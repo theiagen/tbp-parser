@@ -8,10 +8,6 @@ class Row(Variant) :
   def __init__(self, variant, samplename, min_depth, coverage_threshold):
     super(variant).__init__()
 
-    # initialize the interpretation fields
-    self.looker_interpretation = ""
-    self.mdl_interpretation = ""
-   
     self.sample_id = samplename
     self.tbprofiler_gene_name = self.gene
     # add gene tier if present in the GENE_TO_TIER look-up dictionary

@@ -24,7 +24,10 @@ class Variant:
           # overwrite the annotation field with the list of Annotation objects
           self.annotation = annotation_list
 
-        
+      # initialize the interpretation fields
+      self.looker_interpretation = ""
+      self.mdl_interpretation = ""
+   
       
   
   def apply_expert_rules(self, interpretation_destination):
@@ -105,4 +108,6 @@ class Variant:
       return int(match.group(1))
     
     return 0
-    
+  
+  
+  

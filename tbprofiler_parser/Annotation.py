@@ -1,3 +1,5 @@
+import globals
+
 """ 
 This class represents the annotation field from TBProfiler.
 """
@@ -34,3 +36,6 @@ class Annotation:
     # "Not assoc w R" and "Not assoc w R - Interim" and anything else
     else: 
       return "No mutations associated with resistance to {} detected".format(drug)
+    
+  def convert_to_interpretation(self, interpretation_destination):
+    return globals.ANNOTATION_TO_INTERPRETATION[self.annotation][interpretation_destination]
