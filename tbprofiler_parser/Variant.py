@@ -1,34 +1,60 @@
 import re
-import globals
-import Annotation
-
-"""
-This class represents the variant field from TBProfiler
-"""
+import tbprofiler_parser.globals as globals
+import tbprofiler_parser.Row as Row
 
 class Variant:
-  def __init__(self, variant=None):
+  """
+  This class represents the Variant field from TBProfiler.
+  Note:
+  A variant can have either (1) an annotation field. This field could be
+  (b) have 1 or more annotations, or (b) have none. A variant could also 
+  have (2) no annotation field at all.
+  
+  Within the annotation field, an annotation could have more than one drug
+  listed. In addition, it is possible that the same drug can show up twice
+  within the same annotation for a single variant.
+  """
+  def __init__(self, logger, variant=None):
+    self.logger = logger
+    
+    # a list containing the various annotations for this variant
+    self.annotation_dictionary = {}
     if variant is not None:
       for key, value in variant.items():
         setattr(self, key, value)
-        
-      # if the annotation exists, 
-      if hasattr(self, "annotation"):
-        if len(self.annotation) > 0:
-          # turn each annotation into a member of the Annotation class
-          annotation_list = []
-          for item in self.annotation:
-            annotation = Annotation(item["annotation"], item["drug"])
-            annotation_list.add(annotation)
-          
-          # overwrite the annotation field with the list of Annotation objects
-          self.annotation = annotation_list
-
-      # initialize the interpretation fields
-      self.looker_interpretation = ""
-      self.mdl_interpretation = ""
-   
       
+   
+  def extract_annotations(self):
+    """
+    This function takes the annotation field in a variant and splits it into
+    its individual parts, creating an Annotation class for each part. If the
+    annotation field is empty or does not exist, the function creates a row
+    based off of the gene_associated_drugs field.
+    """
+    # if possibility 1a (variant has an annotation field with content)
+    if hasattr(self, "annotation") and len(self.annotation) > 0:
+      self.logger.debug("Before splitting up the annotations: {}".format(self.annotation))
+      
+      # turn each annotation into a member of the Annotation class
+      for item in self.annotation:
+        # if this is the first time a drug has been seen, add it to the annotation dictionary
+        annotation = Row(self.logger, self, item["who_confidence"], item["drug"])
+        if annotation.drug not in self.annotation_dictionary.keys():
+          self.annotation_dictionary[annotation.drug] = Row(self.logger, self, annotation.who_confidence, annotation.drug)
+        
+        # otherwise, save only the annotaiton with the more severe WHO confidence (higher value)
+        elif annotation.rank_annotation() > self.annotation_dictionary[annotation.drug].annotation.rank_annotation():
+          self.annotation_dictionary[annotation.drug] = Row(self.logger, self, annotation.who_confidence, annotation.drug)
+        
+      self.logger.debug("After splitting up the annotations: {}".format(self.annotation_dictionary))
+    else:
+      # possibilities 1b and 2: the annotation field has no content or the field does not exist
+      self.logger.debug("No annotations for this variant")
+       
+      for drug in self.gene_associated_drugs:
+        self.annotation_dictionary[drug] = Row(self.logger, self, "No WHO annotation", drug)
+  
+      self.logger.debug("After iterating through gene_associated_drugs: {}".format(self.annotation_dictionary))
   
   def apply_expert_rules(self, interpretation_destination):
     """
@@ -45,7 +71,7 @@ class Variant:
         return "Uncertain significance" if interpretation_destination == "LIMS" else "U"
       # otherwise, check if it is an upstream gene variant
       elif "upstream_gene_variant" in self.substitution_type: 
-        return "S" if interpretation_destination == "MDL" else "U"
+        return "S" if interpretation_destination == "mdl" else "U"
       elif not any(non_ORF in self.nucleotide_change for non_ORF in ["+", "-", "*"]) or self.nucleotide_change.endswith("*"): 
         # if a position includes either +, *, or - it's not in the ORF 
         # UNLESS the * is at the end which means its a premature stop codon
@@ -58,14 +84,14 @@ class Variant:
       if (globals.SPECIAL_POSITIONS[self.gene][1][1] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][1][2]) or (globals.SPECIAL_POSITIONS[self.gene][2][1] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][2][2]):
         return "Uncertain significance" if interpretation_destination == "LIMS" else "U"
       else:
-        return "S" if interpretation_destination == "MDL" else "U"
+        return "S" if interpretation_destination == "mdl" else "U"
 
     # apply expert rules 2.2.1
     elif self.gene in ["katG", "pncA", "ethA", "gid"]: 
       if any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.nucleotide_change.endswith("*"):
         return "Uncertain significance" if interpretation_destination == "LIMS" else "U"
       elif (self.substitution_type != "synonymous_variant") or ("upstream_gene_variant" in self.substitution_type):
-        return "S" if interpretation_destination == "MDL" else "U"
+        return "S" if interpretation_destination == "mdl" else "U"
       else:
         return "S"
 
@@ -77,7 +103,7 @@ class Variant:
           else:
             return "S"   
       elif (self.substitution_type != "synonymous_variant") or ("upstream_gene_variant" in self.substitution_type):
-        return "S" if interpretation_destination == "MDL" else "U"
+        return "S" if interpretation_destination == "mdl" else "U"
       else:
         return "S"
 
@@ -87,14 +113,13 @@ class Variant:
         if position_nt in globals.SPECIAL_POSITIONS[self.gene]:
           return "Unoexpert"
         else:
-          return "Snoexpert" if interpretation_destination == "MDL" else "Unoexpert"
+          return "Snoexpert" if interpretation_destination == "mdl" else "Unoexpert"
       elif (self.substitution_type != "synonymous_variant") or ("upstream_gene_variant" in self.substitution_type):
-        return "Snoexpert" if interpretation_destination == "MDL" else "Unoexpert"
+        return "Snoexpert" if interpretation_destination == "mdl" else "Unoexpert"
       else:
         return "Snoexpert"
 
     return ""
-
 
   def get_position(self, mutation):
     """  

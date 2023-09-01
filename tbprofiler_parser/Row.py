@@ -1,40 +1,84 @@
-import Variant
-
-"""
-This class represents a row in the CDPH Laboratorian report.
-"""
-
-class Row(Variant) :
-  def __init__(self, variant, samplename, min_depth, coverage_threshold):
-    super(variant).__init__()
-
-    self.sample_id = samplename
-    self.tbprofiler_gene_name = self.gene
-    # add gene tier if present in the GENE_TO_TIER look-up dictionary
-    if self.gene in globals.GENE_TO_TIER.keys():
-      self.gene_tier = globals.GENE_TO_TIER[self.gene]
-    else:
-      self.gene_tier = "NA"
+import tbprofiler_parser.Variant as Variant
+import tbprofiler_parser.globals as globals
+class Row() :
+  """
+  This class represents a row in the CDPH Laboratorian report.
+  """
+  def __init__(self, logger, variant, who_confidence, drug):
+    self.logger = logger
+    self.variant = variant
+    self.who_confidence = who_confidence
+    self.drug = drug
     
-    # fill in the rest of the values needed in the row according to the tbprofiler output contents
-    self.tbprofiler_locus_tag = self.locus_tag
-    self.tbprofiler_variant_substitution_type = self.type
-    self.tbprofiler_variant_substitution_nt = self.nucleotide_change
-    self.tbprofiler_variant_substitution_aa = self.protein_change if self.protein_change != "" else "NA"
-    self.depth = int(self.depth or 0)
-    self.frequency = self.freq
-    self.read_support = self.depth*self.frequency
+    # Initalizing the rest of the columns for the CDPH Laboratorian report
+    self.sample_id = ""
+    self.tbprofiler_gene_name = self.variant.gene
+    self.tbprofiler_locus_tag = self.variant.locus_tag
+    self.tbprofiler_variant_substitution_type = self.variant.substitution_type
+    self.tbprofiler_variant_substitution_nt = self.variant.substitution_nt
+    self.tbprofiler_variant_substitution_aa = self.variant.substitution_aa
+    self.confidence = ""
+    self.antimicrobial = self.drug
+    self.looker_interpretation = ""
+    self.mdl_interpretation = ""
+    self.depth = self.variant.depth
+    self.frequency = self.variant.frequency
+    self.read_support = self.variant.read_support
+    self.rationale = ""
     self.warning = ""
-    # Set a warning if the coverage level is below the pre-determined threshold
-    # if the mutation is not a deletion, then add the gene to the low coverage list
-    if self.depth < int(min_depth) or float(globals.GENE_COVERAGE_DICT[self.gene]) < coverage_threshold:
-      self.warning = "Insufficient coverage in locus"
-      # I am not sure if this outcome is still wanted
-      if "del" in self.nucleotide_change:
-        self.warning = "Insufficient coverage in locus (deletion identified)"
-      else:
-        globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.gene)
-
+   
+    
+  def complete_row(self):
+    """
+    This function finishes each row with the rest of the values needed.
+    """
+    self.logger.info("Within complete_row function")
+    
+    self.confidence = "No WHO annotation" if self.variant.who_confidence == "No WHO annotation" else self.variant.who_confidence
+    self.antimicrobial = self.drug
+    
+    if self.who_confidence != "No WHO annotation":
+      self.logger.info("WHO annotation identified: convert to interpretation logic")
+      self.looker_interpretation = globals.ANNOTATION_TO_INTERPRETATION(self.who_confidence, "looker")
+      self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION(self.who_confidence, "mdl")
+      self.rationale = "WHO classificaiton"
+    
+    else:
+      self.logger.info("No WHO annotation identified: convert with expert rules")
+      self.looker_interpretation = self.variant.apply_expert_rules("looker")
+      self.mdl_interpretation = self.variant.apply_expert_rules("mdl")
+      self.rationale = "Expert rule applied"
+      
+    self.logger.info("Interpretation logic applied")
+    
+    self.remove_no_expert()
+    
+  def rank_annotation(self):
+    """
+    This function ranks the WHO annotation based on resistance,
+    with 4 being the most resistant category and 1 the least.
+    """
+    if self.who_confidence == "Assoc w R":
+      return 4
+    elif self.who_confidence == "Assoc w R - interim":
+      return 3
+    elif self.who_confidence == "Uncertain significance":
+      return 2
+    else:
+      return 1  
+    
+  def annotation_to_LIMS(self):
+    """
+    This function converts the WHO annotation and the target drug
+    into returns the LIMS' report file appropriate annotation.
+    """
+    if self.who_confidence == "Assoc w R":
+      return "Mutation(s) associated with resistance to {} detected".format(self.drug)
+    elif (self.who_confidence == "Assoc w R - interim") or (self.who_confidence == "Uncertain significance"):
+      return "The detected mutation(s) have uncertain significance. Resistance to {} cannot be ruled out".format(self.drug)
+    # "Not assoc w R" and "Not assoc w R - Interim" and anything else
+    else: 
+      return "No mutations associated with resistance to {} detected".format(self.drug)
 
   def remove_no_expert(self):
     """
