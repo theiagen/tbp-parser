@@ -23,7 +23,10 @@ class Row() :
     self.mdl_interpretation = ""
     self.depth = self.variant.depth
     self.frequency = self.variant.freq
-    self.read_support = self.variant.depth * self.variant.freq
+    try:
+      self.read_support = self.variant.depth * self.variant.freq
+    except:
+      self.read_support = 0
     self.rationale = ""
     self.warning = ""
    
@@ -36,7 +39,7 @@ class Row() :
     
     self.antimicrobial = self.drug
     
-    if self.who_confidence != "No WHO annotation":
+    if self.who_confidence != "No WHO annotation" and self.who_confidence != "":
       self.logger.info("WHO annotation identified: convert to interpretation logic")
       self.looker_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
       self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]

@@ -43,7 +43,7 @@ class Variant:
           self.annotation_dictionary[annotation.drug] = Row(self.logger, self, annotation.who_confidence, annotation.drug)
         
         # otherwise, save only the annotaiton with the more severe WHO confidence (higher value)
-        elif annotation.rank_annotation() > self.annotation_dictionary[annotation.drug].annotation.rank_annotation():
+        elif annotation.rank_annotation() > self.annotation_dictionary[annotation.drug].rank_annotation():
           self.annotation_dictionary[annotation.drug] = Row(self.logger, self, annotation.who_confidence, annotation.drug)
         
       self.logger.debug("After splitting up the annotations: {}".format(self.annotation_dictionary))

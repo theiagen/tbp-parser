@@ -67,14 +67,18 @@ class Laboratorian:
         for annotation_row in variant.annotation_dictionary.values():
           # complete the row objectsSW
           annotation_row.complete_row()
-        
+          
+          self.logger.debug("New row: {}".format(annotation_row))
+          row_list.append(annotation_row)
         # create a row object
-        row = Row(variant, self.logger, samplename, min_depth, coverage_threshold)
+        #row = Row(self.logger, variant, samplename, min_depth)
         #row.complete_row()
         
-        self.logger.debug("New row: {}".format(row))
-        row_list.append(row)
+        #self.logger.debug("New row: {}".format(row))
+        #row_list.append(row)
     
     self.logger.debug("Creating the dataframe")
-    df_laboratorian = df_laboratorian.concat(row_list, ignore_index=True)
+    # convert row list into a dataframe
+    
+    df_laboratorian = df_laboratorian.add(row_list, ignore_index=True)
     df_laboratorian.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
