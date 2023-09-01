@@ -1,6 +1,6 @@
 import re
-import tbprofiler_parser.globals as globals
-import tbprofiler_parser.Row as Row
+import globals
+from Row import Row 
 
 class Variant:
   """
@@ -70,12 +70,12 @@ class Variant:
       if globals.PROMOTER_REGIONS[self.gene][1] <= position_nt <= globals.PROMOTER_REGIONS[self.gene][2]: 
         return "Uncertain significance" if interpretation_destination == "LIMS" else "U"
       # otherwise, check if it is an upstream gene variant
-      elif "upstream_gene_variant" in self.substitution_type: 
+      elif "upstream_gene_variant" in self.type: 
         return "S" if interpretation_destination == "mdl" else "U"
       elif not any(non_ORF in self.nucleotide_change for non_ORF in ["+", "-", "*"]) or self.nucleotide_change.endswith("*"): 
         # if a position includes either +, *, or - it's not in the ORF 
         # UNLESS the * is at the end which means its a premature stop codon
-        if self.substitution_type != "synonymous_variant":
+        if self.type != "synonymous_variant":
           return "Uncertain significance" if interpretation_destination == "LIMS" else "U"
         else:
           return "S"
@@ -90,7 +90,7 @@ class Variant:
     elif self.gene in ["katG", "pncA", "ethA", "gid"]: 
       if any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.nucleotide_change.endswith("*"):
         return "Uncertain significance" if interpretation_destination == "LIMS" else "U"
-      elif (self.substitution_type != "synonymous_variant") or ("upstream_gene_variant" in self.substitution_type):
+      elif (self.type != "synonymous_variant") or ("upstream_gene_variant" in self.type):
         return "S" if interpretation_destination == "mdl" else "U"
       else:
         return "S"
@@ -98,11 +98,11 @@ class Variant:
     # apply expert rules 2.2.2
     elif self.gene == "rpoB": 
       if globals.SPECIAL_POSITIONS[self.gene][1] <= position_aa <= globals.SPECIAL_POSITIONS[self.gene][2]:
-          if self.substitution_type != "synonymous_variant":
+          if self.type != "synonymous_variant":
             return "Assoc with R" if interpretation_destination == "LIMS" else "R"
           else:
             return "S"   
-      elif (self.substitution_type != "synonymous_variant") or ("upstream_gene_variant" in self.substitution_type):
+      elif (self.type != "synonymous_variant") or ("upstream_gene_variant" in self.type):
         return "S" if interpretation_destination == "mdl" else "U"
       else:
         return "S"
@@ -114,7 +114,7 @@ class Variant:
           return "Unoexpert"
         else:
           return "Snoexpert" if interpretation_destination == "mdl" else "Unoexpert"
-      elif (self.substitution_type != "synonymous_variant") or ("upstream_gene_variant" in self.substitution_type):
+      elif (self.type != "synonymous_variant") or ("upstream_gene_variant" in self.type):
         return "Snoexpert" if interpretation_destination == "mdl" else "Unoexpert"
       else:
         return "Snoexpert"

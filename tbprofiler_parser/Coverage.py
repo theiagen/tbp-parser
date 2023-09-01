@@ -1,6 +1,7 @@
 import subprocess
-import tbprofiler_parser.globals as globals
+import globals
 import pandas as pd
+import importlib_resources
 
 class Coverage:
   def __init__(self, logger, input_bam, output_prefix):
@@ -8,33 +9,34 @@ class Coverage:
     self.input_bam = input_bam
     self.output_prefix = output_prefix
   
-  def calculate_coverage(self):
+  def calculate_coverage(self, min_depth):
     """
     This function calculates the coverage for each gene in the tbdb.bed file.
     """
+    
     self.logger.info("Within calculate_coverage function")
     self.logger.info("Collecting the chromosome name from the BAM file")
     
     command = "samtools idxstats {} | cut -f 1 | head -1".format(self.input_bam)
     CHROMOSOME = subprocess.check_output(command, shell=True).decode("utf-8").strip()
-    self.logger.debug("The BAM file Chromosome: {}".format(CHROMOSOME))    
+    #self.logger.debug("The BAM file Chromosome: {}".format(CHROMOSOME))    
     
-    with open("tbdb.bed", "r") as bedfile_fh:
+    with open(importlib_resources.files(__name__) / "../data/tbdb.bed", "r") as bedfile_fh:
       for line in bedfile_fh:
-        line = line.strip("\t")
+        line = line.split("\t")
         start = line[1]
         end = line[2]
         gene = line[4]
         
         # samtools outputs 3 columns; column 3 is the depth of coverage per nucleotide position, piped to awk to count the positions
         #  above min_depth, then wc -l counts them all
-        command = "samtools depth -J -r \"" + CHROMOSOME + ":" + start + "-" + end + "\" {} | awk -F '\t' '{if (\$3 >= ~{min_depth}) print;}' | wc -l".format(self.input_bam)
+        command = "samtools depth -J -r \"" + CHROMOSOME + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(min_depth) + ") print;}' | wc -l"
         depth = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
         
         # get coverage for region in bed file based on depth
         #  add one to gene length to compensate for subtraction
         coverage = (int(depth) / (int(end) - int(start) + 1)) * 100
-        self.logger.debug("Gene: {} Coverage: {}".format(gene, coverage))
+        #self.logger.debug("Gene: {} Coverage: {}".format(gene, coverage))
         
         globals.COVERAGE_DICTIONARY[gene] = coverage
     
@@ -42,8 +44,8 @@ class Coverage:
     globals.COVERAGE_DICTIONARY["Rv0678"] = globals.COVERAGE_DICTIONARY["mmpR5"]
     globals.COVERAGE_DICTIONARY["Rv2983"] = globals.COVERAGE_DICTIONARY["fbiD"]
     
-    self.logger.debug("Coverage dictionary: ")
-    self.logger.debug(globals.COVERAGE_DICTIONARY)
+    #self.logger.debug("Coverage dictionary: ")
+    #self.logger.debug(globals.COVERAGE_DICTIONARY)
     
   def reformat_coverage(self, lab_report):
     """

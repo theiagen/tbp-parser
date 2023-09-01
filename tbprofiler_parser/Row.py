@@ -1,5 +1,5 @@
-import tbprofiler_parser.Variant as Variant
-import tbprofiler_parser.globals as globals
+import globals
+
 class Row() :
   """
   This class represents a row in the CDPH Laboratorian report.
@@ -14,16 +14,16 @@ class Row() :
     self.sample_id = ""
     self.tbprofiler_gene_name = self.variant.gene
     self.tbprofiler_locus_tag = self.variant.locus_tag
-    self.tbprofiler_variant_substitution_type = self.variant.substitution_type
-    self.tbprofiler_variant_substitution_nt = self.variant.substitution_nt
-    self.tbprofiler_variant_substitution_aa = self.variant.substitution_aa
+    self.tbprofiler_variant_substitution_type = self.variant.type
+    self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
+    self.tbprofiler_variant_substitution_aa = self.variant.protein_change
     self.confidence = ""
     self.antimicrobial = self.drug
     self.looker_interpretation = ""
     self.mdl_interpretation = ""
     self.depth = self.variant.depth
-    self.frequency = self.variant.frequency
-    self.read_support = self.variant.read_support
+    self.frequency = self.variant.freq
+    self.read_support = self.variant.depth * self.variant.freq
     self.rationale = ""
     self.warning = ""
    
@@ -34,13 +34,12 @@ class Row() :
     """
     self.logger.info("Within complete_row function")
     
-    self.confidence = "No WHO annotation" if self.variant.who_confidence == "No WHO annotation" else self.variant.who_confidence
     self.antimicrobial = self.drug
     
     if self.who_confidence != "No WHO annotation":
       self.logger.info("WHO annotation identified: convert to interpretation logic")
-      self.looker_interpretation = globals.ANNOTATION_TO_INTERPRETATION(self.who_confidence, "looker")
-      self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION(self.who_confidence, "mdl")
+      self.looker_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
+      self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
       self.rationale = "WHO classificaiton"
     
     else:

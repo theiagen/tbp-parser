@@ -1,8 +1,5 @@
-import tbprofiler_parser.Row as Row
-import tbprofiler_parser.Variant as Variant
-import tbprofiler_parser.Annotation as Annotation
-import tbprofiler_parser.Coverage as Coverage
-import tbprofiler_parser.globals as globals
+from Row import Row
+from Variant import Variant
 import pandas as pd
 import json
 
@@ -73,7 +70,11 @@ class Laboratorian:
         
         # create a row object
         row = Row(variant, self.logger, samplename, min_depth, coverage_threshold)
-        row.complete_row()
+        #row.complete_row()
         
         self.logger.debug("New row: {}".format(row))
         row_list.append(row)
+    
+    self.logger.debug("Creating the dataframe")
+    df_laboratorian = df_laboratorian.concat(row_list, ignore_index=True)
+    df_laboratorian.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
