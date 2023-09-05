@@ -1,3 +1,5 @@
+import pandas as pd
+
 """
 A dictionary to turn TBProfiler WHO annotations into
 their corresponding CDPH Looker or MDL interpretations
@@ -380,8 +382,17 @@ SPECIAL_POSITIONS = {
 }
 
 """
-A list of genes that have been reported so far
+A set of genes that have been reported so far
 """
 global GENES_REPORTED
-GENES_REPORTED = []
-  
+GENES_REPORTED = set()
+
+"""
+This dataframe is made to host the laboratorian report
+"""
+global DF_LABORATORIAN
+DF_LABORATORIAN = pd.DataFrame(columns = [
+  "sample_id", "tbprofiler_gene_name", "tbprofiler_locus_tag", "tbprofiler_variant_substitution_type", 
+  "tbprofiler_variant_substitution_nt", "tbprofiler_variant_substitution_aa", "confidence", "antimicrobial",
+  "looker_interpretation", "mdl_interpretation", "depth", "frequency", "read_support", "rationale", "warning"
+])

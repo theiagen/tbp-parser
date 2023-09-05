@@ -4,7 +4,7 @@ class Row() :
   """
   This class represents a row in the CDPH Laboratorian report.
   """
-  def __init__(self, logger, variant, who_confidence, drug):
+  def __init__(self, logger, variant, who_confidence, drug, gene_name=None, coverage_threshold=0):
     self.logger = logger
     self.variant = variant
     self.who_confidence = who_confidence
@@ -12,46 +12,101 @@ class Row() :
     
     # Initalizing the rest of the columns for the CDPH Laboratorian report
     self.sample_id = ""
-    self.tbprofiler_gene_name = self.variant.gene
-    self.tbprofiler_locus_tag = self.variant.locus_tag
-    self.tbprofiler_variant_substitution_type = self.variant.type
-    self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
-    self.tbprofiler_variant_substitution_aa = self.variant.protein_change
-    self.confidence = ""
-    self.antimicrobial = self.drug
-    self.looker_interpretation = ""
-    self.mdl_interpretation = ""
-    self.depth = self.variant.depth
-    self.frequency = self.variant.freq
-    try:
-      self.read_support = self.variant.depth * self.variant.freq
-    except:
-      self.read_support = 0
-    self.rationale = ""
-    self.warning = ""
-   
+    if variant is not None:
+      self.tbprofiler_gene_name = self.variant.gene
+      self.tbprofiler_locus_tag = self.variant.locus_tag
+      self.tbprofiler_variant_substitution_type = self.variant.type
+      self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
+      self.tbprofiler_variant_substitution_aa = self.variant.protein_change
+      if self.tbprofiler_variant_substitution_aa == "":
+        self.tbprofiler_variant_substitution_aa = "NA"
+      self.confidence = self.who_confidence
+      self.antimicrobial = self.drug
+      self.looker_interpretation = ""
+      self.mdl_interpretation = ""
+      self.depth = self.variant.depth
+      if self.depth is None:
+        self.depth = 0
+      self.frequency = self.variant.freq
+      try:
+        self.read_support = self.variant.depth * self.variant.freq
+      except:
+        self.read_support = 0
+      self.rationale = ""
+      self.warning = ""
+    else:
+      self.tbprofiler_gene_name = gene_name
+      self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
+      self.tbprofiler_variant_substitution_nt = "NA"
+      self.tbprofiler_variant_substitution_aa = "NA"
+      self.confidence = "NA"
+      self.antimicrobial = self.drug
+      self.depth = "NA"
+      self.frequency = "NA"
+      self.read_support = "NA"
+      self.rationale = "NA"
+      self.warning = "NA"
+      
+      if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= coverage_threshold:
+        self.tbprofiler_variant_substitution_type = "WT"
+        self.tbprofiler_variant_substitution_nt = "WT"
+        self.tbprofiler_variant_substitution_aa = "WT"
+        self.looker_interpretation = "S"
+        self.mdl_interpretation = "WT"
+      else:
+        self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
+        self.looker_interpretation = "Insufficient Coverage"
+        self.mdl_interpretation = "Insufficient Coverage"
+        self.warning = "Insufficient coverage for the locus"
     
-  def complete_row(self):
+    try:
+      self.gene_tier = globals.GENE_TO_TIER[self.tbprofiler_gene_name]
+    except:
+      self.gene_tier = "NA"
+      
+  
+  def print(self):
+    """
+    This function prints the row in a readable format.
+    """
+    self.logger.debug("sample_id: {}".format(self.sample_id))
+    self.logger.debug("tbprofiler_gene_name: {}".format(self.tbprofiler_gene_name))
+    self.logger.debug("tbprofiler_locus_tag: {}".format(self.tbprofiler_locus_tag))
+    self.logger.debug("tbprofiler_variant_substitution_type: {}".format(self.tbprofiler_variant_substitution_type))
+    self.logger.debug("tbprofiler_variant_substitution_nt: {}".format(self.tbprofiler_variant_substitution_nt))
+    self.logger.debug("tbprofiler_variant_substitution_aa: {}".format(self.tbprofiler_variant_substitution_aa))
+    self.logger.debug("confidence: {}".format(self.confidence))
+    self.logger.debug("antimicrobial: {}".format(self.antimicrobial))
+    self.logger.debug("looker_interpretation: {}".format(self.looker_interpretation))
+    self.logger.debug("mdl_interpretation: {}".format(self.mdl_interpretation))
+    self.logger.debug("depth: {}".format(self.depth))
+    self.logger.debug("frequency: {}".format(self.frequency))
+    self.logger.debug("read_support: {}".format(self.read_support))
+    self.logger.debug("rationale: {}".format(self.rationale))
+    self.logger.debug("warning: {}".format(self.warning))
+       
+  def complete_row(self, sample_id):
     """
     This function finishes each row with the rest of the values needed.
-    """
+    """    
     self.logger.info("Within complete_row function")
     
+    self.sample_id = sample_id
     self.antimicrobial = self.drug
     
-    if self.who_confidence != "No WHO annotation" and self.who_confidence != "":
+    if self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
       self.logger.info("WHO annotation identified: convert to interpretation logic")
       self.looker_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
       self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
-      self.rationale = "WHO classificaiton"
+      self.rationale = "WHO classification"
     
-    else:
+    elif self.who_confidence != "NA":
       self.logger.info("No WHO annotation identified: convert with expert rules")
       self.looker_interpretation = self.variant.apply_expert_rules("looker")
       self.mdl_interpretation = self.variant.apply_expert_rules("mdl")
       self.rationale = "Expert rule applied"
       
-    self.logger.info("Interpretation logic applied")
+    self.logger.info("Interpretation logic applied or skipped")
     
     self.remove_no_expert()
     
@@ -91,8 +146,10 @@ class Row() :
       interpretation = self.looker_interpretation
       self.looker_interpretation = interpretation.replace("noexpert", "")
       self.rationale = "No WHO annotation or expert rule"
-    
+      self.confidence = "No WHO annotation"
+      
     if "noexpert" in self.mdl_interpretation:
       interpretation = self.mdl_interpretation
       self.mdl_interpretation = interpretation.replace("noexpert", "")
       self.rationale = "No WHO annotation or expert rule"
+      self.confidence = "No WHO annotation"

@@ -14,7 +14,7 @@ class Variant:
   listed. In addition, it is possible that the same drug can show up twice
   within the same annotation for a single variant.
   """
-  def __init__(self, logger, variant=None):
+  def __init__(self, logger, variant=None, gene=None, drug_name=None):
     self.logger = logger
     
     # a list containing the various annotations for this variant
@@ -22,7 +22,6 @@ class Variant:
     if variant is not None:
       for key, value in variant.items():
         setattr(self, key, value)
-      
    
   def extract_annotations(self):
     """
