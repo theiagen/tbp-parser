@@ -388,11 +388,12 @@ A dictionary that ranks the resistances on severity
 """
 global RESISTANCE_RANKING
 RESISTANCE_RANKING = {
-  "R": 5,
-  "R-Interim": 4,
-  "U": 3,
-  "S-Interim": 2,
-  "S": 1,
+  "R": 6,
+  "R-Interim": 5,
+  "U": 4,
+  "S-Interim": 3,
+  "S": 2,
+  "WT": 1,
   "Insufficient Coverage": 0
 }
 

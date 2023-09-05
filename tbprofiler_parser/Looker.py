@@ -45,17 +45,20 @@ class Looker:
     """
     self.logger.info("Within create_looker_report function")
     
-    DF_LOOKER = pd.DataFrame({"sample_id": globals.SAMPLE_NAME, "output_seq_method_type": globals.SEQUENCING_METHOD}, index=[0])
+    DF_LOOKER = pd.DataFrame({
+      "sample_id": globals.SAMPLE_NAME, 
+      "output_seq_method_type": globals.SEQUENCING_METHOD
+      }, index=[0])
     
     # iterate through laboratorian dataframe to extract highest mutation
     for antimicrobial in globals.ANTIMICROBIAL_DRUG_NAME_LIST:
       self.logger.debug("Antimicrobial: {}".format(antimicrobial))
-      potential_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial]["looker_interpretation"]
+      potential_looker_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial]["looker_interpretation"]
       # this is a crazy one liner:
       # basically, it gets the max resistance ranking (R > R-Interim > U > S-Interim > S) for all resistance annotations for a drug
-      max_resistance = [annotation for annotation,rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_resistances])]
-      DF_LOOKER[antimicrobial] = max_resistance[0]
-      self.logger.debug("Resistance: {}".format(max_resistance[0]))
+      max_looker_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_looker_resistances])]
+      DF_LOOKER[antimicrobial] = max_looker_resistance[0]
+      self.logger.debug("Resistance: {}".format(max_looker_resistance[0]))
       for gene in globals.ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME[antimicrobial]:
         # indicate warning if any genes failed to achieve 100% coverage_threshold and/or minimum depth  (10x) 
         if DF_LOOKER[antimicrobial][0] != "R" and gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:

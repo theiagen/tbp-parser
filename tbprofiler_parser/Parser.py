@@ -3,6 +3,7 @@ import globals
 from Coverage import Coverage
 from Laboratorian import Laboratorian
 from Looker import Looker
+from LIMS import LIMS
 
 
 class Parser:
@@ -43,3 +44,7 @@ class Parser:
     self.logger.info("Creating Looker report")
     looker = Looker(self.logger, self.input_json, self.output_prefix)
     looker.create_looker_report()
+    
+    self.logger.info("Creating LIMS report")
+    lims = LIMS(self.logger, self.input_json, self.output_prefix)
+    lims.create_lims_report()
