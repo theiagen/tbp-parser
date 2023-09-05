@@ -4,50 +4,55 @@ class Row() :
   """
   This class represents a row in the CDPH Laboratorian report.
   """
-  def __init__(self, logger, variant, who_confidence, drug, gene_name=None, coverage_threshold=0):
+  def __init__(self, logger, variant, who_confidence, drug, gene_name=None):
     self.logger = logger
     self.variant = variant
     self.who_confidence = who_confidence
-    self.drug = drug
-    
+    self.antimicrobial = drug
+    self.antimicrobial = self.antimicrobial.replace("rifampicin", "rifampin")
+
+    self.sample_id = globals.SAMPLE_NAME
+
     # Initalizing the rest of the columns for the CDPH Laboratorian report
-    self.sample_id = ""
+    # for when the variant is in the JSON file
     if variant is not None:
       self.tbprofiler_gene_name = self.variant.gene
       self.tbprofiler_locus_tag = self.variant.locus_tag
       self.tbprofiler_variant_substitution_type = self.variant.type
       self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
       self.tbprofiler_variant_substitution_aa = self.variant.protein_change
+      # change blank aa substitutions to NA
       if self.tbprofiler_variant_substitution_aa == "":
         self.tbprofiler_variant_substitution_aa = "NA"
       self.confidence = self.who_confidence
-      self.antimicrobial = self.drug
       self.looker_interpretation = ""
       self.mdl_interpretation = ""
-      self.depth = self.variant.depth
-      if self.depth is None:
-        self.depth = 0
+      self.depth = int(self.variant.depth or 0)
       self.frequency = self.variant.freq
+      # avoid division by zero errors
       try:
         self.read_support = self.variant.depth * self.variant.freq
       except:
         self.read_support = 0
       self.rationale = ""
       self.warning = ""
-    else:
+    
+    # otherwise, the variant does not appear in the JSON file and default NA/WT values
+    # need to be supplied
+    else: 
       self.tbprofiler_gene_name = gene_name
       self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
       self.tbprofiler_variant_substitution_nt = "NA"
       self.tbprofiler_variant_substitution_aa = "NA"
       self.confidence = "NA"
-      self.antimicrobial = self.drug
       self.depth = "NA"
       self.frequency = "NA"
       self.read_support = "NA"
       self.rationale = "NA"
       self.warning = "NA"
       
-      if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= coverage_threshold:
+      # check to see if we need to apply a coverage warning
+      if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
         self.tbprofiler_variant_substitution_type = "WT"
         self.tbprofiler_variant_substitution_nt = "WT"
         self.tbprofiler_variant_substitution_aa = "WT"
@@ -85,14 +90,11 @@ class Row() :
     self.logger.debug("rationale: {}".format(self.rationale))
     self.logger.debug("warning: {}".format(self.warning))
        
-  def complete_row(self, sample_id):
+  def complete_row(self):
     """
     This function finishes each row with the rest of the values needed.
     """    
     self.logger.info("Within complete_row function")
-    
-    self.sample_id = sample_id
-    self.antimicrobial = self.drug
     
     if self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
       self.logger.info("WHO annotation identified: convert to interpretation logic")
@@ -130,12 +132,12 @@ class Row() :
     into returns the LIMS' report file appropriate annotation.
     """
     if self.who_confidence == "Assoc w R":
-      return "Mutation(s) associated with resistance to {} detected".format(self.drug)
+      return "Mutation(s) associated with resistance to {} detected".format(self.antimicrobial)
     elif (self.who_confidence == "Assoc w R - interim") or (self.who_confidence == "Uncertain significance"):
-      return "The detected mutation(s) have uncertain significance. Resistance to {} cannot be ruled out".format(self.drug)
+      return "The detected mutation(s) have uncertain significance. Resistance to {} cannot be ruled out".format(self.antimicrobial)
     # "Not assoc w R" and "Not assoc w R - Interim" and anything else
     else: 
-      return "No mutations associated with resistance to {} detected".format(self.drug)
+      return "No mutations associated with resistance to {} detected".format(self.antimicrobial)
 
   def remove_no_expert(self):
     """

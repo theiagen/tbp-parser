@@ -1,6 +1,8 @@
 import logging
+import globals
 from Coverage import Coverage
 from Laboratorian import Laboratorian
+from Looker import Looker
 
 
 class Parser:
@@ -14,11 +16,12 @@ class Parser:
     self.input_bam = options.input_bam
     self.verbose = options.verbose
     self.output_prefix = options.output_prefix
-    self.min_depth = options.min_depth
-    self.coverage_threshold = options.coverage_threshold
+    globals.MIN_DEPTH = options.min_depth
+    globals.COVERAGE_THRESHOLD = options.coverage_threshold
+    globals.SEQUENCING_METHOD = options.sequencing_method
+    globals.OPERATOR = options.operator
     
     if self.verbose:
-      print("should be here")
       self.logger.setLevel(logging.DEBUG)
       self.logger.info("Verbose mode enabled")
     else:
@@ -30,8 +33,13 @@ class Parser:
     """    
     self.logger.info("Creating initial coverage report")
     coverage = Coverage(self.logger, self.input_bam, self.output_prefix)
-    coverage.calculate_coverage(self.min_depth)
+
+    coverage.calculate_coverage()
     
     self.logger.info("Creating laboratorian report")
     laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix)
-    laboratorian.create_laboratorian_report(self.min_depth, self.coverage_threshold)
+    laboratorian.create_laboratorian_report()
+    
+    self.logger.info("Creating Looker report")
+    looker = Looker(self.logger, self.input_json, self.output_prefix)
+    looker.create_looker_report()

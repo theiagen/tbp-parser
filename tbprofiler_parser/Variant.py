@@ -38,12 +38,12 @@ class Variant:
       for item in self.annotation:
         # if this is the first time a drug has been seen, add it to the annotation dictionary
         annotation = Row(self.logger, self, item["who_confidence"], item["drug"])
-        if annotation.drug not in self.annotation_dictionary.keys():
-          self.annotation_dictionary[annotation.drug] = Row(self.logger, self, annotation.who_confidence, annotation.drug)
+        if annotation.antimicrobial not in self.annotation_dictionary.keys():
+          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.who_confidence, annotation.antimicrobial)
         
         # otherwise, save only the annotaiton with the more severe WHO confidence (higher value)
-        elif annotation.rank_annotation() > self.annotation_dictionary[annotation.drug].rank_annotation():
-          self.annotation_dictionary[annotation.drug] = Row(self.logger, self, annotation.who_confidence, annotation.drug)
+        elif annotation.rank_annotation() > self.annotation_dictionary[annotation.antimicrobial].rank_annotation():
+          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.who_confidence, annotation.antimicrobial)
         
       self.logger.debug("After splitting up the annotations: {}".format(self.annotation_dictionary))
     else:

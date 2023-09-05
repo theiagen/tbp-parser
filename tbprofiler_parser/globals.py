@@ -156,7 +156,23 @@ A dictionary that will contain the percent coverage for each gene
 """
 global COVERAGE_DICTIONARY
 COVERAGE_DICTIONARY = {}
-    
+ 
+"""
+The coverage threshold
+"""
+global COVERAGE_THRESHOLD
+COVERAGE_THRESHOLD = 100
+
+"""
+This dataframe is made to host the laboratorian report
+"""
+global DF_LABORATORIAN
+DF_LABORATORIAN = pd.DataFrame(columns = [
+  "sample_id", "tbprofiler_gene_name", "tbprofiler_locus_tag", "tbprofiler_variant_substitution_type", 
+  "tbprofiler_variant_substitution_nt", "tbprofiler_variant_substitution_aa", "confidence", "antimicrobial",
+  "looker_interpretation", "mdl_interpretation", "depth", "frequency", "read_support", "rationale", "warning"
+])
+
 """
 A dictionary that contains the list of genes that are to be
 included in the CDPH LIMS report
@@ -180,6 +196,12 @@ A list of genes that correspond to a certain set of expert rules
 """
 global GENE_LIST_OPTION_2
 GENE_LIST_OPTION_2 = ["ethA", "gid", "katG", "pncA", "rpoB"]
+
+"""
+A set of genes that have been reported so far
+"""
+global GENES_REPORTED
+GENES_REPORTED = set()
   
 """
 A dictionary corresponding each gene to the drug they may confer
@@ -342,7 +364,13 @@ below the coverage threshold; default of 10x
 """  
 global LOW_DEPTH_OF_COVERAGE_LIST
 LOW_DEPTH_OF_COVERAGE_LIST = []
-  
+
+"""
+The minimum depth threshold
+"""
+global MIN_DEPTH
+MIN_DEPTH = 10
+
 """
 A dictionary that matches certain genes to their promoter regions.
 If a mutation is within these promoter regions, it needs special consideration.
@@ -353,6 +381,19 @@ PROMOTER_REGIONS = {
   "pepQ": [-33, -1],
   "rplC": [-18, -1],
   "Rv0678": [-84, -1]
+}
+
+"""
+A dictionary that ranks the resistances on severity
+"""
+global RESISTANCE_RANKING
+RESISTANCE_RANKING = {
+  "R": 5,
+  "R-Interim": 4,
+  "U": 3,
+  "S-Interim": 2,
+  "S": 1,
+  "Insufficient Coverage": 0
 }
 
 """
@@ -371,6 +412,18 @@ RPOB_MUTATIONS = [
 ]
 
 """
+This variable holds the sample name
+"""
+global SAMPLE_NAME
+SAMPLE_NAME = ""
+
+"""
+This variable holds the sequencing method
+"""
+global SEQUENCING_METHOD
+SEQUENCING_METHOD = ""
+
+"""
 This is a dictionary of positions for genes requiring different consideration.
 Note: the rpoB special position is in codons, rrl & rrs are nucleotide positions
 """
@@ -381,18 +434,8 @@ SPECIAL_POSITIONS = {
   "rrs": [1401, 1402, 1484]
 }
 
+""" 
+This variable holds the operator's name
 """
-A set of genes that have been reported so far
-"""
-global GENES_REPORTED
-GENES_REPORTED = set()
-
-"""
-This dataframe is made to host the laboratorian report
-"""
-global DF_LABORATORIAN
-DF_LABORATORIAN = pd.DataFrame(columns = [
-  "sample_id", "tbprofiler_gene_name", "tbprofiler_locus_tag", "tbprofiler_variant_substitution_type", 
-  "tbprofiler_variant_substitution_nt", "tbprofiler_variant_substitution_aa", "confidence", "antimicrobial",
-  "looker_interpretation", "mdl_interpretation", "depth", "frequency", "read_support", "rationale", "warning"
-])
+global OPERATOR
+OPERATOR = ""

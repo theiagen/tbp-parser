@@ -6,7 +6,7 @@ import json
 
 class Laboratorian:
   """
-  This class creates the laboratorian report.
+  This class creates the CDPH Laboratorian report.
   """
   
   def __init__(self, logger, input_json, output_prefix):
@@ -24,7 +24,7 @@ class Laboratorian:
       variant = Variant(variant)
       #globals.VARIANTS.append(variant)
    
-  def iterate_section(self, variant_section, row_list, sample_name):
+  def iterate_section(self, variant_section, row_list):
     for variant in variant_section:
       # create a Variant object and add the origin gene to the GENES_REPORTED set
       variant = Variant(self.logger, variant)
@@ -35,7 +35,7 @@ class Laboratorian:
       
       for annotation_row in variant.annotation_dictionary.values():
         # complete the row objects
-        annotation_row.complete_row(sample_name)
+        annotation_row.complete_row()
         annotation_row.print()
         
         self.logger.debug("New row: {}".format(annotation_row))
@@ -43,7 +43,7 @@ class Laboratorian:
         
     return row_list
       
-  def create_laboratorian_report(self, min_depth, coverage_threshold):
+  def create_laboratorian_report(self):
     """
     This function creates the laboratorian report, which is a CSV file
     containing the following information for each mutation in the input JSON:
@@ -71,10 +71,10 @@ class Laboratorian:
     with open(self.input_json) as json_fh:
       input_json = json.load(json_fh)
       
-      sample_name = input_json["id"]
+      globals.SAMPLE_NAME = input_json["id"]
       
-      row_list = self.iterate_section(input_json["dr_variants"], row_list, sample_name)
-      row_list = self.iterate_section(input_json["other_variants"], row_list, sample_name)
+      row_list = self.iterate_section(input_json["dr_variants"], row_list)
+      row_list = self.iterate_section(input_json["other_variants"], row_list)
       
     ### TO-DO: ADD COVERAGE WARNINGS ### 
       
@@ -83,9 +83,7 @@ class Laboratorian:
       for drug_name in antimicrobial_drug_names:
         if gene not in globals.GENES_REPORTED:
           self.logger.debug("Gene {} not in report, adding based on coverage".format(gene))
-          new_row = Row(self.logger, None, "NA", drug_name, gene, coverage_threshold)
-          new_row.complete_row(sample_name)
-          row_list.append(new_row)
+          row_list.append(Row(self.logger, None, "NA", drug_name, gene))
         else:
           self.logger.debug("Gene {} already in report".format(gene))
           
@@ -110,18 +108,15 @@ class Laboratorian:
               # remove all rows in the row_list entity that belong to this gene
               row_list = [row for row in row_list if row.tbprofiler_gene_name != gene]
               # re-add the row, but with correct information as of 4.2
-              new_row = Row(self.logger, None, "NA", drug_name, gene, coverage_threshold)
-              new_row.complete_row(sample_name)
-              row_list.append(new_row)     
+              row_list.append(Row(self.logger, None, "NA", drug_name, gene))     
      
     self.logger.debug("Creating the dataframe")
     
     # ad row list to DF_LABORATORIAN
     for row in row_list:
       row_dictionary = pd.DataFrame(vars(row), index=[0])
-      row_dictionary.drop(["logger", "variant", "who_confidence", "drug"], axis=1, inplace=True)
+      row_dictionary.drop(["logger", "variant", "who_confidence"], axis=1, inplace=True)
       globals.DF_LABORATORIAN = pd.concat([globals.DF_LABORATORIAN, row_dictionary], ignore_index=True)
       
             
-    #DF_LABORATORIAN = DF_LABORATORIAN.add(row_list, ignore_index=True)
     globals.DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)

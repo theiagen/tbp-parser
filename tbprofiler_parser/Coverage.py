@@ -9,7 +9,7 @@ class Coverage:
     self.input_bam = input_bam
     self.output_prefix = output_prefix
   
-  def calculate_coverage(self, min_depth):
+  def calculate_coverage(self):
     """
     This function calculates the coverage for each gene in the tbdb.bed file.
     """
@@ -30,7 +30,7 @@ class Coverage:
         
         # samtools outputs 3 columns; column 3 is the depth of coverage per nucleotide position, piped to awk to count the positions
         #  above min_depth, then wc -l counts them all
-        command = "samtools depth -J -r \"" + CHROMOSOME + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(min_depth) + ") print;}' | wc -l"
+        command = "samtools depth -J -r \"" + CHROMOSOME + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(globals.MIN_DEPTH) + ") print;}' | wc -l"
         depth = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
         
         # get coverage for region in bed file based on depth
