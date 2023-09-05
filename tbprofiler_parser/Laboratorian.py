@@ -76,6 +76,8 @@ class Laboratorian:
       row_list = self.iterate_section(input_json["dr_variants"], row_list, sample_name)
       row_list = self.iterate_section(input_json["other_variants"], row_list, sample_name)
       
+    ### TO-DO: ADD COVERAGE WARNINGS ### 
+      
     # add any genes that are missing from the report
     for gene, antimicrobial_drug_names in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
       for drug_name in antimicrobial_drug_names:
