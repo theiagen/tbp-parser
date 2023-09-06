@@ -106,52 +106,62 @@ class LIMS:
 
       mutations_per_gene = {}
       non_s_mutations = 0
+      print(gene_dictionary)
       for gene, gene_code in gene_dictionary.items():
+        print(gene)
         if gene in globals.GENES_FOR_LIMS:
           nt_mutations_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_nt"].unique().tolist()
           aa_mutations_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_aa"].unique().tolist()
           mutation_types_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_type"].unique().tolist()
           mdl_interpretation = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["mdl_interpretation"].tolist()
           
-          # format all mutations associated with a particular antimicrobial appropriately
-          for mutation in nt_mutations_per_gene:
-            index = nt_mutations_per_gene.index(mutation)
-            # perform some data clean-up:
-            if mutation == "WT":
-              mutation = ""
-            try:
-              aa_mutation = aa_mutations_per_gene[index]
-            except:
-              aa_mutation = ""
-            if aa_mutation == "NA" or aa_mutation == "WT":
-              aa_mutation = "" 
-            if gene == "rpoB":           
-              aa_mutation_position = self.get_mutation_position(aa_mutation)
-            try:  
-              mutation_type = mutation_types_per_gene[index]
-            except: 
-              mutation_type = mutation_types_per_gene[0]
+          print(gene, max_mdl_resistance[0])
+          if max_mdl_resistance[0] == "S" and gene != "rpoB":
+            print(gene)
+            mutations_per_gene[gene] = "No high confidence mutations detected"
+          else:         
+            # format all mutations associated with a particular antimicrobial appropriately
+            for mutation in nt_mutations_per_gene:
+              print(mutation)
+              index = nt_mutations_per_gene.index(mutation)
+              # perform some data clean-up:
+              if mutation == "WT":
+                mutation = ""
+              try:
+                aa_mutation = aa_mutations_per_gene[index]
+              except:
+                aa_mutation = ""
+              if aa_mutation == "NA" or aa_mutation == "WT":
+                aa_mutation = "" 
+              if gene == "rpoB":           
+                aa_mutation_position = self.get_mutation_position(aa_mutation)
+              try:  
+                mutation_type = mutation_types_per_gene[index]
+              except: 
+                mutation_type = mutation_types_per_gene[0]
               
-            # report all non-synonymous mutations UNLESS rpoB RRDR
-            if mutation_type != "synonymous_variant" or (gene == "rpoB" and (globals.SPECIAL_POSITIONS[gene][1] <= aa_mutation_position <= globals.SPECIAL_POSITIONS[gene][2])):
-              substitution = "{} ({})".format(mutation, aa_mutation)
-              
-              # the following if only captures synonymous mutations if rpoB RRDR mutations
-              if mutation_type == "synonymous_variant":
-                substitution = "{} [synonymous]".format(mutation)
-              
-              # add to dictionary
-              if gene not in mutations_per_gene.keys():
-                mutations_per_gene[gene] = [substitution]
+              # report all non-synonymous mutations UNLESS rpoB RRDR
+              if mutation_type != "synonymous_variant" or (gene == "rpoB" and (globals.SPECIAL_POSITIONS[gene][1] <= aa_mutation_position <= globals.SPECIAL_POSITIONS[gene][2])):
+                substitution = "{} ({})".format(mutation, aa_mutation)
+                
+                # the following if only captures synonymous mutations if rpoB RRDR mutations
+                if mutation_type == "synonymous_variant":
+                  substitution = "{} [synonymous]".format(mutation)
+                
+                # add to dictionary
+                if gene not in mutations_per_gene.keys():
+                  mutations_per_gene[gene] = [substitution]
+                else:
+                  mutations_per_gene[gene] = "{}; {}".format("".join(mutations_per_gene[gene]), substitution)
               else:
-                mutations_per_gene[gene] = "{}; {}".format(mutations_per_gene[gene][0], substitution)
-          
+                mutations_per_gene[gene] = "No high confidence mutations detected"
+                
           # if that gene has mutations associated with it, perform additional filtration
-          if gene in mutations_per_gene.keys():            
+          if gene in mutations_per_gene.keys():
             DF_LIMS[gene_code] = mutations_per_gene[gene]
             if mdl_interpretation[index] != "S" or mdl_interpretation[index] != "WT":
               non_s_mutations += 1
-              
+            print(gene)  
             if gene == "rpoB":
 
               if mdl_interpretation[index] == "R":

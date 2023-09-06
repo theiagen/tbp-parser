@@ -35,7 +35,15 @@ class Row() :
       except:
         self.read_support = 0
       self.rationale = ""
+      
       self.warning = ""
+      if (self.depth < globals.MIN_DEPTH) or (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
+        self.warning = "Insufficient coverage in locus"
+        if "del" in self.tbprofiler_variant_substitution_nt:
+          self.warning = "Insufficient coverage in locus (deletion identified)"
+        else:
+          globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
+        
     
     # otherwise, the variant does not appear in the JSON file and default NA/WT values
     # need to be supplied

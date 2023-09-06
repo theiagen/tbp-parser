@@ -48,3 +48,6 @@ class Parser:
     self.logger.info("Creating LIMS report")
     lims = LIMS(self.logger, self.input_json, self.output_prefix)
     lims.create_lims_report()
+    
+    self.logger.info("Reformatting coverage report")
+    coverage.reformat_coverage()

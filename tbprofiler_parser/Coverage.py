@@ -47,21 +47,20 @@ class Coverage:
     #self.logger.debug("Coverage dictionary: ")
     #self.logger.debug(globals.COVERAGE_DICTIONARY)
     
-  def reformat_coverage(self, lab_report):
+  def reformat_coverage(self):
     """
     This function reformats the coverage dictionary into a CSV file
     and includes the warning field.
     """
     self.logger.info("Within reformat_coverage function")
     
-    df_lab_report = pd.read_csv(lab_report, skip_blank_lines=True)
-    df_coverage = pd.DataFrame(columns=["Gene", "Percent_Coverage", "Warning"])
+    DF_COVERAGE = pd.DataFrame(columns=["Gene", "Percent_Coverage", "Warning"])
 
     for gene, percent_coverage in globals.COVERAGE_DICTIONARY.items():
       warning = ""
       
       try:
-        for mutation_type_nucleotide in df_lab_report["tbprofiler_variant_substitution_nt"][df_lab_report["tbprofiler_gene_name"] == gene]:
+        for mutation_type_nucleotide in globals.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"][globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]:
           if "del" in mutation_type_nucleotide:
             warning = "Deletion identified"
             if float(percent_coverage) == 100:
@@ -69,7 +68,8 @@ class Coverage:
       except:
         self.logger.debug("Gene {} not found in lab report".format(gene))
       
+      
       self.logger.debug("Gene: {} Percent Coverage: {} Warning: {}".format(gene, percent_coverage, warning))
-      df_coverage.concat({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, ignore_index=True)
+      DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])], ignore_index=True)
 
-    df_coverage.to_csv(self.output_prefix + "-percent_gene_coverage.csv", index=False)
+    DF_COVERAGE.to_csv(self.output_prefix + ".percent_gene_coverage.csv", index=False)
