@@ -7,6 +7,10 @@ import datetime
 class Looker:
   """ 
   This class creates the CDPH Looker report.
+  
+  It has two functions:
+    - get_lineage_and_id: returns the lineage and ID fields for Looker
+    - create_looker_report: creates the Looker report CSV file 
   """
   def __init__(self, logger, input_json, output_prefix):
     self.logger = logger
@@ -17,6 +21,7 @@ class Looker:
     """
     Returns the lineage and ID fields for Looker
     """
+    self.logger.info("Within Looker class get_lineage_and_id function")
     with open(self.input_json) as json_fh:
       input_json = json.load(json_fh)
       
@@ -34,6 +39,8 @@ class Looker:
       else:
         ID = sublineage
       
+      self.logger.debug("Lineage: {}; ID: {}".format(lineage, ID))
+      self.logger.info("Finished getting lineage and ID, now exiting function")
       return lineage, ID  
   
   def create_looker_report(self):
@@ -43,7 +50,7 @@ class Looker:
       - sample_id: the sample name
       - for each antimicrobial, indication if resistant (R) or susceptible (S)
     """
-    self.logger.info("Within create_looker_report function")
+    self.logger.info("Within Looker class create_looker_report function")
     
     DF_LOOKER = pd.DataFrame({
       "sample_id": globals.SAMPLE_NAME, 
@@ -52,13 +59,14 @@ class Looker:
     
     # iterate through laboratorian dataframe to extract highest mutation
     for antimicrobial in globals.ANTIMICROBIAL_DRUG_NAME_LIST:
-      self.logger.debug("Antimicrobial: {}".format(antimicrobial))
+      self.logger.debug("Now extracting highest mutation for this antimicrobial: {}".format(antimicrobial))
       potential_looker_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial]["looker_interpretation"]
       # this is a crazy one liner:
       # basically, it gets the max resistance ranking (R > R-Interim > U > S-Interim > S) for all resistance annotations for a drug
       max_looker_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_looker_resistances])]
       DF_LOOKER[antimicrobial] = max_looker_resistance[0]
-      self.logger.debug("Resistance: {}".format(max_looker_resistance[0]))
+      self.logger.debug("The max resistance for this antimicrobial is {}".format(max_looker_resistance[0]))
+      
       for gene in globals.ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME[antimicrobial]:
         # indicate warning if any genes failed to achieve 100% coverage_threshold and/or minimum depth  (10x) 
         if DF_LOOKER[antimicrobial][0] != "R" and gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
@@ -77,4 +85,5 @@ class Looker:
     
     # write to file
     DF_LOOKER.to_csv("{}.looker_report.csv".format(self.output_prefix), index=False)
-        
+    
+    self.logger.info("Looker report created, now exiting function")

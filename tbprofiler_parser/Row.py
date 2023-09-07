@@ -3,9 +3,24 @@ import globals
 class Row() :
   """
   This class represents a row in the CDPH Laboratorian report.
+  The __init__ function assigns each variant attribute to the appropriate
+  column in the CDPH Laboratorian report; it also applies any coverage
+  warnings if necessary.
+  
+  This class has five additional functions:
+    - print: prints the row in a readable format
+    - complete_row: finishes each row with the rest of the values needed
+    - rank_annotation: ranks the WHO annotation based on resistance
+    - annotation_to_LIMS: converts the WHO annotation and the target drug
+      into returns the LIMS' report file appropriate annotation
+    - remove_no_expert: removes the 'noexpert' suffix in the case where
+      the interpretation logic applied is not considered an expert rule
   """
+  
   def __init__(self, logger, variant, who_confidence, drug, gene_name=None):
     self.logger = logger
+    self.logger.info("Within the Row class __init__ function")
+    
     self.variant = variant
     self.who_confidence = who_confidence
     self.antimicrobial = drug
@@ -16,6 +31,7 @@ class Row() :
     # Initalizing the rest of the columns for the CDPH Laboratorian report
     # for when the variant is in the JSON file
     if variant is not None:
+      self.logger.info("Initalizing the Row object, the variant has been supplied.")
       self.tbprofiler_gene_name = self.variant.gene
       self.tbprofiler_locus_tag = self.variant.locus_tag
       self.tbprofiler_variant_substitution_type = self.variant.type
@@ -38,16 +54,17 @@ class Row() :
       
       self.warning = ""
       if (self.depth < globals.MIN_DEPTH) or (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
+        self.logger.debug("The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a warning".format(self.depth, globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
         self.warning = "Insufficient coverage in locus"
         if "del" in self.tbprofiler_variant_substitution_nt:
           self.warning = "Insufficient coverage in locus (deletion identified)"
         else:
           globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
         
-    
     # otherwise, the variant does not appear in the JSON file and default NA/WT values
     # need to be supplied
-    else: 
+    else:
+      self.logger.info("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.") 
       self.tbprofiler_gene_name = gene_name
       self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
       self.tbprofiler_variant_substitution_nt = "NA"
@@ -61,12 +78,14 @@ class Row() :
       
       # check to see if we need to apply a coverage warning
       if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
+        self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
         self.tbprofiler_variant_substitution_type = "WT"
         self.tbprofiler_variant_substitution_nt = "WT"
         self.tbprofiler_variant_substitution_aa = "WT"
         self.looker_interpretation = "S"
         self.mdl_interpretation = "WT"
       else:
+        self.logger.debug("A warning needs to be applied; setting the variant information to insufficient coverage")
         self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
         self.looker_interpretation = "Insufficient Coverage"
         self.mdl_interpretation = "Insufficient Coverage"
@@ -76,49 +95,52 @@ class Row() :
       self.gene_tier = globals.GENE_TO_TIER[self.tbprofiler_gene_name]
     except:
       self.gene_tier = "NA"
-      
+    
+    self.logger.info("Row object initialized, exiting __init__ function")
   
   def print(self):
     """
     This function prints the row in a readable format.
     """
-    self.logger.debug("sample_id: {}".format(self.sample_id))
-    self.logger.debug("tbprofiler_gene_name: {}".format(self.tbprofiler_gene_name))
-    self.logger.debug("tbprofiler_locus_tag: {}".format(self.tbprofiler_locus_tag))
-    self.logger.debug("tbprofiler_variant_substitution_type: {}".format(self.tbprofiler_variant_substitution_type))
-    self.logger.debug("tbprofiler_variant_substitution_nt: {}".format(self.tbprofiler_variant_substitution_nt))
-    self.logger.debug("tbprofiler_variant_substitution_aa: {}".format(self.tbprofiler_variant_substitution_aa))
-    self.logger.debug("confidence: {}".format(self.confidence))
-    self.logger.debug("antimicrobial: {}".format(self.antimicrobial))
-    self.logger.debug("looker_interpretation: {}".format(self.looker_interpretation))
-    self.logger.debug("mdl_interpretation: {}".format(self.mdl_interpretation))
-    self.logger.debug("depth: {}".format(self.depth))
-    self.logger.debug("frequency: {}".format(self.frequency))
-    self.logger.debug("read_support: {}".format(self.read_support))
-    self.logger.debug("rationale: {}".format(self.rationale))
-    self.logger.debug("warning: {}".format(self.warning))
+    self.logger.debug("Now printing the row in a readable format:")
+    self.logger.debug("\tsample_id: {}".format(self.sample_id))
+    self.logger.debug("\ttbprofiler_gene_name: {}".format(self.tbprofiler_gene_name))
+    self.logger.debug("\ttbprofiler_locus_tag: {}".format(self.tbprofiler_locus_tag))
+    self.logger.debug("\ttbprofiler_variant_substitution_type: {}".format(self.tbprofiler_variant_substitution_type))
+    self.logger.debug("\ttbprofiler_variant_substitution_nt: {}".format(self.tbprofiler_variant_substitution_nt))
+    self.logger.debug("\ttbprofiler_variant_substitution_aa: {}".format(self.tbprofiler_variant_substitution_aa))
+    self.logger.debug("\tconfidence: {}".format(self.confidence))
+    self.logger.debug("\tantimicrobial: {}".format(self.antimicrobial))
+    self.logger.debug("\tlooker_interpretation: {}".format(self.looker_interpretation))
+    self.logger.debug("\tmdl_interpretation: {}".format(self.mdl_interpretation))
+    self.logger.debug("\tdepth: {}".format(self.depth))
+    self.logger.debug("\tfrequency: {}".format(self.frequency))
+    self.logger.debug("\tread_support: {}".format(self.read_support))
+    self.logger.debug("\trationale: {}".format(self.rationale))
+    self.logger.debug("\twarning: {}\n".format(self.warning))
        
   def complete_row(self):
     """
     This function finishes each row with the rest of the values needed.
     """    
-    self.logger.info("Within complete_row function")
+    self.logger.info("Within the Row class complete_row function")
     
     if self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
-      self.logger.info("WHO annotation identified: convert to interpretation logic")
+      self.logger.debug("WHO annotation identified: converting to the appropriate interpretation")
       self.looker_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
       self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
       self.rationale = "WHO classification"
     
     elif self.who_confidence != "NA":
-      self.logger.info("No WHO annotation identified: convert with expert rules")
+      self.logger.debug("No WHO annotation identified: convert with expert rules")
       self.looker_interpretation = self.variant.apply_expert_rules("looker")
       self.mdl_interpretation = self.variant.apply_expert_rules("mdl")
       self.rationale = "Expert rule applied"
       
-    self.logger.info("Interpretation logic applied or skipped")
-    
+    self.logger.debug("Interpretation logic applied or skipped; now removing any 'noexpert' suffixes")
     self.remove_no_expert()
+    
+    self.logger.info("Finished completing the row's values, now exiting function")
     
   def rank_annotation(self):
     """

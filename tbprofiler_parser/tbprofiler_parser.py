@@ -3,20 +3,32 @@ import argparse
 import CheckInputs
 from Parser import Parser 
 
-VERSION = "0.0.1"
+VERSION = "TBProfiler Parser v0.0.1"
 
 parser = argparse.ArgumentParser(
-  description='Parses the TBProfiler output into three files for CDPH',
-  usage='tbprofiler_parser <input_json> <input_bam> [<args>]')
-parser.add_argument("input_json", help="the JSON file produced by TBProfiler", type=CheckInputs.is_json_valid)
-parser.add_argument("input_bam", help="the BAM file produced by TBProfiler", type=CheckInputs.is_bam_valid)
-parser.add_argument("--verbose", "-v", help="increase output verbosity", action="store_true", default=False)
-parser.add_argument("--version", action='version', version=str(VERSION))
-parser.add_argument("--output_prefix", "-o", help="the output file name prefix", default="tbprofiler_parser")
-parser.add_argument("--min_depth", "-d", help="the minimum depth of coverage to pass QC", default=10)
-parser.add_argument("--coverage_threshold", "-c", help="the minimum percent coverage for a gene to pass QC", default=100)
-parser.add_argument("--sequencing_method", "-s", help="the sequencing method used to generate the data", default="Sequencing method not provided")
-parser.add_argument("--operator", "-p", help="the operator who ran the sequencing", default="Operator not provided")
+  description = "Parses Jody Phelon's TBProfiler JSON output into three files:\n- a Laboratorian report,\n- a Looker report, and\n- a LIMS report",
+  usage = "tbprofiler_parser [-h|-v] <input_json> <input_bam> [<args>]",
+  formatter_class = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=10))
+parser.add_argument("input_json", 
+                    help="the JSON file produced by TBProfiler", type=CheckInputs.is_json_valid)
+parser.add_argument("input_bam", 
+                    help="the BAM file produced by TBProfiler", type=CheckInputs.is_bam_valid)
+parser.add_argument("-v", "--version", 
+                    action='version', version=str(VERSION))
+parser.add_argument("-o", "--output_prefix", 
+                    help="the output file name prefix\nDo not include a space", default="tbprofiler_parser", metavar="\b")
+parser.add_argument("-d", "--min_depth", 
+                    help="the minimum depth of coverage to pass QC\ndefault=10", default=10, metavar="\b")
+parser.add_argument("-c", "--coverage_threshold", 
+                    help="the minimum percent coverage for a gene to pass QC\ndefault=100", default=100, metavar="\b")
+parser.add_argument("-s", "--sequencing_method", "-s", 
+                    help="the sequencing method used to generate the data\nEnclose in quotes if includes a space", default="Sequencing method not provided", metavar="\b")
+parser.add_argument("-p", "--operator", 
+                    help="the operator who ran the sequencing\nEnclose in quotes if includes a space", default="Operator not provided", metavar="\b")
+parser.add_argument("--verbose", 
+                    help="increase output verbosity", action="store_true", default=False)
+parser.add_argument("--debug", 
+                    help="increase output verbosity to debug; overwrites --verbose", action="store_true", default=False)
 
 options = parser.parse_args()
 

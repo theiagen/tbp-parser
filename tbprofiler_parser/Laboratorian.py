@@ -7,40 +7,48 @@ import json
 class Laboratorian:
   """
   This class creates the CDPH Laboratorian report.
+  It has two functions:
+    - iterate_section: iterates through each variant in a section and creates
+      a Variant in the Variant class for each variant
+    - create_laboratorian_report: creates the laboratorian report CSV file
   """
   
   def __init__(self, logger, input_json, output_prefix):
     self.logger = logger
     self.input_json = input_json
     self.output_prefix = output_prefix
-
-  def separate_variants(self, variant_section):
-    """
-    This function separates each variant in a section into its own
-    individual Variant class
-    """
-    self.logger.info("Within separate_variants function")
-    for variant in variant_section:
-      variant = Variant(variant)
-      #globals.VARIANTS.append(variant)
    
   def iterate_section(self, variant_section, row_list):
+    """
+    This function iterate through each variant in a section of the TBProfiler 
+    JSON file; for example, it goes through each subsection in the "dr_variants" 
+    and "other_variants" sections. It takes each subsection and converts it 
+    into an individual Variant object. Then, each annotation within that variant 
+    is extracted and converted into a Row object.
+    """
+    self.logger.info("Within the Laboratorian class iterate_section function")
+    
+    self.logger.debug("Iterating through the variant section to turn each one into a Variant object")
     for variant in variant_section:
-      # create a Variant object and add the origin gene to the GENES_REPORTED set
+      # create a Variant object and add the origin gene to the global GENES_REPORTED set variable
       variant = Variant(self.logger, variant)
       globals.GENES_REPORTED.add(variant.gene)
       
       # extract all of the annotations for the variant
       variant.extract_annotations()
       
+      self.logger.debug("The current variant has {} annotations; now iterating through them".format(len(variant.annotation_dictionary)))
       for annotation_row in variant.annotation_dictionary.values():
         # complete the row objects
         annotation_row.complete_row()
+        
+        # if in --debug mode, print the annotation row.
         annotation_row.print()
         
-        self.logger.debug("New row: {}".format(annotation_row))
+        self.logger.debug("New row created! Adding to row_list")
         row_list.append(annotation_row)
         
+    self.logger.info("Finished iterating through the variant section, now exiting function")    
     return row_list
       
   def create_laboratorian_report(self):
@@ -63,34 +71,33 @@ class Laboratorian:
       - rationale: the rationale for resistance calling (WHO classification, Expert rule)
       - warning: a column reserved for warnings such as low depth of coverage 
     """
-    self.logger.info("Within create_laboratorian_report function")   
+    self.logger.info("Within the Laboratorian class create_laboratorian_report function")   
     
-    self.logger.debug("Creating row_list and the genes_reported list")
     row_list = []
+    self.logger.debug("Initializing the row_list; contains {} rows".format(len(row_list)))
     
     with open(self.input_json) as json_fh:
       input_json = json.load(json_fh)
       
       globals.SAMPLE_NAME = input_json["id"]
       
+      self.logger.debug("About to parse through the variant sections for the sample with name {}".format(globals.SAMPLE_NAME))
+      
       row_list = self.iterate_section(input_json["dr_variants"], row_list)
       row_list = self.iterate_section(input_json["other_variants"], row_list)
       
-    ### TO-DO: ADD COVERAGE WARNINGS ### 
-      
-    # add any genes that are missing from the report
+      self.logger.debug("Iteration complete, there are now {} rows".format(len(row_list)))
+
+    self.logger.debug("Now adding any genes that are missing from the report and editing any rows that need to be edited")
     for gene, antimicrobial_drug_names in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
       for drug_name in antimicrobial_drug_names:
         if gene not in globals.GENES_REPORTED:
-          self.logger.debug("Gene {} not in report, adding based on coverage".format(gene))
+          self.logger.debug("Gene {} not in report, now adding it to the report".format(gene))
           row_list.append(Row(self.logger, None, "NA", drug_name, gene))
         else:
           self.logger.debug("Gene {} already in report".format(gene))
           
-          ### TO-DO: DOUBLE CHECK THIS LOGIC ###
-          
-          # check if the gene has at least an R mutation; 
-          # applying part 2 of rule 4.2 in the interpretation logic document
+          self.logger.debug("Checking if the gene ({}) has at least an R mutation, otherwise the row will be overwritten".format(gene))
           no_r_mutations = set()
           for row in row_list:
             if row.tbprofiler_gene_name == gene:
@@ -107,16 +114,18 @@ class Laboratorian:
             if gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
               # remove all rows in the row_list entity that belong to this gene
               row_list = [row for row in row_list if row.tbprofiler_gene_name != gene]
-              # re-add the row, but with correct information as of 4.2
+              # re-add the gene, but with correct information as per interpretation document point 4.2
               row_list.append(Row(self.logger, None, "NA", drug_name, gene))     
-     
-    self.logger.debug("Creating the dataframe")
     
-    # ad row list to DF_LABORATORIAN
+    self.logger.debug("Creation of rows completed; there are now {} rows".format(len(row_list))) 
+        
+    # add row list to DF_LABORATORIAN
     for row in row_list:
+      # make a temporary dataframe out of the Row object using vars(row) which converts the object into a dictionary
       row_dictionary = pd.DataFrame(vars(row), index=[0])
       row_dictionary.drop(["logger", "variant", "who_confidence"], axis=1, inplace=True)
       globals.DF_LABORATORIAN = pd.concat([globals.DF_LABORATORIAN, row_dictionary], ignore_index=True)
       
             
     globals.DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
+    self.logger.info("Laboratorian report created, now exiting function")

@@ -7,6 +7,13 @@ import re
 class LIMS:
   """
   This class creates the CDPH LIMS report.
+  
+  It has four functions:
+    - get_lineage: returns the lineage in English for LIMS
+    - convert_annotation: converts the resistance annotation and the target drug
+      into the LIMS language
+    - get_mutation_position: returns the position where a mutation occurs
+    - create_lims_report: creates the LIMS report CSV file
   """
 
   def __init__(self, logger, input_json, output_prefix):
@@ -14,13 +21,17 @@ class LIMS:
     self.input_json = input_json
     self.output_prefix = output_prefix
   
-  
   def get_lineage(self):
     """
     Returns the lineage in English for LIMS
     """
+    self.logger.info("Within LIMS class get_lineage function")
+    
+    self.logger.debug("Calculating the percentage of genes about the coverage threshold")
     number_of_genes_above_coverage_threshold = sum(int(value) >= globals.COVERAGE_THRESHOLD for value in globals.COVERAGE_DICTIONARY.values())
     percentage_above = number_of_genes_above_coverage_threshold / len(globals.COVERAGE_DICTIONARY)
+    self.logger.debug("The percentage of genes above the coverage threshold is {}".format(percentage_above))
+    
     # if the percentage of genes above the coverage threshold is greater than 90%, then we can call the lineage
     percentage_limit = 0.9
     
@@ -45,6 +56,8 @@ class LIMS:
       elif "La1" in detected_lineage:
         lineage = "DNA of M. tuberculosis complex detected (M. bovis)"
       
+    self.logger.debug("The lineage is: {}".format(lineage))
+    self.logger.info("Finished getting lineage, now exiting function")
     return lineage
   
   def convert_annotation(self, annotation, drug):
@@ -76,6 +89,8 @@ class LIMS:
     return 0
   
   
+  
+  ##### MAYBE CONSIDER MAKING MORE FUNCTIONS HERE TO SHORTEN THIS ONE
   def create_lims_report(self):
     """
     This function recieves the input json file and laboratorian report to
@@ -88,12 +103,13 @@ class LIMS:
       - Date of analysis in YYYY-MM-DD HH:SS format
       - Operator information
     """
-    
+    self.logger.info("Within LIMS class create_lims_report function")
     DF_LIMS = pd.DataFrame({
       "MDL sample accession numbers": globals.SAMPLE_NAME, 
       "M_DST_A01_ID": self.get_lineage()
       }, index=[0])
     
+    self.logger.debug("Now iterating through each LIMS antimicrobial code")
     for antimicrobial_code, gene_dictionary in globals.ANTIMICROBIAL_CODE_TO_GENES.items():
       drug_name = globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
       
@@ -106,23 +122,20 @@ class LIMS:
 
       mutations_per_gene = {}
       non_s_mutations = 0
-      print(gene_dictionary)
+
       for gene, gene_code in gene_dictionary.items():
-        print(gene)
+
         if gene in globals.GENES_FOR_LIMS:
           nt_mutations_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_nt"].unique().tolist()
           aa_mutations_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_aa"].unique().tolist()
           mutation_types_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_type"].unique().tolist()
           mdl_interpretation = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["mdl_interpretation"].tolist()
           
-          print(gene, max_mdl_resistance[0])
           if max_mdl_resistance[0] == "S" and gene != "rpoB":
-            print(gene)
             mutations_per_gene[gene] = "No high confidence mutations detected"
           else:         
             # format all mutations associated with a particular antimicrobial appropriately
             for mutation in nt_mutations_per_gene:
-              print(mutation)
               index = nt_mutations_per_gene.index(mutation)
               # perform some data clean-up:
               if mutation == "WT":
@@ -161,7 +174,6 @@ class LIMS:
             DF_LIMS[gene_code] = mutations_per_gene[gene]
             if mdl_interpretation[index] != "S" or mdl_interpretation[index] != "WT":
               non_s_mutations += 1
-            print(gene)  
             if gene == "rpoB":
 
               if mdl_interpretation[index] == "R":
