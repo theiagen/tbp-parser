@@ -21,3 +21,9 @@ dynanmic = ["version"]
 
 [tool.setuptools.dynamic]
 version = {attr = "tbprofiler_parser.__VERSION__"}
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".",
+  "tbprofiler_parser"
+]
