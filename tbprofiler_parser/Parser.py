@@ -17,7 +17,7 @@ class Parser:
     self.input_json = options.input_json
     self.input_bam = options.input_bam
     self.verbose = options.verbose
-    self.debug = options.verbose
+    self.debug = options.debug
     self.output_prefix = options.output_prefix
     globals.MIN_DEPTH = options.min_depth
     globals.COVERAGE_THRESHOLD = options.coverage_threshold

@@ -19,7 +19,7 @@ class Row() :
   
   def __init__(self, logger, variant, who_confidence, drug, gene_name=None):
     self.logger = logger
-    self.logger.info("Within the Row class __init__ function")
+    self.logger.debug("Within the Row class __init__ function")
     
     self.variant = variant
     self.who_confidence = who_confidence
@@ -31,7 +31,7 @@ class Row() :
     # Initalizing the rest of the columns for the CDPH Laboratorian report
     # for when the variant is in the JSON file
     if variant is not None:
-      self.logger.info("Initalizing the Row object, the variant has been supplied.")
+      self.logger.debug("Initalizing the Row object, the variant has been supplied.")
       self.tbprofiler_gene_name = self.variant.gene
       self.tbprofiler_locus_tag = self.variant.locus_tag
       self.tbprofiler_variant_substitution_type = self.variant.type
@@ -64,7 +64,7 @@ class Row() :
     # otherwise, the variant does not appear in the JSON file and default NA/WT values
     # need to be supplied
     else:
-      self.logger.info("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.") 
+      self.logger.debug("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.") 
       self.tbprofiler_gene_name = gene_name
       self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
       self.tbprofiler_variant_substitution_nt = "NA"
@@ -96,7 +96,7 @@ class Row() :
     except:
       self.gene_tier = "NA"
     
-    self.logger.info("Row object initialized, exiting __init__ function")
+    self.logger.debug("Row object initialized, exiting __init__ function")
   
   def print(self):
     """
@@ -123,7 +123,7 @@ class Row() :
     """
     This function finishes each row with the rest of the values needed.
     """    
-    self.logger.info("Within the Row class complete_row function")
+    self.logger.debug("Within the Row class complete_row function")
     
     if self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
       self.logger.debug("WHO annotation identified: converting to the appropriate interpretation")
@@ -140,7 +140,7 @@ class Row() :
     self.logger.debug("Interpretation logic applied or skipped; now removing any 'noexpert' suffixes")
     self.remove_no_expert()
     
-    self.logger.info("Finished completing the row's values, now exiting function")
+    self.logger.debug("Finished completing the row's values, now exiting function")
     
   def rank_annotation(self):
     """

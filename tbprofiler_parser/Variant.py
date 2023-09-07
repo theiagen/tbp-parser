@@ -38,7 +38,7 @@ class Variant:
     annotation field is empty or does not exist, the function creates a row
     based off of the gene_associated_drugs field.
     """
-    self.logger.info("Within the Variant class extract_annotations function")
+    self.logger.debug("Within the Variant class extract_annotations function")
     
     # if possibility 1a (variant has an annotation field with content)
     if hasattr(self, "annotation") and len(self.annotation) > 0:
@@ -69,13 +69,13 @@ class Variant:
   
       self.logger.debug("After iterating through gene_associated_drugs, the annotation dictionary has a length of {}".format(len(self.annotation_dictionary)))
 
-    self.logger.info("Annotations extracted, now exiting function")
+    self.logger.debug("Annotations extracted, now exiting function")
     
   def apply_expert_rules(self, interpretation_destination):
     """
     Apply rules 1-3 from the CDPH interpretation logic document regarding the interpretation of potential resistance mutations.
     """
-    self.logger.info("Within the Variant class apply_expert_rules function")
+    self.logger.debug("Within the Variant class apply_expert_rules function")
     
     position_nt = self.get_position(self.nucleotide_change)
     position_aa = self.get_position(self.protein_change)
@@ -167,8 +167,6 @@ class Variant:
       else:
         self.logger.debug("The position is a synonymous variant or is not an upstream gene variant; interpretation is 'S'")
         return "Snoexpert"
-
-    self.logger.info("Finished applying expert rules, now exiting function")
     return ""
 
   def get_position(self, mutation):
