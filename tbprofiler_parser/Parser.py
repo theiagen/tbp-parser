@@ -1,4 +1,5 @@
 import logging
+import subprocess
 import globals
 import sys
 from Coverage import Coverage
@@ -34,10 +35,26 @@ class Parser:
       self.logger.setLevel(logging.DEBUG)
       self.logger.debug("Debug mode enabled")
   
+  def check_dependency_exists(self):
+    result = subprocess.run(
+        ["samtools", "--version"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    
+    if result.returncode != 0:
+        self.logger.critical("Error: samtools not found. Please install samtools and try again.")
+        sys.exit(1)
+  
+  
   def run(self):
     """
     This function runs the parsing module for the TBProfiler_Parser tool.
     """    
+    self.logger.info("Checking for samtools")
+    self.check_dependency_exists
+    
     self.logger.info("Creating initial coverage report")
     coverage = Coverage(self.logger, self.input_bam, self.output_prefix)
     coverage.calculate_coverage()
