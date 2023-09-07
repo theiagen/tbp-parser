@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import argparse
 import CheckInputs
+from __init__ import __VERSION__
 from Parser import Parser 
-
-VERSION = "TBProfiler Parser v0.0.1"
 
 parser = argparse.ArgumentParser(
   description = "Parses Jody Phelon's TBProfiler JSON output into three files:\n- a Laboratorian report,\n- a Looker report, and\n- a LIMS report",
@@ -14,7 +13,7 @@ parser.add_argument("input_json",
 parser.add_argument("input_bam", 
                     help="the BAM file produced by TBProfiler", type=CheckInputs.is_bam_valid)
 parser.add_argument("-v", "--version", 
-                    action='version', version=str(VERSION))
+                    action='version', version=str(__VERSION__))
 parser.add_argument("-o", "--output_prefix", 
                     help="the output file name prefix\nDo not include a space", default="tbprofiler_parser", metavar="\b")
 parser.add_argument("-d", "--min_depth", 
