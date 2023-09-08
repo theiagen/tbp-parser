@@ -19,7 +19,6 @@ class Variant:
       annotations and creates a Row object for each annotation.
     - apply_expert_rules: applies the expert rules from the CDPH interpretation
       logic document to the variant.
-    - get_position: returns the position of a mutation (e.g. 'p.Met291Ile' -> 291)
   """
   def __init__(self, logger, variant=None):
     self.logger = logger
@@ -31,18 +30,6 @@ class Variant:
       for key, value in variant.items():
         setattr(self, key, value)
   
-  def get_position(self, mutation):
-    """  
-    This function recieves a mutation (e.g. 'p.Met291Ile') and
-    returns the position (numerical part) as an Int
-    """    
-    pattern = r"\.*?(-?\d+).*"
-    
-    match = re.search(pattern, mutation)
-    if match:
-      position = int(match.group(1))
-      return position
-    return 0
    
   def extract_annotations(self):
     """
@@ -90,8 +77,8 @@ class Variant:
     """
     self.logger.debug("Within the Variant class apply_expert_rules function")
     
-    position_nt = self.get_position(self.nucleotide_change)
-    position_aa = self.get_position(self.protein_change)
+    position_nt = globals.get_position(self.nucleotide_change)
+    position_aa = globals.get_position(self.protein_change)
 
     self.logger.debug("The nucleotide position is {} and the amino acid position is {}".format(position_nt, position_aa))
     

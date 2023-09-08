@@ -1,4 +1,18 @@
 import pandas as pd
+import re
+
+def get_position(mutation):
+  """  
+  This function recieves a mutation (e.g. 'p.Met291Ile') and
+  returns the position (numerical part) as an Int
+  """    
+  pattern = r"\.*?(-?\d+).*"
+  
+  match = re.search(pattern, mutation)
+  if match:
+    position = int(match.group(1))
+    return position
+  return 0
 
 """
 A dictionary to turn TBProfiler WHO annotations into

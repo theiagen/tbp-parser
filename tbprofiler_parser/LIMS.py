@@ -13,6 +13,7 @@ class LIMS:
     - convert_annotation: converts the resistance annotation and the target drug
       into the LIMS language
     - get_mutation_position: returns the position where a mutation occurs
+    - apply_lims_rules: implements several parsing rules for the LIMS report
     - create_lims_report: creates the LIMS report CSV file
   """
 
@@ -74,20 +75,7 @@ class LIMS:
       message = "Pending Retest"      
       
     return message
-      
-  def get_mutation_position(self, mutation):
-    """
-    This function recieves a mutation (e.g. 'p.Met291Ile') and
-    returns the position where that mutation occurs (e.g. 291)
-    """
-    pattern = r"\.\D+(\d+)"
-
-    match = re.search(pattern, mutation)
-    if match:
-      position = match.group(1)
-      return int(position)
-    return 0
-  
+   
   def apply_lims_rules(self, gene_dictionary, max_mdl_resistance, mutations_per_gene, DF_LIMS, non_s_mutations, antimicrobial_code):
     """
     This function implements several parsing rules for the LIMS report.
@@ -119,7 +107,7 @@ class LIMS:
             if aa_mutation == "NA" or aa_mutation == "WT":
               aa_mutation = "" 
             if gene == "rpoB":           
-              aa_mutation_position = self.get_mutation_position(aa_mutation)
+              aa_mutation_position = globals.get_position(aa_mutation)
               
             try:  
               mutation_type = mutation_types_per_gene[index]
@@ -142,7 +130,7 @@ class LIMS:
             else:
               mutations_per_gene[gene] = "No high confidence mutations detected"
               
-          # if that gene has mutations associated with it, perform additional filtration
+          # if that gene has mutations associated with it, perform additional filtration -- also check for coverage???
           if gene in mutations_per_gene.keys():
             DF_LIMS[gene_code] = mutations_per_gene[gene]
             if mdl_interpretation[index] != "S" or mdl_interpretation[index] != "U" or mdl_interpretation[index] != "WT":
