@@ -48,11 +48,10 @@ class TestLIMS:
     assert (lineage, ID) == ("lineage1.1.2",
                              "MtBC, not M. bovis")
   
-  def test_get_lienage_and_id_nolineage(self):
+  def test_get_lineage_and_id_nolineage(self):
     JSON = os.path.join(self.data_dir + '/lineages', "nolineage.json")
     
     LOOKER1 = Looker(logger=self.LOGGER, input_json=JSON, output_prefix="test")
     lineage, ID = LOOKER1.get_lineage_and_id()
     
-    assert (lineage, ID) == ("NA",
-                             "NA")
+    assert (lineage, ID) == ("NA", "NA")

@@ -97,35 +97,37 @@ class Laboratorian:
         else:
           self.logger.debug("Gene {} already in report".format(gene))
           
-          self.logger.debug("Checking if the gene ({}) has at least an R mutation, otherwise the row will be overwritten".format(gene))
-          no_r_mutations = set()
-          for row in row_list:
-            if row.tbprofiler_gene_name == gene:
-              if row.looker_interpretation != "R" and "deletion" not in row.warning:
-                # if there is no R interpretation for the gene, add it to the no_r_mutations 
-                # set, where we will add in the insufficient coverage warning
-                no_r_mutations.add(row.tbprofiler_gene_name)
-              else:
-                # if there is an R interpretation or a deletion for the gene, remove it from the set
-                no_r_mutations.discard(row.tbprofiler_gene_name)
+      if gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
+        self.logger.debug("Checking if the gene ({}) has at least an R mutation if poor coverage, otherwise the row will be overwritten".format(gene))
+        no_r_mutations = set()
+        r_mutations = set()
+        for row in row_list:
+          if row.tbprofiler_gene_name == gene:
+            # the row contains a mutation, but that mutation is not resistant (whole locus fail point D)
+            if (row.looker_interpretation != "R") and any(warning for warning in row.warning if "deletion" in warning) and (row.tbprofiler_variant_substitution_nt != "Insufficient Coverage"):
+              no_r_mutations.add(row.tbprofiler_gene_name)
+            else:
+              r_mutations.add(row.tbprofiler_gene_name)
 
-          # if the set is not empty, add the insufficient coverage warning
-          if len(no_r_mutations) > 0:
-            if gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
-              # remove all rows in the row_list entity that belong to this gene
-              row_list = [row for row in row_list if row.tbprofiler_gene_name != gene]
-              # re-add the gene, but with correct information as per interpretation document point 4.2
-              row_list.append(Row(self.logger, None, "NA", drug_name, gene))     
-    
+        # if the no_r_mutations set is not empty but r_mutations is empty, then we want to add an insufficient
+        #  coverage warning
+        if len(no_r_mutations) > 0 and len(r_mutations) == 0:
+            # add a warning to all rows in the row_list entity that belong to this gene
+            for row in row_list:
+              if row.tbprofiler_gene_name == gene:
+                row.warning.append("Insufficient coverage for the locus")
+  
     self.logger.debug("Creation of rows completed; there are now {} rows".format(len(row_list))) 
         
     # add row list to DF_LABORATORIAN
     for row in row_list:
+      row.warning = list(filter(None, row.warning))
+      row.warning = ". ".join(row.warning)
+      
       # make a temporary dataframe out of the Row object using vars(row) which converts the object into a dictionary
       row_dictionary = pd.DataFrame(vars(row), index=[0])
       row_dictionary.drop(["logger", "variant", "who_confidence"], axis=1, inplace=True)
       globals.DF_LABORATORIAN = pd.concat([globals.DF_LABORATORIAN, row_dictionary], ignore_index=True)
-      
-            
+              
     globals.DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
     self.logger.info("Laboratorian report created, now exiting function")

@@ -95,16 +95,17 @@ class LIMS:
             index = nt_mutations_per_gene.index(mutation)
             
             # perform some data clean-up:
-            if mutation == "WT":
+            if mutation == "WT" or mutation == "Insufficient Coverage":
               mutation = ""
-            
+              
             try:
               aa_mutation = aa_mutations_per_gene[index]
             except:
               aa_mutation = ""
               
-            if aa_mutation == "NA" or aa_mutation == "WT":
-              aa_mutation = "" 
+            if aa_mutation == "NA" or aa_mutation == "WT" or aa_mutation == "Insufficient Coverage":
+              aa_mutation = ""
+               
             if gene == "rpoB":           
               aa_mutation_position = globals.get_position(aa_mutation)
               
@@ -132,7 +133,7 @@ class LIMS:
           # if that gene has mutations associated with it, perform additional filtration -- also check for coverage???
           if gene in mutations_per_gene.keys():
             DF_LIMS[gene_code] = mutations_per_gene[gene]
-            if mdl_interpretation[index] != "S" or mdl_interpretation[index] != "U" or mdl_interpretation[index] != "WT":
+            if mdl_interpretation[index] != "S" or mdl_interpretation[index] != "WT":
               non_s_mutations += 1
 
             if gene == "rpoB":

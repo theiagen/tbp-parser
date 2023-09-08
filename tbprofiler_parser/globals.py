@@ -379,6 +379,13 @@ The minimum depth threshold
 global MIN_DEPTH
 MIN_DEPTH = 10
 
+""" 
+A list that will contain the nucleotide mutations that have failed
+QC: min coverage < 10x, min freq < 10%, min read support < 10x
+"""
+global MUTATION_FAIL_LIST
+MUTATION_FAIL_LIST = []
+
 """
 A dictionary that matches certain genes to their promoter regions.
 If a mutation is within these promoter regions, it needs special consideration.

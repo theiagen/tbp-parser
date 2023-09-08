@@ -68,7 +68,7 @@ class Looker:
       self.logger.debug("The max resistance for this antimicrobial is {}".format(max_looker_resistance[0]))
       
       for gene in globals.ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME[antimicrobial]:
-        # indicate warning if any genes failed to achieve 100% coverage_threshold and/or minimum depth  (10x) 
+        # indicate warning if any genes failed to achieve 100% coverage_threshold
         if DF_LOOKER[antimicrobial][0] != "R" and gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
           DF_LOOKER[antimicrobial] = "Insufficient coverage for the locus"
             

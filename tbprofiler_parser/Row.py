@@ -53,16 +53,21 @@ class Row() :
         except:
           self.read_support = 0
         self.rationale = ""
+        self.warning = []
         
-        self.warning = ""
         if (self.depth < globals.MIN_DEPTH) or (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
           self.logger.debug("The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a warning".format(self.depth, globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
-          self.warning = "Insufficient coverage in locus"
-          if "del" in self.tbprofiler_variant_substitution_nt:
-            self.warning = "Insufficient coverage in locus (deletion identified)"
-          else:
+          if (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
             globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
-          
+            self.warning.append("Insufficient coverage in locus")
+         
+          if "del" in self.tbprofiler_variant_substitution_nt:
+            self.warning.append("Insufficient coverage in locus (deletion identified)")
+          elif (self.depth < globals.MIN_DEPTH) and float(self.frequency) < 0.10 and self.read_support < 10:
+            globals.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
+            self.warning.append("Failed quality in the mutation position")
+        else:
+          self.warning = [""]
       # otherwise, the variant does not appear in the JSON file and default NA/WT values
       # need to be supplied
       else:
@@ -76,9 +81,9 @@ class Row() :
         self.frequency = "NA"
         self.read_support = "NA"
         self.rationale = "NA"
-        self.warning = "NA"
+        self.warning = [""]
         
-        # check to see if we need to apply a coverage warning
+        # check to see if we need to apply a coverage warning (whole locus fail point c)
         if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
           self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
           self.tbprofiler_variant_substitution_type = "WT"
@@ -91,7 +96,7 @@ class Row() :
           self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
           self.looker_interpretation = "Insufficient Coverage"
           self.mdl_interpretation = "Insufficient Coverage"
-          self.warning = "Insufficient coverage for the locus"
+          self.warning.append("Insufficient coverage for the locus")
       
       try:
         self.gene_tier = globals.GENE_TO_TIER[self.tbprofiler_gene_name]
