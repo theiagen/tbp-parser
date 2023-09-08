@@ -1,0 +1,42 @@
+{
+  "Rule3_Variants": [
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake1401fake",
+      "protein_change": "p.Gln409His",
+      "annotation": [
+      ],
+      "locus_tag": "EBG00000313325",
+      "gene": "rrs",
+      "gene_associated_drugs": [
+        "linezolid",
+        "kanamycin",
+        "capreomycin",
+        "amikacin",
+        "aminoglycosides",
+        "streptomycin"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake1400fake",
+      "protein_change": "",
+      "annotation": [
+      ],
+      "locus_tag": "EBG00000313325",
+      "gene": "rrs",
+      "gene_associated_drugs": [
+        "linezolid",
+        "kanamycin",
+        "capreomycin",
+        "amikacin",
+        "aminoglycosides",
+        "streptomycin"
+      ]
+    }
+  ]
+}

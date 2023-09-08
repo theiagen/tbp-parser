@@ -6,12 +6,19 @@
       "type": "frameshift_variant",
       "nucleotide_change": "c.87delC",
       "protein_change": "",
+      "locus_tag": "Rv1908c",
+      "gene": "katG",
+      "gene_associated_drugs": [
+        "isoniazid"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense",
+      "nucleotide_change": "c.87A>C",
+      "protein_change": "",
       "annotation": [
-        {
-          "type": "who_confidence",
-          "drug": "isoniazid",
-          "who_confidence": "Assoc w R - interim"
-        }
       ],
       "locus_tag": "Rv1908c",
       "gene": "katG",

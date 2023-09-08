@@ -28,8 +28,8 @@ class TestVariant:
     assert isinstance(VARIANT1.annotation_dictionary, dict)
     
   def test_expert_rule_rrl(self):
-    with open(os.path.join(data_dir + "/rule1", "rrl.json"), "r") as rrl_uncertain:
-      rrl_file = json.loads(rrl_uncertain.read())
+    with open(os.path.join(data_dir + "/rule1", "rrl.json"), "r") as rrl:
+      rrl_file = json.loads(rrl.read())
       results= {}
       results["mdl"] = []
       results["looker"] = []
@@ -41,8 +41,8 @@ class TestVariant:
     assert (results["looker"], results["mdl"]) == (["U", "U"], ["U", "S"])
   
   def test_expert_rule_rv0678(self):
-    with open(os.path.join(data_dir + "/rule1", "Rv0678.json"), "r") as rv0678_uncertain:
-      rv0678_file = json.loads(rv0678_uncertain.read())
+    with open(os.path.join(data_dir + "/rule1", "Rv0678.json"), "r") as rv0678:
+      rv0678_file = json.loads(rv0678.read())
       results= {}
       results["mdl"] = []
       results["looker"] = []
@@ -50,6 +50,57 @@ class TestVariant:
         rv0678_variant = Variant(logger=logging.getLogger(__name__), variant=variant)
         results["mdl"].append(rv0678_variant.apply_expert_rules("mdl"))
         results["looker"].append(rv0678_variant.apply_expert_rules("looker"))
-      print(results)
+    
     assert (results["looker"], results["mdl"]) == (["U", "U", "U"], ["U", "S", "U"])
-      
+  
+  def test_expert_rule_katg(self):
+    with open(os.path.join(data_dir + "/rule2", "katg.json"), "r") as katg:
+      katg_file = json.loads(katg.read())
+      results= {}
+      results["mdl"] = []
+      results["looker"] = []
+      for variant in katg_file["Rule2_Variants"]:
+        katg_variant = Variant(logger=logging.getLogger(__name__), variant=variant)
+        results["mdl"].append(katg_variant.apply_expert_rules("mdl"))
+        results["looker"].append(katg_variant.apply_expert_rules("looker"))
+
+    assert (results["looker"], results["mdl"]) == (["U", "U"], ["U", "S"])
+  
+  def test_expert_rule_rpob(self):
+    with open(os.path.join(data_dir + "/rule2", "rpob.json"), "r") as rpob:
+      rpob_file = json.loads(rpob.read())
+      results= {}
+      results["mdl"] = []
+      results["looker"] = []
+      for variant in rpob_file["Rule2_Variants"]:
+        rpob_variant = Variant(logger=logging.getLogger(__name__), variant=variant)
+        results["mdl"].append(rpob_variant.apply_expert_rules("mdl"))
+        results["looker"].append(rpob_variant.apply_expert_rules("looker"))
+    
+    assert (results["looker"], results["mdl"]) == (["U", "U", "R"], ["S", "S", "R"])
+  
+  def test_expert_rule_fabg1(self):
+    with open(os.path.join(data_dir + "/rule3", "fabg1.json"), "r") as fabg1:
+      fabg1_file = json.loads(fabg1.read())
+      results= {}
+      results["mdl"] = []
+      results["looker"] = []
+      for variant in fabg1_file["Rule3_Variants"]:
+        fabg1_variant = Variant(logger=logging.getLogger(__name__), variant=variant)
+        results["mdl"].append(fabg1_variant.apply_expert_rules("mdl"))
+        results["looker"].append(fabg1_variant.apply_expert_rules("looker"))
+    
+    assert (results["looker"], results["mdl"]) == (["Unoexpert"], ["Snoexpert"])
+  
+  def test_expert_rule_rrs(self):
+    with open(os.path.join(data_dir + "/rule3", "rrs.json"), "r") as rrs:
+      rrs_file = json.loads(rrs.read())
+      results= {}
+      results["mdl"] = []
+      results["looker"] = []
+      for variant in rrs_file["Rule3_Variants"]:
+        rrs_variant = Variant(logger=logging.getLogger(__name__), variant=variant)
+        results["mdl"].append(rrs_variant.apply_expert_rules("mdl"))
+        results["looker"].append(rrs_variant.apply_expert_rules("looker"))
+    
+    assert (results["looker"], results["mdl"]) == (["Unoexpert", "Unoexpert"], ["Unoexpert", "Snoexpert"])

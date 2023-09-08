@@ -1,0 +1,46 @@
+{
+  "Rule2_Variants": [
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake198fake",
+      "protein_change": "p.Gln409His",
+      "annotation": [
+      ],
+      "locus_tag": "Rv0667",
+      "gene": "rpoB",
+      "gene_associated_drugs": [
+        "rifampicin"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "upstream_gene_variant",
+      "nucleotide_change": "c.fake-198fake",
+      "protein_change": "",
+      "annotation": [
+      ],
+      "locus_tag": "Rv0667",
+      "gene": "rpoB",
+      "gene_associated_drugs": [
+        "rifampicin"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake198fake",
+      "protein_change": "p.Phe433Leu",
+      "annotation": [
+      ],
+      "locus_tag": "Rv0667",
+      "gene": "rpoB",
+      "gene_associated_drugs": [
+        "rifampicin"
+      ]
+    }
+  ]
+}
