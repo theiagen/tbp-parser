@@ -24,80 +24,82 @@ class Row() :
     self.variant = variant
     self.who_confidence = who_confidence
     self.antimicrobial = drug
-    self.antimicrobial = self.antimicrobial.replace("rifampicin", "rifampin")
-
-    self.sample_id = globals.SAMPLE_NAME
-
-    # Initalizing the rest of the columns for the CDPH Laboratorian report
-    # for when the variant is in the JSON file
-    if variant is not None:
-      self.logger.debug("Initalizing the Row object, the variant has been supplied.")
-      self.tbprofiler_gene_name = self.variant.gene
-      self.tbprofiler_locus_tag = self.variant.locus_tag
-      self.tbprofiler_variant_substitution_type = self.variant.type
-      self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
-      self.tbprofiler_variant_substitution_aa = self.variant.protein_change
-      # change blank aa substitutions to NA
-      if self.tbprofiler_variant_substitution_aa == "":
-        self.tbprofiler_variant_substitution_aa = "NA"
-      self.confidence = self.who_confidence
-      self.looker_interpretation = ""
-      self.mdl_interpretation = ""
-      self.depth = int(self.variant.depth or 0)
-      self.frequency = self.variant.freq
-      # avoid division by zero errors
-      try:
-        self.read_support = self.variant.depth * self.variant.freq
-      except:
-        self.read_support = 0
-      self.rationale = ""
-      
-      self.warning = ""
-      if (self.depth < globals.MIN_DEPTH) or (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
-        self.logger.debug("The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a warning".format(self.depth, globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
-        self.warning = "Insufficient coverage in locus"
-        if "del" in self.tbprofiler_variant_substitution_nt:
-          self.warning = "Insufficient coverage in locus (deletion identified)"
-        else:
-          globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
-        
-    # otherwise, the variant does not appear in the JSON file and default NA/WT values
-    # need to be supplied
-    else:
-      self.logger.debug("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.") 
-      self.tbprofiler_gene_name = gene_name
-      self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
-      self.tbprofiler_variant_substitution_nt = "NA"
-      self.tbprofiler_variant_substitution_aa = "NA"
-      self.confidence = "NA"
-      self.depth = "NA"
-      self.frequency = "NA"
-      self.read_support = "NA"
-      self.rationale = "NA"
-      self.warning = "NA"
-      
-      # check to see if we need to apply a coverage warning
-      if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
-        self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
-        self.tbprofiler_variant_substitution_type = "WT"
-        self.tbprofiler_variant_substitution_nt = "WT"
-        self.tbprofiler_variant_substitution_aa = "WT"
-        self.looker_interpretation = "S"
-        self.mdl_interpretation = "WT"
-      else:
-        self.logger.debug("A warning needs to be applied; setting the variant information to insufficient coverage")
-        self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
-        self.looker_interpretation = "Insufficient Coverage"
-        self.mdl_interpretation = "Insufficient Coverage"
-        self.warning = "Insufficient coverage for the locus"
-    
-    try:
-      self.gene_tier = globals.GENE_TO_TIER[self.tbprofiler_gene_name]
-    except:
-      self.gene_tier = "NA"
-    
-    self.logger.debug("Row object initialized, exiting __init__ function")
   
+    if gene_name != "test":
+      self.antimicrobial = self.antimicrobial.replace("rifampicin", "rifampin")
+
+      self.sample_id = globals.SAMPLE_NAME
+
+      # Initalizing the rest of the columns for the CDPH Laboratorian report
+      # for when the variant is in the JSON file
+      if variant is not None:
+        self.logger.debug("Initalizing the Row object, the variant has been supplied.")
+        self.tbprofiler_gene_name = self.variant.gene
+        self.tbprofiler_locus_tag = self.variant.locus_tag
+        self.tbprofiler_variant_substitution_type = self.variant.type
+        self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
+        self.tbprofiler_variant_substitution_aa = self.variant.protein_change
+        # change blank aa substitutions to NA
+        if self.tbprofiler_variant_substitution_aa == "":
+          self.tbprofiler_variant_substitution_aa = "NA"
+        self.confidence = self.who_confidence
+        self.looker_interpretation = ""
+        self.mdl_interpretation = ""
+        self.depth = int(self.variant.depth or 0)
+        self.frequency = self.variant.freq
+        # avoid division by zero errors
+        try:
+          self.read_support = self.variant.depth * self.variant.freq
+        except:
+          self.read_support = 0
+        self.rationale = ""
+        
+        self.warning = ""
+        if (self.depth < globals.MIN_DEPTH) or (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
+          self.logger.debug("The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a warning".format(self.depth, globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
+          self.warning = "Insufficient coverage in locus"
+          if "del" in self.tbprofiler_variant_substitution_nt:
+            self.warning = "Insufficient coverage in locus (deletion identified)"
+          else:
+            globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
+          
+      # otherwise, the variant does not appear in the JSON file and default NA/WT values
+      # need to be supplied
+      else:
+        self.logger.debug("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.") 
+        self.tbprofiler_gene_name = gene_name
+        self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
+        self.tbprofiler_variant_substitution_nt = "NA"
+        self.tbprofiler_variant_substitution_aa = "NA"
+        self.confidence = "NA"
+        self.depth = "NA"
+        self.frequency = "NA"
+        self.read_support = "NA"
+        self.rationale = "NA"
+        self.warning = "NA"
+        
+        # check to see if we need to apply a coverage warning
+        if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
+          self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
+          self.tbprofiler_variant_substitution_type = "WT"
+          self.tbprofiler_variant_substitution_nt = "WT"
+          self.tbprofiler_variant_substitution_aa = "WT"
+          self.looker_interpretation = "S"
+          self.mdl_interpretation = "WT"
+        else:
+          self.logger.debug("A warning needs to be applied; setting the variant information to insufficient coverage")
+          self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
+          self.looker_interpretation = "Insufficient Coverage"
+          self.mdl_interpretation = "Insufficient Coverage"
+          self.warning = "Insufficient coverage for the locus"
+      
+      try:
+        self.gene_tier = globals.GENE_TO_TIER[self.tbprofiler_gene_name]
+      except:
+        self.gene_tier = "NA"
+      
+      self.logger.debug("Row object initialized, exiting __init__ function")
+      
   def print(self):
     """
     This function prints the row in a readable format.

@@ -30,6 +30,19 @@ class Variant:
     if variant is not None:
       for key, value in variant.items():
         setattr(self, key, value)
+  
+  def get_position(self, mutation):
+    """  
+    This function recieves a mutation (e.g. 'p.Met291Ile') and
+    returns the position (numerical part) as an Int
+    """    
+    pattern = r"\.\D*(\d+)"
+    
+    match = re.search(pattern, mutation)
+    if match:
+      position = int(match.group(1))
+      return position
+    return 0
    
   def extract_annotations(self):
     """
@@ -168,19 +181,3 @@ class Variant:
         self.logger.debug("The position is a synonymous variant or is not an upstream gene variant; interpretation is 'S'")
         return "Snoexpert"
     return ""
-
-  def get_position(self, mutation):
-    """  
-    This function recieves a mutation (e.g. 'p.Met291Ile') and
-    returns the position (numerical part) as an Int
-    """    
-    pattern = r"\.\D*(\d+)"
-    
-    match = re.search(pattern, mutation)
-    if match:
-      position = int(match.group(1))
-      return position
-    return 0
-  
-  
-  

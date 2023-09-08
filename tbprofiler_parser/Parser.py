@@ -46,7 +46,7 @@ class Parser:
     if result.returncode != 0:
         self.logger.critical("Error: samtools not found. Please install samtools and try again.")
         sys.exit(1)
-  
+    self.logger.info("samtools found")
   
   def run(self):
     """
