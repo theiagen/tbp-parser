@@ -38,5 +38,18 @@ class TestVariant:
         results["mdl"].append(rrl_variant.apply_expert_rules("mdl"))
         results["looker"].append(rrl_variant.apply_expert_rules("looker"))
         
-      assert (results["looker"], results["mdl"]) == (["U", "U"], ["U", "S"])
+    assert (results["looker"], results["mdl"]) == (["U", "U"], ["U", "S"])
+  
+  def test_expert_rule_rv0678(self):
+    with open(os.path.join(data_dir + "/rule1", "Rv0678.json"), "r") as rv0678_uncertain:
+      rv0678_file = json.loads(rv0678_uncertain.read())
+      results= {}
+      results["mdl"] = []
+      results["looker"] = []
+      for variant in rv0678_file["Rule1_Variants"]:
+        rv0678_variant = Variant(logger=logging.getLogger(__name__), variant=variant)
+        results["mdl"].append(rv0678_variant.apply_expert_rules("mdl"))
+        results["looker"].append(rv0678_variant.apply_expert_rules("looker"))
+      print(results)
+    assert (results["looker"], results["mdl"]) == (["U", "U", "U"], ["U", "S", "U"])
       

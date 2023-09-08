@@ -36,7 +36,7 @@ class Variant:
     This function recieves a mutation (e.g. 'p.Met291Ile') and
     returns the position (numerical part) as an Int
     """    
-    pattern = r"\.\D*(\d+)"
+    pattern = r"\.*?(-?\d+).*"
     
     match = re.search(pattern, mutation)
     if match:
@@ -99,7 +99,7 @@ class Variant:
       self.logger.debug("The gene is {}, now checking if the position requires special consideration".format(self.gene))
      
       # check if position within promoter regions
-      if globals.PROMOTER_REGIONS[self.gene][1] <= position_nt <= globals.PROMOTER_REGIONS[self.gene][2]: 
+      if globals.PROMOTER_REGIONS[self.gene][0] <= position_nt <= globals.PROMOTER_REGIONS[self.gene][1]: 
         self.logger.debug("The position is within the promoter region; interpretation is 'U'")
         return "U"
       
@@ -146,7 +146,7 @@ class Variant:
     elif self.gene == "rpoB": 
       self.logger.debug("The gene is rpoB, now checking if the position requires special consideration")
       
-      if globals.SPECIAL_POSITIONS[self.gene][1] <= position_aa <= globals.SPECIAL_POSITIONS[self.gene][2]:
+      if globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa <= globals.SPECIAL_POSITIONS[self.gene][1]:
         self.logger.debug("The position is within the special positions; interpretation is 'R' if nonsynonymous, else 'S'")
         if self.type != "synonymous_variant":
           return "R"
