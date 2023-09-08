@@ -3,10 +3,10 @@ import os
 import logging
 from tbprofiler_parser.Variant import Variant
 
-test_modules_dir = os.path.dirname(os.path.realpath(__file__))
-data_dir = os.path.join(test_modules_dir, "data")
-
 class TestVariant:
+  test_modules_dir = os.path.dirname(os.path.realpath(__file__))
+  data_dir = os.path.join(test_modules_dir, "data")
+
   def test_get_position_nucleotide(self):
     assert Variant.get_position(None, "c.1234A>T") == 1234
   
@@ -20,7 +20,7 @@ class TestVariant:
     assert Variant.get_position(None, "asdf") == 0
 
   def test_variant_contructor(self):
-    with open(os.path.join(data_dir + "/rule1", "rrl.json"), "r") as rrl_uncertain:
+    with open(os.path.join(self.data_dir + "/rule1", "rrl.json"), "r") as rrl_uncertain:
       testA = json.loads(rrl_uncertain.read())
       VARIANT1 = Variant(logger=logging.getLogger(__name__), variant=testA)
 
@@ -28,7 +28,7 @@ class TestVariant:
     assert isinstance(VARIANT1.annotation_dictionary, dict)
     
   def test_expert_rule_rrl(self):
-    with open(os.path.join(data_dir + "/rule1", "rrl.json"), "r") as rrl:
+    with open(os.path.join(self.data_dir + "/rule1", "rrl.json"), "r") as rrl:
       rrl_file = json.loads(rrl.read())
       results= {}
       results["mdl"] = []
@@ -41,7 +41,7 @@ class TestVariant:
     assert (results["looker"], results["mdl"]) == (["U", "U"], ["U", "S"])
   
   def test_expert_rule_rv0678(self):
-    with open(os.path.join(data_dir + "/rule1", "Rv0678.json"), "r") as rv0678:
+    with open(os.path.join(self.data_dir + "/rule1", "Rv0678.json"), "r") as rv0678:
       rv0678_file = json.loads(rv0678.read())
       results= {}
       results["mdl"] = []
@@ -54,7 +54,7 @@ class TestVariant:
     assert (results["looker"], results["mdl"]) == (["U", "U", "U"], ["U", "S", "U"])
   
   def test_expert_rule_katg(self):
-    with open(os.path.join(data_dir + "/rule2", "katg.json"), "r") as katg:
+    with open(os.path.join(self.data_dir + "/rule2", "katg.json"), "r") as katg:
       katg_file = json.loads(katg.read())
       results= {}
       results["mdl"] = []
@@ -67,7 +67,7 @@ class TestVariant:
     assert (results["looker"], results["mdl"]) == (["U", "U"], ["U", "S"])
   
   def test_expert_rule_rpob(self):
-    with open(os.path.join(data_dir + "/rule2", "rpob.json"), "r") as rpob:
+    with open(os.path.join(self.data_dir + "/rule2", "rpob.json"), "r") as rpob:
       rpob_file = json.loads(rpob.read())
       results= {}
       results["mdl"] = []
@@ -80,7 +80,7 @@ class TestVariant:
     assert (results["looker"], results["mdl"]) == (["U", "U", "R"], ["S", "S", "R"])
   
   def test_expert_rule_fabg1(self):
-    with open(os.path.join(data_dir + "/rule3", "fabg1.json"), "r") as fabg1:
+    with open(os.path.join(self.data_dir + "/rule3", "fabg1.json"), "r") as fabg1:
       fabg1_file = json.loads(fabg1.read())
       results= {}
       results["mdl"] = []
@@ -93,7 +93,7 @@ class TestVariant:
     assert (results["looker"], results["mdl"]) == (["Unoexpert"], ["Snoexpert"])
   
   def test_expert_rule_rrs(self):
-    with open(os.path.join(data_dir + "/rule3", "rrs.json"), "r") as rrs:
+    with open(os.path.join(self.data_dir + "/rule3", "rrs.json"), "r") as rrs:
       rrs_file = json.loads(rrs.read())
       results= {}
       results["mdl"] = []
