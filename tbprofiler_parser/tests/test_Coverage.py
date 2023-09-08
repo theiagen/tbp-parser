@@ -13,5 +13,5 @@ BAM = os.path.join(data_dir, "mtb.bam")
 COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, output_prefix="test1")
 
 class TestCoverage:
-  def test_calculate_coverage(self):
+  def test_calculate_coverage_constructor(self):
     assert isinstance(COVERAGE1, Coverage)
