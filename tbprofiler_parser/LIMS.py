@@ -145,7 +145,7 @@ class LIMS:
           # if that gene has mutations associated with it, perform additional filtration
           if gene in mutations_per_gene.keys():
             DF_LIMS[gene_code] = mutations_per_gene[gene]
-            if mdl_interpretation[index] != "S" or mdl_interpretation[index] != "WT":
+            if mdl_interpretation[index] != "S" or mdl_interpretation[index] != "U" or mdl_interpretation[index] != "WT":
               non_s_mutations += 1
 
             if gene == "rpoB":
