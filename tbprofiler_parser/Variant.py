@@ -21,7 +21,7 @@ class Variant:
       logic document to the variant.
     - get_position: returns the position of a mutation (e.g. 'p.Met291Ile' -> 291)
   """
-  def __init__(self, logger, variant=None, gene=None, drug_name=None):
+  def __init__(self, logger, variant=None):
     self.logger = logger
     
     # a list containing the various annotations for this variant
