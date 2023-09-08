@@ -173,6 +173,7 @@ class Variant:
     """  
     This function recieves a mutation (e.g. 'p.Met291Ile') and
     returns the position (numerical part) as an Int
+    Expect string input, return int.
     """    
     pattern = r"\.\D*(\d+)"
     
