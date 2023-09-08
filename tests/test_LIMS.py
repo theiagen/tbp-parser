@@ -1,0 +1,53 @@
+import os
+import logging
+from tbprofiler_parser.LIMS import LIMS
+from tbprofiler_parser.Coverage import Coverage
+
+class TestLIMS:
+  test_modules_dir = os.path.dirname(os.path.realpath(__file__))
+  data_dir = os.path.join(test_modules_dir, "data")
+  LOGGER = logging.getLogger(__name__)
+
+  BAM = os.path.join(data_dir, "mtb.bam")
+  COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, output_prefix="test1")
+  COVERAGE1.calculate_coverage()
+  
+  def test_get_lineage_bcg(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "bcg.json")
+    
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
+    lineage = LIMS1.get_lineage()
+    
+    assert lineage == "DNA of Mycobacterium bovis BCG detected"
+
+  def test_get_lineage_bovis(self): 
+    JSON = os.path.join(self.data_dir + '/lineages', "bovis.json")
+    
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
+    lineage = LIMS1.get_lineage()
+    
+    assert lineage == "DNA of non-BCG Mycobacterium bovis detected"
+
+  def test_get_lineage_la1(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "la1.json")
+    
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
+    lineage = LIMS1.get_lineage()
+    
+    assert lineage == "DNA of M. tuberculosis complex detected (M. bovis)"
+  
+  def test_get_lineage_lineage(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "lineage.json")
+    
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
+    lineage = LIMS1.get_lineage()
+    
+    assert lineage == "DNA of Mycobacterium tuberculosis species detected"
+  
+  def test_get_lienage_nolineage(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "nolineage.json")
+    
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
+    lineage = LIMS1.get_lineage()
+    
+    assert lineage == "DNA of Mycobacterium tuberculosis complex NOT detected"

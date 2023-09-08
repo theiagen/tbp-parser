@@ -1,4 +1,3 @@
-import json
 import os
 import logging
 from tbprofiler_parser.Coverage import Coverage

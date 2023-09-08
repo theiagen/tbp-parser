@@ -2,7 +2,6 @@ import globals
 import pandas as pd
 import json
 import datetime
-import re
 
 class LIMS:
   """

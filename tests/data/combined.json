@@ -1,0 +1,225 @@
+{
+  "id": "combined_test",
+  "tbprofiler_version": "4.4.2",
+  "lineage": [
+    {
+      "lin": "lineage1"
+    },
+    {
+      "lin": "lineage1.1"
+    }
+  ],
+  "main_lin": "lineage1",
+  "sublin": "lineage1.1.2",
+  "Rule1_Variants": [
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "n.2814G>T",
+      "protein_change": "",
+      "annotation": [
+        {
+          "type": "who_confidence",
+          "drug": "linezolid",
+          "WHO confidence": "Uncertain significance"
+        }
+      ],
+      "locus_tag": "EBG00000313339",
+      "gene": "rrl",
+      "gene_associated_drugs": [
+        "linezolid"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "n.2399G>T",
+      "protein_change": "",
+      "locus_tag": "EBG00000313339",
+      "gene": "rrl",
+      "gene_associated_drugs": [
+        "linezolid"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake-18fake",
+      "protein_change": "",
+      "annotation": [
+      ],
+      "locus_tag": "Rv0678",
+      "gene": "Rv0678",
+      "gene_associated_drugs": [
+        "clofazimine",
+        "bedaquiline"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "upstream_gene_variant",
+      "nucleotide_change": "c.fake-1294fake",
+      "protein_change": "",
+      "locus_tag": "Rv0678",
+      "gene": "Rv0678",
+      "gene_associated_drugs": [
+        "clofazimine",
+        "bedaquiline"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake198fake",
+      "protein_change": "p.Ser68Gly",
+      "annotation": [
+        {
+          "type": "who_confidence",
+          "drug": "clofazimine",
+          "who_confidence": "Uncertain significance"
+        },
+        {
+          "type": "who_confidence",
+          "drug": "bedaquiline",
+          "who_confidence": "Uncertain significance"
+        }
+      ],
+      "locus_tag": "Rv0678",
+      "gene": "Rv0678",
+      "gene_associated_drugs": [
+        "clofazimine",
+        "bedaquiline"
+      ]
+    }
+  ],
+  "Rule2_Variants": [
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "frameshift_variant",
+      "nucleotide_change": "c.87delC",
+      "protein_change": "",
+      "locus_tag": "Rv1908c",
+      "gene": "katG",
+      "gene_associated_drugs": [
+        "isoniazid"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense",
+      "nucleotide_change": "c.87A>C",
+      "protein_change": "",
+      "annotation": [
+      ],
+      "locus_tag": "Rv1908c",
+      "gene": "katG",
+      "gene_associated_drugs": [
+        "isoniazid"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake198fake",
+      "protein_change": "p.Gln409His",
+      "annotation": [
+      ],
+      "locus_tag": "Rv0667",
+      "gene": "rpoB",
+      "gene_associated_drugs": [
+        "rifampicin"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "upstream_gene_variant",
+      "nucleotide_change": "c.fake-198fake",
+      "protein_change": "",
+      "annotation": [
+      ],
+      "locus_tag": "Rv0667",
+      "gene": "rpoB",
+      "gene_associated_drugs": [
+        "rifampicin"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake198fake",
+      "protein_change": "p.Phe433Leu",
+      "annotation": [
+      ],
+      "locus_tag": "Rv0667",
+      "gene": "rpoB",
+      "gene_associated_drugs": [
+        "rifampicin"
+      ]
+    }
+  ],
+  "Rule3_Variants": [
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake198fake",
+      "protein_change": "p.Gln409His",
+      "annotation": [
+      ],
+      "locus_tag": "Rv1483",
+      "gene": "fabG1",
+      "gene_associated_drugs": [
+        "ethionamide",
+        "isoniazid"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake1401fake",
+      "protein_change": "p.Gln409His",
+      "annotation": [
+      ],
+      "locus_tag": "EBG00000313325",
+      "gene": "rrs",
+      "gene_associated_drugs": [
+        "linezolid",
+        "kanamycin",
+        "capreomycin",
+        "amikacin",
+        "aminoglycosides",
+        "streptomycin"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake1400fake",
+      "protein_change": "",
+      "annotation": [
+      ],
+      "locus_tag": "EBG00000313325",
+      "gene": "rrs",
+      "gene_associated_drugs": [
+        "linezolid",
+        "kanamycin",
+        "capreomycin",
+        "amikacin",
+        "aminoglycosides",
+        "streptomycin"
+      ]
+    }
+  ]
+}
