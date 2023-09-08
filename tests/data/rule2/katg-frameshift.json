@@ -1,0 +1,18 @@
+{
+  "Rule2_Variants": [
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "frameshift_variant",
+      "nucleotide_change": "c.87delC",
+      "protein_change": "",
+      "annotation": [
+      ],
+      "locus_tag": "Rv1908c",
+      "gene": "katG",
+      "gene_associated_drugs": [
+        "isoniazid"
+      ]
+    }
+  ]
+}

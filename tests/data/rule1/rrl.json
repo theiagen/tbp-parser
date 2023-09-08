@@ -1,0 +1,35 @@
+{
+  "Rule1_Variants": [
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "n.2814G>T",
+      "protein_change": "",
+      "annotation": [
+        {
+          "type": "who_confidence",
+          "drug": "linezolid",
+          "WHO confidence": "Uncertain significance"
+        }
+      ],
+      "locus_tag": "EBG00000313339",
+      "gene": "rrl",
+      "gene_associated_drugs": [
+        "linezolid"
+      ]
+    },
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "n.2399G>T",
+      "protein_change": "",
+      "locus_tag": "EBG00000313339",
+      "gene": "rrl",
+      "gene_associated_drugs": [
+        "linezolid"
+      ]
+    }
+  ]
+}

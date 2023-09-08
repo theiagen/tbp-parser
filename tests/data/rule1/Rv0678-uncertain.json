@@ -1,0 +1,29 @@
+{
+  "Rule1_Variants": [
+    {
+      "depth": 75,
+      "freq": 1.0,
+      "type": "missense_variant",
+      "nucleotide_change": "c.fake198fake",
+      "protein_change": "p.Ser68Gly",
+      "annotation": [
+        {
+          "type": "who_confidence",
+          "drug": "clofazimine",
+          "who_confidence": "Uncertain significance"
+        },
+        {
+          "type": "who_confidence",
+          "drug": "bedaquiline",
+          "who_confidence": "Uncertain significance"
+        }
+      ],
+      "locus_tag": "Rv0678",
+      "gene": "Rv0678",
+      "gene_associated_drugs": [
+        "clofazimine",
+        "bedaquiline"
+      ]
+    }
+  ]
+}

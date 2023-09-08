@@ -120,8 +120,8 @@ class Variant:
 
     elif self.gene == "rrl":
       self.logger.debug("The gene is rrl, now checking if the position requires special consideration")
-      
-      if (globals.SPECIAL_POSITIONS[self.gene][1][1] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][1][2]) or (globals.SPECIAL_POSITIONS[self.gene][2][1] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][2][2]):
+      self.logger.debug(globals.SPECIAL_POSITIONS["rrl"][0][1])
+      if (globals.SPECIAL_POSITIONS[self.gene][0][0] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][0][1]) or (globals.SPECIAL_POSITIONS[self.gene][1][0] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][1][1]):
         self.logger.debug("The position is within the special positions; interpretation is 'U'")
         return "U"
       
