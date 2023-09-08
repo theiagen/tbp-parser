@@ -22,7 +22,7 @@
         {
           "type": "who_confidence",
           "drug": "linezolid",
-          "WHO confidence": "Uncertain significance"
+          "who_confidence": "Uncertain significance"
         }
       ],
       "locus_tag": "EBG00000313339",
@@ -97,7 +97,7 @@
       ]
     }
   ],
-  "Rule2_Variants": [
+  "dr_variants": [
     {
       "depth": 75,
       "freq": 1.0,
@@ -167,7 +167,7 @@
       ]
     }
   ],
-  "Rule3_Variants": [
+  "other_variants": [
     {
       "depth": 75,
       "freq": 1.0,

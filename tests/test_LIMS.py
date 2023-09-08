@@ -51,3 +51,19 @@ class TestLIMS:
     lineage = LIMS1.get_lineage()
     
     assert lineage == "DNA of Mycobacterium tuberculosis complex NOT detected"
+  
+  def test_convert_annotation(self):
+    JSON = os.path.join(self.data_dir, "combined.json")
+    
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
+    
+    message1 = LIMS1.convert_annotation("R", "rifampicin")
+    message2 = LIMS1.convert_annotation("S", "isoniazid")
+    message3 = LIMS1.convert_annotation("R-Interim", "ethambutol")
+    message4 = LIMS1.convert_annotation("Insufficient Coverage", "kanamycin")
+    
+    assert (message1, message2, message3, message4) == ("Mutation(s) associated with resistance to rifampicin detected", 
+                                              "No mutations associated with resistance to isoniazid detected", 
+                                              "The detected mutation(s) have uncertain significance. Resistance to ethambutol cannot be ruled out",
+                                              "Pending Retest")
+    
