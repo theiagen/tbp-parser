@@ -46,12 +46,8 @@ LABEL website="https://github.com/theiagen/tbp-parser"
 LABEL license="https://github.com/theiagen/tbp-parser/blob/main/LICENSE"
 LABEL maintainer="Curtis Kapsak"
 LABEL maintainer.email="curtis.kapsak@theiagen.com"
-LABEL maintainer.original="Shelby Bennett"
-LABEL maintainer.email.original="shelby.bennett@dgs.virginia.gov"
-LABEL maintainer3.original="Erin Young"
-LABEL maintainer3.email.original="eriny@utah.gov"
-LABEL maintainer4.original="Kutluhan Incekara"
-LABEL maintainer4.email.original="kutluhan.incekara@ct.gov"
+LABEL maintainer2="Sage Wright"
+LABEL maintainer2.email="sage.wright@theiagen.com"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -90,23 +86,28 @@ python3 -m pip install -r requirements.txt
 WORKDIR /data
 
 # default command is to pull up help options
-## TODO - change this to the parser script?
-CMD ["samtools", "--help"]
+CMD [ "python3", "/tbp-parser/tbp_parser/tbp_parser.py", "--help"]
 
 ### start of test stage ###
 FROM app as test
 
 # # install wget for downloading test files
-# RUN apt-get update && apt-get install --no-install-recommends -y wget ca-certificates
+RUN apt-get update && apt-get install --no-install-recommends -y wget ca-certificates
 
-# RUN wget -q https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.consensus.fa && \
-#   wget -q https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.primertrim.sorted.bam && \
-#   wget -q https://raw.githubusercontent.com/artic-network/artic-ncov2019/master/primer_schemes/nCoV-2019/V3/nCoV-2019.primer.bed && \
-#   samtools stats SRR13957123.primertrim.sorted.bam && \
-#   samtools faidx SRR13957123.consensus.fa && \
-#   samtools ampliconstats nCoV-2019.primer.bed SRR13957123.primertrim.sorted.bam > SRR13957123_ampliconstats.txt && \
-#   plot-ampliconstats plot SRR13957123_ampliconstats.txt && \
-#   ls
+RUN wget -q https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.consensus.fa && \
+  wget -q https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.primertrim.sorted.bam && \
+  wget -q https://raw.githubusercontent.com/artic-network/artic-ncov2019/master/primer_schemes/nCoV-2019/V3/nCoV-2019.primer.bed && \
+  samtools stats SRR13957123.primertrim.sorted.bam && \
+  samtools faidx SRR13957123.consensus.fa && \
+  samtools ampliconstats nCoV-2019.primer.bed SRR13957123.primertrim.sorted.bam > SRR13957123_ampliconstats.txt && \
+  plot-ampliconstats plot SRR13957123_ampliconstats.txt && \
+  ls
 
-# add test to view help options for tb-profiler-parser script? and output version?
-RUN python3 /tbp-parser/tbp_parser/tbp_parser.py --version
+# test version and help option outputs
+# run pytest suite
+# expect to see a warning regarding pandas data frame concatenation
+RUN python3 /tbp-parser/tbp_parser/tbp_parser.py --version && \
+python3 /tbp-parser/tbp_parser/tbp_parser.py --help && \
+python3 -m pip install pytest && \
+cd /tbp-parser && \
+pytest
