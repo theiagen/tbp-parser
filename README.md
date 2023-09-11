@@ -70,6 +70,14 @@ Please note that the BAM file must have the accompanying BAI file in the same di
 
 ## Outputs
 
+### Coverage report
+
+Takes the naming convention of `<output_prefix>.percent_gene_coverage.csv`. This report contains the following fields:
+
+- Gene
+- Percent_Coverage
+- Warning
+
 ### Laboratorian report
 
 Takes the naming convention of `<output_prefix>.laboratorian_report.csv`. This report contains the following fields:
