@@ -16,7 +16,7 @@ def main():
   parser.add_argument("-v", "--version", 
                       action='version', version=str(__VERSION__))
   parser.add_argument("-o", "--output_prefix", 
-                      help="the output file name prefix\nDo not include a space", default="tbprofiler_parser", metavar="\b")
+                      help="the output file name prefix\nDo not include a space", default="tb_parser", metavar="\b")
   parser.add_argument("-d", "--min_depth", 
                       help="the minimum depth of coverage to pass QC\ndefault=10", default=10, metavar="\b")
   parser.add_argument("-c", "--coverage_threshold", 

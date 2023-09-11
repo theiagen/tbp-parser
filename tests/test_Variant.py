@@ -1,7 +1,7 @@
 import json
 import os
 import logging
-from tbprofiler_parser.Variant import Variant
+from tbp_parser.Variant import Variant
 
 class TestVariant:
   test_modules_dir = os.path.dirname(os.path.realpath(__file__))

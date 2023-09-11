@@ -1,4 +1,4 @@
-# tbprofiler_parser
+# tb_parser
 
 This repository contains the tbprofiler-parser tool which parses the JSON output of [Jody Phelan's TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Available as a download-able Python package and as a Docker image, tbprofiler-parser converts the output of TBProfiler into four files:
 
@@ -28,7 +28,7 @@ To-do: add instructions
 ## Usage
 
 ```bash
-usage: tbprofiler_parser [-h|-v] <input_json> <input_bam> [<args>]
+usage: tb_parser [-h|-v] <input_json> <input_bam> [<args>]
 
 Parses Jody Phelon's TBProfiler JSON output into three files:
 - a Laboratorian report,

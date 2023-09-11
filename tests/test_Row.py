@@ -1,4 +1,4 @@
-from tbprofiler_parser.Row import Row
+from tbp_parser.Row import Row
 import logging
 
 class TestRow:  

@@ -10,7 +10,7 @@ from LIMS import LIMS
 
 class Parser:
   """
-  This class runs the parsing module for the TBProfiler_Parser tool.
+  This class runs the parsing module for the tb_parser tool.
   """
   def __init__(self, options):
     logging.basicConfig(encoding='utf-8', level=logging.ERROR, stream=sys.stderr)
@@ -50,7 +50,7 @@ class Parser:
   
   def run(self):
     """
-    This function runs the parsing module for the TBProfiler_Parser tool.
+    This function runs the parsing module for the tb_parser tool.
     """    
     self.logger.info("Checking for samtools")
     self.check_dependency_exists

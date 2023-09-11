@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tbprofiler_parser"
+name = "tbp_parser"
 authors = [
   {name = "Sage M. Wright", email = "sage.wright@theiagen.com"},
   {name = "Inês Mendes", email = "ines.mendes@theiagen.com"}
@@ -20,10 +20,10 @@ dependencies = [
 dynanmic = ["version"]
 
 [tool.setuptools.dynamic]
-version = {attr = "tbprofiler_parser.__VERSION__"}
+version = {attr = "tbp_parser.__VERSION__"}
 
 [tool.pytest.ini_options]
 pythonpath = [
   ".",
-  "tbprofiler_parser"
+  "tbp_parser"
 ]
