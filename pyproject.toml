@@ -8,7 +8,7 @@ authors = [
   {name = "Sage M. Wright", email = "sage.wright@theiagen.com"},
   {name = "Inês Mendes", email = "ines.mendes@theiagen.com"}
 ]
-description = "Parses the TBProfiler output into three files for CDPH"
+description = "Parses the TBProfiler output into four files"
 readme = "README.md"
 requires-python = ">=3.9"
 keywords = ["tb", "MtbC", "antimicrobial resistance"]
@@ -17,19 +17,10 @@ dependencies = [
   "pandas >= 1.4.2",
   "importlib_resources"
 ]
-dynamic = ["version"]
-
-[project.scripts]
-cli-name = "tbp_parser.tbp_parser:main" 
-
-[tool.setuptools]
-py-modules = []
+dynamic = ["version"] 
 
 [tool.setuptools.dynamic]
 version = {attr = "tbp_parser.__VERSION__"}
-
-[tool.setuptools.packages.find]
-where = ["tbp_parser"]
 
 [tool.pytest.ini_options]
 pythonpath = [
