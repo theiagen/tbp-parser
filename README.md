@@ -44,6 +44,7 @@ optional arguments:
   -o, --output_prefix 
           the output file name prefix
           Do not include a space
+          default="tb_parser"
   -d, --min_depth 
           the minimum depth of coverage to pass QC
           default=10
@@ -66,3 +67,42 @@ optional arguments:
 ```
 
 Please note that the BAM file must have the accompanying BAI file in the same directory. It must also be named exactly the same as the BAM file but ending with a `.bai` suffix.
+
+## Outputs
+
+### Laboratorian report
+
+Takes the naming convention of `<output_prefix>.laboratorian_report.csv`. This report contains the following fields:
+
+- sample_id: the sample name
+- tbprofiler_gene_name: the gene name
+- tbprofiler_locus_tag: the locus tag
+- tbprofiler_variant_substitution_type: the variant substitution type (missense_variant, upstream_gene_variant...)
+- tbprofiler_variant_substitution_nt: the nucleotide substitution (c.1349C>G)
+- tbprofiler_variant_substitution_aa: the amino acid substitution (p.Ser450Trp)
+- confidence: the tbprofiler annotation regarding resistance (Not assoc w R, Uncertain significance...)
+- antimicrobial: the antimicrobial drug the mutation confers resistance to (streptomycin, rifampin...)
+- looker_interpretation: the interpretation of resistance for the CDPH Looker report (R, R-interim, U, S, S-interim)
+- mdl_interpretation: the MDL interpretation of resistance (R, S, U)
+- depth: the depth of coverage at the mutation site (100)
+- frequency: the frequency of mutation at the site (1)
+- read_support: the number of reads supporting the mutation (100, depth*frequency)
+- rationale: the rationale for resistance calling (WHO classification, Expert rule)
+- warning: a column reserved for warnings such as low depth of coverage
+
+### LIMS report
+
+Takes the naming convention of `<output_prefix>.lims_report.csv`. This report contains the following fields:
+
+- MDL sample accession numbers:  sample name
+- M_DST_A01_ID - lineage
+- The set of information in ANTIMICROBIAL_CODE_TO_GENES dictionary with target drug resistance information in layman's terms, and the mutations responsible for the predicted phenotype
+- Date of analysis in YYYY-MM-DD HH:SS format
+- Operator information
+
+### Looker report
+
+Takes the naming convention of `<output_prefix>.looker_report.csv`. This report contains the following fields:
+
+- sample_id: the sample name
+- for each antimicrobial, indication if resistant (R) or susceptible (S)
