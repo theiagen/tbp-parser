@@ -1,4 +1,4 @@
-# tb_parser
+# tb-parser
 
 This repository contains the tbprofiler-parser tool which parses the JSON output of [Jody Phelan's TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Available as a download-able Python package and as a Docker image, tbp-parser converts the output of TBProfiler into four files:
 
@@ -13,22 +13,16 @@ Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if
 
 ### Docker
 
-We recommend using the following Docker image to run tbprofiler-parser:
-
-To-do: make a docker image
+We recommend using the following Docker image to run tbp-parser:
 
 ```bash
-docker pull theiagen/tbprofiler-parser
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:0.0.1
 ```
-
-### Pip/Conda
-
-To-do: add instructions
 
 ## Usage
 
 ```bash
-usage: python tb_parser.py [-h|-v] <input_json> <input_bam> [<args>]
+usage: python tbp-parser/tbp_parser/tbp_parser.py [-h|-v] <input_json> <input_bam> [<args>]
 
 Parses Jody Phelon's TBProfiler JSON output into three files:
 - a Laboratorian report,
@@ -70,3 +64,5 @@ optional arguments:
           increase output verbosity to debug;
           overwrites --verbose
 ```
+
+Please note that the BAM file must have the accompanying BAI file in the same directory. It must also be named exactly the same as the BAM file but ending with a `.bai` suffix.
