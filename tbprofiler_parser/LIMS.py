@@ -78,7 +78,7 @@ class LIMS:
   def apply_lims_rules(self, gene_dictionary, max_mdl_resistance, mutations_per_gene, DF_LIMS, non_s_mutations, antimicrobial_code):
     """
     This function implements several parsing rules for the LIMS report.
-    """
+    """    
     for gene, gene_code in gene_dictionary.items():
 
       if gene in globals.GENES_FOR_LIMS:
@@ -86,6 +86,7 @@ class LIMS:
         aa_mutations_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_aa"].unique().tolist()
         mutation_types_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_type"].unique().tolist()
         mdl_interpretation = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["mdl_interpretation"].tolist()
+        warnings = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["warning"]
         
         if max_mdl_resistance[0] == "S" and gene != "rpoB":
           mutations_per_gene[gene] = "No high confidence mutations detected"
@@ -113,9 +114,12 @@ class LIMS:
               mutation_type = mutation_types_per_gene[index]
             except: 
               mutation_type = mutation_types_per_gene[0]
-            
+            if "".join(globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"] == mutation]["warning"]) == "Failed quality in the mutation position":
+              # do not report
+              self.logger.debug("Mutation {} failed quality in the mutation position, not adding to LIMS report".format(mutation))
+              
             # report all non-synonymous mutations UNLESS rpoB RRDR
-            if mutation_type != "synonymous_variant" or (gene == "rpoB" and (globals.SPECIAL_POSITIONS[gene][1] <= aa_mutation_position <= globals.SPECIAL_POSITIONS[gene][2])):
+            elif mutation_type != "synonymous_variant" or (gene == "rpoB" and (globals.SPECIAL_POSITIONS[gene][1] <= aa_mutation_position <= globals.SPECIAL_POSITIONS[gene][2])):
               substitution = "{} ({})".format(mutation, aa_mutation)
               
               # the following if only captures synonymous mutations if rpoB RRDR mutations
@@ -129,10 +133,12 @@ class LIMS:
                 mutations_per_gene[gene] = "{}; {}".format("".join(mutations_per_gene[gene]), substitution)
             else:
               mutations_per_gene[gene] = "No high confidence mutations detected"
-              
+          
+            
           # if that gene has mutations associated with it, perform additional filtration -- also check for coverage???
           if gene in mutations_per_gene.keys():
             DF_LIMS[gene_code] = mutations_per_gene[gene]
+            
             if mdl_interpretation[index] != "S" or mdl_interpretation[index] != "WT":
               non_s_mutations += 1
 
@@ -167,6 +173,10 @@ class LIMS:
               DF_LIMS[gene_code] = "No mutations detected"
             elif mdl_interpretation[index] == "Insufficient Coverage":
               DF_LIMS[gene_code] = "No sequence"
+          
+          # otherwise, there are no mutations associated with that gene
+          else:
+            DF_LIMS[gene_code] = "No mutations detected"
         
     return DF_LIMS
   

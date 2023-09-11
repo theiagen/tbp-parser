@@ -115,8 +115,9 @@ class Laboratorian:
             # add a warning to all rows in the row_list entity that belong to this gene
             for row in row_list:
               if row.tbprofiler_gene_name == gene:
-                row.warning.append("Insufficient coverage for the locus")
-  
+                if ("Insufficient coverage in locus (deletion identified)") not in row.warning:
+                  row.warning.append("Insufficient coverage in locus")
+                  
     self.logger.debug("Creation of rows completed; there are now {} rows".format(len(row_list))) 
         
     # add row list to DF_LABORATORIAN
