@@ -1,6 +1,6 @@
 import os
 import logging
-from tbprofiler_parser.Coverage import Coverage
+from tbp_parser.Coverage import Coverage
 
 class TestCoverage:
   test_modules_dir = os.path.dirname(os.path.realpath(__file__))

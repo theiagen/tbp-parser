@@ -1,4 +1,4 @@
-import tbprofiler_parser.globals as globals
+import tbp_parser.globals as globals
 
 class TestGlobals:
   def test_get_position_nucleotide(self):

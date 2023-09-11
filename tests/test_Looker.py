@@ -1,7 +1,7 @@
 import os
 import logging
-from tbprofiler_parser.Looker import Looker
-from tbprofiler_parser.Coverage import Coverage
+from tbp_parser.Looker import Looker
+from tbp_parser.Coverage import Coverage
 
 class TestLIMS:
   test_modules_dir = os.path.dirname(os.path.realpath(__file__))

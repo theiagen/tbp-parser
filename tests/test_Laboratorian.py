@@ -1,9 +1,9 @@
-from tbprofiler_parser.Laboratorian import Laboratorian
-from tbprofiler_parser.Coverage import Coverage
+from tbp_parser.Laboratorian import Laboratorian
+from tbp_parser.Coverage import Coverage
 import logging
 import os
 import json
-import globals 
+import tbp_parser.globals as globals
 
 class TestLaboratorian:
   test_modules_dir = os.path.dirname(os.path.realpath(__file__))

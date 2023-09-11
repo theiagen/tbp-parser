@@ -7,7 +7,7 @@ from Parser import Parser
 def main():
   parser = argparse.ArgumentParser(
     description = "Parses Jody Phelon's TBProfiler JSON output into three files:\n- a Laboratorian report,\n- a LIMS report\n- a Looker report, and\n- a coverage report",
-    usage = "tbprofiler_parser [-h|-v] <input_json> <input_bam> [<args>]",
+    usage = "tbp_parser [-h|-v] <input_json> <input_bam> [<args>]",
     formatter_class = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=10))
   parser.add_argument("input_json", 
                       help="the JSON file produced by TBProfiler", type=CheckInputs.is_json_valid)
