@@ -6,7 +6,7 @@ from Parser import Parser
 
 def main():
   parser = argparse.ArgumentParser(
-    description = "Parses Jody Phelon's TBProfiler JSON output into three files:\n- a Laboratorian report,\n- a Looker report, and\n- a LIMS report",
+    description = "Parses Jody Phelon's TBProfiler JSON output into three files:\n- a Laboratorian report,\n- a LIMS report\n- a Looker report, and\n- a coverage report",
     usage = "tbprofiler_parser [-h|-v] <input_json> <input_bam> [<args>]",
     formatter_class = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=10))
   parser.add_argument("input_json", 
@@ -22,9 +22,9 @@ def main():
   parser.add_argument("-c", "--coverage_threshold", 
                       help="the minimum percent coverage for a gene to pass QC\ndefault=100", default=100, metavar="\b")
   parser.add_argument("-s", "--sequencing_method", "-s", 
-                      help="the sequencing method used to generate the data\nEnclose in quotes if includes a space", default="Sequencing method not provided", metavar="\b")
+                      help="the sequencing method used to generate the data\nEnclose in quotes if includes a space\ndefault=\"Sequencing method not provided\"", default="Sequencing method not provided", metavar="\b")
   parser.add_argument("-p", "--operator", 
-                      help="the operator who ran the sequencing\nEnclose in quotes if includes a space", default="Operator not provided", metavar="\b")
+                      help="the operator who ran the sequencing\nEnclose in quotes if includes a space\ndefault=\"Operator not provided\"", default="Operator not provided", metavar="\b")
   parser.add_argument("--verbose", 
                       help="increase output verbosity", action="store_true", default=False)
   parser.add_argument("--debug", 
