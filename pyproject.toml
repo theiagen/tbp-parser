@@ -12,15 +12,24 @@ description = "Parses the TBProfiler output into three files for CDPH"
 readme = "README.md"
 requires-python = ">=3.9"
 keywords = ["tb", "MtbC", "antimicrobial resistance"]
-license = "GNU GPLv3"
+license = {file = "LICENSE"}
 dependencies = [
   "pandas >= 1.4.2",
   "importlib_resources"
 ]
-dynanmic = ["version"]
+dynamic = ["version"]
+
+[project.scripts]
+cli-name = "tbp_parser.tbp_parser:main" 
+
+[tool.setuptools]
+py-modules = []
 
 [tool.setuptools.dynamic]
 version = {attr = "tbp_parser.__VERSION__"}
+
+[tool.setuptools.packages.find]
+where = ["tbp_parser"]
 
 [tool.pytest.ini_options]
 pythonpath = [

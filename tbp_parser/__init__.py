@@ -1,1 +1,1 @@
-__VERSION__ = "TBProfiler Parser v0.0.1"
+__VERSION__ = "v0.0.1"
