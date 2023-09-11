@@ -9,8 +9,10 @@ class TestLIMS:
   LOGGER = logging.getLogger(__name__)
 
   BAM = os.path.join(data_dir, "mtb.bam")
-  COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, output_prefix="test1")
+  COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, output_prefix="test")
   COVERAGE1.calculate_coverage()
+  
+  INPUT_JSON = os.path.join(data_dir, "combined.json")
   
   def test_get_lineage_and_id_bcg(self):
     JSON = os.path.join(self.data_dir + '/lineages', "bcg.json")
@@ -48,10 +50,19 @@ class TestLIMS:
     assert (lineage, ID) == ("lineage1.1.2",
                              "MtBC, not M. bovis")
   
-  def test_get_lineage_and_id_nolineage(self):
+  def test_get_lineage_and_id_nolineage(self):  
     JSON = os.path.join(self.data_dir + '/lineages', "nolineage.json")
     
     LOOKER1 = Looker(logger=self.LOGGER, input_json=JSON, output_prefix="test")
     lineage, ID = LOOKER1.get_lineage_and_id()
     
     assert (lineage, ID) == ("NA", "NA")
+  
+  def test_create_looker_report(self):
+    LOOKER1 = Looker(logger=self.LOGGER, input_json=self.INPUT_JSON, output_prefix="test")
+    LOOKER1.create_looker_report()
+    
+    assert os.path.exists("test.looker_report.csv")
+    
+    os.remove("test.looker_report.csv")
+    

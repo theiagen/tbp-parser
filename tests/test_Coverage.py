@@ -11,6 +11,6 @@ class TestCoverage:
     LOGGER = logging.getLogger(__name__)
     BAM = os.path.join(self.data_dir, "mtb.bam")
     
-    COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, output_prefix="test1")
+    COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, output_prefix="test")
 
     assert isinstance(COVERAGE1, Coverage)

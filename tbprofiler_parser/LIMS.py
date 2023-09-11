@@ -86,7 +86,6 @@ class LIMS:
         aa_mutations_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_aa"].unique().tolist()
         mutation_types_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_type"].unique().tolist()
         mdl_interpretation = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["mdl_interpretation"].tolist()
-        warnings = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["warning"]
         
         if max_mdl_resistance[0] == "S" and gene != "rpoB":
           mutations_per_gene[gene] = "No high confidence mutations detected"
