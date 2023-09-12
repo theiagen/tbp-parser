@@ -1,6 +1,6 @@
-# tb-parser
+# tbp-parser
 
-This repository contains the tbprofiler-parser tool which parses the JSON output of [Jody Phelan's TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Available as a download-able Python package and as a Docker image, tbp-parser converts the output of TBProfiler into four files:
+This repository contains the tbp-parser tool which parses the JSON output of [Jody Phelan's TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Available as a download-able Python package and as a Docker image, tbp-parser converts the output of TBProfiler into four files:
 
 1. A _Laboratorian_ report, which contains information regarding each mutation and its associated drug resistance profile in a CSV file. This file also contains two interpretation fields -- "Looker" and "MDL" which are generated using the CDC's expert rules for interpreting the severity of potential drug resistance mutations.
 2. A _LIMS_ report, formatted specifically for STAR LIMS. This CSV report summarizes the highest severity mutations for each antimicrobial and lists the relevant mutations for each gene.
@@ -22,7 +22,7 @@ docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:0.0.2
 ## Usage
 
 ```bash
-usage: python tbp-parser/tbp_parser/tbp_parser.py [-h|-v] <input_json> <input_bam> [<args>]
+usage: python /tbp-parser/tbp_parser/tbp_parser.py [-h|-v] <input_json> <input_bam> [<args>]
 
 Parses Jody Phelon's TBProfiler JSON output into three files:
 - a Laboratorian report,
