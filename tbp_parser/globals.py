@@ -442,6 +442,7 @@ SEQUENCING_METHOD = ""
 """
 This is a dictionary of positions for genes requiring different consideration.
 Note: the rpoB special position is in codons, rrl & rrs are nucleotide positions
+rpoB and rrl indicate ranges; rrs indicates specific positions
 """
 global SPECIAL_POSITIONS
 SPECIAL_POSITIONS = {
