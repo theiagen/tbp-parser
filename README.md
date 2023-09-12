@@ -16,7 +16,7 @@ Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if
 We recommend using the following Docker image to run tbp-parser:
 
 ```bash
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:0.0.1
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:0.0.2
 ```
 
 ## Usage
