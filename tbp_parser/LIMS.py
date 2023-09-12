@@ -79,12 +79,22 @@ class LIMS:
     """
     This function implements several parsing rules for the LIMS report.
     """    
+    antimicrobial_name = globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
     for gene, gene_code in gene_dictionary.items():
       if gene in globals.GENES_FOR_LIMS:
-        nt_mutations_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_nt"].tolist()
-        aa_mutations_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_aa"].tolist()
-        mutation_types_per_gene = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["tbprofiler_variant_substitution_type"].tolist()
-        mdl_interpretation = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]["mdl_interpretation"].tolist()
+        nt_mutations_per_gene = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["tbprofiler_variant_substitution_nt"].tolist()
+        aa_mutations_per_gene = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["tbprofiler_variant_substitution_aa"].tolist()
+        mutation_types_per_gene = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["tbprofiler_variant_substitution_type"].tolist()
+        mdl_interpretation = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["mdl_interpretation"].tolist()
+
+        self.logger.debug("antimicrobial_name: {}".format(antimicrobial_name))
+        self.logger.debug("gene: {}".format(gene))
+        self.logger.debug("nt_mutations_per_gene: {}".format(nt_mutations_per_gene))
+        self.logger.debug("aa_mutations_per_gene: {}".format(aa_mutations_per_gene))
+        self.logger.debug("mutation_types_per_gene: {}".format(mutation_types_per_gene))
+        self.logger.debug("mdl_interpretation: {}".format(mdl_interpretation))
+
+        # make sure only reporting for particular drug
 
         if max_mdl_resistance[0] == "S" and gene != "rpoB" and gene in mutations_per_gene.keys():
           DF_LIMS[gene_code] = "No high confidence mutations detected"
@@ -98,24 +108,23 @@ class LIMS:
             if mutation == "WT" or mutation == "Insufficient Coverage":
               mutation = ""
               
-            try:
-              aa_mutation = aa_mutations_per_gene[index]
-            except:
-              aa_mutation = ""
+            # try:
+            aa_mutation = aa_mutations_per_gene[index]
+            # except:
+            #   aa_mutation = ""
               
             if aa_mutation == "NA" or aa_mutation == "WT" or aa_mutation == "Insufficient Coverage":
               aa_mutation = ""
                
             if gene == "rpoB":           
               aa_mutation_position = globals.get_position(aa_mutation)
-              
-            try:  
-              mutation_type = mutation_types_per_gene[index]
-            except: 
-              mutation_type = mutation_types_per_gene[0]
-            if "".join(globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"] == mutation]["warning"]) == "Failed quality in the mutation position":
+                
+            mutation_type = mutation_types_per_gene[index]
+            
+            if "Failed quality in the mutation position" in "".join(globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"] == mutation]["warning"]):
               # do not report
               self.logger.debug("Mutation {} failed quality in the mutation position, not adding to LIMS report".format(mutation))
+              # think about this more!!!!
               
             # report all non-synonymous mutations UNLESS rpoB RRDR
             elif mutation_type != "synonymous_variant" or (gene == "rpoB" and (globals.SPECIAL_POSITIONS[gene][0] <= aa_mutation_position <= globals.SPECIAL_POSITIONS[gene][1])):
