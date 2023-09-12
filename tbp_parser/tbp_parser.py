@@ -18,9 +18,9 @@ def main():
   parser.add_argument("-o", "--output_prefix", 
                       help="the output file name prefix\nDo not include a space", default="tb_parser", metavar="\b")
   parser.add_argument("-d", "--min_depth", 
-                      help="the minimum depth of coverage to pass QC\ndefault=10", default=10, metavar="\b")
+                      help="the minimum depth of coverage to pass QC\ndefault=10", default=10, metavar="\b", type=int)
   parser.add_argument("-c", "--coverage_threshold", 
-                      help="the minimum percent coverage for a gene to pass QC\ndefault=100", default=100, metavar="\b")
+                      help="the minimum percent coverage for a gene to pass QC\ndefault=100", default=100, metavar="\b", type=int)
   parser.add_argument("-s", "--sequencing_method", "-s", 
                       help="the sequencing method used to generate the data\nEnclose in quotes if includes a space\ndefault=\"Sequencing method not provided\"", default="Sequencing method not provided", metavar="\b")
   parser.add_argument("-p", "--operator", 
