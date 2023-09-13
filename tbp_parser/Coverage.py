@@ -40,7 +40,7 @@ class Coverage:
         
         # samtools outputs 3 columns; column 3 is the depth of coverage per nucleotide position, piped to awk to count the positions
         #  above min_depth, then wc -l counts them all
-        command = "samtools depth -J -r \"" + CHROMOSOME + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(globals.MIN_DEPTH) + ") print;}' | wc -l"
+        command = "samtools depth -r \"" + CHROMOSOME + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(globals.MIN_DEPTH) + ") print;}' | wc -l"
         self.logger.debug("Now running " + command)
         depth = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
         

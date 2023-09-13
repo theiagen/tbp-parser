@@ -61,11 +61,12 @@ class Looker:
     for antimicrobial in globals.ANTIMICROBIAL_DRUG_NAME_LIST:
       self.logger.debug("Now extracting highest mutation for this antimicrobial: {}".format(antimicrobial))
       potential_looker_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial]["looker_interpretation"]
+      
       # this is a crazy one liner:
       # basically, it gets the max resistance ranking (R > R-Interim > U > S-Interim > S) for all resistance annotations for a drug
       max_looker_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_looker_resistances])]
       DF_LOOKER[antimicrobial] = max_looker_resistance[0]
-      self.logger.debug("The max resistance for this antimicrobial is {}".format(max_looker_resistance[0]))
+      self.logger.debug("The max Looker resistance for this antimicrobial is {}".format(max_looker_resistance[0]))
       
       for gene in globals.ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME[antimicrobial]:
         # indicate warning if any genes failed to achieve 100% coverage_threshold
