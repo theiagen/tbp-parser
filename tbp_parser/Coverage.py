@@ -54,7 +54,12 @@ class Coverage:
     # rename some genes to match CDPH nomenclature
     globals.COVERAGE_DICTIONARY["Rv0678"] = globals.COVERAGE_DICTIONARY["mmpR5"]
     globals.COVERAGE_DICTIONARY["Rv2983"] = globals.COVERAGE_DICTIONARY["fbiD"]
-    self.logger.info("Initial coverage report created, now exiting function")
+    
+    # remove non-matching genes
+    globals.COVERAGE_DICTIONARY.pop("mmpR5")
+    globals.COVERAGE_DICTIONARY.pop("fbiD")
+    
+    self.logger.info("Initial coverage report created, now exiting function\n")
     
   def reformat_coverage(self):
     """
@@ -81,4 +86,4 @@ class Coverage:
       DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])], ignore_index=True)
 
     DF_COVERAGE.to_csv(self.output_prefix + ".percent_gene_coverage.csv", index=False)
-    self.logger.info("Coverage report reformatted and saved to {}".format(self.output_prefix + ".percent_gene_coverage.csv"))
+    self.logger.info("Coverage report reformatted and saved to {}\n".format(self.output_prefix + ".percent_gene_coverage.csv"))

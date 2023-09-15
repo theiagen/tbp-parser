@@ -37,7 +37,7 @@ class Laboratorian:
       # extract all of the annotations for the variant
       variant.extract_annotations()
       
-      self.logger.debug("The current variant has {} annotations; now iterating through them".format(len(variant.annotation_dictionary)))
+      self.logger.debug("The current variant (gene: {}) has {} annotations; now iterating through them".format(variant.gene, len(variant.annotation_dictionary)))
       for annotation_row in variant.annotation_dictionary.values():
         # complete the row objects
         annotation_row.complete_row()
@@ -99,9 +99,13 @@ class Laboratorian:
           
       if gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
         self.logger.debug("Checking if the gene ({}) has at least an R mutation if poor coverage, otherwise the row will be overwritten".format(gene))
+               
         no_r_mutations = set()
         r_mutations = set()
         for row in row_list:
+          if (row.tbprofiler_gene_name in globals.GENES_WITH_DELETIONS) and ("Insufficient coverage in locus (deletion identified)" not in row.warning):
+            row.warning = [warning.replace("Insufficient coverage in locus", "Insufficient coverage in locus (deletion identified)") for warning in row.warning]
+        
           if row.tbprofiler_gene_name == gene:
             # the row contains a mutation, but that mutation is not resistant (whole locus fail point D)
             if (row.looker_interpretation != "R") and any(warning for warning in row.warning if "deletion" in warning) and (row.tbprofiler_variant_substitution_nt != "Insufficient Coverage"):
@@ -115,7 +119,7 @@ class Laboratorian:
             # add a warning to all rows in the row_list entity that belong to this gene
             for row in row_list:
               if row.tbprofiler_gene_name == gene:
-                if ("Insufficient coverage in locus (deletion identified)") not in row.warning:
+                if "Insufficient coverage in locus (deletion identified)" not in row.warning:
                   row.warning.append("Insufficient coverage in locus")
                   
     self.logger.debug("Creation of rows completed; there are now {} rows".format(len(row_list))) 
@@ -125,10 +129,11 @@ class Laboratorian:
       row.warning = list(filter(None, row.warning))
       row.warning = ". ".join(row.warning)
       
+      
       # make a temporary dataframe out of the Row object using vars(row) which converts the object into a dictionary
       row_dictionary = pd.DataFrame(vars(row), index=[0])
       row_dictionary.drop(["logger", "variant", "who_confidence"], axis=1, inplace=True)
       globals.DF_LABORATORIAN = pd.concat([globals.DF_LABORATORIAN, row_dictionary], ignore_index=True)
               
     globals.DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
-    self.logger.info("Laboratorian report created, now exiting function")
+    self.logger.info("Laboratorian report created, now exiting function\n")

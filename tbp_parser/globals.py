@@ -365,6 +365,12 @@ GENE_TO_TIER = {
   "Rv2983": "Tier 1", "Rv3083": "Tier 2", "Rv3236c": "Tier 2",
   "tlyA": "Tier 1", "ubiA": "Tier 2", "whiB6": "Tier 2", "whiB7": "Tier 1"
 }
+
+"""
+A set that contains genes that have deletions
+"""
+global GENES_WITH_DELETIONS
+GENES_WITH_DELETIONS = set()
                 
 """
 A list that will contain the names of genes that have coverages
