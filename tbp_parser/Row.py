@@ -60,8 +60,9 @@ class Row() :
           if (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
             globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
             
-            if "del" in self.tbprofiler_variant_substitution_nt:
+            if "del" in self.tbprofiler_variant_substitution_nt or self.tbprofiler_gene_name in globals.GENES_WITH_DELETIONS:
               self.warning.append("Insufficient coverage in locus (deletion identified)")
+              globals.GENES_WITH_DELETIONS.add(self.tbprofiler_gene_name)
             else:
               self.warning.append("Insufficient coverage in locus")
          
@@ -126,7 +127,7 @@ class Row() :
     self.logger.debug("\tfrequency: {}".format(self.frequency))
     self.logger.debug("\tread_support: {}".format(self.read_support))
     self.logger.debug("\trationale: {}".format(self.rationale))
-    self.logger.debug("\twarning: {}\n".format(self.warning))
+    self.logger.debug("\twarning: {}".format(self.warning))
        
   def complete_row(self):
     """

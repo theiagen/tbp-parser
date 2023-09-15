@@ -39,7 +39,7 @@ class Looker:
       else:
         ID = sublineage
       
-      self.logger.debug("Lineage: {}; ID: {}".format(lineage, ID))
+      self.logger.debug("The lineage is {}; the ID is \"{}\"".format(lineage, ID))
       self.logger.info("Finished getting lineage and ID, now exiting function")
       return lineage, ID  
   
@@ -59,7 +59,7 @@ class Looker:
     
     # iterate through laboratorian dataframe to extract highest mutation
     for antimicrobial in globals.ANTIMICROBIAL_DRUG_NAME_LIST:
-      self.logger.debug("Now extracting highest mutation for this antimicrobial: {}".format(antimicrobial))
+      self.logger.debug("Now extracting the highest mutation ranking for this antimicrobial: {}".format(antimicrobial))
       potential_looker_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial]["looker_interpretation"]
       
       # this is a crazy one liner:
@@ -87,4 +87,4 @@ class Looker:
     # write to file
     DF_LOOKER.to_csv("{}.looker_report.csv".format(self.output_prefix), index=False)
     
-    self.logger.info("Looker report created, now exiting function")
+    self.logger.info("Looker report created, now exiting function\n")

@@ -15,14 +15,14 @@ Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if
 
 We recommend using the following Docker image to run tbp-parser:
 
-```bash
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:0.0.4
+```markdown
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:0.0.6
 ```
 
 ## Usage
 
-```bash
-usage: python /tbp-parser/tbp_parser/tbp_parser.py [-h|-v] <input_json> <input_bam> [<args>]
+```markdown
+usage: python3 /tbp-parser/tbp_parser/tbp_parser.py [-h|-v] <input_json> <input_bam> [<args>]
 
 Parses Jody Phelon's TBProfiler JSON output into three files:
 - a Laboratorian report,
@@ -43,8 +43,8 @@ optional arguments:
           show program's version number and exit
   -o, --output_prefix 
           the output file name prefix
-          Do not include a space
-          default="tb_parser"
+          Do not include any spaces
+          default="tbp_parser"
   -d, --min_depth 
           the minimum depth of coverage to pass QC
           default=10
@@ -67,6 +67,19 @@ optional arguments:
 ```
 
 Please note that the BAM file must have the accompanying BAI file in the same directory. It must also be named exactly the same as the BAM file but ending with a `.bai` suffix.
+
+### Example
+
+```markdown
+python3 /tbp-parser/tbp_parser/tbp_parser.py \
+    -o "example" \
+    -d 12 \
+    -c 98 \
+    -s "Illumina NextSeq" \
+    -p "John Doe" \
+    /path/to/data/tbprofiler_output.json \
+    /path/to/data/tbprofiler_output.bam
+```
 
 ## Outputs
 

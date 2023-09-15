@@ -7,7 +7,7 @@ from Parser import Parser
 def main():
   parser = argparse.ArgumentParser(
     description = "Parses Jody Phelon's TBProfiler JSON output into three files:\n- a Laboratorian report,\n- a LIMS report\n- a Looker report, and\n- a coverage report",
-    usage = "tbp_parser [-h|-v] <input_json> <input_bam> [<args>]",
+    usage = "python3 /tbp-parser/tbp_parser/tbp_parser.py [-h|-v] <input_json> <input_bam> [<args>]",
     formatter_class = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=10))
   parser.add_argument("input_json", 
                       help="the JSON file produced by TBProfiler", type=CheckInputs.is_json_valid)
@@ -16,7 +16,7 @@ def main():
   parser.add_argument("-v", "--version", 
                       action='version', version=str(__VERSION__))
   parser.add_argument("-o", "--output_prefix", 
-                      help="the output file name prefix\nDo not include a space", default="tb_parser", metavar="\b")
+                      help="the output file name prefix\nDo not include any spaces", default="tbp_parser", metavar="\b")
   parser.add_argument("-d", "--min_depth", 
                       help="the minimum depth of coverage to pass QC\ndefault=10", default=10, metavar="\b", type=int)
   parser.add_argument("-c", "--coverage_threshold", 

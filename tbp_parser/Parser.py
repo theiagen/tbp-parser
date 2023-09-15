@@ -46,13 +46,13 @@ class Parser:
     if result.returncode != 0:
         self.logger.critical("Error: samtools not found. Please install samtools and try again.")
         sys.exit(1)
-    self.logger.info("samtools found")
+    self.logger.info("samtools was found! Proceeding with parsing")
   
   def run(self):
     """
     This function runs the parsing module for the tb_parser tool.
     """    
-    self.logger.info("Checking for samtools")
+    self.logger.info("Checking for samtools...")
     self.check_dependency_exists
     
     self.logger.info("Creating initial coverage report")
