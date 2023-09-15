@@ -75,15 +75,16 @@ class LIMS:
       
     return message
    
-  def apply_lims_rules(self, gene_dictionary, max_mdl_resistance, DF_LIMS, antimicrobial_code):
+  def apply_lims_rules(self, gene_dictionary, DF_LIMS, antimicrobial_code):
     """
     This function implements several parsing rules for the LIMS report.
     Explanation of input variables:
     - gene_dictionary = the genes matched to their associated LIMS codes
-    - max_mdl_resistance = the maximum resistance annotation for the drug
     - DF_LIMS = the LIMS dataframe
     - antimicrobial_code = the LIMS code for the drug
-    """    
+    """ 
+    self.logger.info("Within LIMS class apply_lims_rules function; applying rules to mutations associated with {}".format(globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
+    
     antimicrobial_name = globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
     mutations_per_gene = {}
 
@@ -97,7 +98,11 @@ class LIMS:
         mutation_types_per_gene = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["tbprofiler_variant_substitution_type"].tolist()
         mdl_interpretations = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["mdl_interpretation"].tolist()
         warnings = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["warning"].tolist()
-   
+        
+        self.logger.debug("The following mutations belong to this gene ({}) and are associated with this drug ({})".format(gene, antimicrobial_name))
+        self.logger.debug("Nucleotide mutations: {}".format(nt_mutations_per_gene))
+        self.logger.debug("Their corresponding MDL interpretations: {}".format(mdl_interpretations))
+        
         # format all mutations that are associated with the drug appropriately
         for mutation in nt_mutations_per_gene:
           
@@ -120,7 +125,7 @@ class LIMS:
               
           # do not add the mutation if the particular mutation has low quality or is blank
           if ("Failed quality in the mutation position" in warnings[index]) or (mutation == ""):
-            self.logger.debug("Mutation ({}) failed quality in the mutation position or was WT/Insufficient Coverage, not adding to LIMS report".format(mutation))
+            self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
             
           # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR
           elif (mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") or (gene == "rpoB" and (globals.SPECIAL_POSITIONS[gene][0] <= aa_mutation_position <= globals.SPECIAL_POSITIONS[gene][1])):
@@ -136,33 +141,34 @@ class LIMS:
             elif substitution not in mutations_per_gene[gene]:
                 mutations_per_gene[gene] = "{}; {}".format("".join(mutations_per_gene[gene]), substitution)
           else:
-            self.logger.debug("This mutation ({}) is not being added to the LIMS report because it is a non-rpoB RRDR \"S\" mutation".format(mutation))
+            self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it is a non-rpoB RRDR \"S\" mutation".format(mutation, gene))
         
         # Mutations for a particular gene have been added to the mutations_per_gene dictionary.
         # if that gene has mutations associated with it, we want to perform some additional filtration,
         # especially if it is RRDR rpoB
         if gene in mutations_per_gene.keys():
-          self.logger.debug("Adding the mutations ({}) associated with this gene to the DF_LIMS dataframe".format(mutations_per_gene[gene]))
+          self.logger.debug("Adding the mutations ({}) associated with this gene ({}) to the DF_LIMS dataframe".format(mutations_per_gene[gene], gene))
           DF_LIMS[gene_code] = mutations_per_gene[gene]
         
           if gene == "rpoB":
-            # check all rpoB mutations to see if any fall within a special rpoB mutation list
             if mdl_interpretations[index] == "R":
+              self.logger.debug("This gene is rpoB, now checking to see if all of the mutations belong to the special position list")
               non_rpob_specific_mutations_counter = 0
               
               for mutation in mutations_per_gene[gene]:
                 if ~ any(rpob_mutation in mutation for rpob_mutation in globals.RPOB_MUTATIONS):
                   non_rpob_specific_mutations_counter += 1
               
-              # if the only rpoB mutations are in the special rpoB mutation list, then we want to change the DF_LIMS[antimicrobial_code] to be something specific
               if non_rpob_specific_mutations_counter == 0:
+                self.logger.debug("The only rpoB mutations are in the special rpoB mutation list, changing the output message")
                 DF_LIMS[antimicrobial_code] = "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods."
-              # otherwise, the mutations are not in the special list and we want a different specific message for DF_LIMS[antimicrobial_code]
               else:
+                self.logger.debug("Not all mutations are in the special rpoB mutation list, changing the output message")
                 DF_LIMS[antimicrobial_code] = "Predicted resistance to rifampin"
 
             # if the maximum MDL resistance is S in this case, though we want to add a specific message for rpoB RRDR mutations
             if mdl_interpretations[index] == "S":
+              self.logger.debug("This gene is rpoB, now checking to see if any mutations are in the RRDR region")
               # RRDR mutations are always synonymous; check if there are any non-synonymous mutations
               if len(mutations_per_gene[gene]) > 0: 
                 non_synonymous_count = 0
@@ -171,23 +177,31 @@ class LIMS:
                   # if any NON synonymous mutations were identified, we will increment the counter
                   if "synonymous" not in mutation: 
                     non_synonymous_count += 1 
-                # otherwise, the only synonymous mutations were identified in rpoB RRDR, add the specific message
+
                 if non_synonymous_count == 0: 
+                  self.logger.debug("The only synonymous mutations were identified in RRDR; changing output message")
                   DF_LIMS[antimicrobial_code] = "No mutations associated with resistance to rifampin detected. The detected synonymous mutation(s) do not confer resistance but may result in false-resistance in PCR-based assays targeting the rpoB RRDR."
                 
-        # count up the number of non-S mutations
-        self.logger.debug(mdl_interpretations[index])
-        if mdl_interpretations[index] != "S" and mdl_interpretations[index] != "WT":
-          non_s_mutations += 1
+        # make sure that there is a mutation associated with this gene-drug combo
+        if len(nt_mutations_per_gene) > 0:
+          maximum_ranking = max([globals.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])
+          # see the globals.RESISTANCE_RANKING dictionary for the ranking of each MDL interpretation
+          # count up the number of non-S mutations; non-S mutations have a ranking > 2
+          if maximum_ranking > 2:
+            non_s_mutations += 1
 
-        # change the gene_code to be something different depending on the MDL interpretations
-        if mdl_interpretations[index] == "S" and non_s_mutations == 0:
-          DF_LIMS[gene_code] = "No high confidence mutations detected"
-        elif mdl_interpretations[index] == "WT":
+          # change the gene_code to be something different depending on the MDL interpretations and/or number of non-s mutations
+          if maximum_ranking == 2 and non_s_mutations == 0: # S
+            DF_LIMS[gene_code] = "No high confidence mutations detected"
+          elif maximum_ranking == 1: # WT
+            DF_LIMS[gene_code] = "No mutations detected"
+          elif maximum_ranking == 0: # Insufficient Coverage
+            DF_LIMS[gene_code] = "No sequence"
+        else:
+          self.logger.debug("There are no mutations for this gene ({}) associated with this drug ({})".format(gene, antimicrobial_name))
           DF_LIMS[gene_code] = "No mutations detected"
-        elif mdl_interpretations[index] == "Insufficient Coverage":
-          DF_LIMS[gene_code] = "No sequence"
-      
+    
+    self.logger.info("Finished applying rules to mutations associated with {}, exiting function".format(globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
     return DF_LIMS
   
   def create_lims_report(self):
@@ -216,14 +230,15 @@ class LIMS:
       
       # get the maximum resistance for the drug
       max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_mdl_resistances])]
-      self.logger.debug("The max MDL resistance for this antimicrobial is {}".format(max_mdl_resistance[0]))
+      self.logger.debug("The max MDL resistance for this antimicrobial ({}) is {}".format(drug_name, max_mdl_resistance[0]))
 
       DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], drug_name)            
 
-      DF_LIMS = self.apply_lims_rules(gene_dictionary, max_mdl_resistance, DF_LIMS, antimicrobial_code)
+      DF_LIMS = self.apply_lims_rules(gene_dictionary, DF_LIMS, antimicrobial_code)
            
     DF_LIMS["Analysis date"] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
     DF_LIMS["Operator"] = globals.OPERATOR
     
     # write to file
     DF_LIMS.to_csv("{}.lims_report.csv".format(self.output_prefix), index=False)
+    self.logger.info("LIMS report created, now exiting function\n")
