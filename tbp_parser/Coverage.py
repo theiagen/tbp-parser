@@ -55,10 +55,6 @@ class Coverage:
     globals.COVERAGE_DICTIONARY["Rv0678"] = globals.COVERAGE_DICTIONARY["mmpR5"]
     globals.COVERAGE_DICTIONARY["Rv2983"] = globals.COVERAGE_DICTIONARY["fbiD"]
     
-    # remove non-matching genes
-    globals.COVERAGE_DICTIONARY.pop("mmpR5")
-    globals.COVERAGE_DICTIONARY.pop("fbiD")
-    
     self.logger.info("Initial coverage report created, now exiting function\n")
     
   def reformat_coverage(self):
