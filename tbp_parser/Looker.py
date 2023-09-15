@@ -70,7 +70,7 @@ class Looker:
       
       for gene in globals.ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME[antimicrobial]:
         # indicate warning if any genes failed to achieve 100% coverage_threshold
-        if DF_LOOKER[antimicrobial][0] != "R" and gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
+        if DF_LOOKER[antimicrobial][0] != "R" and gene in globals.LOW_DEPTH_OF_COVERAGE_LIST and gene not in globals.GENES_WITH_DELETIONS:
           DF_LOOKER[antimicrobial] = "Insufficient coverage in locus"
             
     # get lineage and ID
