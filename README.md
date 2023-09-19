@@ -72,13 +72,13 @@ Please note that the BAM file must have the accompanying BAI file in the same di
 
 ```markdown
 python3 /tbp-parser/tbp_parser/tbp_parser.py \
+    /path/to/data/tbprofiler_output.json \
+    /path/to/data/tbprofiler_output.bam \
     -o "example" \
     -d 12 \
     -c 98 \
     -s "Illumina NextSeq" \
-    -p "John Doe" \
-    /path/to/data/tbprofiler_output.json \
-    /path/to/data/tbprofiler_output.bam
+    -p "John Doe" 
 ```
 
 ## Outputs
