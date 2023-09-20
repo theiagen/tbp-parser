@@ -166,22 +166,15 @@ class LIMS:
                 self.logger.debug("Not all mutations are in the special rpoB mutation list, changing the output message")
                 DF_LIMS[antimicrobial_code] = "Predicted resistance to rifampin"
 
-            # if the maximum MDL resistance is S in this case, though we want to add a specific message for rpoB RRDR mutations
+            # if the maximum MDL resistance is S in this case, the mutation will always be an rpoB RRDR region one
             if mdl_interpretations[index] == "S":
-              self.logger.debug("This gene is rpoB, now checking to see if any mutations are in the RRDR region")
-              # RRDR mutations are always synonymous; check if there are any non-synonymous mutations
-              if len(mutations_per_gene[gene]) > 0: 
-                non_synonymous_count = 0
-                
-                for mutation in mutations_per_gene[gene]: 
-                  # if any NON synonymous mutations were identified, we will increment the counter
-                  if "synonymous" not in mutation: 
-                    non_synonymous_count += 1 
+              self.logger.debug("A synonymous mutations was identified in RRDR; changing output message")
+              DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampin. The detected synonymous mutation(s) do not confer resistance"
 
-                if non_synonymous_count == 0: 
-                  self.logger.debug("The only synonymous mutations were identified in RRDR; changing output message")
-                  DF_LIMS[antimicrobial_code] = "No mutations associated with resistance to rifampin detected. The detected synonymous mutation(s) do not confer resistance but may result in false-resistance in PCR-based assays targeting the rpoB RRDR."
-                
+        elif gene == "rpoB":
+          self.logger.debug("No mutations were identified in rpoB; changing output message")
+          DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampin"
+          
         # make sure that there is a mutation associated with this gene-drug combo
         if len(nt_mutations_per_gene) > 0:
           maximum_ranking = max([globals.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])
@@ -191,7 +184,7 @@ class LIMS:
             non_s_mutations += 1
 
           # change the gene_code to be something different depending on the MDL interpretations and/or number of non-s mutations
-          if maximum_ranking == 2 and non_s_mutations == 0: # S
+          if maximum_ranking == 2 and non_s_mutations == 0 and gene != "rpoB": # S
             DF_LIMS[gene_code] = "No high confidence mutations detected"
           elif maximum_ranking == 1: # WT
             DF_LIMS[gene_code] = "No mutations detected"
