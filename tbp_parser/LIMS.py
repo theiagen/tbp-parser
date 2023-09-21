@@ -153,13 +153,13 @@ class LIMS:
           if gene == "rpoB":
             if mdl_interpretations[index] == "R":
               self.logger.debug("This gene is rpoB, now checking to see if all of the mutations belong to the special position list")
-              non_rpob_specific_mutations_counter = 0
+              rpob_specific_mutations_counter = 0
               
               for mutation in mutations_per_gene[gene]:
-                if ~ any(rpob_mutation in mutation for rpob_mutation in globals.RPOB_MUTATIONS):
-                  non_rpob_specific_mutations_counter += 1
+                if any(rpob_mutation in mutation for rpob_mutation in globals.RPOB_MUTATIONS):
+                  rpob_specific_mutations_counter += 1
               
-              if non_rpob_specific_mutations_counter == 0:
+              if rpob_specific_mutations_counter > 0:
                 self.logger.debug("The only rpoB mutations are in the special rpoB mutation list, changing the output message")
                 DF_LIMS[antimicrobial_code] = "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods."
               else:
@@ -174,7 +174,7 @@ class LIMS:
         elif gene == "rpoB":
           self.logger.debug("No mutations were identified in rpoB; changing output message")
           DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampin"
-          
+            
         # make sure that there is a mutation associated with this gene-drug combo
         if len(nt_mutations_per_gene) > 0:
           maximum_ranking = max([globals.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])
@@ -184,7 +184,7 @@ class LIMS:
             non_s_mutations += 1
 
           # change the gene_code to be something different depending on the MDL interpretations and/or number of non-s mutations
-          if maximum_ranking == 2 and non_s_mutations == 0 and gene != "rpoB": # S
+          if maximum_ranking == 2 and non_s_mutations == 0: # S
             DF_LIMS[gene_code] = "No high confidence mutations detected"
           elif maximum_ranking == 1: # WT
             DF_LIMS[gene_code] = "No mutations detected"
