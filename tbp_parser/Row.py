@@ -34,10 +34,7 @@ class Row() :
       # for when the variant is in the JSON file
       if variant is not None:
         self.logger.debug("Initalizing the Row object, the variant has been supplied.")
-        if self.variant.gene == "mmpR5":
-          self.tbprofiler_gene_name = "Rv0678"
-        else:
-          self.tbprofiler_gene_name = self.variant.gene
+        self.tbprofiler_gene_name = self.variant.gene
         self.tbprofiler_locus_tag = self.variant.locus_tag
         self.tbprofiler_variant_substitution_type = self.variant.type
         self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change

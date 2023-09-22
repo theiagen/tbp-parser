@@ -31,6 +31,7 @@ class Variant:
         setattr(self, key, value)
   
     if self.gene == "mmpR5":
+      self.logger.debug("The gene is mmpR5, renaming to Rv0678")
       self.gene = "Rv0678"
    
   def extract_annotations(self):
