@@ -30,7 +30,7 @@ class Variant:
       for key, value in variant.items():
         setattr(self, key, value)
   
-    if self.gene == "mmpR5":
+    if hasattr(self, "gene") and self.gene == "mmpR5":
       self.logger.debug("The gene is mmpR5, renaming to Rv0678")
       self.gene = "Rv0678"
    
@@ -80,7 +80,7 @@ class Variant:
     """
     self.logger.debug("Within the Variant class apply_expert_rules function")
     
-    position_nt = globals.get_position(self.nucleotide_change)
+    position_nt = globals.get_position(self.nucleotide_change)[0]
     position_aa = globals.get_position(self.protein_change)
 
     self.logger.debug("The nucleotide position is {} and the amino acid position is {}".format(position_nt, position_aa))
@@ -135,8 +135,8 @@ class Variant:
 
     elif self.gene == "rpoB": 
       self.logger.debug("The gene is rpoB, now checking if the position requires special consideration")
-      
-      if globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa <= globals.SPECIAL_POSITIONS[self.gene][1]:
+         
+      if (len(position_aa) > 1 and (any([x in globals.RRDR_RANGE for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene]]))) or (globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene][1]):
         self.logger.debug("The position is within the special positions; interpretation is 'R' if nonsynonymous, else 'S'")
         if self.type != "synonymous_variant":
           return "R"

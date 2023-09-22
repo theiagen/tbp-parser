@@ -31,6 +31,6 @@ class TestRow:
     assert (a.looker_interpretation, a.mdl_interpretation, a.rationale, a.confidence) == ("U", "S", "No WHO annotation or expert rule", "No WHO annotation")
     
   def test_complete_row(self):
-    a = Row(logging.getLogger(__name__), None, "Assoc w R", "test", "test")
+    a = Row(logging.getLogger(__name__), None, "Assoc w R", "test", "katG")
     a.complete_row()
     assert a.rationale == "WHO classification"

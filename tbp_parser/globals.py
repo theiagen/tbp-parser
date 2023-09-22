@@ -6,13 +6,12 @@ def get_position(mutation):
   This function recieves a mutation (e.g. 'p.Met291Ile') and
   returns the position (numerical part) as an Int
   """    
-  pattern = r"\.*?(-?\d+).*"
+  pattern = r"-?\d+"
   
-  match = re.search(pattern, mutation)
-  if match:
-    position = int(match.group(1))
-    return position
-  return 0
+  match = re.findall(pattern, mutation)
+  if len(match) > 0:
+    return [int(x) for x in match]
+  return [0]
 
 """
 A dictionary to turn TBProfiler WHO annotations into
@@ -464,6 +463,12 @@ SPECIAL_POSITIONS = {
   "rrs": [1401, 1402, 1484]
 }
 
+"""
+The range of rpoB special positions
+"""
+global RRDR_RANGE
+RRDR_RANGE = range(426, 452)
+            
 """ 
 This variable holds the operator's name
 """

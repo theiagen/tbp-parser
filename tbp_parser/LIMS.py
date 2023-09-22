@@ -89,6 +89,7 @@ class LIMS:
     mutations_per_gene = {}
 
     for gene, gene_code in gene_dictionary.items():
+      DF_LIMS[gene_code] = ""
       non_s_mutations = 0
       # check to see if we are reporting on this gene for the LIMS report
       if gene in globals.GENES_FOR_LIMS:
@@ -126,20 +127,20 @@ class LIMS:
           # do not add the mutation if the particular mutation has low quality or is blank
           if ("Failed quality in the mutation position" in warnings[index]) or (mutation == ""):
             self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
-            
+                        
           # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR
-          elif (mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") or (gene == "rpoB" and (globals.SPECIAL_POSITIONS[gene][0] <= aa_mutation_position <= globals.SPECIAL_POSITIONS[gene][1])):
-            substitution = "{} ({})".format(mutation, aa_mutation)
-            
-            # the following if only captures synonymous mutations if rpoB RRDR mutations
-            if mutation_type == "synonymous_variant":
-              substitution = "{} [synonymous]".format(substitution)
-            
-            # add the formatted mutation to mutations_per_gene dictionary (formatted as a list)
-            if gene not in mutations_per_gene.keys():
-              mutations_per_gene[gene] = [substitution]
-            elif substitution not in mutations_per_gene[gene]:
-                mutations_per_gene[gene] = "{}; {}".format("".join(mutations_per_gene[gene]), substitution)
+          elif (mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") or (gene == "rpoB" and ((len(aa_mutation_position) > 1 and (any([x in globals.RRDR_RANGE for x in aa_mutation_position]) or any([x in range(aa_mutation_position[0], aa_mutation_position[1]) for x in globals.SPECIAL_POSITIONS[gene]]))) or (globals.SPECIAL_POSITIONS[gene][0] <= aa_mutation_position[0] <= globals.SPECIAL_POSITIONS[gene][1]))):
+              substitution = "{} ({})".format(mutation, aa_mutation)
+        
+              # the following if only captures synonymous mutations if rpoB RRDR mutations
+              if mutation_type == "synonymous_variant":
+                substitution = "{} [synonymous]".format(substitution)
+              
+              # add the formatted mutation to mutations_per_gene dictionary (formatted as a list)
+              if gene not in mutations_per_gene.keys():
+                mutations_per_gene[gene] = [substitution]
+              elif substitution not in mutations_per_gene[gene]:
+                  mutations_per_gene[gene] = "{}; {}".format("".join(mutations_per_gene[gene]), substitution)
           else:
             self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it is a non-rpoB RRDR \"S\" mutation".format(mutation, gene))
         
