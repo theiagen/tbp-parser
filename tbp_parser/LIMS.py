@@ -116,7 +116,7 @@ class LIMS:
             aa_mutation_position = globals.get_position(aa_mutation)
           
           # convert WT and Insufficient Coverage to empty strings
-          if mutation == "WT" or mutation == "Insufficient Coverage":
+          if mutation == "WT" or mutation == "Insufficient Coverage" or mutation == "NA":
             mutation = ""
             
           # convert NA,  WT, and Insufficient Coverage to empty strings

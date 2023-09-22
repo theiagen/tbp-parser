@@ -30,6 +30,8 @@ class Variant:
       for key, value in variant.items():
         setattr(self, key, value)
   
+    if self.gene == "mmpR5":
+      self.gene = "Rv0678"
    
   def extract_annotations(self):
     """
@@ -108,9 +110,6 @@ class Variant:
 
     elif self.gene == "rrl":
       self.logger.debug("The gene is rrl, now checking if the position requires special consideration")
-      self.logger.debug("position = {}".format(position_nt))
-      self.logger.debug(globals.SPECIAL_POSITIONS["rrl"][0][0] + "and" + globals.SPECIAL_POSITIONS["rrl"][0][1])
-      self.logger.debug(globals.SPECIAL_POSITIONS["rrl"][1][0] + "and" + globals.SPECIAL_POSITIONS["rrl"][1][1])
       if (globals.SPECIAL_POSITIONS[self.gene][0][0] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][0][1]) or (globals.SPECIAL_POSITIONS[self.gene][1][0] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][1][1]):
         self.logger.debug("The position is within the special positions; interpretation is 'U'")
         return "U"
