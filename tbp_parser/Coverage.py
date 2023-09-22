@@ -52,7 +52,7 @@ class Coverage:
         globals.COVERAGE_DICTIONARY[gene] = coverage
     
     # rename some genes to match CDPH nomenclature
-    globals.COVERAGE_DICTIONARY["Rv0678"] = globals.COVERAGE_DICTIONARY["mmpR5"]
+    globals.COVERAGE_DICTIONARY["Rv0678"] = globals.COVERAGE_DICTIONARY["mmpR"]
     globals.COVERAGE_DICTIONARY["Rv2983"] = globals.COVERAGE_DICTIONARY["fbiD"]
     
     self.logger.info("Initial coverage report created, now exiting function\n")

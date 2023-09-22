@@ -34,7 +34,10 @@ class Row() :
       # for when the variant is in the JSON file
       if variant is not None:
         self.logger.debug("Initalizing the Row object, the variant has been supplied.")
-        self.tbprofiler_gene_name = self.variant.gene
+        if self.variant.gene == "mmpR5":
+          self.tbprofiler_gene_name = "Rv0678"
+        else:
+          self.tbprofiler_gene_name = self.variant.gene
         self.tbprofiler_locus_tag = self.variant.locus_tag
         self.tbprofiler_variant_substitution_type = self.variant.type
         self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
@@ -74,8 +77,11 @@ class Row() :
       # otherwise, the variant does not appear in the JSON file and default NA/WT values
       # need to be supplied
       else:
-        self.logger.debug("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.") 
-        self.tbprofiler_gene_name = gene_name
+        self.logger.debug("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.")
+        if gene_name == "mmpR5":
+          self.tbprofiler_gene_name = "Rv0678"
+        else: 
+          self.tbprofiler_gene_name = gene_name
         self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
         self.tbprofiler_variant_substitution_nt = "NA"
         self.tbprofiler_variant_substitution_aa = "NA"
@@ -138,7 +144,10 @@ class Row() :
     if self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
       self.logger.debug("WHO annotation identified: converting to the appropriate interpretation")
       self.looker_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
-      self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
+      if self.tbprofiler_gene_name in globals.GENE_LIST_MDL:
+        self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl-ingenelist1"]
+      else:
+        self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
       self.rationale = "WHO classification"
     
     elif self.who_confidence != "NA":

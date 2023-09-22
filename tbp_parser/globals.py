@@ -200,10 +200,17 @@ GENES_FOR_LIMS = [
 
 """
 A list of genes that correspond to a certain set of expert rules
-Rv0678 is equivalent to mmpR
+Rv0678 is equivalent to mmpR5
 """
 global GENE_LIST 
-GENE_LIST = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678","ethA", "gid", "katG", "pncA", "rpoB"]
+GENE_LIST = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678", "ethA", "gid", "katG", "pncA", "rpoB"]
+
+"""
+A list of genes that require specific MDL interpretation rules
+Rv0678 is equivalent to mmpR5
+"""
+global GENE_LIST_MDL
+GENE_LIST_MDL = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678"]
 
 """
 A set of genes that have been reported so far

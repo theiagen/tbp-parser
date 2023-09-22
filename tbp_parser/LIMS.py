@@ -188,7 +188,7 @@ class LIMS:
             DF_LIMS[gene_code] = "No high confidence mutations detected"
           elif maximum_ranking == 1: # WT
             DF_LIMS[gene_code] = "No mutations detected"
-          elif maximum_ranking == 0: # Insufficient Coverage
+          elif maximum_ranking == 0 and "del" not in DF_LIMS[gene_code]: # Insufficient Coverage (and not a deletion)
             DF_LIMS[gene_code] = "No sequence"
         else:
           self.logger.debug("There are no mutations for this gene ({}) associated with this drug ({})".format(gene, antimicrobial_name))
