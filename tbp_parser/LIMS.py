@@ -99,10 +99,49 @@ class LIMS:
         mutation_types_per_gene = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["tbprofiler_variant_substitution_type"].tolist()
         mdl_interpretations = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["mdl_interpretation"].tolist()
         warnings = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["warning"].tolist()
+        read_supports = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["read_support"].tolist()
         
         self.logger.debug("The following mutations belong to this gene ({}) and are associated with this drug ({})".format(gene, antimicrobial_name))
         self.logger.debug("Nucleotide mutations: {}".format(nt_mutations_per_gene))
         self.logger.debug("Their corresponding MDL interpretations: {}".format(mdl_interpretations))
+           
+        # check if there are any matching amino acid positions;
+        # if so, we want to keep the row with the higher read support
+        self.logger.debug("Considering if any mutations have identical amino acid positions and keeping only the one with higher read support")
+        removal_list = []
+        for mutation in aa_mutations_per_gene:
+          current_index = aa_mutations_per_gene.index(mutation)
+          
+          # get a list of all other mutations for this gene except the current index for comparison          
+          aa_positions_original = {aa_mutation:globals.get_position(aa_mutation) for i, aa_mutation in enumerate(aa_mutations_per_gene) if i != current_index}
+          aa_positions_flattened = {aa_mutation:position for aa_mutation, subposition in aa_positions_original.items() for position in subposition}
+          
+          if mutation not in ["Insufficient Coverage", "NA", "WT"]:            
+            current_positions = set(aa_positions_flattened.values())
+            other_positions = set(globals.get_position(mutation))
+            same_positions = list(current_positions & other_positions)
+           
+            if len(same_positions) > 0:
+              matching_index = aa_mutations_per_gene.index(list(aa_positions_flattened.keys())[list(aa_positions_flattened.values()).index(same_positions[0])])
+              self.logger.debug("The current mutation has a matching amino acid position to an additional mutation, now testing read support")
+              if read_supports[current_index] > read_supports[matching_index]:
+                self.logger.debug("The current mutation ({}) has higher read support ({}) than the other mutation ({}; {})".format(mutation, read_supports[current_index], aa_mutations_per_gene[matching_index], read_supports[matching_index]))
+                removal_list.append(aa_mutations_per_gene[matching_index]) # avoid removing items while iterating through object
+              else:
+                self.logger.debug("The other mutation ({}) has higher read support ({}) than the current mutation ({}; {})".format(aa_mutations_per_gene[matching_index], read_supports[matching_index], mutation, read_supports[current_index]))
+                removal_list.append(mutation)
+                
+        # remove all mutations that have lower read support
+        if len(removal_list) > 0:
+          for mutation in removal_list:
+            if mutation in aa_mutations_per_gene:
+              removal_index = aa_mutations_per_gene.index(mutation)
+              aa_mutations_per_gene.pop(removal_index)
+              nt_mutations_per_gene.pop(removal_index)
+              mutation_types_per_gene.pop(removal_index)
+              mdl_interpretations.pop(removal_index)
+              warnings.pop(removal_index)
+              read_supports.pop(removal_index)  
         
         # format all mutations that are associated with the drug appropriately
         for mutation in nt_mutations_per_gene:

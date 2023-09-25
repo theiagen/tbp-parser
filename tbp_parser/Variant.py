@@ -33,6 +33,28 @@ class Variant:
     if hasattr(self, "gene") and self.gene == "mmpR5":
       self.logger.debug("The gene is mmpR5, renaming to Rv0678")
       self.gene = "Rv0678"
+  
+  def extract_alternate_consequences(self, parent_row, row_list):
+    """
+    This function takes apart the alternate_consequences field for variants
+    in the mmpS5, mmpL5, and Rv0678 genes. It creates a Row object for each, 
+    and then determines which one has the highest severity. The highest
+    severity mutation is returned.
+    """
+    self.logger.debug("Within the Variant class extract_alternate_consequences function")
+
+    # check if alternate_consequences section exists, and if so, enter it
+    if hasattr(self, "alternate_consequences") and len(self.alternate_consequences) > 0:
+      self.logger.debug("Now iterating through alternate_consequences")
+      
+      for item in self.alternate_consequences:
+        var = Variant(self.logger, item)
+        row = Row(self.logger, var, parent_row.who_confidence, parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency)
+        row.complete_row()
+        
+        row_list.append(row)
+  
+    return row_list
    
   def extract_annotations(self):
     """

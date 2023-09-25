@@ -17,7 +17,7 @@ class Row() :
       the interpretation logic applied is not considered an expert rule
   """
   
-  def __init__(self, logger, variant, who_confidence, drug, gene_name=None):
+  def __init__(self, logger, variant, who_confidence, drug, gene_name=None, depth=0, frequency=None):
     self.logger = logger
     self.logger.debug("Within the Row class __init__ function")
     
@@ -34,8 +34,15 @@ class Row() :
       # for when the variant is in the JSON file
       if variant is not None:
         self.logger.debug("Initalizing the Row object, the variant has been supplied.")
-        self.tbprofiler_gene_name = self.variant.gene
-        self.tbprofiler_locus_tag = self.variant.locus_tag
+        try:
+          self.tbprofiler_gene_name = self.variant.gene
+        except:
+          self.tbprofiler_gene_name = gene_name
+          self.variant.gene = gene_name
+        try:
+          self.tbprofiler_locus_tag = self.variant.locus_tag
+        except:
+          self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
         self.tbprofiler_variant_substitution_type = self.variant.type
         self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
         self.tbprofiler_variant_substitution_aa = self.variant.protein_change
@@ -45,8 +52,14 @@ class Row() :
         self.confidence = self.who_confidence
         self.looker_interpretation = ""
         self.mdl_interpretation = ""
-        self.depth = int(self.variant.depth or 0)
-        self.frequency = self.variant.freq
+        try:
+          self.depth = int(self.variant.depth)
+        except:
+          self.depth = depth
+        try:
+          self.frequency = self.variant.freq
+        except:
+          self.frequency = frequency
         # avoid division by zero errors
         try:
           self.read_support = self.variant.depth * self.variant.freq

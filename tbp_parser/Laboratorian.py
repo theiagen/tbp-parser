@@ -45,8 +45,12 @@ class Laboratorian:
         # if in --debug mode, print the annotation row.
         annotation_row.print()
         
-        self.logger.debug("New row created! Adding to row_list")
-        row_list.append(annotation_row)
+        # if mutation in mmpS5, mmpL5, or Rv0678, we want to perform further examination but only if the mutation is NOT R based on rule 1.1;
+        # otherwise, we want to examine the "aternate_consequences" section and apply rule 1.2 and keep only the highest severity mutation
+        if annotation_row.tbprofiler_gene_name in ["mmpS5", "mmpL5", "Rv0678"] and annotation_row.mdl_interpretation != "R" and annotation_row.rationale != "WHO classification":
+          row_list = variant.extract_alternate_consequences(annotation_row, row_list)
+        else:
+          row_list.append(annotation_row)
         
     self.logger.info("Finished iterating through the variant section, now exiting function")    
     return row_list
@@ -128,7 +132,6 @@ class Laboratorian:
     for row in row_list:
       row.warning = list(filter(None, row.warning))
       row.warning = ". ".join(row.warning)
-      
       
       # make a temporary dataframe out of the Row object using vars(row) which converts the object into a dictionary
       row_dictionary = pd.DataFrame(vars(row), index=[0])
