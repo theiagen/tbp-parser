@@ -49,6 +49,7 @@ class Variant:
       
       for item in self.alternate_consequences:
         var = Variant(self.logger, item)
+        globals.GENES_REPORTED.add(var.gene_name)
         row = Row(self.logger, var, parent_row.who_confidence, parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency)
         row.complete_row()
         

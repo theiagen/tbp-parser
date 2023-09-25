@@ -49,8 +49,8 @@ class Laboratorian:
         # otherwise, we want to examine the "aternate_consequences" section and apply rule 1.2 and keep only the highest severity mutation
         if annotation_row.tbprofiler_gene_name in ["mmpS5", "mmpL5", "Rv0678"] and annotation_row.mdl_interpretation != "R" and annotation_row.rationale != "WHO classification":
           row_list = variant.extract_alternate_consequences(annotation_row, row_list)
-        else:
-          row_list.append(annotation_row)
+
+        row_list.append(annotation_row)
         
     self.logger.info("Finished iterating through the variant section, now exiting function")    
     return row_list
