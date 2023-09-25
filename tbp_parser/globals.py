@@ -21,11 +21,13 @@ global ANNOTATION_TO_INTERPRETATION
 ANNOTATION_TO_INTERPRETATION = {
   "Assoc w R": {
     "looker": "R", 
-    "mdl": "R" 
+    "mdl": "R",
+    "mdl-ingenelist1": "R"
   },
   "Assoc w R - interim": {
     "looker": "R-Interim",   
-    "mdl": "U" 
+    "mdl": "U",
+    "mdl-ingenelist1": "U" 
   },
   "Uncertain significance": {
     "looker": "U", 

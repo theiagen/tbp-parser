@@ -122,7 +122,7 @@ class Variant:
     elif self.gene in ["katG", "pncA", "ethA", "gid"]: 
       self.logger.debug("The gene is {}, now checking if the mutation type requires special consideration".format(self.gene))
       
-      if any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.nucleotide_change.endswith("*"):
+      if (any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.nucleotide_change.endswith("*")) or (any(indel_or_stop in self.protein_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.protein_change.endswith("*")):
         self.logger.debug("The mutation type is an indel, stop, or frameshift codon; interpretation is 'U'")
         return "U"
       
@@ -135,7 +135,13 @@ class Variant:
 
     elif self.gene == "rpoB": 
       self.logger.debug("The gene is rpoB, now checking if the position requires special consideration")
-         
+      
+      # explanation of following giant conditional:
+      # if there are more than 2 AA positions, it's likely a deletion or frameshift thing. 
+      #  if that is the case, we want to check to see if any of those positions are within RRDR *or* if RRDR falls within those positions
+      #  to see if within RRDR, we check if any of the AA positions are within the RRDR range
+      #  to see if RRDR falls within, we check RRDR start/end positions are within the AA position range
+      # otherwise, check if the single AA position is within RRDR positions
       if (len(position_aa) > 1 and (any([x in globals.RRDR_RANGE for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene]]))) or (globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene][1]):
         self.logger.debug("The position is within the special positions; interpretation is 'R' if nonsynonymous, else 'S'")
         if self.type != "synonymous_variant":

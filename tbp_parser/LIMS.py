@@ -75,7 +75,7 @@ class LIMS:
       
     return message
    
-  def apply_lims_rules(self, gene_dictionary, DF_LIMS, antimicrobial_code):
+  def apply_lims_rules(self, gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code):
     """
     This function implements several parsing rules for the LIMS report.
     Explanation of input variables:
@@ -114,7 +114,7 @@ class LIMS:
           
           # if it is rpoB, we want to get the position of the mutation to check if it is in RRDR
           if gene == "rpoB":           
-            aa_mutation_position = globals.get_position(aa_mutation)
+            position_aa = globals.get_position(aa_mutation)
           
           # convert WT and Insufficient Coverage to empty strings
           if mutation == "WT" or mutation == "Insufficient Coverage" or mutation == "NA":
@@ -128,8 +128,8 @@ class LIMS:
           if ("Failed quality in the mutation position" in warnings[index]) or (mutation == ""):
             self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
                         
-          # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR
-          elif (mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") or (gene == "rpoB" and ((len(aa_mutation_position) > 1 and (any([x in globals.RRDR_RANGE for x in aa_mutation_position]) or any([x in range(aa_mutation_position[0], aa_mutation_position[1]) for x in globals.SPECIAL_POSITIONS[gene]]))) or (globals.SPECIAL_POSITIONS[gene][0] <= aa_mutation_position[0] <= globals.SPECIAL_POSITIONS[gene][1]))):
+          # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
+          elif (mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") or (gene == "rpoB" and (len(position_aa) > 1 and (any([x in globals.RRDR_RANGE for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[gene]])) or (globals.SPECIAL_POSITIONS[gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[gene][1]))):
               substitution = "{} ({})".format(mutation, aa_mutation)
         
               # the following if only captures synonymous mutations if rpoB RRDR mutations
@@ -150,10 +150,10 @@ class LIMS:
         if gene in mutations_per_gene.keys():
           self.logger.debug("Adding the mutations ({}) associated with this gene ({}) to the DF_LIMS dataframe".format(mutations_per_gene[gene], gene))
           DF_LIMS[gene_code] = mutations_per_gene[gene]
-        
+
           if gene == "rpoB":
-            if mdl_interpretations[index] == "R":
-              self.logger.debug("This gene is rpoB, now checking to see if all of the mutations belong to the special position list")
+            if max_mdl_resistance[0] == "R":
+              self.logger.debug("This gene is rpoB, now checking to see if any of the mutations belong to the special position list")
               rpob_specific_mutations_counter = 0
               
               for mutation in mutations_per_gene[gene]:
@@ -161,15 +161,15 @@ class LIMS:
                   rpob_specific_mutations_counter += 1
               
               if rpob_specific_mutations_counter > 0:
-                self.logger.debug("The only rpoB mutations are in the special rpoB mutation list, changing the output message")
+                self.logger.debug("Some rpoB mutations are in the special rpoB mutation list, changing the output message")
                 DF_LIMS[antimicrobial_code] = "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods."
               else:
-                self.logger.debug("Not all mutations are in the special rpoB mutation list, changing the output message")
+                self.logger.debug("None of the mutations are in the special rpoB mutation list, changing the output message")
                 DF_LIMS[antimicrobial_code] = "Predicted resistance to rifampin"
 
-            # if the maximum MDL resistance is S in this case, the mutation will always be an rpoB RRDR region one
-            if mdl_interpretations[index] == "S":
-              self.logger.debug("A synonymous mutations was identified in RRDR; changing output message")
+            # if the *maximum* MDL resistance is S in this case and it is RRDR synonymous
+            elif max_mdl_resistance[0] == "S" and "synonymous" in mutations_per_gene[gene][0]:
+              self.logger.debug("Only synonymous mutations were identified in RRDR; changing output message")
               DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampin. The detected synonymous mutation(s) do not confer resistance"
 
         elif gene == "rpoB":
@@ -185,7 +185,7 @@ class LIMS:
             non_s_mutations += 1
 
           # change the gene_code to be something different depending on the MDL interpretations and/or number of non-s mutations
-          if maximum_ranking == 2 and non_s_mutations == 0: # S
+          if maximum_ranking == 2 and non_s_mutations == 0 and ~ DF_LIMS[gene_code].str.contains("synonymous")[0]: # non-RRDR region S
             DF_LIMS[gene_code] = "No high confidence mutations detected"
           elif maximum_ranking == 1: # WT
             DF_LIMS[gene_code] = "No mutations detected"
@@ -228,7 +228,7 @@ class LIMS:
 
       DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], drug_name)            
 
-      DF_LIMS = self.apply_lims_rules(gene_dictionary, DF_LIMS, antimicrobial_code)
+      DF_LIMS = self.apply_lims_rules(gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code)
            
     DF_LIMS["Analysis date"] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
     DF_LIMS["Operator"] = globals.OPERATOR
