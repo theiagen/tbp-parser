@@ -79,9 +79,9 @@ class Row() :
             else:
               self.warning.append("Insufficient coverage in locus")
          
-          if (self.depth < globals.MIN_DEPTH or float(self.frequency) < 0.10 or self.read_support < 10) and "del" not in self.tbprofiler_variant_substitution_nt:
-            globals.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
-            self.warning.append("Failed quality in the mutation position")
+        if (self.depth < globals.MIN_DEPTH or float(self.frequency) < 0.10 or self.read_support < 10) and "del" not in self.tbprofiler_variant_substitution_nt:
+          globals.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
+          self.warning.append("Failed quality in the mutation position")
         else:
           self.warning = [""]
       # otherwise, the variant does not appear in the JSON file and default NA/WT values
