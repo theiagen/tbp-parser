@@ -103,7 +103,7 @@ class Variant:
     """
     self.logger.debug("Within the Variant class apply_expert_rules function")
     
-    position_nt = globals.get_position(self.nucleotide_change)[0]
+    position_nt = globals.get_position(self.nucleotide_change)
     position_aa = globals.get_position(self.protein_change)
 
     self.logger.debug("The nucleotide position is {} and the amino acid position is {}".format(position_nt, position_aa))
@@ -113,7 +113,7 @@ class Variant:
      
       # check if position within promoter regions
       if self.gene in globals.PROMOTER_REGIONS.keys():
-        if globals.PROMOTER_REGIONS[self.gene][0] <= position_nt <= globals.PROMOTER_REGIONS[self.gene][1]: 
+        if (len(position_nt) > 1 and (any([x in range(globals.PROMOTER_REGIONS[self.gene][0], globals.PROMOTER_REGIONS[self.gene][1]) for x in position_nt]) or any([x in range(position_nt[0], position_nt[1]) for x in globals.PROMOTER_REGIONS[self.gene]]))) or (globals.PROMOTER_REGIONS[self.gene][0] <= position_nt[0] <= globals.PROMOTER_REGIONS[self.gene][1]):
           self.logger.debug("The position is within the promoter region; interpretation is 'U'")
           return "U"
       
@@ -123,7 +123,7 @@ class Variant:
         return "S" if interpretation_destination == "mdl" else "U"
       
       # otherwise, check if it is not in the ORF
-      if not any(non_ORF in self.nucleotide_change for non_ORF in ["+", "-", "*"]) or self.nucleotide_change.endswith("*"):
+      if (not any(non_ORF in self.nucleotide_change for non_ORF in ["+", "-", "*"]) or self.nucleotide_change.endswith("*")) or (not any(non_ORF in self.protein_change for non_ORF in ["+", "-", "*"]) or self.protein_change.endswith("*")):
         self.logger.debug("The position is not in the ORF; interpretation is 'S' if it is a synonymous variant or 'U' if it is not")
         # if a position includes either +, *, or - it's not in the ORF, unless 
         #  the * is at the end which means its a premature stop codon
@@ -134,7 +134,7 @@ class Variant:
 
     elif self.gene == "rrl":
       self.logger.debug("The gene is rrl, now checking if the position requires special consideration")
-      if (globals.SPECIAL_POSITIONS[self.gene][0][0] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][0][1]) or (globals.SPECIAL_POSITIONS[self.gene][1][0] <= position_nt <= globals.SPECIAL_POSITIONS[self.gene][1][1]):
+      if (len(position_nt) > 1 and (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0][0], globals.SPECIAL_POSITIONS[self.gene][0][1]) for x in position_nt]) or any([x in range(globals.SPECIAL_POSITIONS[self.gene][1][0], globals.SPECIAL_POSITIONS[self.gene][1][1]) for x in position_nt]) or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][0]]) or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][1]]))) or ((globals.SPECIAL_POSITIONS[self.gene][0][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][0][1]) or (globals.SPECIAL_POSITIONS[self.gene][1][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][1][1])):
         self.logger.debug("The position is within the special positions; interpretation is 'U'")
         return "U"
       
@@ -185,7 +185,7 @@ class Variant:
       if self.gene == "rrs":
         self.logger.debug("The gene is rrs, now checking if the position requires special consideration")
         
-        if position_nt in globals.SPECIAL_POSITIONS[self.gene]:
+        if any(map(lambda position: position in position_nt, globals.SPECIAL_POSITIONS[self.gene])):
           self.logger.debug("The position is within the special positions; interpretation is 'U'")
           return "Unoexpert"
         else:
