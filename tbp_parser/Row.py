@@ -64,7 +64,7 @@ class Row() :
         try:
           self.read_support = self.variant.depth * self.variant.freq
         except:
-          self.read_support = 0
+          self.read_support = self.depth * self.frequency
         self.rationale = ""
         self.warning = []
         
