@@ -166,6 +166,7 @@ class LIMS:
           # do not add the mutation if the particular mutation has low quality or is blank
           if ("Failed quality in the mutation position" in warnings[index]) or (mutation == ""):
             self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
+            DF_LIMS[gene_code] = "No mutations detected"
                         
           # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
           elif (mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") or (gene == "rpoB" and (len(position_aa) > 1 and (any([x in globals.RRDR_RANGE for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[gene]])) or (globals.SPECIAL_POSITIONS[gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[gene][1]))):
@@ -233,6 +234,11 @@ class LIMS:
         else:
           self.logger.debug("There are no mutations for this gene ({}) associated with this drug ({})".format(gene, antimicrobial_name))
           DF_LIMS[gene_code] = "No mutations detected"
+
+        if "Insufficient Coverage" in mdl_interpretations and max_mdl_resistance[0] in ["WT", "S"]:
+          self.logger.debug("This gene ({}) has insufficient coverage and no other mutations associated with this antimicrobial ({}) are 'R'; changing antimicrobial output to 'Pending Retest'".format(gene, antimicrobial_name))
+          DF_LIMS[antimicrobial_code] = "Pending Retest"
+    
     
     self.logger.info("Finished applying rules to mutations associated with {}, exiting function".format(globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
     return DF_LIMS
