@@ -165,6 +165,7 @@ class Row() :
       self.looker_interpretation = self.variant.apply_expert_rules("looker")
       self.mdl_interpretation = self.variant.apply_expert_rules("mdl")
       self.rationale = "Expert rule applied"
+      self.who_confidence = "No WHO annotation"
       
     self.logger.debug("Interpretation logic applied or skipped; now removing any 'noexpert' suffixes")
     self.remove_no_expert()
