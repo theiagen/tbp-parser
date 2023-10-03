@@ -461,10 +461,10 @@ rpoB and rrl indicate ranges; rrs indicates specific positions
 global SPECIAL_POSITIONS
 SPECIAL_POSITIONS = {
   "rpoB": [426, 452],
-  "rrl": [[2003, 2367], [2449, 3056]],
-  "rrs": [1401, 1402, 1484],
   "gyrA": [88, 94],
-  "gyrB": [446, 507]
+  "gyrB": [446, 507],
+  "rrl": [[2003, 2367], [2449, 3056]],
+  "rrs": [1401, 1402, 1484]
 }
 
 """
