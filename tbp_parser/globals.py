@@ -26,12 +26,12 @@ ANNOTATION_TO_INTERPRETATION = {
   },
   "Assoc w R - interim": {
     "looker": "R-Interim",   
-    "mdl": "U",
-    "mdl-ingenelist1": "U" 
+    "mdl": "R",
+    "mdl-ingenelist1": "R" 
   },
   "Uncertain significance": {
     "looker": "U", 
-    "mdl": "S", 
+    "mdl": "U", 
     "mdl-ingenelist1" : "U" 
   },
   "Not assoc w R": {
@@ -42,7 +42,7 @@ ANNOTATION_TO_INTERPRETATION = {
   "Not assoc w R - Interim": {
     "looker": "S-Interim", 
     "mdl": "S", 
-    "mdl-ingenelist1" : "U" 
+    "mdl-ingenelist1" : "S" 
   }                              
 }
 
@@ -455,12 +455,14 @@ SEQUENCING_METHOD = ""
 
 """
 This is a dictionary of positions for genes requiring different consideration.
-Note: the rpoB special position is in codons, rrl & rrs are nucleotide positions
+Note: the rpoB, gyrA, and gyrB special positions are in codons, rrl & rrs are nucleotide positions
 rpoB and rrl indicate ranges; rrs indicates specific positions
 """
 global SPECIAL_POSITIONS
 SPECIAL_POSITIONS = {
   "rpoB": [426, 452],
+  "gyrA": [88, 94],
+  "gyrB": [446, 507],
   "rrl": [[2003, 2367], [2449, 3056]],
   "rrs": [1401, 1402, 1484]
 }

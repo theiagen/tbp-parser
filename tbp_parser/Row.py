@@ -19,7 +19,6 @@ class Row() :
   
   def __init__(self, logger, variant, who_confidence, drug, gene_name=None, depth=0, frequency=None):
     self.logger = logger
-    self.logger.debug("Within the Row class __init__ function")
     
     self.variant = variant
     self.who_confidence = who_confidence
@@ -121,9 +120,7 @@ class Row() :
         self.gene_tier = globals.GENE_TO_TIER[self.tbprofiler_gene_name]
       except:
         self.gene_tier = "NA"
-      
-      self.logger.debug("Row object initialized, exiting __init__ function")
-      
+            
   def print(self):
     """
     This function prints the row in a readable format.
