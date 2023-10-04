@@ -16,7 +16,7 @@ Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if
 We recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.0.2
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.0.3
 ```
 
 ## Usage
@@ -163,7 +163,7 @@ What follows is a step-by-step explanation of what happens in the tbp-parser too
             1. If the `Row` object has a `who_confidence` attribute that is _not_ absent, it will convert that confidence into a `looker_interpretation` and `mdl_interpretation` using the `ANNOTATION_TO_INTERPRETATION` global variable dictionary.
             2. If the `Row` object is missing a `who_confidence`, it will apply the `apply_expert_rules()` method to its originating `Variant` object.
     - The `apply_expert_rules()` function in the `Variant` class implements the rules outlined in the CDPH interpretation document regarding the interpretation of potential resistance mutations. Each `Variant` is considered based on its originating gene and the antimicrobial drug it is associated with. Depending on the mutation and/or position, the appropriate Looker and MDL interpretations are returned to the `Row` object.
-        - Depending on whether or not the rule applied is considered an "expert" rule or not, a `"noexpert"` string is sometimes appended to the interpretation. If this is the case, the `complete_row()` method calls the `Row`'s `remove_no_expert()` function which removes this suffix and modifies the `rationale` field.
+        - Depending on whether or not the rule applied is considered an "expert" rule or not, a `"noexpert"` string is sometimes appended to the interpretation. If this is the case, the `complete_row()` method calls the `Row`'s `describe_rationale()` function which removes this suffix and modifies the `rationale` field.
     - Following `Row` completion, depending on if the `Row`'s `tbprofiler_gene_name` belongs to a certain group of genes, the `extract_alternate_consequences` function is called on the `Variant`. This performs a function similar to the `iterate_section` method but upon a `Variant`'s `alternate_consequences` attribute. Any additional `Row`s made are added to the `row_list`.
 5. After `iterate_section()` completes within the `create_laboratorian_report()` method, any genes that are not already in the `row_list` are added. In addition, any warnings are also applied. Finally, the `row_list` is added to the global variable `DF_LABORATORIAN` for usage in other functions, and the row_list is converted into an output CSV file.
 6. The `Parser.run()` method now creates a `Looker` object (`Looker.py`) which is initialized with the input JSON file. The `create_looker_report` method is then called on the object.

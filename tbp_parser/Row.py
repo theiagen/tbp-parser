@@ -13,7 +13,7 @@ class Row() :
     - rank_annotation: ranks the WHO annotation based on resistance
     - annotation_to_LIMS: converts the WHO annotation and the target drug
       into returns the LIMS' report file appropriate annotation
-    - remove_no_expert: removes the 'noexpert' suffix in the case where
+    - describe_rationale: removes the 'noexpert' suffix in the case where
       the interpretation logic applied is not considered an expert rule
   """
   
@@ -151,10 +151,7 @@ class Row() :
     if self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
       self.logger.debug("WHO annotation identified: converting to the appropriate interpretation")
       self.looker_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
-      if self.tbprofiler_gene_name in globals.GENE_LIST_MDL:
-        self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl-ingenelist1"]
-      else:
-        self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
+      self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
       self.rationale = "WHO classification"
     
     elif self.who_confidence != "NA":
@@ -165,11 +162,11 @@ class Row() :
       self.confidence = "No WHO annotation"
       
     self.logger.debug("Interpretation logic applied or skipped; now removing any 'noexpert' suffixes")
-    self.remove_no_expert()
+    self.describe_rationale()
     
     self.logger.debug("Finished completing the row's values, now exiting function")
     
-  def rank_annotation(self):
+  def rank_annotation(self): 
     """
     This function ranks the WHO annotation based on resistance,
     with 4 being the most resistant category and 1 the least.
@@ -196,19 +193,22 @@ class Row() :
     else: 
       return "No mutations associated with resistance to {} detected".format(self.antimicrobial)
 
-  def remove_no_expert(self):
+  def describe_rationale(self):
     """
     This function removes the 'noexpert' suffix in the case where 
     the interpretation logic applied is not considered an expert rule.
     """
-    if "noexpert" in self.looker_interpretation:
-      interpretation = self.looker_interpretation
-      self.looker_interpretation = interpretation.replace("noexpert", "")
-      self.rationale = "No WHO annotation or expert rule"
+    if any(rule in self.looker_interpretation for rule in globals.RULE_TO_RATIONALE.keys()):
+      interpretation = self.looker_interpretation[0]
+      rule = self.looker_interpretation[1:]
+      self.looker_interpretation = interpretation
+      self.rationale = globals.RULE_TO_RATIONALE[rule]
       self.confidence = "No WHO annotation"
       
-    if "noexpert" in self.mdl_interpretation:
-      interpretation = self.mdl_interpretation
-      self.mdl_interpretation = interpretation.replace("noexpert", "")
-      self.rationale = "No WHO annotation or expert rule"
+    if any(rule in self.mdl_interpretation for rule in globals.RULE_TO_RATIONALE.keys()):
+      interpretation = self.mdl_interpretation[0]
+      rule = self.mdl_interpretation[1:]
+      self.mdl_interpretation = interpretation
+      self.rationale = globals.RULE_TO_RATIONALE[rule]
       self.confidence = "No WHO annotation"
+      

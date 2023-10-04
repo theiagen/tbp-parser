@@ -21,28 +21,23 @@ global ANNOTATION_TO_INTERPRETATION
 ANNOTATION_TO_INTERPRETATION = {
   "Assoc w R": {
     "looker": "R", 
-    "mdl": "R",
-    "mdl-ingenelist1": "R"
+    "mdl-rule": "R"
   },
   "Assoc w R - interim": {
-    "looker": "R-Interim",   
-    "mdl": "R",
-    "mdl-ingenelist1": "R" 
+    "looker": "R-Interim",
+    "mdl": "R"
   },
   "Uncertain significance": {
     "looker": "U", 
-    "mdl": "U", 
-    "mdl-ingenelist1" : "U" 
+    "mdl": "U" 
   },
   "Not assoc w R": {
-    "looker": "S", 
-    "mdl": "S",
-    "mdl-ingenelist1" : "S" 
+    "looker": "S",
+    "mdl": "S"
   }, 
   "Not assoc w R - Interim": {
     "looker": "S-Interim", 
-    "mdl": "S", 
-    "mdl-ingenelist1" : "S" 
+    "mdl": "S"
   }                              
 }
 
@@ -207,11 +202,18 @@ global GENE_LIST
 GENE_LIST = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678", "ethA", "gid", "katG", "pncA", "rpoB"]
 
 """
-A list of genes that require specific MDL interpretation rules
+A list of genes that correspond to rule 1.1
 Rv0678 is equivalent to mmpR5
 """
-global GENE_LIST_MDL
-GENE_LIST_MDL = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678"]
+global GENE_LIST_MDL_1_1
+GENE_LIST_MDL_1_1 = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678"]
+
+"""
+A list of genes that correspond to rule 1.1
+Rv0678 is equivalent to mmpR5
+"""
+global GENE_LIST_MDL_2_1
+GENE_LIST_MDL_2_1 = ["ethA", "gid", "katG", "pncA", "rpoB"]
 
 """
 A set of genes that have been reported so far
@@ -440,6 +442,21 @@ RPOB_MUTATIONS = [
   "Leu452Pro",
   "Ile491Phe"
 ]
+
+"""
+This dictionary converts the rule to the rationale language
+"""
+global RULE_TO_RATIONALE
+RULE_TO_RATIONALE = {
+  "rule1.2": "Expert rule 1.2. Novel drug targets",
+  "rule2.2.1": "Expert rule 2.2.1. Loss-of-function",
+  "rule2.2.2.1": "Expert rule 2.2.2.1. rpoB RRDR",
+  "rule2.2.2.2": "Expert rule 2.2.2.2 rpoB non-RRDR",
+  "rule3.2.1": "Expert rule 3.2.1. rrs",
+  "rule3.2.2": "Expert rule 3.2.3. gyrA QRDR",
+  "rule3.2.3": "Expert rule 3.2.3. gyrB QRDR",
+  "rule3.2.4": "No WHO annotation or expert rule"
+}
 
 """
 This variable holds the sample name
