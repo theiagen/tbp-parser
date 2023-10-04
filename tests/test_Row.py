@@ -21,12 +21,12 @@ class TestRow:
                                           "The detected mutation(s) have uncertain significance. Resistance to test cannot be ruled out", 
                                           "No mutations associated with resistance to test detected")
     
-  def test_remove_no_expert(self):
+  def test_describe_rationale(self):
     a = Row(logging.getLogger(__name__), None, "Assoc w R", "test", "test")
     a.looker_interpretation = "Unoexpert"
     a.mdl_interpretation = "Snoexpert"
     
-    a.remove_no_expert()
+    a.describe_rationale()
     
     assert (a.looker_interpretation, a.mdl_interpretation, a.rationale, a.confidence) == ("U", "S", "No WHO annotation or expert rule", "No WHO annotation")
     

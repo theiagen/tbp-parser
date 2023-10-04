@@ -109,18 +109,18 @@ class Variant:
     self.logger.debug("The nucleotide position is {} and the amino acid position is {}".format(position_nt, position_aa))
     
     if self.gene in ["Rv0678", "atpE", "pepQ", "rplC", "mmpL5", "mmpS5"]:        
-      self.logger.debug("The gene is {}, now checking if the position requires special consideration".format(self.gene))
+      self.logger.debug("The gene is {}, now checking if the position requires special consideration under rule 1.2".format(self.gene))
      
       # check if position within promoter regions
       if self.gene in globals.PROMOTER_REGIONS.keys():
         if (len(position_nt) > 1 and (any([x in range(globals.PROMOTER_REGIONS[self.gene][0], globals.PROMOTER_REGIONS[self.gene][1]) for x in position_nt]) or any([x in range(position_nt[0], position_nt[1]) for x in globals.PROMOTER_REGIONS[self.gene]]))) or (globals.PROMOTER_REGIONS[self.gene][0] <= position_nt[0] <= globals.PROMOTER_REGIONS[self.gene][1]):
           self.logger.debug("The position is within the promoter region; interpretation is 'U'")
-          return "U"
+          return "Urule1.2"
       
       # otherwise, check if it is an upstream gene variant
       if "upstream_gene_variant" in self.type: 
         self.logger.debug("The position is an upstream gene variant; interpretation is 'S/U'")
-        return "S" if interpretation_destination == "mdl" else "U"
+        return "Srule1.2" if interpretation_destination == "mdl" else "Urule1.2"
       
       # otherwise, check if it is not in the ORF
       if (not any(non_ORF in self.nucleotide_change for non_ORF in ["+", "-", "*"]) or self.nucleotide_change.endswith("*")) or (not any(non_ORF in self.protein_change for non_ORF in ["+", "-", "*"]) or self.protein_change.endswith("*")):
@@ -128,37 +128,36 @@ class Variant:
         # if a position includes either +, *, or - it's not in the ORF, unless 
         #  the * is at the end which means its a premature stop codon
         if self.type != "synonymous_variant":
-          return "U"
+          return "Urule1.2"
         else:
-          return "S"
+          return "Srule1.2"
 
     elif self.gene == "rrl":
       self.logger.debug("The gene is rrl, now checking if the position requires special consideration")
       if (len(position_nt) > 1 and (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0][0], globals.SPECIAL_POSITIONS[self.gene][0][1]) for x in position_nt]) or any([x in range(globals.SPECIAL_POSITIONS[self.gene][1][0], globals.SPECIAL_POSITIONS[self.gene][1][1]) for x in position_nt]) or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][0]]) or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][1]]))) or ((globals.SPECIAL_POSITIONS[self.gene][0][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][0][1]) or (globals.SPECIAL_POSITIONS[self.gene][1][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][1][1])):
         self.logger.debug("The position is within the special positions; interpretation is 'U'")
-        return "U"
+        return "Urule1.2"
       
       else:
         self.logger.debug("The position is not within the special positions; interpretation is 'S/U'")
-        return "S" if interpretation_destination == "mdl" else "U"
+        return "Srule1.2" if interpretation_destination == "mdl" else "Urule1.2"
 
     elif self.gene in ["katG", "pncA", "ethA", "gid"]: 
-      self.logger.debug("The gene is {}, now checking if the mutation type requires special consideration".format(self.gene))
+      self.logger.debug("The gene is {}, now checking if the mutation type requires special consideration under rule 2.2".format(self.gene))
 
       if (any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.nucleotide_change.endswith("*")) or (any(indel_or_stop in self.protein_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.protein_change.endswith("*")):
         if all([int(position) > -30 for position in position_nt]): 
           self.logger.debug("The mutation type is an indel, stop, or frameshift codon and within 30 nt of the start codon; interpretation is 'U'")
-          return "U"
+          return "Urule2.2.1"
         else:
           self.logger.debug("The mutation type is an indel, stop, or frameshift codon but is past 30 nt of the start codon; interpretation is 'S'")
-          return "S"
       
-      elif (self.type != "synonymous_variant") or ("upstream_gene_variant" in self.type):
+      if (self.type != "synonymous_variant") or ("upstream_gene_variant" in self.type):
         self.logger.debug("The mutation type is not a synonymous variant or is an upstream gene variant; interpretation is 'S/U'")
-        return "S" if interpretation_destination == "mdl" else "U"
+        return "Srule2.2.1" if interpretation_destination == "mdl" else "Urule2.2.1"
       else:
         self.logger.debug("The mutation type is a synonymous variant or is not upstream gene variant; interpretation is 'S'")
-        return "S"
+        return "Srule2.2.1"
 
     elif self.gene in ["gyrA", "gyrB", "rpoB"]: 
       self.logger.debug("The gene is {}, now checking if the position requires special consideration".format(self.gene))
@@ -171,18 +170,34 @@ class Variant:
       #  to see if (R/Q)RDR falls within, we check (R/Q)RDR start/end positions are within the AA position range
       # otherwise, check if the single AA position is within (R/Q)RDR positions
       if (len(position_aa) > 1 and (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0][0], globals.SPECIAL_POSITIONS[self.gene][0][1]) for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene][0]]))) or ((globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene][1])):
-        self.logger.debug("The position is within the special positions; interpretation is 'R' if rpoB or 'U' if not if nonsynonymous, else 'S'")
-        if self.type != "synonymous_variant":
-          return "R" if self.gene == "rpoB" else "U"
-        else:
-          return "S"
+        self.logger.debug("The position is within the special positions; interpretation is 'R' if rpoB (or 'U' if not) and nonsynonymous, else 'S'")
+        if self.gene == "rpoB":
+          if self.type != "synonymous_variant":
+            return "Rrule2.2.2.1" 
+          else:
+            return "Srule2.2.2.1"
+          
+        if self.gene == "gyrA":
+          if self.type != "synonymous_variant":
+            return "Urule3.2.2"
+          else:
+            return "Srule3.2.4"
+          
+        if self.gene == "gyrB":
+          if self.type != "synonymous_variant":
+            return "Urule3.2.3"
+          else:
+            return "Srule3.2.4"
           
       elif (self.type != "synonymous_variant") or ("upstream_gene_variant" in self.type):
         self.logger.debug("The position is not within the special positions, is not nonsynonymous, or is an upstream gene variant; interpretation is 'S/U'")
-        return "S" if interpretation_destination == "mdl" else "U"
+        if self.gene == "rpoB":
+          return "Srule2.2.2.2" if interpretation_destination == "mdl" else "Urule2.2.2.2"
+        else:
+          return "Srule3.2.4" if interpretation_destination == "mdl" else "Urule3.2.4"
       else:
         self.logger.debug("The position is not within the special positions, is synonymous, or is not an upstream gene variant; interpretation is 'S'")
-        return "S"
+        return "Srule2.2.2.2" if self.gene == "rpoB" else "Srule3.2.4"
 
     elif self.gene not in globals.GENE_LIST:
       self.logger.debug("The gene is not in the gene list that requires an expert rule.")
@@ -192,16 +207,16 @@ class Variant:
         
         if any(map(lambda position: position in position_nt, globals.SPECIAL_POSITIONS[self.gene])):
           self.logger.debug("The position is within the special positions; interpretation is 'U'")
-          return "Unoexpert"
+          return "Urule3.2.1"
         else:
           self.logger.debug("The position is not within the special positions; interpretation is 'S/U'")
-          return "Snoexpert" if interpretation_destination == "mdl" else "Unoexpert"
+          return "Srule3.2.1" if interpretation_destination == "mdl" else "Urule3.2.1"
       
       elif (self.type != "synonymous_variant") or ("upstream_gene_variant" in self.type):
         self.logger.debug("The position is not a synonymous variant or is an upstream gene variant; interpretation is 'S/U'")
-        return "Snoexpert" if interpretation_destination == "mdl" else "Unoexpert"
+        return "Srule3.2.4" if interpretation_destination == "mdl" else "Urule3.2.4"
       
       else:
         self.logger.debug("The position is a synonymous variant or is not an upstream gene variant; interpretation is 'S'")
-        return "Snoexpert"
+        return "Srule3.2.4"
     return ""
