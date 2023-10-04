@@ -7,3 +7,4 @@ __pycache__/
 # output from pytest
 *.csv
 .pytest_cache/
+*.pyc
