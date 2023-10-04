@@ -23,8 +23,10 @@ class TestRow:
     
   def test_describe_rationale(self):
     a = Row(logging.getLogger(__name__), None, "Assoc w R", "test", "test")
-    a.looker_interpretation = "Unoexpert"
-    a.mdl_interpretation = "Snoexpert"
+    a.looker_interpretation = "Urule3.2.4"
+    a.mdl_interpretation = "Srule3.2.4"
+    a.rationale = ""
+    a.confidence = ""
     
     a.describe_rationale()
     
