@@ -21,7 +21,7 @@ global ANNOTATION_TO_INTERPRETATION
 ANNOTATION_TO_INTERPRETATION = {
   "Assoc w R": {
     "looker": "R", 
-    "mdl-rule": "R"
+    "mdl": "R"
   },
   "Assoc w R - interim": {
     "looker": "R-Interim",
