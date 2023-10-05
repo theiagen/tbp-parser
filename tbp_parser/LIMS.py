@@ -265,7 +265,7 @@ class LIMS:
     for antimicrobial_code, gene_dictionary in globals.ANTIMICROBIAL_CODE_TO_GENES.items():
       drug_name = globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
       
-      potential_mdl_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name]["mdl_interpretation"]
+      potential_mdl_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name][globals.DF_LABORATORIAN["tbprofiler_gene_name"].isin(globals.GENES_FOR_LIMS)]["mdl_interpretation"]
       
       # get the maximum resistance for the drug
       max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_mdl_resistances])]
