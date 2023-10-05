@@ -40,7 +40,7 @@ ARG SAMTOOLS_VER
 LABEL base.image="ubuntu:jammy"
 LABEL dockerfile.version="1"
 LABEL software="tbp-parser"
-LABEL software.version="1.0.3"
+LABEL software.version="1.0.4"
 LABEL description="tbp-parser and samtools"
 LABEL website="https://github.com/theiagen/tbp-parser"
 LABEL license="https://github.com/theiagen/tbp-parser/blob/main/LICENSE"
