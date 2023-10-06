@@ -146,7 +146,7 @@ class Variant:
       self.logger.debug("The gene is {}, now checking if the mutation type requires special consideration under rule 2.2".format(self.gene))
 
       if (any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.nucleotide_change.endswith("*")) or (any(indel_or_stop in self.protein_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.protein_change.endswith("*")):
-        if all([int(position) > -30 for position in position_nt]): 
+        if any([int(position) > -30 for position in position_nt]): 
           self.logger.debug("The mutation type is an indel, stop, or frameshift codon and within 30 nt of the start codon; interpretation is 'U'")
           return "Urule2.2.1"
         else:
