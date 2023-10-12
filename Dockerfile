@@ -3,6 +3,7 @@
 # Shelby Bennett, Erin Young, Curtis Kapsak, & Kutluhan Incekara
 
 ARG SAMTOOLS_VER="1.18"
+ARG TBP_PARSER_VER="1.1.1"
 
 FROM ubuntu:jammy as builder
 
@@ -36,11 +37,12 @@ RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VER}/
 FROM ubuntu:jammy as app
 
 ARG SAMTOOLS_VER
+ARG TBP_PARSER_VER
 
 LABEL base.image="ubuntu:jammy"
 LABEL dockerfile.version="1"
 LABEL software="tbp-parser"
-LABEL software.version="1.0.5"
+LABEL software.version="1.1.1"
 LABEL description="tbp-parser and samtools"
 LABEL website="https://github.com/theiagen/tbp-parser"
 LABEL license="https://github.com/theiagen/tbp-parser/blob/main/LICENSE"
@@ -63,6 +65,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     liblzma-dev \
     libcurl4-gnutls-dev \
     gnuplot \
+    wget \
+    ca-certificates \
     && apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
 # copy in samtools executables from builder stage
@@ -71,7 +75,9 @@ COPY --from=builder /usr/local/bin/* /usr/local/bin/
 ENV LC_ALL=C
 
 # copy in all of the tb-profiler-parsing code
-COPY . /tbp-parser
+RUN wget https://github.com/theiagen/tbp-parser/archive/refs/tags/v${TBP_PARSER_VER}.tar.gz && \
+    tar -xzvf v${TBP_PARSER_VER}.tar.gz && \
+    mv -v tbp-parser-${TBP_PARSER_VER} /tbp-parser
 
 ENV DEB_PYTHON_INSTALL_LAYOUT=deb_system
 

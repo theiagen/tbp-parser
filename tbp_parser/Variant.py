@@ -162,6 +162,8 @@ class Variant:
     elif self.gene in ["gyrA", "gyrB", "rpoB"]: 
       self.logger.debug("The gene is {}, now checking if the position requires special consideration".format(self.gene))
       self.logger.debug("length of aa: {}".format(len(position_aa)))
+      self.logger.debug("SEPCIAL POSITIONS: {}".format(globals.SPECIAL_POSITIONS[self.gene]))
+      
       # explanation of following giant conditional:
       # RRDR belongs to rpoB, QRDR belongs to gyrA and gyrB
       # if there are more than 2 AA positions, it's likely a deletion or frameshift thing. 
@@ -169,7 +171,7 @@ class Variant:
       #  to see if within (R/Q)RDR, we check if any of the AA positions are within the (R/Q)RDR range
       #  to see if (R/Q)RDR falls within, we check (R/Q)RDR start/end positions are within the AA position range
       # otherwise, check if the single AA position is within (R/Q)RDR positions
-      if (len(position_aa) > 1 and (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0][0], globals.SPECIAL_POSITIONS[self.gene][0][1]) for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene][0]]))) or ((globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene][1])):
+      if (len(position_aa) > 1 and (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0], globals.SPECIAL_POSITIONS[self.gene][1]) for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene]]))) or ((globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene][1])):
         self.logger.debug("The position is within the special positions; interpretation is 'R' if rpoB (or 'U' if not) and nonsynonymous, else 'S'")
         if self.gene == "rpoB":
           if self.type != "synonymous_variant":
