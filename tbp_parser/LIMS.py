@@ -39,20 +39,29 @@ class LIMS:
       input_json = json.load(json_fh)
       
       # set default value for lineage
-      lineage = "DNA of Mycobacterium tuberculosis complex detected (not M. bovis and not M. tb)"
+      lineage = []
       detected_lineage = input_json["main_lin"]
+      sublineage = input_json["sublin"]
       
       if detected_lineage == "" or detected_lineage == "NA":
         if percentage_above >= percentage_limit:
-          lineage = "DNA of Mycobacterium tuberculosis complex detected"
+          lineage.append("DNA of Mycobacterium tuberculosis complex detected")
         else:
-           lineage = "DNA of Mycobacterium tuberculosis complex NOT detected"
-      elif "lineage" in detected_lineage:
-        lineage = "DNA of Mycobacterium tuberculosis species detected"
-      elif "BCG" in detected_lineage:
-        lineage = "DNA of Mycobacterium bovis BCG detected"
-      elif "bovis" in detected_lineage or "La1" in detected_lineage:
-        lineage = "DNA of Mycobacterium bovis (not BCG) detected"
+           lineage.append("DNA of Mycobacterium tuberculosis complex NOT detected")
+           
+      if "lineage" in detected_lineage:
+        lineage.append("DNA of Mycobacterium tuberculosis species detected")
+        
+      if "BCG" in detected_lineage or "BCG" in sublineage:
+        lineage.append("DNA of Mycobacterium bovis BCG detected")
+        
+      if "La1" in detected_lineage or "La1" in sublineage:
+        lineage.append("DNA of Mycobacterium bovis (not BCG) detected")
+        
+      if len(lineage) == 0:
+        lineage.append("DNA of Mycobacterium tuberculosis complex detected (not M. bovis and not M. tb)")
+       
+      lineage = "; ".join(lineage)
         
     self.logger.debug("The lineage is: {}".format(lineage))
     self.logger.info("Finished getting lineage, now exiting function")
