@@ -55,8 +55,8 @@ class LIMS:
       if "BCG" in detected_lineage or "BCG" in sublineage:
         lineage.append("DNA of Mycobacterium bovis BCG detected")
         
-      if "La1" in detected_lineage or "La1" in sublineage:
-        lineage.append("DNA of Mycobacterium bovis (not BCG) detected")
+      if ("La1" in detected_lineage or "La1" in sublineage) or ("bovis" in detected_lineage or "bovis" in sublineage):
+        lineage.append("DNA of Mycobacterium bovis (not BCG) detected")     
         
       if len(lineage) == 0:
         lineage.append("DNA of Mycobacterium tuberculosis complex detected (not M. bovis and not M. tb)")
