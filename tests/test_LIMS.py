@@ -31,7 +31,7 @@ class TestLIMS:
     LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
     lineage = LIMS1.get_lineage()
     
-    assert lineage == "DNA of non-BCG Mycobacterium bovis detected"
+    assert lineage == "DNA of Mycobacterium bovis (not BCG) detected"
 
   def test_get_lineage_la1(self):
     JSON = os.path.join(self.data_dir + '/lineages', "la1.json")
@@ -39,7 +39,7 @@ class TestLIMS:
     LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
     lineage = LIMS1.get_lineage()
     
-    assert lineage == "DNA of M. tuberculosis complex detected (M. bovis)"
+    assert lineage == "DNA of Mycobacterium bovis (not BCG) detected"
   
   def test_get_lineage_lineage(self):
     JSON = os.path.join(self.data_dir + '/lineages', "lineage.json")
