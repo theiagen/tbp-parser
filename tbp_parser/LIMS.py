@@ -42,7 +42,7 @@ class LIMS:
       lineage = "DNA of Mycobacterium tuberculosis complex detected (not M. bovis and not M. tb)"
       detected_lineage = input_json["main_lin"]
       
-      if detected_lineage == "":
+      if detected_lineage == "" or detected_lineage == "NA":
         if percentage_above >= percentage_limit:
           lineage = "DNA of Mycobacterium tuberculosis complex detected"
         else:
@@ -51,11 +51,9 @@ class LIMS:
         lineage = "DNA of Mycobacterium tuberculosis species detected"
       elif "BCG" in detected_lineage:
         lineage = "DNA of Mycobacterium bovis BCG detected"
-      elif "bovis" in detected_lineage:
-        lineage = "DNA of non-BCG Mycobacterium bovis detected"
-      elif "La1" in detected_lineage:
-        lineage = "DNA of M. tuberculosis complex detected (M. bovis)"
-      
+      elif "bovis" in detected_lineage or "La1" in detected_lineage:
+        lineage = "DNA of Mycobacterium bovis (not BCG) detected"
+        
     self.logger.debug("The lineage is: {}".format(lineage))
     self.logger.info("Finished getting lineage, now exiting function")
     return lineage
