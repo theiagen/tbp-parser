@@ -39,29 +39,32 @@ class LIMS:
       input_json = json.load(json_fh)
       
       # set default value for lineage
-      lineage = []
+      lineage = set()
       detected_lineage = input_json["main_lin"]
-      sublineage = input_json["sublin"]
+      detected_sublineage = input_json["sublin"]
       
+      sublineages = detected_sublineage.split(";")
+      
+      if "lineage" in detected_lineage:
+        lineage.add("DNA of Mycobacterium tuberculosis species detected")
+        
+      for sublineage in sublineages:  
+        if "BCG" in detected_lineage or "BCG" in sublineage:
+          lineage.add("DNA of Mycobacterium bovis BCG detected")
+                
+        elif ("La1" in detected_lineage or "La1" in sublineage) or ("bovis" in detected_lineage or "bovis" in sublineage):
+          lineage.add("DNA of Mycobacterium bovis (not BCG) detected")     
+        
       if detected_lineage == "" or detected_lineage == "NA":
         if percentage_above >= percentage_limit:
-          lineage.append("DNA of Mycobacterium tuberculosis complex detected")
+          lineage.add("DNA of Mycobacterium tuberculosis complex detected")
         else:
-           lineage.append("DNA of Mycobacterium tuberculosis complex NOT detected")
-           
-      if "lineage" in detected_lineage:
-        lineage.append("DNA of Mycobacterium tuberculosis species detected")
-        
-      if "BCG" in detected_lineage or "BCG" in sublineage:
-        lineage.append("DNA of Mycobacterium bovis BCG detected")
-        
-      if ("La1" in detected_lineage or "La1" in sublineage) or ("bovis" in detected_lineage or "bovis" in sublineage):
-        lineage.append("DNA of Mycobacterium bovis (not BCG) detected")     
-        
+          lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
+      
       if len(lineage) == 0:
-        lineage.append("DNA of Mycobacterium tuberculosis complex detected (not M. bovis and not M. tb)")
+        lineage.add("DNA of Mycobacterium tuberculosis complex detected (not M. bovis and not M. tb)")
        
-      lineage = "; ".join(lineage)
+      lineage = "; ".join(sorted(lineage))
         
     self.logger.debug("The lineage is: {}".format(lineage))
     self.logger.info("Finished getting lineage, now exiting function")
