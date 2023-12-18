@@ -64,12 +64,15 @@ class Variant:
     annotation field is empty or does not exist, the function creates a row
     based off of the gene_associated_drugs field.
     """
-    self.logger.debug("Within the Variant class extract_annotations function")
+    self.logger.debug("Within the Variant class extract_annotations function")   
     
     # if possibility 1a (variant has an annotation field with content)
     if hasattr(self, "annotation") and len(self.annotation) > 0:
       self.logger.debug("Starting to turn each annotation into a Row")
       
+      # create a list of the drugs associated with the gene to check if all drugs are reported
+      gene_associated_drug_list = self.gene_associated_drugs
+
       # iterate through the annotations
       for item in self.annotation:
         # turn the annotation into a Row object
@@ -79,6 +82,10 @@ class Variant:
         if annotation.antimicrobial not in self.annotation_dictionary.keys():
           self.logger.debug("This is the first time this drug ({}) has been seen; adding it to the annotation dictionary".format(annotation.antimicrobial))
           self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.who_confidence, annotation.antimicrobial)
+          
+          # if the drug is in the gene associated drug list, remove it because it has been accounted for
+          if annotation.antimicrobial in gene_associated_drug_list:
+            gene_associated_drug_list.remove(annotation.antimicrobial)
         
         # otherwise, save only the annotation with the more severe WHO confidence (higher value)
         elif annotation.rank_annotation() > self.annotation_dictionary[annotation.antimicrobial].rank_annotation():
@@ -86,6 +93,12 @@ class Variant:
           self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.who_confidence, annotation.antimicrobial)
         
       self.logger.debug("The annotation dictionary has been expanded; it now has a length of {}".format(len(self.annotation_dictionary)))
+
+      # add any missing drugs from the annotation list that are found on the gene associated drug list to the annotation dictionary 
+      for drug in gene_associated_drug_list:  
+        self.annotation_dictionary[drug] = Row(self.logger, self, "No WHO annotation", drug)
+
+      self.logger.debug("The annotation dictionary has all gene associated drugs included; it now has a length of {}".format(len(self.annotation_dictionary)))
     else:
       # possibilities 1b and 2: the annotation field has no content or the field does not exist
       self.logger.debug("The annotation field has no content or does not exist. Now iterating through gene associated drugs.")
