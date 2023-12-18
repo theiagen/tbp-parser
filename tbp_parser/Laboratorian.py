@@ -47,7 +47,9 @@ class Laboratorian:
         
         # if mutation in mmpS5, mmpL5, or Rv0678, we want to perform further examination but only if the mutation is NOT R based on rule 1.1;
         # otherwise, we want to examine the "aternate_consequences" section and apply rule 1.2 and keep only the highest severity mutation
-        if annotation_row.tbprofiler_gene_name in ["mmpS5", "mmpL5", "Rv0678"] and annotation_row.mdl_interpretation != "R" and annotation_row.rationale != "WHO classification":
+        # change 2023-12-15: all mmpS/mmpL/mmpR mutations are reported regardless of WHO classification
+        if annotation_row.tbprofiler_gene_name in ["mmpS5", "mmpL5", "Rv0678"]:
+        # OLD CONDITIONAL included `and !(annotation_row.mdl_interpretation == "R" and annotation_row.rationale == "WHO classification"):`
           row_list = variant.extract_alternate_consequences(annotation_row, row_list)
 
         row_list.append(annotation_row)
