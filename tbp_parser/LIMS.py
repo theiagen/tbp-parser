@@ -165,18 +165,21 @@ class LIMS:
           if gene == "rpoB":           
             position_aa = globals.get_position(aa_mutation)
           
-          # convert WT and Insufficient Coverage to empty strings
+          # convert NA, WT, and Insufficient Coverage to empty strings
           if mutation == "WT" or mutation == "Insufficient Coverage" or mutation == "NA":
             mutation = ""
             
-          # convert NA,  WT, and Insufficient Coverage to empty strings
+          # convert NA, WT, and Insufficient Coverage to empty strings
           if aa_mutation == "NA" or aa_mutation == "WT" or aa_mutation == "Insufficient Coverage":
             aa_mutation = ""
               
           # do not add the mutation if the particular mutation has low quality or is blank
-          if ("Failed quality in the mutation position" in warnings[index]) or (mutation == ""):
-            self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
+          if mutation == "":
+            self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it is WT".format(mutation, gene))
             DF_LIMS[gene_code] = "No mutations detected"
+          elif ("Failed quality in the mutation position" in warnings[index]) or ("Insufficient coverage in locus" in warnings[index]):
+            self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position or had insufficient locus coverage".format(mutation, gene))
+            DF_LIMS[gene_code] = "No sequence"
                         
           # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
           elif (mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") or (gene == "rpoB" and (len(position_aa) > 1 and (any([x in globals.RRDR_RANGE for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[gene]])) or (globals.SPECIAL_POSITIONS[gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[gene][1]))):
@@ -235,7 +238,7 @@ class LIMS:
             non_s_mutations += 1
 
           # change the gene_code to be something different depending on the MDL interpretations and/or number of non-s mutations
-          if maximum_ranking == 2 and non_s_mutations == 0 and ~ DF_LIMS[gene_code].str.contains("synonymous")[0]: # non-RRDR region S
+          if maximum_ranking == 2 and non_s_mutations == 0 and ~ DF_LIMS[gene_code].str.contains("synonymous")[0] and DF_LIMS[gene_code] != "No sequence": # non-RRDR region S
             DF_LIMS[gene_code] = "No high confidence mutations detected"
           elif maximum_ranking == 1: # WT
             DF_LIMS[gene_code] = "No mutations detected"
