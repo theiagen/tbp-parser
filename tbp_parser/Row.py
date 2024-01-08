@@ -68,21 +68,30 @@ class Row() :
         self.warning = []
         
         if (self.depth < globals.MIN_DEPTH) or (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
-          self.logger.debug("The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a warning".format(self.depth, globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
+          self.logger.debug("The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a locus warning".format(self.depth, globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
           if (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
             globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
             
             if "del" in self.tbprofiler_variant_substitution_nt or self.tbprofiler_gene_name in globals.GENES_WITH_DELETIONS:
-              self.warning.append("Insufficient coverage in locus (deletion identified)")
               globals.GENES_WITH_DELETIONS.add(self.tbprofiler_gene_name)
             else:
               self.warning.append("Insufficient coverage in locus")
          
         if (self.depth < globals.MIN_DEPTH or float(self.frequency) < 0.10 or self.read_support < 10) and "del" not in self.tbprofiler_variant_substitution_nt:
+          self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; applying a mutation position warning".format(self.depth, self.frequency, self.read_support))
           globals.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
           self.warning.append("Failed quality in the mutation position")
-        else:
+        
+        elif (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD) and "del" not in self.tbprofiler_variant_substitution_nt:
+          self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; no warning added for the mutation position".format(self.depth, self.frequency, self.read_support))
+        
+        elif "del" in self.tbprofiler_variant_substitution_nt:
+          self.logger.debug("This is a deletion, no additional warning added for the mutation position")
+        
+        else: # all other variants, no warning added
           self.warning = [""]
+          
+        self.logger.debug("warnings: {}".format(self.warning))
       # otherwise, the variant does not appear in the JSON file and default NA/WT values
       # need to be supplied
       else:
