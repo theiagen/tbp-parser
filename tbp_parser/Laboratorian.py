@@ -134,10 +134,7 @@ class Laboratorian:
               if row.tbprofiler_gene_name == gene:
                 if "Insufficient coverage in locus" not in row.warning:
                   row.warning.append("Insufficient coverage in locus")
-                # overwrite all row values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
-                row.tbprofiler_variant_substitution_type = "Insufficient Coverage"
-                row.tbprofiler_variant_substitution_nt = "NA"
-                row.tbprofiler_variant_substitution_aa = "NA"
+                # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
                 row.looker_interpretation = "Insufficient Coverage"
                 row.mdl_interpretation = "Insufficient Coverage"
                 reorder_list.append(row)
