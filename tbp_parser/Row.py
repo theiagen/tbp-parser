@@ -73,17 +73,18 @@ class Row() :
             globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
             
             if "del" in self.tbprofiler_variant_substitution_nt or self.tbprofiler_gene_name in globals.GENES_WITH_DELETIONS:
+              self.logger.debug("This is a deletion, no warning added for the locus")
               globals.GENES_WITH_DELETIONS.add(self.tbprofiler_gene_name)
             else:
               self.warning.append("Insufficient coverage in locus")
          
         if (self.depth < globals.MIN_DEPTH or float(self.frequency) < 0.10 or self.read_support < 10) and "del" not in self.tbprofiler_variant_substitution_nt:
-          self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; applying a mutation position warning".format(self.depth, self.frequency, self.read_support))
+          self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; applying an additional mutation position warning".format(self.depth, self.frequency, self.read_support))
           globals.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
           self.warning.append("Failed quality in the mutation position")
         
         elif (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD) and "del" not in self.tbprofiler_variant_substitution_nt:
-          self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; no warning added for the mutation position".format(self.depth, self.frequency, self.read_support))
+          self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; no additional warning added for the mutation position".format(self.depth, self.frequency, self.read_support))
         
         elif "del" in self.tbprofiler_variant_substitution_nt:
           self.logger.debug("This is a deletion, no additional warning added for the mutation position")
