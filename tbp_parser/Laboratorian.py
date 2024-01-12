@@ -47,7 +47,9 @@ class Laboratorian:
         
         # if mutation in mmpS5, mmpL5, or Rv0678, we want to perform further examination but only if the mutation is NOT R based on rule 1.1;
         # otherwise, we want to examine the "aternate_consequences" section and apply rule 1.2 and keep only the highest severity mutation
-        if annotation_row.tbprofiler_gene_name in ["mmpS5", "mmpL5", "Rv0678"] and annotation_row.mdl_interpretation != "R" and annotation_row.rationale != "WHO classification":
+        # change 2023-12-15: all mmpS/mmpL/mmpR mutations are reported regardless of WHO classification
+        if annotation_row.tbprofiler_gene_name in ["mmpS5", "mmpL5", "Rv0678"]:
+        # OLD CONDITIONAL included `and !(annotation_row.mdl_interpretation == "R" and annotation_row.rationale == "WHO classification"):`
           row_list = variant.extract_alternate_consequences(annotation_row, row_list)
 
         row_list.append(annotation_row)
@@ -106,25 +108,41 @@ class Laboratorian:
                
         no_r_mutations = set()
         r_mutations = set()
-        for row in row_list:
-          if (row.tbprofiler_gene_name in globals.GENES_WITH_DELETIONS) and ("Insufficient coverage in locus (deletion identified)" not in row.warning):
-            row.warning = [warning.replace("Insufficient coverage in locus", "Insufficient coverage in locus (deletion identified)") for warning in row.warning]
-        
+        for row in row_list:       
           if row.tbprofiler_gene_name == gene:
             # the row contains a mutation, but that mutation is not resistant (whole locus fail point D)
-            if (row.looker_interpretation != "R") and any(warning for warning in row.warning if "deletion" in warning) and (row.tbprofiler_variant_substitution_nt != "Insufficient Coverage"):
+           
+           #######################FIX THIS LINE#######################
+           # only NON-R MUTATIONS WITH NO DELETIONS
+           # warnings no longer have "deletion" in their names
+           # i might need to check if mutation contains del or something
+            if (row.looker_interpretation != "R") and "del" not in row.tbprofiler_variant_substitution_nt:
               no_r_mutations.add(row.tbprofiler_gene_name)
             else:
               r_mutations.add(row.tbprofiler_gene_name)
 
+        self.logger.debug("Size of sets: no_r_mutations: {}, r_mutations: {}".format(len(no_r_mutations), len(r_mutations)))
+        
         # if the no_r_mutations set is not empty but r_mutations is empty, then we want to add an insufficient
-        #  coverage warning
+        #  coverage warning (only non-r mutations are found for this gene)
         if len(no_r_mutations) > 0 and len(r_mutations) == 0:
             # add a warning to all rows in the row_list entity that belong to this gene
+            # make a list to add these to the end of the laboratorian report
+            self.logger.debug("Adding insufficient coverage warning to all rows in the row_list entity that belong to this gene ({})".format(gene))
+            reorder_list = [] 
             for row in row_list:
               if row.tbprofiler_gene_name == gene:
-                if "Insufficient coverage in locus (deletion identified)" not in row.warning:
+                if "Insufficient coverage in locus" not in row.warning:
                   row.warning.append("Insufficient coverage in locus")
+                # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
+                row.looker_interpretation = "Insufficient Coverage"
+                row.mdl_interpretation = "Insufficient Coverage"
+                reorder_list.append(row)
+            
+            # remove rows in reorder_list from row_list and add them to the end of row_list
+            for row in reorder_list:
+              row_list.remove(row)
+              row_list.append(row)
                   
     self.logger.debug("Creation of rows completed; there are now {} rows".format(len(row_list))) 
         
