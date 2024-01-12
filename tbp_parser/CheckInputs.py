@@ -19,3 +19,13 @@ def is_bam_valid(filename):
   if not os.path.exists(bai_filename) and (bai_filename != "-"):
     raise argparse.ArgumentTypeError("Cannot find the BAI file for this BAM")
   return filename
+
+def is_bed_valid(filename):
+  """
+  Checks if the coverage regions BED file is valid
+  """
+  scripts_dir = os.path.dirname(os.path.realpath(__file__))
+  bed_file = os.path.join(scripts_dir, filename)
+  if not os.path.exists(bed_file) and filename != "-":
+    raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
+  return filename

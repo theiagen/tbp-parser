@@ -20,6 +20,7 @@ class Parser:
     self.verbose = options.verbose
     self.debug = options.debug
     self.output_prefix = options.output_prefix
+    self.coverage_regions = options.coverage_regions
     globals.MIN_DEPTH = options.min_depth
     globals.COVERAGE_THRESHOLD = options.coverage_threshold
     globals.SEQUENCING_METHOD = options.sequencing_method
@@ -56,7 +57,7 @@ class Parser:
     self.check_dependency_exists
     
     self.logger.info("Creating initial coverage report")
-    coverage = Coverage(self.logger, self.input_bam, self.output_prefix)
+    coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions)
     coverage.calculate_coverage()
     
     self.logger.info("Creating laboratorian report")
