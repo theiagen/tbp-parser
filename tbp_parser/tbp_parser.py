@@ -21,7 +21,9 @@ def main():
                       help="the minimum depth of coverage to pass QC\ndefault=10", default=10, metavar="\b", type=int)
   parser.add_argument("-c", "--coverage_threshold", 
                       help="the minimum percent coverage for a gene to pass QC\ndefault=100", default=100, metavar="\b", type=int)
-  parser.add_argument("-s", "--sequencing_method", "-s", 
+  parser.add_argument("-r", "--coverage_regions",
+                      help="the BED file containing the regions to calculate coverage for\ndefault=data/tbdb-modified-regions.bed", default="../data/tbdb-modified-regions.bed", metavar="\b", type=CheckInputs.is_bed_valid)
+  parser.add_argument("-s", "--sequencing_method", 
                       help="the sequencing method used to generate the data\nEnclose in quotes if includes a space\ndefault=\"Sequencing method not provided\"", default="Sequencing method not provided", metavar="\b")
   parser.add_argument("-p", "--operator", 
                       help="the operator who ran the sequencing\nEnclose in quotes if includes a space\ndefault=\"Operator not provided\"", default="Operator not provided", metavar="\b")

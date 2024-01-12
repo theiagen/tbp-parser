@@ -16,7 +16,7 @@ Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if
 We recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.1.4
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.2.0
 ```
 
 ## Usage
@@ -51,6 +51,9 @@ optional arguments:
   -c, --coverage_threshold 
           the minimum percent coverage for a gene to pass QC
           default=100
+  -r, --coverage_regions
+          the BED file containing the regions to calculate coverage for
+          default="../data/tbdb-modified-regions.bed"
   -s, --sequencing_method, -s 
           the sequencing method used to generate the data
           Enclose in quotes if includes a space
@@ -135,7 +138,7 @@ What follows is a step-by-step explanation of what happens in the tbp-parser too
 1. The `tbp_parser.py` script is run with the input JSON and BAM files. This script is the entry point for the tool, and begins by parsing the various command-line arguments. Upon completion of arguments, it creates an new `Parser` object with those arguments as input and runs the `.run()` method of that class.
 2. The Parser class (`Parser.py`) is the controlling module for this package. It is initialized with the command line arguments and uses these inputs to set global variables, such as `MIN_DEPTH`, `COVERAGE_THRESHOLD`, etc. Its primary method is `run()`. This method also calls the `check_dependency_exists()` function, which determines if the prequesite `samtools` is installed. 
 3. The first object created in the `run()` function is an instance of the `Coverage` class (`Coverage.py`) in order to make the initial coverage report. This class is initialized with the input BAM file. It then runs the `create_coverage_report()` method, which creates the coverage report and saves it to a CSV file.
-    - The `calculate_coverage()` method iterates through the genes contained in the `../data/tbdb.bed` file (collected on Sep 1, 2023 from the TBProfiler repository). It runs `samtools depth` and then divides the sum of the positions above the `MIN_DEPTH` value by the length of the gene in question to calculate the percent coverage of each gene in the H37Rv reference genome. It then saves this information as `{gene: percent coverage}` into the global variable `COVERAGE_DICTIONARY`.
+    - The `calculate_coverage()` method iterates through the genes contained in the `../data/tbdb-modified-regions.bed` (or a different bed file provided by the user) file (collected on Sep 1, 2023 from the TBProfiler repository). It runs `samtools depth` and then divides the sum of the positions above the `MIN_DEPTH` value by the length of the gene in question to calculate the percent coverage of each gene in the H37Rv reference genome. It then saves this information as `{gene: percent coverage}` into the global variable `COVERAGE_DICTIONARY`.
 4. The section object created in the `run()` function is of the `Laboratorian` class (`Laboratorian.py`). This class is initialized with the input JSON file. The `create_laboratorian_report()` method is then called on the object, which begins by performing the `iterate_section()` method on the different variant sections belonging to its input JSON.
     - The `iterate_section()` takes two items: the variant section of the input JSON and the `row_list` which is a list of `Row` objects (explained later) to be included in the Laboratorian report. The method iterates through each variant in the section and creates a `Variant` object (`Variant.py`) for each one.
     - The `Variant` class represents a single variant reported by TBProfiler. This class is initialized by turning each item of the variant's dictionary into an attribute. The first method called on the object is `extract annotations()` which divides the annotation field of a `Variant` into individual annotations. Depending on if the object has an `annotation` attribute, each item in that field is turned into a `Row` object (`Row.py`). If not, every antimicrobial drug in the `gene_associated_drugs` attribute is transformed into a `Row`. This is because we preferentially examine the `annotation` field as it may contain a WHO resistance interpretation which takes priority over any expert rules applied in the `gene_associated_drugs` field.

@@ -11,10 +11,11 @@ class Coverage:
     - reformat_coverage: adds a warning column if a deletion was identified
       within the gene.
   """
-  def __init__(self, logger, input_bam, output_prefix):
+  def __init__(self, logger, input_bam, output_prefix, coverage_regions):
     self.logger = logger
     self.input_bam = input_bam
     self.output_prefix = output_prefix
+    self.coverage_regions = coverage_regions
   
   def calculate_coverage(self):
     """
@@ -30,8 +31,8 @@ class Coverage:
     CHROMOSOME = subprocess.check_output(command, shell=True).decode("utf-8").strip()
     self.logger.debug("The BAM file chromosome name is: {}".format(CHROMOSOME))    
     
-    with open(importlib_resources.files(__name__) / "../data/tbdb.bed", "r") as bedfile_fh:
-      self.logger.debug("Now calculating coverage for each gene in the tbdb.bed file")
+    with open(importlib_resources.files(__name__) / self.coverage_regions, "r") as bedfile_fh:
+      self.logger.debug("Now calculating coverage for each gene in the {} file".format(self.coverage_regions))
       for line in bedfile_fh:
         line = line.split("\t")
         start = line[1]

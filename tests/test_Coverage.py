@@ -10,7 +10,8 @@ class TestCoverage:
     
     LOGGER = logging.getLogger(__name__)
     BAM = os.path.join(self.data_dir, "mtb.bam")
+    COVERAGE_BED = os.path.join(self.data_dir, "tbdb-modified-regions-for-tests.bed")
     
-    COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, output_prefix="test")
+    COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, coverage_regions=COVERAGE_BED, output_prefix="test")
 
     assert isinstance(COVERAGE1, Coverage)
