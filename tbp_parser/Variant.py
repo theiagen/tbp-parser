@@ -72,6 +72,7 @@ class Variant:
       
       # create a list of the drugs associated with the gene to check if all drugs are reported
       gene_associated_drug_list = self.gene_associated_drugs
+      gene_associated_drug_list = ["rifampin" for drug in gene_associated_drug_list if drug == "rifampicin"] # remove empty strings from the list
       
       # iterate through the annotations
       for item in self.annotation:
