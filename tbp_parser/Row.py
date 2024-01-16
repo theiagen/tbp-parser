@@ -92,7 +92,7 @@ class Row() :
         else: # all other variants, no warning added
           self.warning = [""]
           
-        self.logger.debug("warnings: {}".format(self.warning))
+        self.logger.debug("This variant has the following warnings: {}".format(self.warning))
       # otherwise, the variant does not appear in the JSON file and default NA/WT values
       # need to be supplied
       else:

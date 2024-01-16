@@ -72,8 +72,8 @@ class Variant:
       
       # create a list of the drugs associated with the gene to check if all drugs are reported
       gene_associated_drug_list = self.gene_associated_drugs
-      gene_associated_drug_list = ["rifampin" for drug in gene_associated_drug_list if drug == "rifampicin"] # rename rifampicin to rifampin
-      
+      gene_associated_drug_list = ["rifampin" if drug == "rifampicin" else drug for drug in gene_associated_drug_list] # rename rifampicin to rifampin
+
       # iterate through the annotations
       for item in self.annotation:
         # turn the annotation into a Row object
@@ -87,7 +87,8 @@ class Variant:
           # if the drug is in the gene associated drug list, remove it because it has been accounted for
           if annotation.antimicrobial in gene_associated_drug_list:
             gene_associated_drug_list.remove(annotation.antimicrobial)
-                    
+            self.logger.debug("The gene associated drug list: {}".format(gene_associated_drug_list))
+        
         # otherwise, save only the annotation with the more severe WHO confidence (higher value)
         elif annotation.rank_annotation() > self.annotation_dictionary[annotation.antimicrobial].rank_annotation():
           self.logger.debug("A more severe WHO confidence annotation was found for this drug ({}); replacing the old annotation with the new one".format(annotation.antimicrobial))
@@ -97,6 +98,7 @@ class Variant:
 
       # add any missing drugs from the annotation list that are found on the gene associated drug list to the annotation dictionary 
       for drug in gene_associated_drug_list:  
+        self.logger.debug("The drug ({}) was not found in the annotation dictionary; adding it with a WHO confidence of 'No WHO annotation'".format(drug))
         self.annotation_dictionary[drug] = Row(self.logger, self, "No WHO annotation", drug)
         
       self.logger.debug("The annotation dictionary has all gene associated drugs included; it now has a length of {}".format(len(self.annotation_dictionary)))
