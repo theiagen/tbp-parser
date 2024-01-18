@@ -69,18 +69,19 @@ class Coverage:
     self.logger.debug("Now iterating through each gene in the inital coverage report")
     for gene, percent_coverage in globals.COVERAGE_DICTIONARY.items():
       warning = ""
+      renamed_gene = gene.split("_")[0] # remove the _* from the gene names; only necessary in tNGS
       
       try:
-        for mutation_type_nucleotide in globals.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"][globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]:
+        for mutation_type_nucleotide in globals.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"][globals.DF_LABORATORIAN["tbprofiler_gene_name"] == renamed_gene]:
           if "del" in mutation_type_nucleotide:
             warning = "Deletion identified"
             if float(percent_coverage) == 100:
               warning = "Deletion identified (upstream)"
-            self.logger.debug("A deletion warning is being added to a gene ({}) with {}%% coverage: {}".format(gene, percent_coverage, warning))
+            self.logger.debug("A deletion warning is being added to a gene ({}) with {}%% coverage: {}".format(renamed_gene, percent_coverage, warning))
       except:
-        self.logger.error("An expected gene ({}) was not found in laboratorian report.\nSomething may have gone wrong.".format(gene))
+        self.logger.error("An expected gene ({}) was not found in laboratorian report.\nSomething may have gone wrong.".format(renamed_gene))
       
-      DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])], ignore_index=True)
+      DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": renamed_gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])], ignore_index=True)
 
     DF_COVERAGE.to_csv(self.output_prefix + ".percent_gene_coverage.csv", index=False)
     self.logger.info("Coverage report reformatted and saved to {}\n".format(self.output_prefix + ".percent_gene_coverage.csv"))
