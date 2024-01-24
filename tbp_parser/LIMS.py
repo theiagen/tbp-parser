@@ -27,10 +27,16 @@ class LIMS:
     """
     self.logger.info("Within LIMS class get_lineage function")
     
-    self.logger.debug("Calculating the percentage of genes about the coverage threshold")
+    self.logger.debug("Calculating the percentage of genes above the coverage threshold")
     number_of_genes_above_coverage_threshold = sum(int(value) >= globals.COVERAGE_THRESHOLD for value in globals.COVERAGE_DICTIONARY.values())
     percentage_above = number_of_genes_above_coverage_threshold / len(globals.COVERAGE_DICTIONARY)
     self.logger.debug("The percentage of genes above the coverage threshold is {}".format(percentage_above))
+    
+    ### caclulate percentage of genes in the LIMS report above the coverage threshold
+    self.logger.debug("Calculating the percentage of LIMS genes above the coverage threshold")
+    number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
+    percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
+    self.logger.debug("The number of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
     
     # if the percentage of genes above the coverage threshold is greater than 90%, then we can call the lineage
     percentage_limit = 0.9
@@ -44,25 +50,27 @@ class LIMS:
       detected_sublineage = input_json["sublin"]
       
       sublineages = detected_sublineage.split(";")
-      
-      if "lineage" in detected_lineage:
-        lineage.add("DNA of Mycobacterium tuberculosis species detected")
+      if percentage_lims_genes_above >= percentage_limit:
+        if "lineage" in detected_lineage:
+          lineage.add("DNA of Mycobacterium tuberculosis species detected")
+          
+        for sublineage in sublineages:  
+          if "BCG" in detected_lineage or "BCG" in sublineage:
+            lineage.add("DNA of Mycobacterium bovis BCG detected")
+                  
+          elif ("La1" in detected_lineage or "La1" in sublineage) or ("bovis" in detected_lineage or "bovis" in sublineage):
+            lineage.add("DNA of Mycobacterium bovis (not BCG) detected")     
+          
+        if detected_lineage == "" or detected_lineage == "NA":
+          if percentage_above >= percentage_limit:
+            lineage.add("DNA of Mycobacterium tuberculosis complex detected")
+          else:
+            lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
         
-      for sublineage in sublineages:  
-        if "BCG" in detected_lineage or "BCG" in sublineage:
-          lineage.add("DNA of Mycobacterium bovis BCG detected")
-                
-        elif ("La1" in detected_lineage or "La1" in sublineage) or ("bovis" in detected_lineage or "bovis" in sublineage):
-          lineage.add("DNA of Mycobacterium bovis (not BCG) detected")     
-        
-      if detected_lineage == "" or detected_lineage == "NA":
-        if percentage_above >= percentage_limit:
-          lineage.add("DNA of Mycobacterium tuberculosis complex detected")
-        else:
-          lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
-      
-      if len(lineage) == 0:
-        lineage.add("DNA of Mycobacterium tuberculosis complex detected (not M. bovis and not M. tb)")
+        if len(lineage) == 0:
+          lineage.add("DNA of Mycobacterium tub erculosis complex NOT detected (not M. bovis and not M. tb)")
+      else:
+        lineage.add("MTBC DNA NOT detected")
        
       lineage = "; ".join(sorted(lineage))
         
