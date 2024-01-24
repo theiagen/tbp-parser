@@ -23,16 +23,16 @@ class Row() :
     self.variant = variant
     self.who_confidence = who_confidence
     self.antimicrobial = drug
-  
+
     # create a row for the sample if the gene is in the coverage dictionary (should occur for all except in tNGS where only certain genes are sequenced)
-    if gene_name != "test" and gene_name in globals.COVERAGE_DICTIONARY.keys():
+    if gene_name != "test":
       self.antimicrobial = self.antimicrobial.replace("rifampicin", "rifampin")
 
       self.sample_id = globals.SAMPLE_NAME
 
       # Initalizing the rest of the columns for the CDPH Laboratorian report
       # for when the variant is in the JSON file
-      if variant is not None:
+      if variant is not None and (gene_name in globals.COVERAGE_DICTIONARY.keys() or self.variant.gene in globals.COVERAGE_DICTIONARY.keys()):
         self.logger.debug("Initalizing the Row object, the variant has been supplied.")
         try:
           self.tbprofiler_gene_name = self.variant.gene
@@ -98,11 +98,15 @@ class Row() :
       # otherwise, the variant does not appear in the JSON file (or was not sequenced [tNGS]) and default NA/WT values need to be supplied
       else:
         self.logger.debug("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.")
+       
         if gene_name == "mmpR5":
           self.tbprofiler_gene_name = "Rv0678"
         else: 
           self.tbprofiler_gene_name = gene_name
-        self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
+        try:
+          self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
+        except:
+          self.tbprofiler_locus_tag = "NA"
         self.tbprofiler_variant_substitution_nt = "NA"
         self.tbprofiler_variant_substitution_aa = "NA"
         self.confidence = "NA"
@@ -128,10 +132,11 @@ class Row() :
             self.mdl_interpretation = "Insufficient Coverage"
             self.warning.append("Insufficient coverage in locus")
         else:
-            self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
-            self.looker_interpretation = "NA"
-            self.mdl_interpretation = "NA"
-            self.warning.append("This gene was not sequenced")
+          self.logger.debug("This gene ({}) was not sequenced".format(self.tbprofiler_gene_name))
+          # self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
+          self.tbprofiler_variant_substitution_type = "NA"
+          self.looker_interpretation = "NA"
+          self.mdl_interpretation = "NA"
       
       try:
         self.gene_tier = globals.GENE_TO_TIER[self.tbprofiler_gene_name]
