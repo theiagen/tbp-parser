@@ -24,7 +24,8 @@ class Row() :
     self.who_confidence = who_confidence
     self.antimicrobial = drug
   
-    if gene_name != "test":
+    # create a row for the sample if the gene is in the coverage dictionary (should occur for all except in tNGS where only certain genes are sequenced)
+    if gene_name != "test" and gene_name in globals.COVERAGE_DICTIONARY.keys():
       self.antimicrobial = self.antimicrobial.replace("rifampicin", "rifampin")
 
       self.sample_id = globals.SAMPLE_NAME
@@ -93,8 +94,8 @@ class Row() :
           self.warning = [""]
           
         self.logger.debug("This variant has the following warnings: {}".format(self.warning))
-      # otherwise, the variant does not appear in the JSON file and default NA/WT values
-      # need to be supplied
+      
+      # otherwise, the variant does not appear in the JSON file (or was not sequenced [tNGS]) and default NA/WT values need to be supplied
       else:
         self.logger.debug("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.")
         if gene_name == "mmpR5":
@@ -112,19 +113,25 @@ class Row() :
         self.warning = [""]
         
         # check to see if we need to apply a coverage warning (whole locus fail point c)
-        if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
-          self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
-          self.tbprofiler_variant_substitution_type = "WT"
-          self.tbprofiler_variant_substitution_nt = "WT"
-          self.tbprofiler_variant_substitution_aa = "WT"
-          self.looker_interpretation = "S"
-          self.mdl_interpretation = "WT"
+        if self.tbprofiler_gene_name in globals.COVERAGE_DICTIONARY.keys():
+          if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
+            self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
+            self.tbprofiler_variant_substitution_type = "WT"
+            self.tbprofiler_variant_substitution_nt = "WT"
+            self.tbprofiler_variant_substitution_aa = "WT"
+            self.looker_interpretation = "S"
+            self.mdl_interpretation = "WT"
+          else:
+            self.logger.debug("A warning needs to be applied; setting the variant information to insufficient coverage")
+            self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
+            self.looker_interpretation = "Insufficient Coverage"
+            self.mdl_interpretation = "Insufficient Coverage"
+            self.warning.append("Insufficient coverage in locus")
         else:
-          self.logger.debug("A warning needs to be applied; setting the variant information to insufficient coverage")
-          self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
-          self.looker_interpretation = "Insufficient Coverage"
-          self.mdl_interpretation = "Insufficient Coverage"
-          self.warning.append("Insufficient coverage in locus")
+            self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
+            self.looker_interpretation = "NA"
+            self.mdl_interpretation = "NA"
+            self.warning.append("This gene was not sequenced")
       
       try:
         self.gene_tier = globals.GENE_TO_TIER[self.tbprofiler_gene_name]
