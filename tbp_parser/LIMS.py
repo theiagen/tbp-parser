@@ -27,12 +27,7 @@ class LIMS:
     """
     self.logger.info("Within LIMS class get_lineage function")
     
-    self.logger.debug("Calculating the percentage of genes above the coverage threshold")
-    number_of_genes_above_coverage_threshold = sum(int(value) >= globals.COVERAGE_THRESHOLD for value in globals.COVERAGE_DICTIONARY.values())
-    percentage_above = number_of_genes_above_coverage_threshold / len(globals.COVERAGE_DICTIONARY)
-    self.logger.debug("The percentage of genes above the coverage threshold is {}".format(percentage_above))
-    
-    ### caclulate percentage of genes in the LIMS report above the coverage threshold
+    # calculate percentage of genes in the LIMS report above the coverage threshold
     self.logger.debug("Calculating the percentage of LIMS genes above the coverage threshold")
     number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
     percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
@@ -61,16 +56,11 @@ class LIMS:
           elif ("La1" in detected_lineage or "La1" in sublineage) or ("bovis" in detected_lineage or "bovis" in sublineage):
             lineage.add("DNA of Mycobacterium bovis (not BCG) detected")     
           
-        if detected_lineage == "" or detected_lineage == "NA":
-          if percentage_above >= percentage_limit:
+        if detected_lineage == "" or detected_lineage == "NA" or len(lineage) == 0:
             lineage.add("DNA of Mycobacterium tuberculosis complex detected")
-          else:
-            lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
-        
-        if len(lineage) == 0:
-          lineage.add("DNA of Mycobacterium tub erculosis complex NOT detected (not M. bovis and not M. tb)")
+      
       else:
-        lineage.add("MTBC DNA NOT detected")
+        lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
        
       lineage = "; ".join(sorted(lineage))
         
