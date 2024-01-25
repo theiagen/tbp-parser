@@ -425,7 +425,8 @@ RESISTANCE_RANKING = {
   "S-Interim": 3,
   "S": 2,
   "WT": 1,
-  "Insufficient Coverage": 0
+  "Insufficient Coverage": 0,
+  "NA": 0
 }
 
 """
