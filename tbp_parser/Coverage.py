@@ -71,7 +71,6 @@ class Coverage:
     self.logger.debug("Now iterating through each gene in the inital coverage report")
     for gene, percent_coverage in globals.COVERAGE_DICTIONARY.items():
       warning = ""
-      #renamed_gene = gene.split("_")[0] # remove the _* from the gene names; only necessary in tNGS
       
       try:
         for mutation_type_nucleotide in globals.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"][globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]:

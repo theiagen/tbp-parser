@@ -133,7 +133,6 @@ class Row() :
             self.warning.append("Insufficient coverage in locus")
         else:
           self.logger.debug("This gene ({}) was not sequenced".format(self.tbprofiler_gene_name))
-          # self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
           self.tbprofiler_variant_substitution_type = "NA"
           self.looker_interpretation = "NA"
           self.mdl_interpretation = "NA"
