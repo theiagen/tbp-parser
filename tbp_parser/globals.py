@@ -66,8 +66,8 @@ ANTIMICROBIAL_CODE_TO_DRUG_NAME = {
 A dictionary that matches CDPH LIMS antimicrobial codes to the
 corresponding genes and their corresponding CDPH LIMS codes
 """
-global ANTIMICROBIAL_CODE_TO_GENES
-ANTIMICROBIAL_CODE_TO_GENES = {
+global ANTIMICROBIAL_CODE_TO_GENES_WGS
+ANTIMICROBIAL_CODE_TO_GENES_WGS = {
   "M_DST_B01_INH": {
     "katG": "M_DST_B02_katG", 
     "fabG1": "M_DST_B03_fabG1",
@@ -126,6 +126,62 @@ ANTIMICROBIAL_CODE_TO_GENES = {
     "rplC": "M_DST_N03_rplC"
   }
 }
+
+global ANTIMICROBIAL_CODE_TO_GENES_tNGS
+ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
+  "M_DST_B01_INH": {
+    "katG": "M_DST_B02_katG", 
+    "fabG1": "M_DST_B03_fabG1",
+    "inhA": "M_DST_B04_inhA"
+  },
+  "M_DST_C01_ETO": {
+    "ethA": "M_DST_C02_ethA", 
+    "fabG1": "M_DST_C03_fabG1",
+    "inhA": "M_DST_C04_inhA"
+  },
+  "M_DST_D01_RIF": {
+    "rpoB": "M_DST_D02_rpoB"
+  },
+  "M_DST_E01_PZA": {
+    "pncA": "M_DST_E02_pncA"
+  },
+  "M_DST_F01_EMB": {
+    "embB": "M_DST_F03_embB"
+  },
+  "M_DST_G01_AMK": {
+    "rrs": "M_DST_G02_rrs", 
+    "eis": "M_DST_G03_eis"
+  },
+  "M_DST_H01_KAN": {
+    "rrs": "M_DST_H02_rrs", 
+    "eis": "M_DST_H03_eis"
+  },
+  "M_DST_I01_CAP": {
+    "rrs": "M_DST_I02_rrs", 
+    "tlyA": "M_DST_I03_tlyA"
+  },
+  "M_DST_J01_MFX": {
+    "gyrA": "M_DST_J02_gyrA", 
+    "gyrB": "M_DST_J03_gyrB"
+  },
+  "M_DST_K01_LFX": {
+    "gyrA": "M_DST_K02_gyrA", 
+    "gyrB": "M_DST_K03_gyrB"
+  },
+  "M_DST_L01_BDQ": {
+    "Rv0678": "M_DST_L02_Rv0678", 
+  },
+  "M_DST_M01_CFZ": {
+    "Rv0678":"M_DST_M02_Rv0678", 
+  },
+  "M_DST_N01_LZD": {
+    "rrl": "M_DST_N02_rrl", 
+    "rplC": "M_DST_N03_rplC"
+  }
+}
+
+global ANTIMICROBIAL_CODE_TO_GENES
+ANTIMICROBIAL_CODE_TO_GENES = {}
 
 """
 A dictionary that contains a list of the antimicrobial drug names
@@ -187,12 +243,22 @@ DF_LABORATORIAN = pd.DataFrame(columns = [
 A dictionary that contains the list of genes that are to be
 included in the CDPH LIMS report
 """
-global GENES_FOR_LIMS
-GENES_FOR_LIMS = [
+global GENES_FOR_LIMS_WGS
+GENES_FOR_LIMS_WGS = [
   "atpE", "eis", "embA", "embB", "ethA", "fabG1", "gyrA", 
   "gyrB", "inhA", "katG", "mmpL5", "mmpS5", "pepQ", 
   "pncA", "rplC", "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
 ]
+
+global GENES_FOR_LIMS_tNGS
+GENES_FOR_LIMS_tNGS = [
+  "eis", "embB", "ethA", "fabG1", "gyrA", 
+  "gyrB", "inhA", "katG", "pncA", "rplC", 
+  "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
+]
+
+global GENES_FOR_LIMS
+GENES_FOR_LIMS = []
 
 """
 A list of genes that correspond to a certain set of expert rules
@@ -381,6 +447,7 @@ A set that contains genes that have deletions
 """
 global GENES_WITH_DELETIONS
 GENES_WITH_DELETIONS = set()
+            
                 
 """
 A list that will contain the names of genes that have coverages
@@ -402,6 +469,12 @@ QC: min coverage < 10x, min freq < 10%, min read support < 10x
 global MUTATION_FAIL_LIST
 MUTATION_FAIL_LIST = []
 
+""" 
+This variable holds the operator's name
+"""
+global OPERATOR
+OPERATOR = ""
+          
 """
 A dictionary that matches certain genes to their promoter regions.
 If a mutation is within these promoter regions, it needs special consideration.
@@ -445,6 +518,12 @@ RPOB_MUTATIONS = [
 ]
 
 """
+The range of rpoB special positions
+"""
+global RRDR_RANGE
+RRDR_RANGE = range(426, 452)
+            
+"""
 This dictionary converts the rule to the rationale language
 """
 global RULE_TO_RATIONALE
@@ -486,13 +565,25 @@ SPECIAL_POSITIONS = {
 }
 
 """
-The range of rpoB special positions
+The specific primer regions for the genes that are split into multiple sections [tNGS only]
 """
-global RRDR_RANGE
-RRDR_RANGE = range(426, 452)
-            
-""" 
-This variable holds the operator's name
-"""
-global OPERATOR
-OPERATOR = ""
+global TNGS_REGIONS
+TNGS_REGIONS = {
+  "katG": {
+    "katG_1": [2155140, 2155858],
+    "katG_2": [2153405, 2153423],
+    "katG_3": [2155288, 2155307],
+    "katG_4": [2155804, 2155821],
+    "katG_5": [2156119, 2156138]
+  },
+  "rpoB": {
+    "rpoB_1": [760957, 761355],
+    "rpoB_2": [760280, 760812]
+  },
+  "rrs": {
+    "rrs_1": [1471850, 1472524],
+    "rrs_2": [1472561, 1473417],
+    "rrs_3": [1472159, 1472178],
+    "rrs_4": [1473927, 1473946]
+  }
+}

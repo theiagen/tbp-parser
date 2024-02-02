@@ -13,10 +13,11 @@ class Laboratorian:
     - create_laboratorian_report: creates the laboratorian report CSV file
   """
   
-  def __init__(self, logger, input_json, output_prefix):
+  def __init__(self, logger, input_json, output_prefix, tngs):
     self.logger = logger
     self.input_json = input_json
     self.output_prefix = output_prefix
+    self.tngs = tngs
    
   def iterate_section(self, variant_section, row_list):
     """
@@ -34,6 +35,16 @@ class Laboratorian:
       variant = Variant(self.logger, variant)
       globals.GENES_REPORTED.add(variant.gene)
       
+      if self.tngs and variant.gene in globals.TNGS_REGIONS.keys():
+        self.logger.debug("[tNGS only]: checking to see which segment this gene is found in")
+        for segment in globals.TNGS_REGIONS[variant.gene]:
+          self.logger.debug("[tNGS only]: checking if variant from {} is found in segment {}".format(variant.gene, segment))
+          if (globals.TNGS_REGIONS[variant.gene][segment][0] <= variant.genome_pos <= globals.TNGS_REGIONS[variant.gene][segment][1]):
+            self.logger.debug("[tNGS only]: variant from {} is found in segment {}; renaming gene to segment name".format(variant.gene, segment))
+            variant.gene = segment
+          else:
+            self.logger.debug("[tNGS only]: variant from {} is NOT found in segment {}".format(variant.gene, segment))
+        
       # extract all of the annotations for the variant
       variant.extract_annotations()
       

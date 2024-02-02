@@ -17,6 +17,7 @@ class Parser:
     self.logger = logging.getLogger(__name__)
     self.input_json = options.input_json
     self.input_bam = options.input_bam
+    self.tngs = options.tngs
     self.verbose = options.verbose
     self.debug = options.debug
     self.output_prefix = options.output_prefix
@@ -25,6 +26,25 @@ class Parser:
     globals.COVERAGE_THRESHOLD = options.coverage_threshold
     globals.SEQUENCING_METHOD = options.sequencing_method
     globals.OPERATOR = options.operator
+    
+    if self.tngs:
+      self.logger.info("Deeplex + CDPH modified protocol flag detected; adjusting outputs to reflect this")
+      if (self.coverage_regions == "../data/tbdb-modified-regions.bed"):
+        self.logger.debug("Changing default coverage regions to ../data/tngs-primer-regions.bed")
+        self.coverage_regions = "../data/tngs-primer-regions.bed"
+      
+      self.logger.debug("Altering the ANTIMICROBIAL_CODE_TO_GENES dictionary to include only tNGS entries")
+      globals.ANTIMICROBIAL_CODE_TO_GENES = globals.ANTIMICROBIAL_CODE_TO_GENES_tNGS
+      
+      self.logger.debug("Altering the GENES_FOR_LIMS list to include only tNGS genes")
+      globals.GENES_FOR_LIMS = globals.GENES_FOR_LIMS_tNGS
+      
+    else:
+      self.logger.debug("Setting the ANTIMICROBIAL_CODE_TO_GENES dictionary to include all WGS entries")
+      globals.ANTIMICROBIAL_CODE_TO_GENES = globals.ANTIMICROBIAL_CODE_TO_GENES_WGS
+    
+      self.logger.debug("Setting the GENES_FOR_LIMS list to include all WGS genes")
+      globals.GENES_FOR_LIMS = globals.GENES_FOR_LIMS_WGS
     
     if self.verbose:
       self.logger.setLevel(logging.INFO)
@@ -61,7 +81,7 @@ class Parser:
     coverage.calculate_coverage()
     
     self.logger.info("Creating laboratorian report")
-    laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix)
+    laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, self.tngs)
     laboratorian.create_laboratorian_report()
     
     self.logger.info("Creating Looker report")
@@ -69,7 +89,7 @@ class Parser:
     looker.create_looker_report()
     
     self.logger.info("Creating LIMS report")
-    lims = LIMS(self.logger, self.input_json, self.output_prefix)
+    lims = LIMS(self.logger, self.input_json, self.output_prefix, self.tngs)
     lims.create_lims_report()
     
     self.logger.info("Finalizing coverage report")

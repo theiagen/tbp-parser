@@ -25,6 +25,8 @@ def main():
                       help="the BED file containing the regions to calculate coverage for\ndefault=data/tbdb-modified-regions.bed", default="../data/tbdb-modified-regions.bed", metavar="\b", type=CheckInputs.is_bed_valid)
   parser.add_argument("-s", "--sequencing_method", 
                       help="the sequencing method used to generate the data\nEnclose in quotes if includes a space\ndefault=\"Sequencing method not provided\"", default="Sequencing method not provided", metavar="\b")
+  parser.add_argument("--tngs",
+                      help="flag that indicates that the data was generated using the Deeplex + CDPH modified protocol", action="store_true", default=False)
   parser.add_argument("-p", "--operator", 
                       help="the operator who ran the sequencing\nEnclose in quotes if includes a space\ndefault=\"Operator not provided\"", default="Operator not provided", metavar="\b")
   parser.add_argument("--verbose", 

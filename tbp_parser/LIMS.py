@@ -16,10 +16,11 @@ class LIMS:
     - create_lims_report: creates the LIMS report CSV file
   """
 
-  def __init__(self, logger, input_json, output_prefix):
+  def __init__(self, logger, input_json, output_prefix, tngs):
     self.logger = logger
     self.input_json = input_json
     self.output_prefix = output_prefix
+    self.tngs = tngs
   
   def get_lineage(self):
     """
@@ -29,8 +30,12 @@ class LIMS:
     
     # calculate percentage of genes in the LIMS report above the coverage threshold
     self.logger.debug("Calculating the percentage of LIMS genes above the coverage threshold")
-    number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
-    percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
+    if self.tngs:
+      number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.COVERAGE_DICTIONARY.keys())
+      percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
+    else:
+      number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
+      percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
     self.logger.debug("The number of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
     
     # if the percentage of genes above the coverage threshold is greater than 90%, then we can call the lineage
