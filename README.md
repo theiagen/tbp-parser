@@ -16,7 +16,7 @@ Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if
 We recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.0
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.1
 ```
 
 ## Usage
@@ -62,6 +62,9 @@ optional arguments:
           the operator who ran the sequencing
           Enclose in quotes if includes a space
           default="Operator not provided"
+  --tngs
+          indicates data generated using Deeplex + CDPH modified protocol
+          Turns on tNGS-specific global parameters
   --verbose
           increase output verbosity
   --debug
@@ -94,6 +97,8 @@ Takes the naming convention of `<output_prefix>.percent_gene_coverage.csv`. This
 - Percent_Coverage
 - Warning
 
+Coverage regions are determined with either the default "../data/tbdb-modified-regions.bed" or "../data/tngs-primer-regions.bed" if `--tngs`. User-provided coverage regions take precedence over default values.
+
 ### Laboratorian report
 
 Takes the naming convention of `<output_prefix>.laboratorian_report.csv`. This report contains the following fields:
@@ -120,7 +125,7 @@ Takes the naming convention of `<output_prefix>.lims_report.csv`. This report co
 
 - MDL sample accession numbers:  sample name
 - M_DST_A01_ID - lineage
-- The set of information in ANTIMICROBIAL_CODE_TO_GENES dictionary with target drug resistance information in layman's terms, and the mutations responsible for the predicted phenotype
+- The set of information in ANTIMICROBIAL_CODE_TO_GENES_WGS dictionary (or, if `--tngs`, ANTIMICROBIAL_CODE_TO_GENES_tNGS) with target drug resistance information in layman's terms, and the mutations responsible for the predicted phenotype
 - Date of analysis in YYYY-MM-DD HH:SS format
 - Operator information
 
