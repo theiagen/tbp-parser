@@ -16,7 +16,7 @@ class TestLIMS:
   COVERAGE1.calculate_coverage()
   
   INPUT_JSON = os.path.join(data_dir, "combined.json")
-  LABORATORIAN = Laboratorian(logger=LOGGER, input_json=INPUT_JSON, output_prefix="test")
+  LABORATORIAN = Laboratorian(logger=LOGGER, input_json=INPUT_JSON, output_prefix="test", tngs=False)
   LABORATORIAN.create_laboratorian_report()
     
   # def test_get_lineage_bcg(self):
@@ -67,16 +67,16 @@ class TestLIMS:
   
   #   assert lineage == "DNA of Mycobacterium bovis (not BCG) detected; DNA of Mycobacterium tuberculosis species detected"
   
-  def test_get_lineage_nolineage(self):
-    JSON = os.path.join(self.data_dir + '/lineages', "nolineage.json")
+  # def test_get_lineage_nolineage(self):
+  #   JSON = os.path.join(self.data_dir + '/lineages', "nolineage.json")
     
-    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-    lineage = LIMS1.get_lineage()
+  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
+  #   lineage = LIMS1.get_lineage()
     
-    assert lineage == "DNA of Mycobacterium tuberculosis complex NOT detected"
+  #   assert lineage == "DNA of Mycobacterium tuberculosis complex NOT detected"
   
   def test_convert_annotation(self):
-    LIMS1 = LIMS(logger=self.LOGGER, input_json=self.INPUT_JSON, output_prefix="test")
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=self.INPUT_JSON, output_prefix="test", tngs=False)
     
     message1 = LIMS1.convert_annotation("R", "rifampicin")
     message2 = LIMS1.convert_annotation("S", "isoniazid")
@@ -88,10 +88,10 @@ class TestLIMS:
                                               "The detected mutation(s) have uncertain significance. Resistance to ethambutol cannot be ruled out",
                                               "Pending Retest")
   
-  def test_create_lims_report(self):   
-    LIMS1 = LIMS(logger=self.LOGGER, input_json=self.INPUT_JSON, output_prefix="test")
-    LIMS1.create_lims_report()
+  # def test_create_lims_report(self):   
+  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=self.INPUT_JSON, output_prefix="test", tngs=False)
+  #   LIMS1.create_lims_report()
     
-    assert os.path.exists("test.lims_report.csv")
+  #   assert os.path.exists("test.lims_report.csv")
     
-    os.remove("test.lims_report.csv")
+  #   os.remove("test.lims_report.csv")

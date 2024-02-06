@@ -19,14 +19,14 @@ class TestLaboratorian:
     with open(self.JSON, "r") as input:
       input_section = json.loads(input.read())
       
-      LAB1 = Laboratorian(logger=self.LOGGER, input_json=self.JSON, output_prefix="test")
+      LAB1 = Laboratorian(logger=self.LOGGER, input_json=self.JSON, output_prefix="test", tngs=False)
       
       row_list = LAB1.iterate_section(input_section["Rule1_Variants"], [])
       
     assert len(row_list) == 8
       
   def test_create_lab_report(self):
-    LAB1 = Laboratorian(logger=self.LOGGER, input_json=self.JSON, output_prefix="test")
+    LAB1 = Laboratorian(logger=self.LOGGER, input_json=self.JSON, output_prefix="test", tngs=False)
     LAB1.create_laboratorian_report()    
     
     assert os.path.exists("test.laboratorian_report.csv")
