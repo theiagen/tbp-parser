@@ -122,13 +122,9 @@ class Laboratorian:
         r_mutations = set()
         for row in row_list:       
           if row.tbprofiler_gene_name == gene:
-            # the row contains a mutation, but that mutation is not resistant (whole locus fail point D)
-           
-           #######################FIX THIS LINE#######################
-           # only NON-R MUTATIONS WITH NO DELETIONS
-           # warnings no longer have "deletion" in their names
-           # i might need to check if mutation contains del or something
-            if (row.looker_interpretation != "R") and "del" not in row.tbprofiler_variant_substitution_nt:
+            # the row contains a mutation, but that mutation is not resistant (whole locus fail point D)           
+            # only NON-R MUTATIONS WITH NO DELETIONS
+            if (row.mdl_interpretation != "R") and "del" not in row.tbprofiler_variant_substitution_nt:
               no_r_mutations.add(row.tbprofiler_gene_name)
             else:
               r_mutations.add(row.tbprofiler_gene_name)
