@@ -125,20 +125,42 @@ class Row() :
         self.warning = [""]
         
         # check to see if we need to apply a coverage warning (whole locus fail point c)
-        if self.tbprofiler_gene_name in globals.COVERAGE_DICTIONARY.keys():
-          if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
-            self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
-            self.tbprofiler_variant_substitution_type = "WT"
-            self.tbprofiler_variant_substitution_nt = "WT"
-            self.tbprofiler_variant_substitution_aa = "WT"
-            self.looker_interpretation = "S"
-            self.mdl_interpretation = "WT"
-          else:
-            self.logger.debug("A warning needs to be applied; setting the variant information to insufficient coverage")
-            self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
-            self.looker_interpretation = "Insufficient Coverage"
-            self.mdl_interpretation = "Insufficient Coverage"
-            self.warning.append("Insufficient coverage in locus")
+        if self.tbprofiler_gene_name in globals.COVERAGE_DICTIONARY.keys() or self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys():
+          try: 
+            if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
+              self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
+              self.tbprofiler_variant_substitution_type = "WT"
+              self.tbprofiler_variant_substitution_nt = "WT"
+              self.tbprofiler_variant_substitution_aa = "WT"
+              self.looker_interpretation = "S"
+              self.mdl_interpretation = "WT"
+            else:
+              self.logger.debug("A warning needs to be applied; setting the variant information to insufficient coverage")
+              self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
+              self.looker_interpretation = "Insufficient Coverage"
+              self.mdl_interpretation = "Insufficient Coverage"
+              self.warning.append("Insufficient coverage in locus")
+          except:
+            self.logger.debug("[tNGS only]: The gene does not appear in the coverage dictionary, but is in the TNGS regions dictionary")
+            self.logger.debug("[tNGS only]: This indicates that the gene was sequenced, but coverage was calculated under a different name")
+            self.logger.debug("[tNGS only]: A coverage warning will be applied if at least one segment is under the coverage threshold")
+            
+            for segment in globals.TNGS_REGIONS[self.tbprofiler_gene_name]:
+              if float(globals.COVERAGE_DICTIONARY[segment]) >= globals.COVERAGE_THRESHOLD:
+                self.logger.debug("[tNGS only]: This segment has good coverage, checking the other segments.")
+                self.tbprofiler_variant_substitution_type = "WT"
+                self.tbprofiler_variant_substitution_nt = "WT"
+                self.tbprofiler_variant_substitution_aa = "WT"
+                self.looker_interpretation = "S"
+                self.mdl_interpretation = "WT"
+              else:
+                self.logger.debug("[tNGS only]: This segment has poor coverage and a warning needs to be applied; setting the variant information to insufficient coverage")
+                self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
+                self.looker_interpretation = "Insufficient Coverage"
+                self.mdl_interpretation = "Insufficient Coverage"
+                self.warning.append("Insufficient coverage in locus")
+                break
+
         else:
           self.logger.debug("This gene ({}) was not sequenced".format(self.tbprofiler_gene_name))
           self.tbprofiler_variant_substitution_type = "NA"
@@ -148,8 +170,16 @@ class Row() :
       try:
         self.gene_tier = globals.GENE_TO_TIER[self.tbprofiler_gene_name]
       except:
-        self.gene_tier = "NA"
-            
+        try:
+          # iterate through the tNGS regions to see if we have a match
+          parent_genes = globals.TNGS_REGIONS.keys()
+          parent_gene = [gene for gene in parent_genes if self.tbprofiler_gene_name in globals.TNGS_REGIONS[gene].keys()][0]
+          self.logger.debug("[tNGS only]: The parent gene ({}) of this segment ({}) was identified; now adding tier".format(parent_gene, self.tbprofiler_gene_name))
+          self.gene_tier = globals.GENE_TO_TIER[parent_gene]
+    
+        except:
+          self.gene_tier = "NA"
+                    
   def print(self):
     """
     This function prints the row in a readable format.
@@ -170,6 +200,7 @@ class Row() :
     self.logger.debug("\tread_support: {}".format(self.read_support))
     self.logger.debug("\trationale: {}".format(self.rationale))
     self.logger.debug("\twarning: {}".format(self.warning))
+    self.logger.debug("\ttier: {}".format(self.gene_tier))
        
   def complete_row(self):
     """
