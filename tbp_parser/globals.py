@@ -565,25 +565,12 @@ SPECIAL_POSITIONS = {
 }
 
 """
-The specific primer regions for the genes that are split into multiple sections [tNGS only]
+The specific primer regions for the gene(s) that is(are) split into multiple sections [tNGS only]
 """
 global TNGS_REGIONS
 TNGS_REGIONS = {
-  "katG": {
-    "katG_1": [2155140, 2155858],
-    "katG_2": [2153405, 2153423],
-    "katG_3": [2155288, 2155307],
-    "katG_4": [2155804, 2155821],
-    "katG_5": [2156119, 2156138]
-  },
   "rpoB": {
     "rpoB_1": [760957, 761355],
     "rpoB_2": [760280, 760812]
-  },
-  "rrs": {
-    "rrs_1": [1471850, 1472524],
-    "rrs_2": [1472561, 1473417],
-    "rrs_3": [1472159, 1472178],
-    "rrs_4": [1473927, 1473946]
   }
 }

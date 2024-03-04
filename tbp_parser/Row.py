@@ -115,8 +115,6 @@ class Row() :
           self.tbprofiler_locus_tag = globals.GENE_TO_LOCUS_TAG[self.tbprofiler_gene_name]
         except:
           self.tbprofiler_locus_tag = "NA"
-        self.tbprofiler_variant_substitution_nt = "NA"
-        self.tbprofiler_variant_substitution_aa = "NA"
         self.confidence = "NA"
         self.depth = "NA"
         self.frequency = "NA"
@@ -124,7 +122,7 @@ class Row() :
         self.rationale = "NA"
         self.warning = [""]
         
-        # check to see if we need to apply a coverage warning (whole locus fail point c)
+        # check to see if we need to apply a coverage warning (whole locus fail point c; rule 4.1 & 4.2.1.3.1)
         if self.tbprofiler_gene_name in globals.COVERAGE_DICTIONARY.keys() or self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys():
           try: 
             if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
@@ -137,6 +135,8 @@ class Row() :
             else:
               self.logger.debug("A warning needs to be applied; setting the variant information to insufficient coverage")
               self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
+              self.tbprofiler_variant_substitution_nt = "WT"
+              self.tbprofiler_variant_substitution_aa = "WT"
               self.looker_interpretation = "Insufficient Coverage"
               self.mdl_interpretation = "Insufficient Coverage"
               self.warning.append("Insufficient coverage in locus")
@@ -156,6 +156,8 @@ class Row() :
               else:
                 self.logger.debug("[tNGS only]: This segment has poor coverage and a warning needs to be applied; setting the variant information to insufficient coverage")
                 self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
+                self.tbprofiler_variant_substitution_nt = "WT"
+                self.tbprofiler_variant_substitution_aa = "WT"
                 self.looker_interpretation = "Insufficient Coverage"
                 self.mdl_interpretation = "Insufficient Coverage"
                 self.warning.append("Insufficient coverage in locus")
@@ -164,6 +166,8 @@ class Row() :
         else:
           self.logger.debug("This gene ({}) was not sequenced".format(self.tbprofiler_gene_name))
           self.tbprofiler_variant_substitution_type = "NA"
+          self.tbprofiler_variant_substitution_nt = "NA"
+          self.tbprofiler_variant_substitution_aa = "NA"
           self.looker_interpretation = "NA"
           self.mdl_interpretation = "NA"
       

@@ -1,6 +1,6 @@
 # tbp-parser
 
-This repository contains the tbp-parser tool which parses the JSON output of [Jody Phelan's TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Available as a download-able Python package and as a Docker image, tbp-parser converts the output of TBProfiler into four files:
+This repository contains the tbp-parser tool which parses the JSON output of [Jody Phelan's TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Available as a downloadable Python package and as a Docker image, tbp-parser converts the output of TBProfiler into four files:
 
 1. A _Laboratorian_ report, which contains information regarding each mutation and its associated drug resistance profile in a CSV file. This file also contains two interpretation fields -- "Looker" and "MDL" which are generated using the CDC's expert rules for interpreting the severity of potential drug resistance mutations.
 2. A _LIMS_ report, formatted specifically for STAR LIMS. This CSV report summarizes the highest severity mutations for each antimicrobial and lists the relevant mutations for each gene.
@@ -16,7 +16,7 @@ Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if
 We recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.2
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.3
 ```
 
 ## Usage
@@ -182,3 +182,63 @@ What follows is a step-by-step explanation of what happens in the tbp-parser too
 10. After `apply_lims_rules()` method completes, the `create_lims_report()` method saves the output to a CSV file.
 11. The `Parser.run()` method then finalizes the coverage report using the `Coverage` object's `reformat_coverage()` method, which adds a warning to every gene with a deletion and saves the output to a CSV file.
 12. The `Parser.run()` method then prints a message to the user indicating that the function has completed successfully. Upon completion of this function, the program ends.
+
+## The interpretation logic document and where you can find the corresponding code
+
+The interpretation logic document has many points, and the implementation of these rules is scattered throughout the code. In order to make it easier for a newcomer to find things, I've listed the rules and where they are implemented in the code:
+
+### Rule 1:
+
+- 1.1 - (WHO annotation) - Implemented in the `complete_row()` method in the `Row` class (lines 215 - 219)
+- 1.2 - (No WHO annotation; CDC expert rules) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 127 - 159)
+- 1.3 - (mmpR5/Rv0678, mmpL5, and mmpS5 reporting) - Implemented in the `iterate_section()` method in the `Row` class (lines 63 - 65) and the `extract_alternate_consequences()` method in the `Variant` class (lines 37 - 58)
+
+### Rule 2:
+
+- 2.1 - (WHO annotation) - Impelmented in the `complete_row()` method in the `Row` class (lines 215 - 219)
+- 2.2 - (No WHO annotation; CDC expert rules) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 161 - 196, 210 - 213, 216 - 218)
+  - 2.2.1 - (loss-of-function expert rule) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 164 - 176)
+  - 2.2.2.1 - (rpoB RRDR expert rule) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 192 - 196)
+  - 2.2.2.2 - (rpoB non-RRDR expert rule) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 210 - 213, 216 - 218)
+
+### Rule 3:
+
+- 3.1 - (WHO annotation) - Implemented in the `complete_row()` method in the `Row` class (lines 215 - 219)
+- 3.2 - (No WHO annotation; CDC expert rules) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 190 - 240)
+  - 3.2.1 - (rrs gene expert rule) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 223 - 231)
+  - 3.2.2 - (GyrA QRDR expert rule) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 198 - 200)
+  - 3.2.3 - (GyrB QRDR expert rule) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 204 - 206)
+  - 3.2.4 - (All else expert rule) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 198 - 202, 204 - 208, 210 - 218, 233 - 239)
+
+### Rule 4:
+
+- 4.1 - (WT gene has coverage) - Implemented in the `__init__()` method in the `Row` class (lines 107 - 123)
+- 4.2 - (QC filtering) - Implemented in the `__init__()` method in the `Row` class (lines 71 - 104) and in the `create_laboratorian_report()` method in the `Laboratorian` class (lines 118 - 153)
+  - 4.2.1.1 - (Gene coverage QC pass) - Implemented in the `__init__()` method in the `Row` class (lines 94 - 95)
+  - 4.2.1.2 - (Gene coverage QC fail, but deletion) - Implemented in the `__init__()` method in the `Row` class (lines 77 - 79)
+  - 4.2.1.3 - (Gene coverage QC fail, no deletion) - Implemented in the `__init__()` method in the `Row` class (lines 72 - 73, 128 - 142) and 
+    - 4.2.1.3.1 - (WT) - Implemented in the `__init__()` method in the `Row` class (lines 128 - 142)
+    - 4.2.1.3.2 - (No R mutations detected) - Implemented in the `create_laboratorian_report()` method in the `Laboratorian` class (lines 118 - 153)
+    - 4.2.1.3.3 - (R mutation detected) - Implemented in the `create_laboratorian_report()` method in the `Laboratorian` class (lines 118 - 132)
+  - 4.2.2 - (Variant position QC fail) - Implemented in the `__init__()` method in the `Row` class (lines 83 - 92)
+- 4.3 - (Additional notes) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 131 - 208) and `extract_annotation()` method in the `Variant` class (lines 100 - 112)
+  - 4.3.1 - (Indels spanning into regions of interest) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 131 - 134, 153-155, 190-208)
+  - 4.3.2 - (When an SME expert is needed) - Is NOT implemented in the code as requires human intervention
+  - 4.3.3 - (Report all antimicrobial drugs associated with a gene) - Implemneted in the `extract_annotation()` method in the `Variant` class (lines 100 - 112)
+
+### Rule 5: 
+
+- 5.1 - (Laboratorian language to LIMS language) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (line 180 - 182, 203 - 253)
+- 5.2 - (Drug interpretation in LIMS report) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (line 108) and `create_looker_report()` method in the `LIMS` class (line 63)
+  - 5.2.1 - (Only report LIMS genes in the LIMS report) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (line 108)
+  - 5.2.3 - (Report all genes in the Laboratorian report for the Looker report) - Implemented in the `create_looker_report()` method in the `Looker` class (line 63)
+- 5.3 - (Individual mutation output format) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 132 - 196)
+  - 5.3.1 - (Only report "R" or "U" mutations except rpoB RRDR) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 185 - 190)
+  - 5.3.2 (Mutation output format) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 132, 160 - 196)
+  - 5.3.3 (Take highest read support mutation) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 133 - 157)
+- 5.4 - (Lineage formatting) - Implemented in the `get_lineage()` method in the `LIMS` class (lines 25 -74)
+  - 5.4.1 - (QC check) - Implemented in the `get_lineage()` method in the `LIMS` class (lines 33 - 38, 53)
+    - 5.4.1.1 - 5.4.1.4 - (Lineage formatting) - Implemented in the `get_lineage()` method in the `LIMS` class (lines 54 - 65)
+  - 5.4.2 - (QC fail) - Implemented in the `get_lineage()` method in the `LIMS` class (lines 67 - 68)
+  - 5.4.3 - (Reporting requirements) - Is NOT implemented in the code as requires human intervention
+  - 5.4.4 - (Resequencing requirements) - Is NOT implemented in the code as requires human intervention
