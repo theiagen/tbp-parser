@@ -64,7 +64,10 @@ class Looker:
       
       # this is a crazy one liner:
       # basically, it gets the max resistance ranking (R > R-Interim > U > S-Interim > S) for all resistance annotations for a drug
-      max_looker_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_looker_resistances])]
+      try:
+        max_looker_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_looker_resistances])]
+      except:
+        max_looker_resistance = ["NA"]
       DF_LOOKER[antimicrobial] = max_looker_resistance[0]
       self.logger.debug("The max Looker resistance for this antimicrobial is {}".format(max_looker_resistance[0]))
       
