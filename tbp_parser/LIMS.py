@@ -302,10 +302,17 @@ class LIMS:
       DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], drug_name)            
 
       DF_LIMS = self.apply_lims_rules(gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code)
-           
+    
     DF_LIMS["Analysis date"] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
     DF_LIMS["Operator"] = globals.OPERATOR
     
+    # add lineage
+    with open(self.input_json) as json_fh:
+      input_json = json.load(json_fh)
+      detected_lineage = input_json["main_lin"]
+    
+    DF_LIMS["M_DST_O01_Lineage"] = detected_lineage
+
     # write to file
     DF_LIMS.to_csv("{}.lims_report.csv".format(self.output_prefix), index=False)
     self.logger.info("LIMS report created, now exiting function\n")
