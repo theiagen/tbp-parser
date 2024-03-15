@@ -25,6 +25,8 @@ class Parser:
     globals.MIN_DEPTH = options.min_depth
     globals.COVERAGE_THRESHOLD = options.coverage_threshold
     globals.SEQUENCING_METHOD = options.sequencing_method
+    globals.RRS_FREQUENCY = options.rrs_frequency
+    globals.RRL_FREQUENCY = options.rrl_frequency
     globals.OPERATOR = options.operator
     
     if self.tngs:

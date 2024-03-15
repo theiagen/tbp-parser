@@ -180,7 +180,18 @@ class LIMS:
           if ("Failed quality in the mutation position" in warnings[index]) or (mutation == ""):
             self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
             DF_LIMS[gene_code] = "No mutations detected"
-                        
+            # overwrite the MDL interpretation to be "Insufficient Coverage" if the mutation is non-S
+            # see also rule 4.2.2.1
+            if globals.RESISTANCE_RANKING[mdl_interpretations[index]] > 2: 
+              self.logger.debug("This mutation (\"{}\", origin gene: {}) is having its MDL interpretation rewritten to act as if WT".format(mutation, gene))
+              mdl_interpretations[index] = "WT"  
+              self.logger.debug("Since this MDL interpretation changed, we are now potentially recalculating max_mdl_resistance")
+              if max([globals.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations]) != globals.RESISTANCE_RANKING[max_mdl_resistance[0]]:
+                max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])]
+                self.logger.debug("The maximum needed to be reevaluated. The new max_mdl_resistance is now {}".format(max_mdl_resistance[0]))
+                self.logger.debug("Now changing the antimicrobial code value for this gene since max_mdl_resistance changed")
+                DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], antimicrobial_name)   
+            
           # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
           elif (mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") or (gene == "rpoB" and (len(position_aa) > 1 and (any([x in globals.RRDR_RANGE for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[gene]])) or (globals.SPECIAL_POSITIONS[gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[gene][1]))):
               substitution = "{} ({})".format(mutation, aa_mutation)

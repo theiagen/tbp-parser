@@ -29,6 +29,10 @@ def main():
                       help="the operator who ran the sequencing\nEnclose in quotes if includes a space\ndefault=\"Operator not provided\"", default="Operator not provided", metavar="\b")
   parser.add_argument("--tngs",
                       help="\nindicates data generated using Deeplex + CDPH modified protocol\nTurns on tNGS-specific global parameters", action="store_true", default=False)
+  parser.add_argument("--rrs_frequency",
+                      help="the minimum frequency for an rrs mutation to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
+  parser.add_argument("--rrl_frequency",
+                      help="the minimum frequency for an rrl mutation to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
   parser.add_argument("--verbose", 
                       help="increase output verbosity", action="store_true", default=False)
   parser.add_argument("--debug", 

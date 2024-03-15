@@ -522,6 +522,18 @@ The range of rpoB special positions
 """
 global RRDR_RANGE
 RRDR_RANGE = range(426, 452)
+
+"""
+The minimum frequency for a mutation to be considered for rrs
+"""            
+global RRS_FREQUENCY
+RRS_FREQUENCY = 0.1
+
+"""
+The minimum frequency for a mutation to be considered for rrl
+"""
+global RRL_FREQUENCY
+RRL_FREQUENCY = 0.1
             
 """
 This dictionary converts the rule to the rationale language

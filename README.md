@@ -16,7 +16,7 @@ Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if
 We recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.4
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.5
 ```
 
 ## Usage
@@ -65,6 +65,12 @@ optional arguments:
   --tngs
           indicates data generated using Deeplex + CDPH modified protocol
           Turns on tNGS-specific global parameters
+  --rrs_frequency
+          the minimum frequency for an rrs mutation to pass QC
+          default=0.1
+  --rrl_frequency
+          the minimum frequency for an rrl mutation to pass QC
+          default=0.1
   --verbose
           increase output verbosity
   --debug
@@ -216,11 +222,12 @@ The interpretation logic document has many points, and the implementation of the
 - 4.2 - (QC filtering) - Implemented in the `__init__()` method in the `Row` class (lines 71 - 104) and in the `create_laboratorian_report()` method in the `Laboratorian` class (lines 118 - 153)
   - 4.2.1.1 - (Gene coverage QC pass) - Implemented in the `__init__()` method in the `Row` class (lines 94 - 95)
   - 4.2.1.2 - (Gene coverage QC fail, but deletion) - Implemented in the `__init__()` method in the `Row` class (lines 77 - 79)
-  - 4.2.1.3 - (Gene coverage QC fail, no deletion) - Implemented in the `__init__()` method in the `Row` class (lines 72 - 73, 128 - 142) and 
+  - 4.2.1.3 - (Gene coverage QC fail, no deletion) - Implemented in the `__init__()` method in the `Row` class (lines 72 - 73, 128 - 142) and the `create_laboratorian_report()` method in the `Laboratorian` class (lines 118 - 153)
     - 4.2.1.3.1 - (WT) - Implemented in the `__init__()` method in the `Row` class (lines 128 - 142)
     - 4.2.1.3.2 - (No R mutations detected) - Implemented in the `create_laboratorian_report()` method in the `Laboratorian` class (lines 118 - 153)
     - 4.2.1.3.3 - (R mutation detected) - Implemented in the `create_laboratorian_report()` method in the `Laboratorian` class (lines 118 - 132)
   - 4.2.2 - (Variant position QC fail) - Implemented in the `__init__()` method in the `Row` class (lines 83 - 92)
+    - 4.2.2.1 (Variant position QC fail treated as WT) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 180-186)
 - 4.3 - (Additional notes) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 131 - 208) and `extract_annotation()` method in the `Variant` class (lines 100 - 112)
   - 4.3.1 - (Indels spanning into regions of interest) - Implemented in the `apply_expert_rules()` method in the `Variant` class (lines 131 - 134, 153-155, 190-208)
   - 4.3.2 - (When an SME expert is needed) - Is NOT implemented in the code as requires human intervention
