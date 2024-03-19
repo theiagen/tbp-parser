@@ -19,59 +19,59 @@ class TestLIMS:
   LABORATORIAN = Laboratorian(logger=LOGGER, input_json=INPUT_JSON, output_prefix="test", tngs=False)
   LABORATORIAN.create_laboratorian_report()
     
-  # def test_get_lineage_bcg(self):
+  # def test_get_id_bcg(self):
   #   JSON = os.path.join(self.data_dir + '/lineages', "bcg.json")
     
   #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_lineage()
+  #   lineage = LIMS1.get_id()
     
   #   assert lineage == "DNA of Mycobacterium bovis BCG detected"
 
-  # def test_get_lineage_bovis(self): 
+  # def test_get_id_bovis(self): 
   #   JSON = os.path.join(self.data_dir + '/lineages', "bovis.json")
     
   #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_lineage()
+  #   lineage = LIMS1.get_id()
     
   #   assert lineage == "DNA of Mycobacterium bovis (not BCG) detected"
 
-  # def test_get_lineage_la1(self):
+  # def test_get_id_la1(self):
   #   JSON = os.path.join(self.data_dir + '/lineages', "la1.json")
     
   #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_lineage()
+  #   lineage = LIMS1.get_id()
     
   #   assert lineage == "DNA of Mycobacterium bovis (not BCG) detected"
   
-  # def test_get_lineage_la1andbcg(self):
+  # def test_get_id_la1andbcg(self):
   #   JSON = os.path.join(self.data_dir + '/lineages', "la1andbcg.json")
     
   #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_lineage()
+  #   lineage = LIMS1.get_id()
     
   #   assert lineage == "DNA of Mycobacterium bovis (not BCG) detected; DNA of Mycobacterium bovis BCG detected"
   
-  # def test_get_lineage_lineage(self):
+  # def test_get_id_lineage(self):
   #   JSON = os.path.join(self.data_dir + '/lineages', "lineage.json")
     
   #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_lineage()
+  #   lineage = LIMS1.get_id()
     
   #   assert lineage == "DNA of Mycobacterium tuberculosis species detected"
     
-  # def test_get_lineage_lineageandla1(self):
+  # def test_get_id_lineageandla1(self):
   #   JSON = os.path.join(self.data_dir + '/lineages', "lineageandla1.json")
     
   #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_lineage()
+  #   lineage = LIMS1.get_id()
   
   #   assert lineage == "DNA of Mycobacterium bovis (not BCG) detected; DNA of Mycobacterium tuberculosis species detected"
   
-  # def test_get_lineage_nolineage(self):
+  # def test_get_id_nolineage(self):
   #   JSON = os.path.join(self.data_dir + '/lineages', "nolineage.json")
     
   #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
-  #   lineage = LIMS1.get_lineage()
+  #   lineage = LIMS1.get_id()
     
   #   assert lineage == "DNA of Mycobacterium tuberculosis complex NOT detected"
   

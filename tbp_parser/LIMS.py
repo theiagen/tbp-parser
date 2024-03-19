@@ -8,7 +8,7 @@ class LIMS:
   This class creates the CDPH LIMS report.
   
   It has four functions:
-    - get_lineage: returns the lineage in English for LIMS
+    - get_id: returns the lineage in English for LIMS
     - convert_annotation: converts the resistance annotation and the target drug
       into the LIMS language
     - get_mutation_position: returns the position where a mutation occurs
@@ -22,11 +22,11 @@ class LIMS:
     self.output_prefix = output_prefix
     self.tngs = tngs
   
-  def get_lineage(self):
+  def get_id(self):
     """
     Returns the lineage in English for LIMS
     """
-    self.logger.info("Within LIMS class get_lineage function")
+    self.logger.info("Within LIMS class get_id function")
     
     # calculate percentage of genes in the LIMS report above the coverage threshold
     self.logger.debug("Calculating the percentage of LIMS genes above the coverage threshold")
@@ -47,8 +47,10 @@ class LIMS:
       # set default value for lineage
       lineage = set()
       detected_lineage = input_json["main_lin"]
+      globals.LINEAGE = detected_lineage
       detected_sublineage = input_json["sublin"]
-      
+      self.logger.debug("The detected lineage is: {}, and the detected sublineage is: {}".format(detected_lineage, detected_sublineage))
+            
       sublineages = detected_sublineage.split(";")
       if percentage_lims_genes_above >= percentage_limit:
         if "lineage" in detected_lineage:
@@ -69,8 +71,10 @@ class LIMS:
        
       lineage = "; ".join(sorted(lineage))
         
-    self.logger.debug("The lineage is: {}".format(lineage))
-    self.logger.info("Finished getting lineage, now exiting function")
+    globals.LINEAGE_ENGLISH = lineage
+    self.logger.debug("The LIMS ID is: {}".format(globals.LINEAGE_ENGLISH))
+    self.logger.debug("The TBProfiler lineage is: {}".format(globals.LINEAGE))
+    self.logger.info("Finished getting lineage and ID, now exiting function")
     return lineage
   
   def convert_annotation(self, annotation, drug):
@@ -282,7 +286,7 @@ class LIMS:
     self.logger.info("Within LIMS class create_lims_report function")
     DF_LIMS = pd.DataFrame({
       "MDL sample accession numbers": globals.SAMPLE_NAME, 
-      "M_DST_A01_ID": self.get_lineage()
+      "M_DST_A01_ID": self.get_id()
       }, index=[0])
     
     self.logger.debug("Now iterating through each LIMS antimicrobial code")
@@ -307,11 +311,7 @@ class LIMS:
     DF_LIMS["Operator"] = globals.OPERATOR
     
     # add lineage
-    with open(self.input_json) as json_fh:
-      input_json = json.load(json_fh)
-      detected_lineage = input_json["main_lin"]
-    
-    DF_LIMS["M_DST_O01_Lineage"] = detected_lineage
+    DF_LIMS["M_DST_O01_Lineage"] = globals.LINEAGE
 
     # write to file
     DF_LIMS.to_csv("{}.lims_report.csv".format(self.output_prefix), index=False)

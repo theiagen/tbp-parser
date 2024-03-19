@@ -447,6 +447,18 @@ A set that contains genes that have deletions
 """
 global GENES_WITH_DELETIONS
 GENES_WITH_DELETIONS = set()
+
+"""
+A string that contains the lineage of the sample from the "main_lin" field
+"""
+global LINEAGE
+LINEAGE = ""
+
+"""
+A string that contains the lineage of the sample in English
+"""
+global LINEAGE_ENGLISH
+LINEAGE_ENGLISH = ""
             
                 
 """

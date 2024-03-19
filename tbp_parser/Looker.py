@@ -8,40 +8,13 @@ class Looker:
   """ 
   This class creates the CDPH Looker report.
   
-  It has two functions:
-    - get_lineage_and_id: returns the lineage and ID fields for Looker
+  It has one function:
     - create_looker_report: creates the Looker report CSV file 
   """
   def __init__(self, logger, input_json, output_prefix):
     self.logger = logger
     self.input_json = input_json
     self.output_prefix = output_prefix
-  
-  def get_lineage_and_id(self):
-    """
-    Returns the lineage and ID fields for Looker
-    """
-    self.logger.info("Within Looker class get_lineage_and_id function")
-    with open(self.input_json) as json_fh:
-      input_json = json.load(json_fh)
-      
-      sublineage = input_json["sublin"]
-      lineage = "NA"
-      if "lineage" in sublineage:
-        lineage = sublineage
-        ID = "MtBC, not M. bovis"
-      elif "BCG" in sublineage:
-        ID = "M. bovis BCG"
-      elif "bovis" in sublineage:
-        ID = "M. bovis, not BCG"
-      elif sublineage == "":
-        ID = "NA"
-      else:
-        ID = sublineage
-      
-      self.logger.debug("The lineage is {}; the ID is \"{}\"".format(lineage, ID))
-      self.logger.info("Finished getting lineage and ID, now exiting function")
-      return lineage, ID  
   
   def create_looker_report(self):
     """
@@ -75,15 +48,14 @@ class Looker:
         # indicate warning if any genes failed to achieve 100% coverage_threshold
         if DF_LOOKER[antimicrobial][0] != "R" and gene in globals.LOW_DEPTH_OF_COVERAGE_LIST and gene not in globals.GENES_WITH_DELETIONS:
           DF_LOOKER[antimicrobial] = "Insufficient coverage in locus"
-            
-    # get lineage and ID
-    lineage, ID = self.get_lineage_and_id()
     
     # get time stamp
     current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
     
-    DF_LOOKER["lineage"] = lineage
-    DF_LOOKER["ID"] = ID
+    # as per rule 6.1.2 and 6.1.3, the lineage field is the main_lin field from TBProfiler and the ID field is the same as ID in the LIMS report
+    DF_LOOKER["lineage"] = globals.LINEAGE
+    DF_LOOKER["ID"] = globals.LINEAGE_ENGLISH
+    
     DF_LOOKER["analysis_date"] = current_time
     DF_LOOKER["operator"] = globals.OPERATOR
     

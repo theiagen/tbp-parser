@@ -16,7 +16,7 @@ Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if
 We recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.5
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.6
 ```
 
 ## Usage
@@ -180,12 +180,12 @@ What follows is a step-by-step explanation of what happens in the tbp-parser too
         - Depending on whether or not the rule applied is considered an "expert" rule or not, a `"noexpert"` string is sometimes appended to the interpretation. If this is the case, the `complete_row()` method calls the `Row`'s `describe_rationale()` function which removes this suffix and modifies the `rationale` field.
     - Following `Row` completion, depending on if the `Row`'s `tbprofiler_gene_name` belongs to a certain group of genes, the `extract_alternate_consequences` function is called on the `Variant`. This performs a function similar to the `iterate_section` method but upon a `Variant`'s `alternate_consequences` attribute. Any additional `Row`s made are added to the `row_list`.
 5. After `iterate_section()` completes within the `create_laboratorian_report()` method, any genes that are not already in the `row_list` are added. In addition, any warnings are also applied. Finally, the `row_list` is added to the global variable `DF_LABORATORIAN` for usage in other functions, and the row_list is converted into an output CSV file.
-6. The `Parser.run()` method now creates a `Looker` object (`Looker.py`) which is initialized with the input JSON file. The `create_looker_report` method is then called on the object.
-7. The `create_looker_report` iterates through each drug in the global variable `ANTIMICROBIAL_DRUG_NAME_LIST` and determines the highest mutation ranking for the drug; that is, the most severe resistance ranking is given as output (R > U > S). If the highest ranking is not "R" and the gene has poor coverage, the ranking is replaced with "Insufficient coverage in locus". Following determining the maximum ranking, the `get_lineage_and_id()` function is called which determines the lineage and ID of the sample. Finally, the `create_looker_report()` method saves the output to a CSV file.
-8. The `Parser.run()` method then creates a `LIMS` object (`LIMS.py`), which is initialized using the input JSON as well. The `create_lims_report()` method is then called on the object.
-9. The `create_lims_report()` method iterates through each `{antimicrobial: gene}` combination in the global variable `ANTIMICROBIAL_CODE_TO_GENES`. It determines the maximum MDL resistance ranking for that gene-drug combo, and then converts the annotation into LIMS language with the `convert_annotation()` method. Afterwards, the `apply_lims_rules()` function is called.
+6. The `Parser.run()` method then creates a `LIMS` object (`LIMS.py`), which is initialized using the input JSON as well. The `create_lims_report()` method is then called on the object.
+7. The `create_lims_report()` method iterates through each `{antimicrobial: gene}` combination in the global variable `ANTIMICROBIAL_CODE_TO_GENES`. It determines the maximum MDL resistance ranking for that gene-drug combo, and then converts the annotation into LIMS language with the `convert_annotation()` method. Afterwards, the `apply_lims_rules()` function is called.
     - The `apply_lims_rules()` function iterates through each gene associated with an antimicrobial drug and formats the mutations into LIMS language. Additionally, it applies special language for "rifampin" and also determines based on position, quality scores, etc. what language should be used. Similar to `apply_expert_rules()` in the `Variant` class, this method follows the guidelines described in the CDPH interpretation document.
-10. After `apply_lims_rules()` method completes, the `create_lims_report()` method saves the output to a CSV file.
+8. After `apply_lims_rules()` method completes, the `create_lims_report()` method saves the output to a CSV file.
+9. The `Parser.run()` method now creates a `Looker` object (`Looker.py`) which is initialized with the input JSON file. The `create_looker_report()` method is then called on the object.
+10. The `create_looker_report` iterates through each drug in the global variable `ANTIMICROBIAL_DRUG_NAME_LIST` and determines the highest mutation ranking for the drug; that is, the most severe resistance ranking is given as output (R > U > S). If the highest ranking is not "R" and the gene has poor coverage, the ranking is replaced with "Insufficient coverage in locus". Finally, the `create_looker_report()` method saves the output to a CSV file.
 11. The `Parser.run()` method then finalizes the coverage report using the `Coverage` object's `reformat_coverage()` method, which adds a warning to every gene with a deletion and saves the output to a CSV file.
 12. The `Parser.run()` method then prints a message to the user indicating that the function has completed successfully. Upon completion of this function, the program ends.
 
@@ -236,16 +236,22 @@ The interpretation logic document has many points, and the implementation of the
 ### Rule 5: 
 
 - 5.1 - (Laboratorian language to LIMS language) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (line 180 - 182, 203 - 253)
-- 5.2 - (Drug interpretation in LIMS report) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (line 108) and `create_looker_report()` method in the `LIMS` class (line 63)
+- 5.2 - (Drug interpretation and lineage in LIMS report) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (line 108, 312) and `get_id()` method in the `LIMS` class (line 49-50)
   - 5.2.1 - (Only report LIMS genes in the LIMS report) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (line 108)
-  - 5.2.3 - (Report all genes in the Laboratorian report for the Looker report) - Implemented in the `create_looker_report()` method in the `Looker` class (line 63)
-- 5.3 - (Individual mutation output format) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 132 - 196)
+  - 5.2.2 - (Report the "main_lin" field from TBProfiler) - Implemented in the `get_id()` method in the `LIMS` class (line 49-50) and the `create_lims_rules()` method in the `LIMS` class (line 312)
+- 5.3 - (Individual mutation output format in the LIMS report) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 132 - 196)
   - 5.3.1 - (Only report "R" or "U" mutations except rpoB RRDR) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 185 - 190)
   - 5.3.2 (Mutation output format) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 132, 160 - 196)
   - 5.3.3 (Take highest read support mutation) - Implemented in the `apply_lims_rules()` method in the `LIMS` class (lines 133 - 157)
-- 5.4 - (Lineage formatting) - Implemented in the `get_lineage()` method in the `LIMS` class (lines 25 -74)
-  - 5.4.1 - (QC check) - Implemented in the `get_lineage()` method in the `LIMS` class (lines 33 - 38, 53)
-    - 5.4.1.1 - 5.4.1.4 - (Lineage formatting) - Implemented in the `get_lineage()` method in the `LIMS` class (lines 54 - 65)
-  - 5.4.2 - (QC fail) - Implemented in the `get_lineage()` method in the `LIMS` class (lines 67 - 68)
+- 5.4 - (ID formatting in the LIMS report) - Implemented in the `get_id()` method in the `LIMS` class (lines 25 -74)
+  - 5.4.1 - (QC check) - Implemented in the `get_id()` method in the `LIMS` class (lines 33 - 38, 53)
+    - 5.4.1.1 - 5.4.1.4 - (Lineage formatting) - Implemented in the `get_id()` method in the `LIMS` class (lines 54 - 65)
+  - 5.4.2 - (QC fail) - Implemented in the `get_id()` method in the `LIMS` class (lines 67 - 68)
   - 5.4.3 - (Reporting requirements) - Is NOT implemented in the code as requires human intervention
   - 5.4.4 - (Resequencing requirements) - Is NOT implemented in the code as requires human intervention
+
+### Rule 6:
+
+- 6.1.1 - (Report all genes in the Laboratorian report for the Looker report) - Implemented in the `create_looker_report()` method in the `Looker` class (line 63)
+- 6.1.2 - (ID field for the Looker report) - Implemented in the `create_looker_report()` method in the `Looker` class (line 57)
+- 6.1.3 - (Lineage field for the Looker report) - Implemented in the `create_looker_report()` method in the `Looker` class (line 56)

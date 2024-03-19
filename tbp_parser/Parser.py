@@ -86,13 +86,13 @@ class Parser:
     laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, self.tngs)
     laboratorian.create_laboratorian_report()
     
-    self.logger.info("Creating Looker report")
-    looker = Looker(self.logger, self.input_json, self.output_prefix)
-    looker.create_looker_report()
-    
     self.logger.info("Creating LIMS report")
     lims = LIMS(self.logger, self.input_json, self.output_prefix, self.tngs)
     lims.create_lims_report()
+    
+    self.logger.info("Creating Looker report")
+    looker = Looker(self.logger, self.input_json, self.output_prefix)
+    looker.create_looker_report()
     
     self.logger.info("Finalizing coverage report")
     coverage.reformat_coverage()
