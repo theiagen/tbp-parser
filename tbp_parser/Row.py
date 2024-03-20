@@ -180,6 +180,9 @@ class Row() :
           parent_gene = [gene for gene in parent_genes if self.tbprofiler_gene_name in globals.TNGS_REGIONS[gene].keys()][0]
           self.logger.debug("[tNGS only]: The parent gene ({}) of this segment ({}) was identified; now adding tier".format(parent_gene, self.tbprofiler_gene_name))
           self.gene_tier = globals.GENE_TO_TIER[parent_gene]
+          # now that coverage has been calculated, we can now rename the gene to be the parent gene name
+          self.logger.debug("[tNGS only]: Renaming the gene segment ({}) to be the parent gene name ({})".format(self.tbprofiler_gene_name, parent_gene))
+          self.tbprofiler_gene_name = parent_gene
     
         except:
           self.gene_tier = "NA"
