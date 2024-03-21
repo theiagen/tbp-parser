@@ -9,6 +9,8 @@ This repository contains the tbp-parser tool which parses the JSON output of [Jo
 
 Please reach out to us at [theiagen@support.com](mailto:theiagen@support.com) if you would like any custom file formats and/or changes to these output files that suit your individual needs.
 
+See also [this page](https://theiagen.notion.site/tbp-parser-b02bef0cbc814b129875d861698c80a2?pvs=4) for additional documentation.
+
 ## Installation
 
 ### Docker
