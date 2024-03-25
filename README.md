@@ -18,7 +18,7 @@ See also [this page](https://theiagen.notion.site/tbp-parser-b02bef0cbc814b12987
 We recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.6
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.7
 ```
 
 ## Usage

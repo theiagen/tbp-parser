@@ -1,0 +1,16 @@
+Chromosome	2715344	2715346	Rv2416c	eis	kanamycin,amikacin
+Chromosome	4247429	4248004	Rv3795	embB	ethambutol
+Chromosome	4326003	4327480	Rv3854c	ethA	ethionamide
+Chromosome	1673423	1673432	Rv1483	fabG1	ethionamide,isoniazid
+Chromosome	7563	7584	Rv0006	gyrA	fluoroquinolones,moxifloxacin,levofloxacin,ciprofloxacin,ofloxacin
+Chromosome	6575	6760	Rv0005	gyrB	fluoroquinolones,moxifloxacin,levofloxacin,ciprofloxacin,ofloxacin
+Chromosome	1674481	1674483	Rv1484	inhA	ethionamide,isoniazid
+Chromosome	2153888	2156111	Rv1908c	katG	isoniazid
+Chromosome	2288680	2289253	Rv2043c	pnca	pyrazinamide
+Chromosome	801265	801270	Rv0701	rplC	linezolid
+Chromosome	761076	761279	Rv0667	rpoB_1	rifampicin
+Chromosome	760314	760316	Rv0667	rpoB_2	rifampicin
+Chromosome	1475927	1476403	EBG00000313339	rrl	linezolid
+Chromosome	1473246	1473329	EBG00000313325	rrs	linezolid,kanamycin,capreomycin,amikacin,aminoglycosides
+Chromosome	778990	779487	Rv0678	mmpR5	clofazimine,bedaquiline
+Chromosome	1917933	1918743	Rv1694	tlyA	capreomycin

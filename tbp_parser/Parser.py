@@ -22,6 +22,7 @@ class Parser:
     self.debug = options.debug
     self.output_prefix = options.output_prefix
     self.coverage_regions = options.coverage_regions
+    self.tngs_expert_regions = options.tngs_expert_regions
     globals.MIN_DEPTH = options.min_depth
     globals.COVERAGE_THRESHOLD = options.coverage_threshold
     globals.SEQUENCING_METHOD = options.sequencing_method
@@ -32,8 +33,8 @@ class Parser:
     if self.tngs:
       self.logger.info("Deeplex + CDPH modified protocol flag detected; adjusting outputs to reflect this")
       if (self.coverage_regions == "../data/tbdb-modified-regions.bed"):
-        self.logger.debug("Changing default coverage regions to ../data/tngs-primer-regions.bed")
-        self.coverage_regions = "../data/tngs-primer-regions.bed"
+        self.logger.debug("Changing default coverage regions to ../data/tngs-reportable-regions.bed")
+        self.coverage_regions = "../data/tngs-reportable-regions.bed"
       
       self.logger.debug("Altering the ANTIMICROBIAL_CODE_TO_GENES dictionary to include only tNGS entries")
       globals.ANTIMICROBIAL_CODE_TO_GENES = globals.ANTIMICROBIAL_CODE_TO_GENES_tNGS
@@ -79,8 +80,12 @@ class Parser:
     self.check_dependency_exists
     
     self.logger.info("Creating initial coverage report")
-    coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions)
+    coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions, self.tngs, self.tngs_expert_regions)
     coverage.calculate_coverage()
+    
+    if self.tngs:
+      self.logger.info("Calculating the coverage for the expert rule regions")
+      coverage.calculate_r_expert_rule_regions_coverage()
     
     self.logger.info("Creating laboratorian report")
     laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, self.tngs)

@@ -11,44 +11,78 @@ class Coverage:
     - reformat_coverage: adds a warning column if a deletion was identified
       within the gene.
   """
-  def __init__(self, logger, input_bam, output_prefix, coverage_regions):
+  
+  def __init__(self, logger, input_bam, output_prefix, coverage_regions, tngs, tngs_expert_regions):
+    """ Initalizes the Coverage class
+
+    Args:
+      logger (logging.getlogger() object): Object that handles logging
+      input_bam (File): BAM file of sample to be analyzed (aligned to H37Rv)
+      output_prefix (String): Prefix for all output
+      coverage_regions (File): Bed file of regions to be examined for coverage
+      tngs (Boolean): true/false indication if analysis is of tNGS data
+      tngs_expert_regions (File): Bed file of the expert rule regions to be examined for coverage in tNGS data
+    """
+    
     self.logger = logger
     self.input_bam = input_bam
     self.output_prefix = output_prefix
     self.coverage_regions = coverage_regions
-  
-  def calculate_coverage(self):
-    """
-    This function calculates the coverage for each gene in the tbdb.bed 
-    file from Jody Phelan's TBProfiler repository using `samtools depth` 
-    and adds it to the global variable called "COVERAGE_DICTIONARY"
-    """
-    
-    self.logger.info("Within the Coverage class calculate_coverage function")
-    self.logger.debug("Now collecting the chromosome name from the BAM file")
+    self.tngs = tngs
+    self.tngs_expert_regions = tngs_expert_regions
+    self.tngs_expert_regions_coverage = {}
     
     command = "samtools idxstats {} | cut -f 1 | head -1".format(self.input_bam)
-    CHROMOSOME = subprocess.check_output(command, shell=True).decode("utf-8").strip()
-    self.logger.debug("The BAM file chromosome name is: {}".format(CHROMOSOME))    
+    self.chromosome = subprocess.check_output(command, shell=True).decode("utf-8").strip()
+  
+  def calculate_depth(self, line):
+    """ Uses samtools to calculate average breadth of coverage
+
+    Args:
+      line (String): A line from a bed file listing regions of interest
+
+    Returns:
+      String gene: name of the region
+      Float coverage: average coverage of the region over minimum depth
+    """
+    
+    # parse out the coordinates and gene from each line in the bed file
+    start = line[1]
+    end = line[2]
+    gene = line[4]
+    
+    # samtools outputs 3 columns; column 3 is the depth of coverage per nucleotide position, piped to awk to count the positions
+    #  above min_depth, then wc -l counts them all
+    command = "samtools depth -r \"" + self.chromosome + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(globals.MIN_DEPTH) + ") print;}' | wc -l"
+    self.logger.debug("Now running " + command)
+    depth = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
+    
+    # get coverage for region in bed file based on depth
+    #  add one to gene length to compensate for subtraction
+    coverage = (int(depth) / (int(end) - int(start) + 1)) * 100
+    self.logger.debug("The coverage for this gene ({}) is {}".format(gene, coverage))
+    return gene, coverage
+  
+  def calculate_coverage(self):
+    """ Iterates through a bedfile and adds average breadth of coverage to global variable "COVERAGE_DICTIONARY"
+    
+    Args: 
+      None
+        
+    Returns:
+      None
+    """    
+
+    self.logger.info("Within the Coverage class calculate_coverage function")
+    self.logger.debug("The chromosome name was collected during class initialization: {}".format(self.chromosome))
+    
+    self.logger.debug("The BAM file chromosome name is: {}".format(self.chromosome))    
     
     with open(importlib_resources.files(__name__) / self.coverage_regions, "r") as bedfile_fh:
       self.logger.debug("Now calculating coverage for each gene in the {} file".format(self.coverage_regions))
       for line in bedfile_fh:
         line = line.split("\t")
-        start = line[1]
-        end = line[2]
-        gene = line[4]
-        
-        # samtools outputs 3 columns; column 3 is the depth of coverage per nucleotide position, piped to awk to count the positions
-        #  above min_depth, then wc -l counts them all
-        command = "samtools depth -r \"" + CHROMOSOME + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(globals.MIN_DEPTH) + ") print;}' | wc -l"
-        self.logger.debug("Now running " + command)
-        depth = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
-        
-        # get coverage for region in bed file based on depth
-        #  add one to gene length to compensate for subtraction
-        coverage = (int(depth) / (int(end) - int(start) + 1)) * 100
-        self.logger.debug("The coverage for this gene ({}) is {}".format(gene, coverage))
+        gene, coverage = self.calculate_depth(line)
         
         globals.COVERAGE_DICTIONARY[gene] = coverage
     
@@ -59,6 +93,30 @@ class Coverage:
       globals.COVERAGE_DICTIONARY["Rv2983"] = globals.COVERAGE_DICTIONARY["fbiD"]
     
     self.logger.info("Initial coverage report created, now exiting function\n")
+   
+  def calculate_r_expert_rule_regions_coverage(self):
+    
+    """
+    This function calculates the breadth of coverage over the ranges that encompass
+    R mutations and expert rule regions; intended for supervisory review in the case
+    of low breadth of coverage and should not be used as a QC threshold.
+    """
+    self.logger.info("Within the Coverage class calculate_r_expert_rule_regions_coverage function")
+    self.logger.debug("Now calculating coverage with the tngs-expert-rule-regions.bed file")
+    
+    with open(importlib_resources.files(__name__) / self.tngs_expert_regions, "r") as bedfile_fh:
+      self.logger.debug("Now calculating coverage for each gene in the {} file".format(self.tngs_expert_regions))
+      for line in bedfile_fh:
+        line = line.split("\t")
+        gene, coverage = self.calculate_depth(line)
+        
+        self.tngs_expert_regions_coverage[gene] = coverage
+          
+    # rename some genes to match CDPH nomenclature
+    if "mmpR5" in globals.COVERAGE_DICTIONARY.keys():
+       self.tngs_expert_regions_coverage["Rv0678"] =  self.tngs_expert_regions_coverage["mmpR5"]
+        
+    self.logger.info("Expert regions coverage dictionary created, now exiting function\n")
     
   def reformat_coverage(self):
     """
@@ -83,6 +141,13 @@ class Coverage:
         self.logger.error("An expected gene ({}) was not found in laboratorian report.\nSomething may have gone wrong.".format(gene))
       
       DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])], ignore_index=True)
+
+
+    if self.tngs:
+      self.logger.debug("Merging the tNGS expert rule regions coverage with the initial coverage report and renaming columns")
+      df_tngs_expert_regions_coverage = pd.DataFrame(self.tngs_expert_regions_coverage, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Coverage_Breadth_R_expert-rule_region"})
+      DF_COVERAGE = pd.merge(DF_COVERAGE, df_tngs_expert_regions_coverage, on="Gene", how="outer")
+      DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning"}, inplace=True)
 
     DF_COVERAGE.to_csv(self.output_prefix + ".percent_gene_coverage.csv", index=False)
     self.logger.info("Coverage report reformatted and saved to {}\n".format(self.output_prefix + ".percent_gene_coverage.csv"))
