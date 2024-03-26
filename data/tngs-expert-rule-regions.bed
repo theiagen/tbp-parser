@@ -6,7 +6,7 @@ Chromosome	7563	7584	Rv0006	gyrA	fluoroquinolones,moxifloxacin,levofloxacin,cipr
 Chromosome	6575	6760	Rv0005	gyrB	fluoroquinolones,moxifloxacin,levofloxacin,ciprofloxacin,ofloxacin
 Chromosome	1674481	1674483	Rv1484	inhA	ethionamide,isoniazid
 Chromosome	2153888	2156111	Rv1908c	katG	isoniazid
-Chromosome	2288680	2289253	Rv2043c	pnca	pyrazinamide
+Chromosome	2288680	2289253	Rv2043c	pncA	pyrazinamide
 Chromosome	801265	801270	Rv0701	rplC	linezolid
 Chromosome	761076	761279	Rv0667	rpoB_1	rifampicin
 Chromosome	760314	760316	Rv0667	rpoB_2	rifampicin
