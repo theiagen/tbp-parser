@@ -74,10 +74,10 @@ optional arguments:
           the minimum frequency for an rrl mutation to pass QC
           default=0.1
   --rpob449_frequency
-          the minimum frequency for an rrs mutation to pass QC
+          the minimum frequency for an rpoB mutation at protein position 449 to pass QC
           default=0.1
   --etha237_frequency
-          the minimum frequency for an rrl mutation to pass QC
+          the minimum frequency for an ethA mutation at protein position 237 to pass QC
           default=0.1
   --verbose
           increase output verbosity
