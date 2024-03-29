@@ -35,6 +35,10 @@ def main():
                       help="the minimum frequency for an rrs mutation to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
   parser.add_argument("--rrl_frequency",
                       help="the minimum frequency for an rrl mutation to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
+  parser.add_argument("--rpob449_frequency",
+                      help="the minimum frequency for an rpoB mutation at protein position 449 to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
+  parser.add_argument("--etha237_frequency",
+                      help="the minimum frequency for an ethA mutation at protein position 237 to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
   parser.add_argument("--verbose", 
                       help="increase output verbosity", action="store_true", default=False)
   parser.add_argument("--debug", 

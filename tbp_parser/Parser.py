@@ -28,6 +28,8 @@ class Parser:
     globals.SEQUENCING_METHOD = options.sequencing_method
     globals.RRS_FREQUENCY = options.rrs_frequency
     globals.RRL_FREQUENCY = options.rrl_frequency
+    globals.RPOB449_FREQUENCY = options.rpob449_frequency
+    globals.ETHA237_FREQUENCY = options.etha237_frequency
     globals.OPERATOR = options.operator
     
     if self.tngs:

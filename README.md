@@ -18,7 +18,7 @@ See also [this page](https://theiagen.notion.site/tbp-parser-b02bef0cbc814b12987
 We recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.7
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.3.8
 ```
 
 ## Usage
@@ -71,6 +71,12 @@ optional arguments:
           the minimum frequency for an rrs mutation to pass QC
           default=0.1
   --rrl_frequency
+          the minimum frequency for an rrl mutation to pass QC
+          default=0.1
+  --rpob449_frequency
+          the minimum frequency for an rrs mutation to pass QC
+          default=0.1
+  --etha237_frequency
           the minimum frequency for an rrl mutation to pass QC
           default=0.1
   --verbose

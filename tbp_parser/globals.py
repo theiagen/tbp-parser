@@ -240,6 +240,13 @@ DF_LABORATORIAN = pd.DataFrame(columns = [
 ])
 
 """
+The minimum frequency for a mutation to be considered for ethA at protein position 237
+"""
+global ETHA237_FREQUENCY
+ETHA237_FREQUENCY = 0.1
+
+
+"""
 A dictionary that contains the list of genes that are to be
 included in the CDPH LIMS report
 """
@@ -534,6 +541,12 @@ The range of rpoB special positions
 """
 global RRDR_RANGE
 RRDR_RANGE = range(426, 452)
+
+"""
+The minimum frequency for a mutation to be considered for rpoB at protein position 449
+"""
+global RPOB449_FREQUENCY
+RPOB449_FREQUENCY = 0.1
 
 """
 The minimum frequency for a mutation to be considered for rrs

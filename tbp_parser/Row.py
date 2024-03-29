@@ -80,7 +80,9 @@ class Row() :
               else:
                 self.warning.append("Insufficient coverage in locus")
 
-          if (self.depth < globals.MIN_DEPTH or self.read_support < 10) or (self.tbprofiler_gene_name not in ["rrs", "rrl"] and float(self.frequency) < 0.10) or (self.tbprofiler_gene_name == "rrs" and float(self.frequency) < globals.RRS_FREQUENCY) or (self.tbprofiler_gene_name == "rrl" and float(self.frequency) < globals.RRL_FREQUENCY) and "del" not in self.tbprofiler_variant_substitution_nt:
+          protein_position = globals.get_position(self.tbprofiler_variant_substitution_aa)
+          
+          if (self.depth < globals.MIN_DEPTH or self.read_support < 10) or (self.tbprofiler_gene_name not in ["rrs", "rrl"] and float(self.frequency) < 0.10) or (self.tbprofiler_gene_name == "rrs" and float(self.frequency) < globals.RRS_FREQUENCY) or (self.tbprofiler_gene_name == "rrl" and float(self.frequency) < globals.RRL_FREQUENCY) or (self.tbprofiler_gene_name == "ethA" and 237 in protein_position and float(self.frequency) < globals.ETHA237_FREQUENCY) or (self.tbprofiler_gene_name == "rpoB" and 449 in protein_position and float(self.frequency) < globals.RPOB449_FREQUENCY) and "del" not in self.tbprofiler_variant_substitution_nt:
             self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; applying an additional mutation position warning".format(self.depth, self.frequency, self.read_support))
             globals.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
             self.warning.append("Failed quality in the mutation position")
