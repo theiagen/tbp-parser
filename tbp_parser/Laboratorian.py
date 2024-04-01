@@ -85,7 +85,7 @@ class Laboratorian:
       - mdl_interpretation: the MDL interpretation of resistance (R, S, U)
       - depth: the depth of coverage at the mutation site (100)
       - frequency: the frequency of mutation at the site (1)
-      - read_support: the number of reads supporting the mutation (100, depth*frequency)
+      - read_support: the number of reads supporting the mutation (10, depth*frequency)
       - rationale: the rationale for resistance calling (WHO classification, Expert rule)
       - warning: a column reserved for warnings such as low depth of coverage 
     """

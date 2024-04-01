@@ -24,8 +24,10 @@ class Parser:
     self.coverage_regions = options.coverage_regions
     self.tngs_expert_regions = options.tngs_expert_regions
     globals.MIN_DEPTH = options.min_depth
-    globals.COVERAGE_THRESHOLD = options.coverage_threshold
+    globals.COVERAGE_THRESHOLD = options.min_percent_coverage
     globals.SEQUENCING_METHOD = options.sequencing_method
+    globals.MIN_READ_SUPPORT = options.min_read_support
+    globals.MIN_FREQUENCY = options.min_frequency
     globals.RRS_FREQUENCY = options.rrs_frequency
     globals.RRL_FREQUENCY = options.rrl_frequency
     globals.RPOB449_FREQUENCY = options.rpob449_frequency

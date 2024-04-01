@@ -481,9 +481,21 @@ The minimum depth threshold
 global MIN_DEPTH
 MIN_DEPTH = 10
 
+"""
+The minimum frequency for a mutation to pass QC
+"""
+global MIN_FREQUENCY
+MIN_FREQUENCY = 0.1
+
+"""
+The minimum read support for a mutation to pass QC
+"""
+global MIN_READ_SUPPORT
+MIN_READ_SUPPORT = 10
+
 """ 
 A list that will contain the nucleotide mutations that have failed
-QC: min coverage < 10x, min freq < 10%, min read support < 10x
+QC: min coverage < 10x, min freq < 10%, min read support < 10x (or whatever minimums the user specifies)
 """
 global MUTATION_FAIL_LIST
 MUTATION_FAIL_LIST = []
