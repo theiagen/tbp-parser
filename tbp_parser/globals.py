@@ -61,10 +61,74 @@ ANTIMICROBIAL_CODE_TO_DRUG_NAME = {
   "M_DST_M01_CFZ": "clofazimine", 
   "M_DST_N01_LZD": "linezolid" 
 }
+
+"""
+The dictionary that matches CDPH LIMS antimicrobial codes to the
+corresponding genes and their corresponding CDPH LIMS codes
+"""
+global ANTIMICROBIAL_CODE_TO_GENES
+ANTIMICROBIAL_CODE_TO_GENES = {}
   
 """
 A dictionary that matches CDPH LIMS antimicrobial codes to the
-corresponding genes and their corresponding CDPH LIMS codes
+corresponding genes and their corresponding CDPH LIMS codes for tNGS data
+"""
+global ANTIMICROBIAL_CODE_TO_GENES_tNGS
+ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
+  "M_DST_B01_INH": {
+    "katG": "M_DST_B02_katG", 
+    "fabG1": "M_DST_B03_fabG1",
+    "inhA": "M_DST_B04_inhA"
+  },
+  "M_DST_C01_ETO": {
+    "ethA": "M_DST_C02_ethA", 
+    "fabG1": "M_DST_C03_fabG1",
+    "inhA": "M_DST_C04_inhA"
+  },
+  "M_DST_D01_RIF": {
+    "rpoB": "M_DST_D02_rpoB"
+  },
+  "M_DST_E01_PZA": {
+    "pncA": "M_DST_E02_pncA"
+  },
+  "M_DST_F01_EMB": {
+    "embB": "M_DST_F03_embB"
+  },
+  "M_DST_G01_AMK": {
+    "rrs": "M_DST_G02_rrs", 
+    "eis": "M_DST_G03_eis"
+  },
+  "M_DST_H01_KAN": {
+    "rrs": "M_DST_H02_rrs", 
+    "eis": "M_DST_H03_eis"
+  },
+  "M_DST_I01_CAP": {
+    "rrs": "M_DST_I02_rrs", 
+    "tlyA": "M_DST_I03_tlyA"
+  },
+  "M_DST_J01_MFX": {
+    "gyrA": "M_DST_J02_gyrA", 
+    "gyrB": "M_DST_J03_gyrB"
+  },
+  "M_DST_K01_LFX": {
+    "gyrA": "M_DST_K02_gyrA", 
+    "gyrB": "M_DST_K03_gyrB"
+  },
+  "M_DST_L01_BDQ": {
+    "Rv0678": "M_DST_L02_Rv0678", 
+  },
+  "M_DST_M01_CFZ": {
+    "Rv0678":"M_DST_M02_Rv0678", 
+  },
+  "M_DST_N01_LZD": {
+    "rrl": "M_DST_N02_rrl", 
+    "rplC": "M_DST_N03_rplC"
+  }
+}
+
+"""
+A dictionary that matches CDPH LIMS antimicrobial codes to the
+corresponding genes and their corresponding CDPH LIMS codes for WGS data
 """
 global ANTIMICROBIAL_CODE_TO_GENES_WGS
 ANTIMICROBIAL_CODE_TO_GENES_WGS = {
@@ -127,62 +191,6 @@ ANTIMICROBIAL_CODE_TO_GENES_WGS = {
   }
 }
 
-global ANTIMICROBIAL_CODE_TO_GENES_tNGS
-ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
-  "M_DST_B01_INH": {
-    "katG": "M_DST_B02_katG", 
-    "fabG1": "M_DST_B03_fabG1",
-    "inhA": "M_DST_B04_inhA"
-  },
-  "M_DST_C01_ETO": {
-    "ethA": "M_DST_C02_ethA", 
-    "fabG1": "M_DST_C03_fabG1",
-    "inhA": "M_DST_C04_inhA"
-  },
-  "M_DST_D01_RIF": {
-    "rpoB": "M_DST_D02_rpoB"
-  },
-  "M_DST_E01_PZA": {
-    "pncA": "M_DST_E02_pncA"
-  },
-  "M_DST_F01_EMB": {
-    "embB": "M_DST_F03_embB"
-  },
-  "M_DST_G01_AMK": {
-    "rrs": "M_DST_G02_rrs", 
-    "eis": "M_DST_G03_eis"
-  },
-  "M_DST_H01_KAN": {
-    "rrs": "M_DST_H02_rrs", 
-    "eis": "M_DST_H03_eis"
-  },
-  "M_DST_I01_CAP": {
-    "rrs": "M_DST_I02_rrs", 
-    "tlyA": "M_DST_I03_tlyA"
-  },
-  "M_DST_J01_MFX": {
-    "gyrA": "M_DST_J02_gyrA", 
-    "gyrB": "M_DST_J03_gyrB"
-  },
-  "M_DST_K01_LFX": {
-    "gyrA": "M_DST_K02_gyrA", 
-    "gyrB": "M_DST_K03_gyrB"
-  },
-  "M_DST_L01_BDQ": {
-    "Rv0678": "M_DST_L02_Rv0678", 
-  },
-  "M_DST_M01_CFZ": {
-    "Rv0678":"M_DST_M02_Rv0678", 
-  },
-  "M_DST_N01_LZD": {
-    "rrl": "M_DST_N02_rrl", 
-    "rplC": "M_DST_N03_rplC"
-  }
-}
-
-global ANTIMICROBIAL_CODE_TO_GENES
-ANTIMICROBIAL_CODE_TO_GENES = {}
-
 """
 A dictionary that contains a list of the antimicrobial drug names
 """
@@ -224,7 +232,8 @@ global COVERAGE_DICTIONARY
 COVERAGE_DICTIONARY = {}
  
 """
-The coverage threshold
+The coverage threshold (the minimum percent coverage of a gene/locus over the minimum depth)
+See also MIN_DEPTH
 """
 global COVERAGE_THRESHOLD
 COVERAGE_THRESHOLD = 100
@@ -245,28 +254,6 @@ The minimum frequency for a mutation to be considered for ethA at protein positi
 global ETHA237_FREQUENCY
 ETHA237_FREQUENCY = 0.1
 
-
-"""
-A dictionary that contains the list of genes that are to be
-included in the CDPH LIMS report
-"""
-global GENES_FOR_LIMS_WGS
-GENES_FOR_LIMS_WGS = [
-  "atpE", "eis", "embA", "embB", "ethA", "fabG1", "gyrA", 
-  "gyrB", "inhA", "katG", "mmpL5", "mmpS5", "pepQ", 
-  "pncA", "rplC", "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
-]
-
-global GENES_FOR_LIMS_tNGS
-GENES_FOR_LIMS_tNGS = [
-  "eis", "embB", "ethA", "fabG1", "gyrA", 
-  "gyrB", "inhA", "katG", "pncA", "rplC", 
-  "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
-]
-
-global GENES_FOR_LIMS
-GENES_FOR_LIMS = []
-
 """
 A list of genes that correspond to a certain set of expert rules
 Rv0678 is equivalent to mmpR5
@@ -282,18 +269,12 @@ global GENE_LIST_MDL_1_1
 GENE_LIST_MDL_1_1 = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678"]
 
 """
-A list of genes that correspond to rule 1.1
+A list of genes that correspond to rule 2.1
 Rv0678 is equivalent to mmpR5
 """
 global GENE_LIST_MDL_2_1
 GENE_LIST_MDL_2_1 = ["ethA", "gid", "katG", "pncA", "rpoB"]
 
-"""
-A set of genes that have been reported so far
-"""
-global GENES_REPORTED
-GENES_REPORTED = set()
-  
 """
 A dictionary corresponding each gene to the drug they may confer
 resistance to, including the genes in the TBDB watchlist.
@@ -450,6 +431,40 @@ GENE_TO_TIER = {
 }
 
 """
+The list of genes used to generate the CDPH LIMS report
+"""
+global GENES_FOR_LIMS
+GENES_FOR_LIMS = []
+
+"""
+A  list of genes that are to be included in the 
+CDPH LIMS report for tNGS data
+"""
+global GENES_FOR_LIMS_tNGS
+GENES_FOR_LIMS_tNGS = [
+  "eis", "embB", "ethA", "fabG1", "gyrA", 
+  "gyrB", "inhA", "katG", "pncA", "rplC", 
+  "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
+]
+
+"""
+A list of genes that are to be included in the 
+CDPH LIMS report for WGS data
+"""
+global GENES_FOR_LIMS_WGS
+GENES_FOR_LIMS_WGS = [
+  "atpE", "eis", "embA", "embB", "ethA", "fabG1", "gyrA", 
+  "gyrB", "inhA", "katG", "mmpL5", "mmpS5", "pepQ", 
+  "pncA", "rplC", "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
+]
+
+"""
+A set of genes that have been reported so far
+"""
+global GENES_REPORTED
+GENES_REPORTED = set()
+  
+"""
 A set that contains genes that have deletions
 """
 global GENES_WITH_DELETIONS
@@ -470,7 +485,7 @@ LINEAGE_ENGLISH = ""
                 
 """
 A list that will contain the names of genes that have coverages
-below the coverage threshold; default of 10x
+below the coverage threshold (see also COVERAGE_THRESHOLD)
 """  
 global LOW_DEPTH_OF_COVERAGE_LIST
 LOW_DEPTH_OF_COVERAGE_LIST = []
@@ -489,6 +504,7 @@ MIN_FREQUENCY = 0.1
 
 """
 The minimum read support for a mutation to pass QC
+(calculated as DEPTH * FREQUENCY)
 """
 global MIN_READ_SUPPORT
 MIN_READ_SUPPORT = 10
@@ -549,17 +565,29 @@ RPOB_MUTATIONS = [
 ]
 
 """
+The minimum frequency for a mutation to be considered for rpoB at protein position 449
+"""
+global RPOB449_FREQUENCY
+RPOB449_FREQUENCY = 0.1
+
+"""
 The range of rpoB special positions
 """
 global RRDR_RANGE
 RRDR_RANGE = range(426, 452)
 
 """
-The minimum frequency for a mutation to be considered for rpoB at protein position 449
+The minimum frequency for a mutation to be considered for rrl
 """
-global RPOB449_FREQUENCY
-RPOB449_FREQUENCY = 0.1
+global RRL_FREQUENCY
+RRL_FREQUENCY = 0.1
 
+"""
+The minimum read support for a mutation to be considered for rrl
+"""
+global RRL_READ_SUPPORT
+RRL_READ_SUPPORT = 10
+            
 """
 The minimum frequency for a mutation to be considered for rrs
 """            
@@ -567,10 +595,10 @@ global RRS_FREQUENCY
 RRS_FREQUENCY = 0.1
 
 """
-The minimum frequency for a mutation to be considered for rrl
+The minimum read support for a mutation to be considered for rrs
 """
-global RRL_FREQUENCY
-RRL_FREQUENCY = 0.1
+global RRS_READ_SUPPORT
+RRS_READ_SUPPORT = 10
             
 """
 This dictionary converts the rule to the rationale language
@@ -606,18 +634,25 @@ rpoB and rrl indicate ranges; rrs indicates specific positions
 """
 global SPECIAL_POSITIONS
 SPECIAL_POSITIONS = {
-  "rpoB": [426, 452],
-  "gyrA": [88, 94],
-  "gyrB": [446, 507],
-  "rrl": [[2003, 2367], [2449, 3056]],
-  "rrs": [1401, 1402, 1484]
+  "rpoB": [426, 452], # codon; the RRDR range
+  "gyrA": [88, 94], # codon; the QRDR range
+  "gyrB": [446, 507], # codon; the QRDR range
+  "rrl": [[2003, 2367], [2449, 3056]], # nucleotide; range
+  "rrs": [1401, 1402, 1484] # nucleotide; specific positions
 }
 
 """
 The specific primer regions for the gene(s) that is(are) split into multiple sections [tNGS only]
+Left blank to not affect WGS sequencing
 """
 global TNGS_REGIONS
-TNGS_REGIONS = {
+TNGS_REGIONS = {}
+
+"""
+The specific primer regions for the gene(s) that is(are) split into multiple sections [tNGS only]
+"""
+global TNGS_REGIONS_ACTIVATED
+TNGS_REGIONS_ACTIVATED = {
   "rpoB": {
     "rpoB_1": [760957, 761355],
     "rpoB_2": [760280, 760812]

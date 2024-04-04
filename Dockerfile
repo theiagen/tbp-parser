@@ -3,7 +3,7 @@
 # Shelby Bennett, Erin Young, Curtis Kapsak, & Kutluhan Incekara
 
 ARG SAMTOOLS_VER="1.18"
-ARG TBP_PARSER_VER="1.3.8"
+ARG TBP_PARSER_VER="1.3.9"
 
 FROM ubuntu:jammy as builder
 
@@ -42,7 +42,7 @@ ARG TBP_PARSER_VER
 LABEL base.image="ubuntu:jammy"
 LABEL dockerfile.version="1"
 LABEL software="tbp-parser"
-LABEL software.version="1.3.8"
+LABEL software.version="1.3.9"
 LABEL description="tbp-parser and samtools"
 LABEL website="https://github.com/theiagen/tbp-parser"
 LABEL license="https://github.com/theiagen/tbp-parser/blob/main/LICENSE"

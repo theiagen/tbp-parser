@@ -39,6 +39,7 @@ class Row() :
         except:
           self.tbprofiler_gene_name = gene_name
           self.variant.gene = gene_name
+        self.logger.debug("The variant's gene name is {}".format(self.tbprofiler_gene_name))
         try:
           self.tbprofiler_locus_tag = self.variant.locus_tag
         except:
@@ -46,6 +47,7 @@ class Row() :
         self.tbprofiler_variant_substitution_type = self.variant.type
         self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
         self.tbprofiler_variant_substitution_aa = self.variant.protein_change
+        self.logger.debug("This mutations is a {} with {} and {}".format(self.tbprofiler_variant_substitution_type, self.tbprofiler_variant_substitution_nt, self.tbprofiler_variant_substitution_aa))
         # change blank aa substitutions to NA
         if self.tbprofiler_variant_substitution_aa == "":
           self.tbprofiler_variant_substitution_aa = "NA"
@@ -68,6 +70,10 @@ class Row() :
         self.rationale = ""
         self.warning = []
         
+        
+        if self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys():
+            self.logger.debug("[tNGS only] This mutation's genomic position is outside the expected region. An additional warning will be given.")
+            self.warning.append("This mutation is outside the expected region")
         try:
           if (self.depth < globals.MIN_DEPTH) or (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
             self.logger.debug("The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a locus warning".format(self.depth, globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
@@ -82,12 +88,27 @@ class Row() :
 
           protein_position = globals.get_position(self.tbprofiler_variant_substitution_aa)
           
-          if (self.depth < globals.MIN_DEPTH or self.read_support < globals.MIN_READ_SUPPORT) or (self.tbprofiler_gene_name not in ["rrs", "rrl"] and float(self.frequency) < globals.MIN_FREQUENCY) or (self.tbprofiler_gene_name == "rrs" and float(self.frequency) < globals.RRS_FREQUENCY) or (self.tbprofiler_gene_name == "rrl" and float(self.frequency) < globals.RRL_FREQUENCY) or (self.tbprofiler_gene_name == "ethA" and 237 in protein_position and float(self.frequency) < globals.ETHA237_FREQUENCY) or (self.tbprofiler_gene_name == "rpoB" and 449 in protein_position and float(self.frequency) < globals.RPOB449_FREQUENCY) and "del" not in self.tbprofiler_variant_substitution_nt:
+          # check to see if we need to apply a mutation warning 
+          # (check rrs & rrl for low frequency and read support; 
+          #  also check ethA & rpoB for specific protein position frequency)
+          if ((self.depth < globals.MIN_DEPTH) 
+              or (self.tbprofiler_gene_name not in ["rrs", "rrl"] and 
+                  (float(self.frequency) < globals.MIN_FREQUENCY or self.read_support < globals.MIN_READ_SUPPORT)) 
+              or (self.tbprofiler_gene_name == "rrs" and 
+                  (float(self.frequency) < globals.RRS_FREQUENCY or self.read_support < globals.RRS_READ_SUPPORT)) 
+              or (self.tbprofiler_gene_name == "rrl" and 
+                  (float(self.frequency) < globals.RRL_FREQUENCY or self.read_support < globals.RRL_READ_SUPPORT)) 
+              or (self.tbprofiler_gene_name == "ethA" and 
+                  237 in protein_position and float(self.frequency) < globals.ETHA237_FREQUENCY) 
+              or (self.tbprofiler_gene_name == "rpoB" and 
+                  449 in protein_position and float(self.frequency) < globals.RPOB449_FREQUENCY) 
+              and "del" not in self.tbprofiler_variant_substitution_nt):
             self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; applying an additional mutation position warning".format(self.depth, self.frequency, self.read_support))
             globals.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
             self.warning.append("Failed quality in the mutation position")
           
-          elif (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD) and "del" not in self.tbprofiler_variant_substitution_nt:
+          elif ((float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD)
+                and "del" not in self.tbprofiler_variant_substitution_nt):
             self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; no additional warning added for the mutation position".format(self.depth, self.frequency, self.read_support))
           
           elif "del" in self.tbprofiler_variant_substitution_nt:
@@ -96,12 +117,8 @@ class Row() :
           else: # all other variants, no warning added
             self.warning = [""]
         except:
-          if self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys():
-            self.logger.debug("[tNGS only] This mutation's genomic position is outside the expected region. A different warning will be applied.")
-            self.warning = ["This mutation is outside the expected region"]
-          else:
-            self.logger.debug("This gene does not appear in the coverage dictionary. A different warning will be applied.")
-            self.warning = ["This gene does not appear in the coverage dictionary"]
+          self.logger.debug("This gene does not appear in the coverage dictionary. An additional warning will be given.")
+          self.warning.append("This gene does not appear in the coverage dictionary")
           
         self.logger.debug("This variant has the following warnings: {}".format(self.warning))
       
@@ -124,8 +141,10 @@ class Row() :
         self.rationale = "NA"
         self.warning = [""]
         
-        # check to see if we need to apply a coverage warning (whole locus fail point c; rule 4.1 & 4.2.1.3.1)
-        if self.tbprofiler_gene_name in globals.COVERAGE_DICTIONARY.keys() or self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys():
+        # check to see if we need to apply a coverage warning 
+        #  (whole locus fail point c; rule 4.1 & 4.2.1.3.1)
+        if (self.tbprofiler_gene_name in globals.COVERAGE_DICTIONARY.keys() 
+            or self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys()):
           try: 
             if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
               self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
@@ -143,6 +162,7 @@ class Row() :
               self.mdl_interpretation = "Insufficient Coverage"
               self.warning.append("Insufficient coverage in locus")
           except:
+            # this section currently is not used, but is here in case we decide to split up on regions again
             self.logger.debug("[tNGS only]: The gene does not appear in the coverage dictionary, but is in the TNGS regions dictionary")
             self.logger.debug("[tNGS only]: This indicates that the gene was sequenced, but coverage was calculated under a different name")
             self.logger.debug("[tNGS only]: A coverage warning will be applied if at least one segment is under the coverage threshold")

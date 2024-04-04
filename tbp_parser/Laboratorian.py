@@ -35,6 +35,7 @@ class Laboratorian:
       variant = Variant(self.logger, variant)
       globals.GENES_REPORTED.add(variant.gene)
       
+      # this currently only applies to rpoB -- renaming the gene to the segment name to get the coverage for QC
       if self.tngs and variant.gene in globals.TNGS_REGIONS.keys():
         self.logger.debug("[tNGS only]: checking to see which segment this gene is found in")
         for segment in globals.TNGS_REGIONS[variant.gene]:
@@ -45,6 +46,12 @@ class Laboratorian:
             break
           else:
             self.logger.debug("[tNGS only]: variant from {} is NOT found in segment {}".format(variant.gene, segment))
+        
+        ##### FUTURE NOTICE: IF WE HAVE MORE SEGMENTS ADDED THEN WE'LL NEED TO ADJUST THIS
+        # if the gene name is still rpoB, then it means that the variant was outside of the expected region
+        if variant.gene == "rpoB":
+          self.logger.debug("[tNGS only]: since this was outside of the expected region, we're setting the coverage for rpoB to 0")
+          globals.COVERAGE_DICTIONARY[variant.gene] = 0
         
       # extract all of the annotations for the variant
       variant.extract_annotations()

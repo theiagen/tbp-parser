@@ -29,7 +29,9 @@ class Parser:
     globals.MIN_READ_SUPPORT = options.min_read_support
     globals.MIN_FREQUENCY = options.min_frequency
     globals.RRS_FREQUENCY = options.rrs_frequency
+    globals.RRS_READ_SUPPORT = options.rrs_read_support
     globals.RRL_FREQUENCY = options.rrl_frequency
+    globals.RRL_READ_SUPPORT = options.rrl_read_support
     globals.RPOB449_FREQUENCY = options.rpob449_frequency
     globals.ETHA237_FREQUENCY = options.etha237_frequency
     globals.OPERATOR = options.operator
@@ -45,6 +47,9 @@ class Parser:
       
       self.logger.debug("Altering the GENES_FOR_LIMS list to include only tNGS genes")
       globals.GENES_FOR_LIMS = globals.GENES_FOR_LIMS_tNGS
+      
+      self.logger.debug("Setting the tNGS regions dictionary")
+      globals.TNGS_REGIONS = globals.TNGS_REGIONS_ACTIVATED
       
     else:
       self.logger.debug("Setting the ANTIMICROBIAL_CODE_TO_GENES dictionary to include all WGS entries")

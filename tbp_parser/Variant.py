@@ -129,7 +129,10 @@ class Variant:
      
       # check if position within promoter regions
       if self.gene in globals.PROMOTER_REGIONS.keys():
-        if (len(position_nt) > 1 and (any([x in range(globals.PROMOTER_REGIONS[self.gene][0], globals.PROMOTER_REGIONS[self.gene][1]) for x in position_nt]) or any([x in range(position_nt[0], position_nt[1]) for x in globals.PROMOTER_REGIONS[self.gene]]))) or (globals.PROMOTER_REGIONS[self.gene][0] <= position_nt[0] <= globals.PROMOTER_REGIONS[self.gene][1]):
+        if ((len(position_nt) > 1 and 
+             (any([x in range(globals.PROMOTER_REGIONS[self.gene][0], globals.PROMOTER_REGIONS[self.gene][1]) for x in position_nt]) 
+              or any([x in range(position_nt[0], position_nt[1]) for x in globals.PROMOTER_REGIONS[self.gene]]))) 
+            or (globals.PROMOTER_REGIONS[self.gene][0] <= position_nt[0] <= globals.PROMOTER_REGIONS[self.gene][1])):
           self.logger.debug("The position is within the promoter region; interpretation is 'U'")
           return "Urule1.2"
       
@@ -150,7 +153,13 @@ class Variant:
 
     elif self.gene == "rrl":
       self.logger.debug("The gene is rrl, now checking if the position requires special consideration")
-      if (len(position_nt) > 1 and (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0][0], globals.SPECIAL_POSITIONS[self.gene][0][1]) for x in position_nt]) or any([x in range(globals.SPECIAL_POSITIONS[self.gene][1][0], globals.SPECIAL_POSITIONS[self.gene][1][1]) for x in position_nt]) or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][0]]) or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][1]]))) or ((globals.SPECIAL_POSITIONS[self.gene][0][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][0][1]) or (globals.SPECIAL_POSITIONS[self.gene][1][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][1][1])):
+      if ((len(position_nt) > 1 and 
+           (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0][0], globals.SPECIAL_POSITIONS[self.gene][0][1]) for x in position_nt]) 
+            or any([x in range(globals.SPECIAL_POSITIONS[self.gene][1][0], globals.SPECIAL_POSITIONS[self.gene][1][1]) for x in position_nt]) 
+            or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][0]]) 
+            or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][1]]))) 
+          or ((globals.SPECIAL_POSITIONS[self.gene][0][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][0][1]) 
+              or (globals.SPECIAL_POSITIONS[self.gene][1][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][1][1]))):
         self.logger.debug("The position is within the special positions; interpretation is 'U'")
         return "Urule1.2"
       
@@ -161,7 +170,10 @@ class Variant:
     elif self.gene in ["katG", "pncA", "ethA", "gid"]: 
       self.logger.debug("The gene is {}, now checking if the mutation type requires special consideration under rule 2.2".format(self.gene))
 
-      if (any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.nucleotide_change.endswith("*")) or (any(indel_or_stop in self.protein_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.protein_change.endswith("*")):
+      if ((any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) 
+           or self.nucleotide_change.endswith("*")) 
+          or (any(indel_or_stop in self.protein_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) 
+              or self.protein_change.endswith("*"))):
         if any([int(position) > -30 for position in position_nt]): 
           self.logger.debug("The mutation type is an indel, stop, or frameshift codon and within 30 nt of the start codon; interpretation is 'U'")
           return "Urule2.2.1"
@@ -187,7 +199,10 @@ class Variant:
       #  to see if within (R/Q)RDR, we check if any of the AA positions are within the (R/Q)RDR range
       #  to see if (R/Q)RDR falls within, we check (R/Q)RDR start/end positions are within the AA position range
       # otherwise, check if the single AA position is within (R/Q)RDR positions
-      if (len(position_aa) > 1 and (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0], globals.SPECIAL_POSITIONS[self.gene][1]) for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene]]))) or ((globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene][1])):
+      if ((len(position_aa) > 1 and 
+           (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0], globals.SPECIAL_POSITIONS[self.gene][1]) for x in position_aa]) 
+            or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene]]))) 
+          or ((globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene][1]))):
         self.logger.debug("The position is within the special positions; interpretation is 'R' if rpoB (or 'U' if not) and nonsynonymous, else 'S'")
         if self.gene == "rpoB":
           if self.type != "synonymous_variant":

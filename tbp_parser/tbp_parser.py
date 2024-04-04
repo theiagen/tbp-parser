@@ -45,8 +45,12 @@ def main():
                       help="the BED file containing the regions to calculate coverage for expert rule regions\n  (used to determine coverage quality in the regions where resistance-conferring\n  mutations are found, or where a CDC expert rule is applied; not for QC)\ndefault=data/tngs-expert-rule-regions.bed", default="../data/tngs-expert-rule-regions.bed", metavar="\b", type=CheckInputs.is_bed_valid)
   tngs_arguments.add_argument("--rrs_frequency",
                       help="the minimum frequency for an rrs mutation to pass QC\n  (rrs has several problematic sites in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
+  tngs_arguments.add_argument("--rrs_read_support",
+                      help="the minimum read support for an rrs mutation to pass QC\n  (rrs has several problematic sites in the Deeplex tNGS assay)\ndefault=10", default=10, metavar="\b", type=int)
   tngs_arguments.add_argument("--rrl_frequency",
                       help="the minimum frequency for an rrl mutation to pass QC\n  (rrl has several problematic sites in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
+  tngs_arguments.add_argument("--rrl_read_support",
+                              help="the minimum read support for an rrl mutation to pass QC\n  (rrl has several problematic sites in the Deeplex tNGS assay)\ndefault=10", default=10, metavar="\b", type=int)
   tngs_arguments.add_argument("--rpob449_frequency",
                       help="the minimum frequency for an rpoB mutation at protein position 449 to pass QC\n  (this is a problematic site in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
   tngs_arguments.add_argument("--etha237_frequency",
