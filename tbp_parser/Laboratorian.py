@@ -121,44 +121,41 @@ class Laboratorian:
           row_list.append(Row(self.logger, None, "NA", drug_name, gene))
         else:
           self.logger.debug("Gene {} already in report".format(gene))
-          
+      
+      # make a list to add QC fail rows to end of laboratorian report
+      reorder_list = [] 
+
       if gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
-        self.logger.debug("Checking if the gene ({}) has at least an R mutation if poor coverage, otherwise the row will be overwritten".format(gene))
-               
-        no_r_mutations = set()
-        r_mutations = set()
+        self.logger.debug("Checking if the gene ({}) has poor coverage, if so the row will be overwritten".format(gene))
+        
         for row in row_list:       
           if row.tbprofiler_gene_name == gene:
-            # the row contains a mutation, but that mutation is not resistant (whole locus fail point D)           
-            # only NON-R MUTATIONS WITH NO DELETIONS
-            if (row.mdl_interpretation != "R") and "del" not in row.tbprofiler_variant_substitution_nt:
-              no_r_mutations.add(row.tbprofiler_gene_name)
-            else:
-              r_mutations.add(row.tbprofiler_gene_name)
-
-        self.logger.debug("Size of sets: no_r_mutations: {}, r_mutations: {}".format(len(no_r_mutations), len(r_mutations)))
-        
-        # if the no_r_mutations set is not empty but r_mutations is empty, then we want to add an insufficient
-        #  coverage warning (only non-r mutations are found for this gene)
-        if len(no_r_mutations) > 0 and len(r_mutations) == 0:
-            # add a warning to all rows in the row_list entity that belong to this gene
-            # make a list to add these to the end of the laboratorian report
-            self.logger.debug("Adding insufficient coverage warning to all rows in the row_list entity that belong to this gene ({})".format(gene))
-            reorder_list = [] 
-            for row in row_list:
-              if row.tbprofiler_gene_name == gene:
-                if "Insufficient coverage in locus" not in row.warning:
-                  row.warning.append("Insufficient coverage in locus")
-                # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
-                row.looker_interpretation = "Insufficient Coverage"
-                row.mdl_interpretation = "Insufficient Coverage"
-                reorder_list.append(row)
+            if ("Insufficient coverage in locus" in row.warning and "Failed quality in the mutation position" in row.warning and row.mdl_interpretation == "R"):
+              self.logger.debug("This mutation cannot be trusted due to failing both QC checks; rewriting interpretation to Insufficient Coverage")
+              row.mdl_interpretation = "Insufficient Coverage"
+              row.looker_interpretation = "Insufficient Coverage"     
+              
+              reorder_list.append(row)
             
-            # remove rows in reorder_list from row_list and add them to the end of row_list
-            for row in reorder_list:
-              row_list.remove(row)
-              row_list.append(row)
-                  
+            # whole locus fail point D (non-R mutations with no deletions)
+            elif row.mdl_interpretation != "R" and "del" not in row.tbprofiler_variant_substitution_nt:
+              self.logger.debug("This mutation is not an 'R' mutation so we are rewriting the interpretation to Insufficient Coverage")
+              # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
+              row.mdl_interpretation = "Insufficient Coverage"
+              row.looker_interpretation = "Insufficient Coverage"
+              
+              if "Insufficient coverage in locus" not in row.warning:
+                row.warning.append("Insufficient coverage in locus")
+
+              reorder_list.append(row)
+            else:
+              self.logger.debug("This mutation is an 'R' mutation with decent position quality (or is a deletion); keeping interpretation as is.")
+
+        # remove rows in reorder_list from row_list and add them to the end of row_list
+        for row in reorder_list:
+          row_list.remove(row)
+          row_list.append(row)
+        
     self.logger.debug("Creation of rows completed; there are now {} rows".format(len(row_list))) 
         
     # add row list to DF_LABORATORIAN

@@ -133,7 +133,7 @@ class LIMS:
           aa_positions_original = {aa_mutation:globals.get_position(aa_mutation) for i, aa_mutation in enumerate(aa_mutations_per_gene) if i != current_index}
           aa_positions_flattened = {aa_mutation:position for aa_mutation, subposition in aa_positions_original.items() for position in subposition}
           
-          if mutation not in ["Insufficient Coverage", "NA", "WT"]:            
+          if mutation not in ["Insufficient Coverage", "NA", "WT"]:        
             current_positions = set(aa_positions_flattened.values())
             other_positions = set(globals.get_position(mutation))
             same_positions = list(current_positions & other_positions)
@@ -147,7 +147,7 @@ class LIMS:
               else:
                 self.logger.debug("The other mutation ({}) has higher read support ({}) than the current mutation ({}; {})".format(aa_mutations_per_gene[matching_index], read_supports[matching_index], mutation, read_supports[current_index]))
                 removal_list.append(mutation)
-                
+  
         # remove all mutations that have lower read support
         if len(removal_list) > 0:
           for mutation in removal_list:
@@ -179,9 +179,9 @@ class LIMS:
           # convert NA,  WT, and Insufficient Coverage to empty strings
           if aa_mutation == "NA" or aa_mutation == "WT" or aa_mutation == "Insufficient Coverage":
             aa_mutation = ""
-              
+            
           # do not add the mutation if the particular mutation has low quality or is blank
-          if ("Failed quality in the mutation position" in warnings[index]) or (mutation == ""):
+          if ("Failed quality in the mutation position" in warnings[index]) or ("Insufficient Coverage" in mdl_interpretations[index]) or (mutation == ""):
             self.logger.debug("This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
             DF_LIMS[gene_code] = "No mutations detected"
             
