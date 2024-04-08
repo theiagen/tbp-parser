@@ -92,7 +92,7 @@ class LIMS:
       
     return message
    
-  def apply_lims_rules(self, gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code):
+  def apply_lims_rules(self, gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code, responsible_gene):
     """
     This function implements several parsing rules for the LIMS report.
     Explanation of input variables:
@@ -104,10 +104,18 @@ class LIMS:
     
     antimicrobial_name = globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
     mutations_per_gene = {}
-
+    
+    # get all MDL interpretations for the responsible gene(s) for the max mdl interpretations in case of recalculation
+    all_responsible_mdl_interpretations = {}
+    for responsible_gene_name in responsible_gene:
+      all_responsible_mdl_interpretations[responsible_gene_name] = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == responsible_gene_name) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["mdl_interpretation"].tolist()
+      
+    self.logger.debug("The MDL interpretations for the responsible gene(s) are: {}".format(all_responsible_mdl_interpretations))  
+      
     for gene, gene_code in gene_dictionary.items():
       DF_LIMS[gene_code] = ""
       non_s_mutations = 0
+      
       # check to see if we are reporting on this gene for the LIMS report
       if gene in globals.GENES_FOR_LIMS:
         # get all mutations, their types, interpretations, and warnings associated with a particular gene and it's associated antimicrobial
@@ -121,7 +129,7 @@ class LIMS:
         self.logger.debug("The following mutations belong to this gene ({}) and are associated with this drug ({})".format(gene, antimicrobial_name))
         self.logger.debug("Nucleotide mutations: {}".format(nt_mutations_per_gene))
         self.logger.debug("Their corresponding MDL interpretations: {}".format(mdl_interpretations))
-           
+        
         # check if there are any matching amino acid positions;
         # if so, we want to keep the row with the higher read support
         self.logger.debug("Considering if any mutations have identical amino acid positions and keeping only the one with higher read support")
@@ -189,17 +197,23 @@ class LIMS:
             # see also rule 4.2.2.1
             if globals.RESISTANCE_RANKING[mdl_interpretations[index]] >= 2: 
               self.logger.debug("This mutation (\"{}\", origin gene: {}) is having its MDL interpretation rewritten to act as if WT".format(mutation, gene))
-              mdl_interpretations[index] = "WT"  
+              mdl_interpretations[index] = "WT"
+              
               self.logger.debug("Since this MDL interpretation changed, we are now potentially recalculating max_mdl_resistance")
-              if max([globals.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations]) != globals.RESISTANCE_RANKING[max_mdl_resistance[0]]:
-                max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])]
-                self.logger.debug("The maximum needed to be reevaluated; the new max_mdl_resistance is now {}".format(max_mdl_resistance[0]))
+              if (max([globals.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set]) != globals.RESISTANCE_RANKING[max_mdl_resistance[0]]) and gene in responsible_gene:
+                
+                # also update the interpretation in the responsible gene dictionary  
+                all_responsible_mdl_interpretations[gene][index] = "WT"
+                
+                max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set])]
+                self.logger.debug("The maximum needed to be reevaluated; the potential new max_mdl_resistance is now {}".format(max_mdl_resistance[0]))
                 self.logger.debug("Now changing the antimicrobial code value for this gene since max_mdl_resistance changed")
                 DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], antimicrobial_name)   
               else:
                 self.logger.debug("The maximum did not need to be reevaluated; the max_mdl_resistance is still {}".format(max_mdl_resistance[0]))
           # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
-          elif (mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") or (gene == "rpoB" and (len(position_aa) > 1 and (any([x in globals.RRDR_RANGE for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[gene]])) or (globals.SPECIAL_POSITIONS[gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[gene][1]))):
+          elif ((mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") 
+                or (gene == "rpoB" and (len(position_aa) > 1 and (any([x in globals.RRDR_RANGE for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[gene]])) or (globals.SPECIAL_POSITIONS[gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[gene][1])))):
               substitution = "{} ({})".format(mutation, aa_mutation)
         
               # the following if only captures synonymous mutations if rpoB RRDR mutations
@@ -298,16 +312,21 @@ class LIMS:
       # get the MDL interpretations for all genes **FOR THE LIMS REPORT** associated with this drug             
       potential_mdl_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["tbprofiler_gene_name"].isin(gene_dictionary.keys())]["mdl_interpretation"]
       
+      # initalize list of genes responsible for the max resistance
+      responsible_gene = ()
+      
       # get the maximum resistance for the drug
       try:
         max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_mdl_resistances])]
+        responsible_gene = set(globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["mdl_interpretation"] == max_mdl_resistance[0]]["tbprofiler_gene_name"].tolist())
+        self.logger.debug("The gene(s) responsible for the max MDL resistance for this antimicrobial ({}) is/are {}".format(drug_name, responsible_gene))
       except:
         max_mdl_resistance = ["NA"]
       self.logger.debug("The max MDL resistance for this antimicrobial ({}) is {}".format(drug_name, max_mdl_resistance[0]))
 
-      DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], drug_name)            
+      DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], drug_name) 
 
-      DF_LIMS = self.apply_lims_rules(gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code)
+      DF_LIMS = self.apply_lims_rules(gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code, responsible_gene)
     
     DF_LIMS["Analysis date"] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
     DF_LIMS["Operator"] = globals.OPERATOR
