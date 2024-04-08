@@ -23,7 +23,7 @@ class Looker:
       - sample_id: the sample name
       - for each antimicrobial, indication if resistant (R) or susceptible (S)
     """
-    self.logger.info("Within Looker class create_looker_report function")
+    self.logger.info("LOOKER: Within Looker class create_looker_report function")
     
     DF_LOOKER = pd.DataFrame({
       "sample_id": globals.SAMPLE_NAME, 
@@ -32,7 +32,7 @@ class Looker:
     
     # iterate through laboratorian dataframe to extract highest mutation
     for antimicrobial in globals.ANTIMICROBIAL_DRUG_NAME_LIST:
-      self.logger.debug("Now extracting the highest mutation ranking for this antimicrobial: {}".format(antimicrobial))
+      self.logger.debug("LOOKER: Now extracting the highest mutation ranking for this antimicrobial: {}".format(antimicrobial))
       potential_looker_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial]["looker_interpretation"]
       
       # this is a crazy one liner:
@@ -42,7 +42,7 @@ class Looker:
       except:
         max_looker_resistance = ["NA"]
       DF_LOOKER[antimicrobial] = max_looker_resistance[0]
-      self.logger.debug("The max Looker resistance for this antimicrobial is {}".format(max_looker_resistance[0]))
+      self.logger.debug("LOOKER: The max Looker resistance for this antimicrobial is {}".format(max_looker_resistance[0]))
       
       for gene in globals.ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME[antimicrobial]:
         # indicate warning if any genes failed to achieve 100% coverage_threshold
@@ -62,4 +62,4 @@ class Looker:
     # write to file
     DF_LOOKER.to_csv("{}.looker_report.csv".format(self.output_prefix), index=False)
     
-    self.logger.info("Looker report created, now exiting function\n")
+    self.logger.info("LOOKER: Looker report created, now exiting function\n")
