@@ -54,13 +54,13 @@ class Coverage:
     # samtools outputs 3 columns; column 3 is the depth of coverage per nucleotide position, piped to awk to count the positions
     #  above min_depth, then wc -l counts them all
     command = "samtools depth -r \"" + self.chromosome + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(globals.MIN_DEPTH) + ") print;}' | wc -l"
-    self.logger.debug("COV: Now running " + command)
+    self.logger.debug("COV:Now running " + command)
     depth = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
     
     # get coverage for region in bed file based on depth
     #  add one to gene length to compensate for subtraction
     coverage = (int(depth) / (int(end) - int(start) + 1)) * 100
-    self.logger.debug("COV: The coverage for this gene ({}) is {}".format(gene, coverage))
+    self.logger.debug("COV:The coverage for this gene ({}) is {}".format(gene, coverage))
     return gene, coverage
   
   def calculate_coverage(self):
@@ -73,13 +73,13 @@ class Coverage:
       None
     """    
 
-    self.logger.info("COV: Within the Coverage class calculate_coverage function")
-    self.logger.debug("COV: The chromosome name was collected during class initialization: {}".format(self.chromosome))
+    self.logger.info("COV:Within the Coverage class calculate_coverage function")
+    self.logger.debug("COV:The chromosome name was collected during class initialization: {}".format(self.chromosome))
     
-    self.logger.debug("COV: The BAM file chromosome name is: {}".format(self.chromosome))    
+    self.logger.debug("COV:The BAM file chromosome name is: {}".format(self.chromosome))    
     
     with open(importlib_resources.files(__name__) / self.coverage_regions, "r") as bedfile_fh:
-      self.logger.debug("COV: Now calculating coverage for each gene in the {} file".format(self.coverage_regions))
+      self.logger.debug("COV:Now calculating coverage for each gene in the {} file".format(self.coverage_regions))
       for line in bedfile_fh:
         line = line.split("\t")
         gene, coverage = self.calculate_depth(line)
@@ -92,7 +92,7 @@ class Coverage:
     if "fbiD" in globals.COVERAGE_DICTIONARY.keys():
       globals.COVERAGE_DICTIONARY["Rv2983"] = globals.COVERAGE_DICTIONARY["fbiD"]
     
-    self.logger.info("COV: Initial coverage report created, now exiting function\n")
+    self.logger.info("COV:Initial coverage report created, now exiting function\n")
    
   def calculate_r_expert_rule_regions_coverage(self):
     
@@ -101,11 +101,11 @@ class Coverage:
     R mutations and expert rule regions; intended for supervisory review in the case
     of low breadth of coverage and should not be used as a QC threshold.
     """
-    self.logger.info("COV: Within the Coverage class calculate_r_expert_rule_regions_coverage function")
-    self.logger.debug("COV: Now calculating coverage with the tngs-expert-rule-regions.bed file")
+    self.logger.info("COV:Within the Coverage class calculate_r_expert_rule_regions_coverage function")
+    self.logger.debug("COV:Now calculating coverage with the tngs-expert-rule-regions.bed file")
     
     with open(importlib_resources.files(__name__) / self.tngs_expert_regions, "r") as bedfile_fh:
-      self.logger.debug("COV: Now calculating coverage for each gene in the {} file".format(self.tngs_expert_regions))
+      self.logger.debug("COV:Now calculating coverage for each gene in the {} file".format(self.tngs_expert_regions))
       for line in bedfile_fh:
         line = line.split("\t")
         gene, coverage = self.calculate_depth(line)
@@ -116,17 +116,17 @@ class Coverage:
     if "mmpR5" in globals.COVERAGE_DICTIONARY.keys():
        self.tngs_expert_regions_coverage["Rv0678"] =  self.tngs_expert_regions_coverage["mmpR5"]
         
-    self.logger.info("COV: Expert regions coverage dictionary created, now exiting function\n")
+    self.logger.info("COV:Expert regions coverage dictionary created, now exiting function\n")
     
   def reformat_coverage(self):
     """
     This function reformats the coverage dictionary into a CSV file and 
     includes a deletion warning field as determined by the Laboratorian report.
     """
-    self.logger.info("COV: Within the Coverage class reformat_coverage function")
+    self.logger.info("COV:Within the Coverage class reformat_coverage function")
     DF_COVERAGE = pd.DataFrame(columns=["Gene", "Percent_Coverage", "Warning"])
 
-    self.logger.debug("COV: Now iterating through each gene in the inital coverage report")
+    self.logger.debug("COV:Now iterating through each gene in the inital coverage report")
     for gene, percent_coverage in globals.COVERAGE_DICTIONARY.items():
       warning = ""
       
@@ -136,7 +136,7 @@ class Coverage:
             warning = "Deletion identified"
             if float(percent_coverage) == 100:
               warning = "Deletion identified (upstream)"
-            self.logger.debug("COV: A deletion warning is being added to a gene ({}) with {}%% coverage: {}".format(gene, percent_coverage, warning))
+            self.logger.debug("COV:A deletion warning is being added to a gene ({}) with {}%% coverage: {}".format(gene, percent_coverage, warning))
       except:
         self.logger.error("An expected gene ({}) was not found in laboratorian report.\nSomething may have gone wrong.".format(gene))
       
@@ -144,10 +144,10 @@ class Coverage:
 
 
     if self.tngs:
-      self.logger.debug("COV: Merging the tNGS expert rule regions coverage with the initial coverage report and renaming columns")
+      self.logger.debug("COV:Merging the tNGS expert rule regions coverage with the initial coverage report and renaming columns")
       df_tngs_expert_regions_coverage = pd.DataFrame(self.tngs_expert_regions_coverage, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Coverage_Breadth_R_expert-rule_region"})
       DF_COVERAGE = pd.merge(DF_COVERAGE, df_tngs_expert_regions_coverage, on="Gene", how="outer")
       DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning"}, inplace=True)
 
     DF_COVERAGE.to_csv(self.output_prefix + ".percent_gene_coverage.csv", index=False)
-    self.logger.info("COV: Coverage report reformatted and saved to {}\n".format(self.output_prefix + ".percent_gene_coverage.csv"))
+    self.logger.info("COV:Coverage report reformatted and saved to {}\n".format(self.output_prefix + ".percent_gene_coverage.csv"))
