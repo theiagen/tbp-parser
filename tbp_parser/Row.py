@@ -33,13 +33,13 @@ class Row() :
       # Initalizing the rest of the columns for the CDPH Laboratorian report
       # for when the variant is in the JSON file
       if variant is not None:
-        self.logger.debug("Initalizing the Row object, the variant has been supplied.")
+        self.logger.debug("ROW:Initalizing the Row object, the variant has been supplied.")
         try:
           self.tbprofiler_gene_name = self.variant.gene
         except:
           self.tbprofiler_gene_name = gene_name
           self.variant.gene = gene_name
-        self.logger.debug("The variant's gene name is {}".format(self.tbprofiler_gene_name))
+        self.logger.debug("ROW:The variant's gene name is {}".format(self.tbprofiler_gene_name))
         try:
           self.tbprofiler_locus_tag = self.variant.locus_tag
         except:
@@ -47,7 +47,7 @@ class Row() :
         self.tbprofiler_variant_substitution_type = self.variant.type
         self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
         self.tbprofiler_variant_substitution_aa = self.variant.protein_change
-        self.logger.debug("This mutations is a {} with {} and {}".format(self.tbprofiler_variant_substitution_type, self.tbprofiler_variant_substitution_nt, self.tbprofiler_variant_substitution_aa))
+        self.logger.debug("ROW:This mutations is a {} with {} and {}".format(self.tbprofiler_variant_substitution_type, self.tbprofiler_variant_substitution_nt, self.tbprofiler_variant_substitution_aa))
         # change blank aa substitutions to NA
         if self.tbprofiler_variant_substitution_aa == "":
           self.tbprofiler_variant_substitution_aa = "NA"
@@ -69,20 +69,19 @@ class Row() :
           self.read_support = self.depth * self.frequency
         self.rationale = ""
         self.warning = []
-        
-        
-        if self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys():
-            self.logger.debug("[tNGS only] This mutation's genomic position is outside the expected region. An additional warning will be given.")
-            self.warning.append("This mutation is outside the expected region")
+                
+        # the following if statement only applies to rpoB
+        # if self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys():
+        #   self.logger.debug("ROW:[tNGS only] This mutation's genomic position is outside the expected region.")
+        #   self.warning.append("This mutation is outside the expected region")
         try:
           if (self.depth < globals.MIN_DEPTH) or (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
-            self.logger.debug("The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a locus warning".format(self.depth, globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
+            self.logger.debug("ROW:The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a locus warning".format(self.depth, globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
             if (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
               globals.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
               
               if "del" in self.tbprofiler_variant_substitution_nt or self.tbprofiler_gene_name in globals.GENES_WITH_DELETIONS:
-                self.logger.debug("This is a deletion, no warning added for the locus")
-                globals.GENES_WITH_DELETIONS.add(self.tbprofiler_gene_name)
+                self.logger.debug("ROW:This is a deletion, no warning added for the locus unless it fails positional qc (checked next)")
               else:
                 self.warning.append("Insufficient coverage in locus")
 
@@ -101,30 +100,43 @@ class Row() :
               or (self.tbprofiler_gene_name == "ethA" and 
                   237 in protein_position and float(self.frequency) < globals.ETHA237_FREQUENCY) 
               or (self.tbprofiler_gene_name == "rpoB" and 
-                  449 in protein_position and float(self.frequency) < globals.RPOB449_FREQUENCY) 
-              and "del" not in self.tbprofiler_variant_substitution_nt):
-            self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; applying an additional mutation position warning".format(self.depth, self.frequency, self.read_support))
+                  449 in protein_position and float(self.frequency) < globals.RPOB449_FREQUENCY)):
+            self.logger.debug("ROW:The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; applying an additional mutation position warning".format(self.depth, self.frequency, self.read_support))
+            
+            if ((float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD) and 
+                ("del" in self.tbprofiler_variant_substitution_nt 
+                 or self.tbprofiler_gene_name in globals.GENES_WITH_DELETIONS)):
+              self.logger.debug("ROW:This deletion failed in the mutation position and there was insufficient coverage locus, adding insufficient coverage warning")
+              self.warning.append("Insufficient coverage in locus")
+   
             globals.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
             self.warning.append("Failed quality in the mutation position")
           
-          elif ((float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD)
-                and "del" not in self.tbprofiler_variant_substitution_nt):
-            self.logger.debug("The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; no additional warning added for the mutation position".format(self.depth, self.frequency, self.read_support))
-          
-          elif "del" in self.tbprofiler_variant_substitution_nt:
-            self.logger.debug("This is a deletion, no additional warning added for the mutation position")
-          
+          elif (float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals.COVERAGE_THRESHOLD):
+            self.logger.debug("ROW:The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; no additional warning added for the mutation position".format(self.depth, self.frequency, self.read_support))
+               
           else: # all other variants, no warning added
             self.warning = [""]
         except:
-          self.logger.debug("This gene does not appear in the coverage dictionary. An additional warning will be given.")
-          self.warning.append("This gene does not appear in the coverage dictionary")
+          self.logger.debug("ROW:This gene does not appear in the coverage dictionary. An additional warning will be given.")
+          if self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys():
+            self.logger.debug("ROW:[tNGS only] This mutation's genomic position is outside the expected region")
+            self.warning.append("This mutation is outside the expected region")
+            self.logger.debug("ROW:[tNGS only] Rewriting this variant's interpretation to NA since it shouldn't exist")
+            self.looker_interpretation = "NA"
+            self.mdl_interpretation = "NA"
+          else:
+            self.warning.append("This mutation is outside the expected region")
           
-        self.logger.debug("This variant has the following warnings: {}".format(self.warning))
+        self.logger.debug("ROW:This variant has the following warnings: {}".format(self.warning))
       
+        if "Failed quality in the mutation position" not in self.warning and "del" in self.tbprofiler_variant_substitution_nt:
+          globals.GENES_WITH_DELETIONS.add(self.tbprofiler_gene_name)
+          self.logger.debug("ROW:This is a deletion that passed positional qc, adding to set")
+
       # otherwise, the variant does not appear in the JSON file (or was not sequenced [tNGS]) and default NA/WT values need to be supplied
       else:
-        self.logger.debug("Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.")
+        self.logger.debug("ROW:Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.")
        
         if gene_name == "mmpR5":
           self.tbprofiler_gene_name = "Rv0678"
@@ -147,14 +159,14 @@ class Row() :
             or self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys()):
           try: 
             if float(globals.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) >= globals.COVERAGE_THRESHOLD:
-              self.logger.debug("A warning does not need to be applied; setting the variant information to WT")
+              self.logger.debug("ROW:A warning does not need to be applied; setting the variant information to WT")
               self.tbprofiler_variant_substitution_type = "WT"
               self.tbprofiler_variant_substitution_nt = "WT"
               self.tbprofiler_variant_substitution_aa = "WT"
               self.looker_interpretation = "S"
               self.mdl_interpretation = "WT"
             else:
-              self.logger.debug("A warning needs to be applied; setting the variant information to insufficient coverage")
+              self.logger.debug("ROW:A warning needs to be applied; setting the variant information to insufficient coverage")
               self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
               self.tbprofiler_variant_substitution_nt = "WT"
               self.tbprofiler_variant_substitution_aa = "WT"
@@ -162,21 +174,20 @@ class Row() :
               self.mdl_interpretation = "Insufficient Coverage"
               self.warning.append("Insufficient coverage in locus")
           except:
-            # this section currently is not used, but is here in case we decide to split up on regions again
-            self.logger.debug("[tNGS only]: The gene does not appear in the coverage dictionary, but is in the TNGS regions dictionary")
-            self.logger.debug("[tNGS only]: This indicates that the gene was sequenced, but coverage was calculated under a different name")
-            self.logger.debug("[tNGS only]: A coverage warning will be applied if at least one segment is under the coverage threshold")
+            self.logger.debug("ROW:[tNGS only]: The gene does not appear in the coverage dictionary, but is in the TNGS regions dictionary")
+            self.logger.debug("ROW:[tNGS only]: This indicates that the gene was sequenced, but coverage was calculated under a different name")
+            self.logger.debug("ROW:[tNGS only]: A coverage warning will be applied if at least one segment is under the coverage threshold")
             
             for segment in globals.TNGS_REGIONS[self.tbprofiler_gene_name]:
               if float(globals.COVERAGE_DICTIONARY[segment]) >= globals.COVERAGE_THRESHOLD:
-                self.logger.debug("[tNGS only]: This segment has good coverage, checking the other segments.")
+                self.logger.debug("ROW:[tNGS only]: This segment has good coverage, checking the other segments.")
                 self.tbprofiler_variant_substitution_type = "WT"
                 self.tbprofiler_variant_substitution_nt = "WT"
                 self.tbprofiler_variant_substitution_aa = "WT"
                 self.looker_interpretation = "S"
                 self.mdl_interpretation = "WT"
               else:
-                self.logger.debug("[tNGS only]: This segment has poor coverage and a warning needs to be applied; setting the variant information to insufficient coverage")
+                self.logger.debug("ROW:[tNGS only]: This segment has poor coverage and a warning needs to be applied; setting the variant information to insufficient coverage")
                 self.tbprofiler_variant_substitution_type = "Insufficient Coverage"
                 self.tbprofiler_variant_substitution_nt = "WT"
                 self.tbprofiler_variant_substitution_aa = "WT"
@@ -186,7 +197,7 @@ class Row() :
                 break
 
         else:
-          self.logger.debug("This gene ({}) was not sequenced".format(self.tbprofiler_gene_name))
+          self.logger.debug("ROW:This gene ({}) was not sequenced".format(self.tbprofiler_gene_name))
           self.tbprofiler_variant_substitution_type = "NA"
           self.tbprofiler_variant_substitution_nt = "NA"
           self.tbprofiler_variant_substitution_aa = "NA"
@@ -200,10 +211,10 @@ class Row() :
           # iterate through the tNGS regions to see if we have a match
           parent_genes = globals.TNGS_REGIONS.keys()
           parent_gene = [gene for gene in parent_genes if self.tbprofiler_gene_name in globals.TNGS_REGIONS[gene].keys()][0]
-          self.logger.debug("[tNGS only]: The parent gene ({}) of this segment ({}) was identified; now adding tier".format(parent_gene, self.tbprofiler_gene_name))
+          self.logger.debug("ROW:[tNGS only]: The parent gene ({}) of this segment ({}) was identified; now adding tier".format(parent_gene, self.tbprofiler_gene_name))
           self.gene_tier = globals.GENE_TO_TIER[parent_gene]
           # now that coverage has been calculated, we can now rename the gene to be the parent gene name
-          self.logger.debug("[tNGS only]: Renaming the gene segment ({}) to be the parent gene name ({})".format(self.tbprofiler_gene_name, parent_gene))
+          self.logger.debug("ROW:[tNGS only]: Renaming the gene segment ({}) to be the parent gene name ({})".format(self.tbprofiler_gene_name, parent_gene))
           self.tbprofiler_gene_name = parent_gene
     
         except:
@@ -213,47 +224,54 @@ class Row() :
     """
     This function prints the row in a readable format.
     """
-    self.logger.debug("Now printing the row in a readable format:")
-    self.logger.debug("\tsample_id: {}".format(self.sample_id))
-    self.logger.debug("\ttbprofiler_gene_name: {}".format(self.tbprofiler_gene_name))
-    self.logger.debug("\ttbprofiler_locus_tag: {}".format(self.tbprofiler_locus_tag))
-    self.logger.debug("\ttbprofiler_variant_substitution_type: {}".format(self.tbprofiler_variant_substitution_type))
-    self.logger.debug("\ttbprofiler_variant_substitution_nt: {}".format(self.tbprofiler_variant_substitution_nt))
-    self.logger.debug("\ttbprofiler_variant_substitution_aa: {}".format(self.tbprofiler_variant_substitution_aa))
-    self.logger.debug("\tconfidence: {}".format(self.confidence))
-    self.logger.debug("\tantimicrobial: {}".format(self.antimicrobial))
-    self.logger.debug("\tlooker_interpretation: {}".format(self.looker_interpretation))
-    self.logger.debug("\tmdl_interpretation: {}".format(self.mdl_interpretation))
-    self.logger.debug("\tdepth: {}".format(self.depth))
-    self.logger.debug("\tfrequency: {}".format(self.frequency))
-    self.logger.debug("\tread_support: {}".format(self.read_support))
-    self.logger.debug("\trationale: {}".format(self.rationale))
-    self.logger.debug("\twarning: {}".format(self.warning))
-    self.logger.debug("\ttier: {}".format(self.gene_tier))
+    self.logger.debug("ROW:Now printing the row in a readable format:")
+    self.logger.debug("ROW:\tsample_id: {}".format(self.sample_id))
+    self.logger.debug("ROW:\ttbprofiler_gene_name: {}".format(self.tbprofiler_gene_name))
+    self.logger.debug("ROW:\ttbprofiler_locus_tag: {}".format(self.tbprofiler_locus_tag))
+    self.logger.debug("ROW:\ttbprofiler_variant_substitution_type: {}".format(self.tbprofiler_variant_substitution_type))
+    self.logger.debug("ROW:\ttbprofiler_variant_substitution_nt: {}".format(self.tbprofiler_variant_substitution_nt))
+    self.logger.debug("ROW:\ttbprofiler_variant_substitution_aa: {}".format(self.tbprofiler_variant_substitution_aa))
+    self.logger.debug("ROW:\tconfidence: {}".format(self.confidence))
+    self.logger.debug("ROW:\tantimicrobial: {}".format(self.antimicrobial))
+    self.logger.debug("ROW:\tlooker_interpretation: {}".format(self.looker_interpretation))
+    self.logger.debug("ROW:\tmdl_interpretation: {}".format(self.mdl_interpretation))
+    self.logger.debug("ROW:\tdepth: {}".format(self.depth))
+    self.logger.debug("ROW:\tfrequency: {}".format(self.frequency))
+    self.logger.debug("ROW:\tread_support: {}".format(self.read_support))
+    self.logger.debug("ROW:\trationale: {}".format(self.rationale))
+    self.logger.debug("ROW:\twarning: {}".format(self.warning))
+    self.logger.debug("ROW:\ttier: {}".format(self.gene_tier))
        
   def complete_row(self):
     """
     This function finishes each row with the rest of the values needed.
     """    
-    self.logger.debug("Within the Row class complete_row function")
+    self.logger.debug("ROW:Within the Row class complete_row function")
     
-    if self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
-      self.logger.debug("WHO annotation identified: converting to the appropriate interpretation")
+    if "This mutation is outside the expected region" in self.warning:
+      self.logger.debug("ROW:This mutation shouldn't exist! Setting Looker & MDL interpretations of 'NA'")
+      self.rationale = "NA"
+      self.confidence = "NA"
+      self.looker_interpretation = "NA"
+      self.mdl_interpretation = "NA"
+    
+    elif self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
+      self.logger.debug("ROW:WHO annotation identified: converting to the appropriate interpretation")
       self.looker_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
       self.mdl_interpretation = globals.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
       self.rationale = "WHO classification"
     
     elif self.who_confidence != "NA":
-      self.logger.debug("No WHO annotation identified: convert with expert rules")
+      self.logger.debug("ROW:No WHO annotation identified: convert with expert rules")
       self.looker_interpretation = self.variant.apply_expert_rules("looker")
       self.mdl_interpretation = self.variant.apply_expert_rules("mdl")
       self.rationale = "Expert rule applied"
       self.confidence = "No WHO annotation"
       
-    self.logger.debug("Interpretation logic applied or skipped; now removing any 'noexpert' suffixes")
+    self.logger.debug("ROW:Interpretation logic applied or skipped; now removing any 'noexpert' suffixes")
     self.describe_rationale()
     
-    self.logger.debug("Finished completing the row's values, now exiting function")
+    self.logger.debug("ROW:Finished completing the row's values, now exiting function")
     
   def rank_annotation(self): 
     """

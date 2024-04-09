@@ -27,9 +27,9 @@ class Laboratorian:
     into an individual Variant object. Then, each annotation within that variant 
     is extracted and converted into a Row object.
     """
-    self.logger.info("Within the Laboratorian class iterate_section function")
+    self.logger.info("LAB:Within the Laboratorian class iterate_section function")
     
-    self.logger.debug("Iterating through the variant section to turn each one into a Variant object")
+    self.logger.debug("LAB:Iterating through the variant section to turn each one into a Variant object")
     for variant in variant_section:
       # create a Variant object and add the origin gene to the global GENES_REPORTED set variable
       variant = Variant(self.logger, variant)
@@ -37,26 +37,26 @@ class Laboratorian:
       
       # this currently only applies to rpoB -- renaming the gene to the segment name to get the coverage for QC
       if self.tngs and variant.gene in globals.TNGS_REGIONS.keys():
-        self.logger.debug("[tNGS only]: checking to see which segment this gene is found in")
+        self.logger.debug("LAB:[tNGS only]: checking to see which segment this gene is found in")
         for segment in globals.TNGS_REGIONS[variant.gene]:
-          self.logger.debug("[tNGS only]: checking if variant from {} is found in segment {}".format(variant.gene, segment))
+          self.logger.debug("LAB:[tNGS only]: checking if variant from {} is found in segment {}".format(variant.gene, segment))
           if (globals.TNGS_REGIONS[variant.gene][segment][0] <= variant.genome_pos <= globals.TNGS_REGIONS[variant.gene][segment][1]):
-            self.logger.debug("[tNGS only]: variant from {} is found in segment {}; renaming gene to segment name".format(variant.gene, segment))
+            self.logger.debug("LAB:[tNGS only]: variant from {} is found in segment {}; renaming gene to segment name".format(variant.gene, segment))
             variant.gene = segment
             break
           else:
-            self.logger.debug("[tNGS only]: variant from {} is NOT found in segment {}".format(variant.gene, segment))
+            self.logger.debug("LAB:[tNGS only]: variant from {} is NOT found in segment {}".format(variant.gene, segment))
         
         ##### FUTURE NOTICE: IF WE HAVE MORE SEGMENTS ADDED THEN WE'LL NEED TO ADJUST THIS
         # if the gene name is still rpoB, then it means that the variant was outside of the expected region
-        if variant.gene == "rpoB":
-          self.logger.debug("[tNGS only]: since this was outside of the expected region, we're setting the coverage for rpoB to 0")
-          globals.COVERAGE_DICTIONARY[variant.gene] = 0
+        # if variant.gene == "rpoB":
+        #   self.logger.debug("LAB:[tNGS only]: since this was outside of the expected region, we're setting the coverage for rpoB to 0")
+        #   globals.COVERAGE_DICTIONARY[variant.gene] = 0
         
       # extract all of the annotations for the variant
       variant.extract_annotations()
       
-      self.logger.debug("The current variant (gene: {}) has {} annotations; now iterating through them".format(variant.gene, len(variant.annotation_dictionary)))
+      self.logger.debug("LAB:The current variant (gene: {}) has {} annotations; now iterating through them".format(variant.gene, len(variant.annotation_dictionary)))
       for annotation_row in variant.annotation_dictionary.values():
         # complete the row objects
         annotation_row.complete_row()
@@ -73,7 +73,7 @@ class Laboratorian:
 
         row_list.append(annotation_row)
         
-    self.logger.info("Finished iterating through the variant section, now exiting function")    
+    self.logger.info("LAB:Finished iterating through the variant section, now exiting function")    
     return row_list
       
   def create_laboratorian_report(self):
@@ -96,42 +96,42 @@ class Laboratorian:
       - rationale: the rationale for resistance calling (WHO classification, Expert rule)
       - warning: a column reserved for warnings such as low depth of coverage 
     """
-    self.logger.info("Within the Laboratorian class create_laboratorian_report function")   
+    self.logger.info("LAB:Within the Laboratorian class create_laboratorian_report function")   
     
     row_list = []
-    self.logger.debug("Initializing the row_list; contains {} rows".format(len(row_list)))
+    self.logger.debug("LAB:Initializing the row_list; contains {} rows".format(len(row_list)))
     
     with open(self.input_json) as json_fh:
       input_json = json.load(json_fh)
       
       globals.SAMPLE_NAME = input_json["id"]
       
-      self.logger.debug("About to parse through the variant sections for the sample with name {}".format(globals.SAMPLE_NAME))
+      self.logger.debug("LAB:About to parse through the variant sections for the sample with name {}".format(globals.SAMPLE_NAME))
       
       row_list = self.iterate_section(input_json["dr_variants"], row_list)
       row_list = self.iterate_section(input_json["other_variants"], row_list)
       
-      self.logger.debug("Iteration complete, there are now {} rows".format(len(row_list)))
+      self.logger.debug("LAB:Iteration complete, there are now {} rows".format(len(row_list)))
 
-    self.logger.debug("Now adding any genes that are missing from the report and editing any rows that need to be edited")
+    self.logger.debug("LAB:Now adding any genes that are missing from the report and editing any rows that need to be edited")
     for gene, antimicrobial_drug_names in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
       for drug_name in antimicrobial_drug_names:
         if gene not in globals.GENES_REPORTED:
-          self.logger.debug("Gene {} not in report, now adding it to the report".format(gene))
+          self.logger.debug("LAB:Gene {} not in report, now adding it to the report".format(gene))
           row_list.append(Row(self.logger, None, "NA", drug_name, gene))
         else:
-          self.logger.debug("Gene {} already in report".format(gene))
+          self.logger.debug("LAB:Gene {} already in report".format(gene))
       
       # make a list to add QC fail rows to end of laboratorian report
       reorder_list = [] 
 
       if gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
-        self.logger.debug("Checking if the gene ({}) has poor coverage, if so the row will be overwritten".format(gene))
+        self.logger.debug("LAB:Checking if the gene ({}) has poor coverage, if so the row will be overwritten".format(gene))
         
         for row in row_list:       
           if row.tbprofiler_gene_name == gene:
             if ("Insufficient coverage in locus" in row.warning and "Failed quality in the mutation position" in row.warning and row.mdl_interpretation == "R"):
-              self.logger.debug("This mutation cannot be trusted due to failing both QC checks; rewriting interpretation to Insufficient Coverage")
+              self.logger.debug("LAB:This mutation cannot be trusted due to failing both QC checks; rewriting interpretation to Insufficient Coverage")
               row.mdl_interpretation = "Insufficient Coverage"
               row.looker_interpretation = "Insufficient Coverage"     
               
@@ -139,7 +139,7 @@ class Laboratorian:
             
             # whole locus fail point D (non-R mutations with no deletions)
             elif row.mdl_interpretation != "R" and "del" not in row.tbprofiler_variant_substitution_nt:
-              self.logger.debug("This mutation is not an 'R' mutation so we are rewriting the interpretation to Insufficient Coverage")
+              self.logger.debug("LAB:This mutation is not an 'R' mutation so we are rewriting the interpretation to Insufficient Coverage")
               # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
               row.mdl_interpretation = "Insufficient Coverage"
               row.looker_interpretation = "Insufficient Coverage"
@@ -149,14 +149,14 @@ class Laboratorian:
 
               reorder_list.append(row)
             else:
-              self.logger.debug("This mutation is an 'R' mutation with decent position quality (or is a deletion); keeping interpretation as is.")
+              self.logger.debug("LAB:This mutation is an 'R' mutation with decent position quality (or is a deletion); keeping interpretation as is.")
 
         # remove rows in reorder_list from row_list and add them to the end of row_list
         for row in reorder_list:
           row_list.remove(row)
           row_list.append(row)
         
-    self.logger.debug("Creation of rows completed; there are now {} rows".format(len(row_list))) 
+    self.logger.debug("LAB:Creation of rows completed; there are now {} rows".format(len(row_list))) 
         
     # add row list to DF_LABORATORIAN
     for row in row_list:
@@ -169,4 +169,4 @@ class Laboratorian:
       globals.DF_LABORATORIAN = pd.concat([globals.DF_LABORATORIAN, row_dictionary], ignore_index=True)
               
     globals.DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
-    self.logger.info("Laboratorian report created, now exiting function\n")
+    self.logger.info("LAB:Laboratorian report created, now exiting function\n")
