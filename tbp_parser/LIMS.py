@@ -155,7 +155,10 @@ class LIMS:
               else:
                 self.logger.debug("LIMS:The other mutation ({}) has higher read support ({}) than the current mutation ({}; {})".format(aa_mutations_per_gene[matching_index], read_supports[matching_index], mutation, read_supports[current_index]))
                 removal_list.append(mutation)
-  
+          
+          if ("This mutation is outside the expected region" in warnings[current_index]):
+            removal_list.append(mutation)
+            
         # remove all mutations that have lower read support
         if len(removal_list) > 0:
           for mutation in removal_list:
@@ -189,9 +192,9 @@ class LIMS:
             aa_mutation = ""
             
           # do not add the mutation if the particular mutation has low quality or is blank
-          if ("Failed quality in the mutation position" in warnings[index]) or ("Insufficient Coverage" in mdl_interpretations[index]) or (mutation == "") or ("This mutation is outside the expected region" in warnings[index]):
+          if ("Failed quality in the mutation position" in warnings[index]) or ("Insufficient Coverage" in mdl_interpretations[index]) or (mutation == ""):
             self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
-            if "del" in mutation and "Failed quality in the mutation position" in warnings[index]:
+            if "del" in mutation and "Failed quality in the mutation position" in warnings[index] and "Insufficient coverage in locus" in warnings[index]:
               DF_LIMS[gene_code] = "No sequence"
             else:
               DF_LIMS[gene_code] = "No mutations detected"
@@ -205,10 +208,16 @@ class LIMS:
                 all_responsible_mdl_interpretations[gene][index] = "WT"
 
               if "del" in mutation and "Failed quality in the mutation position" in warnings[index]:
-                mdl_interpretations[index] = "Insufficient Coverage"
-                if gene in responsible_gene:
-                  all_responsible_mdl_interpretations[gene][index] = "Insufficient Coverage"
-
+                try:
+                  if int(globals.COVERAGE_DICTIONARY[gene]) < globals.COVERAGE_THRESHOLD:
+                    mdl_interpretations[index] = "Insufficient Coverage"
+                    if gene in responsible_gene:
+                      all_responsible_mdl_interpretations[gene][index] = "Insufficient Coverage"
+                  else:
+                    self.logger.debug("This gene ({}) has sufficient coverage a deletion being present".format(gene))
+                except:
+                  self.logger.debug("This gene ({})is not in the coverage dictionary".format(gene))
+               
               self.logger.debug("LIMS:Since this MDL interpretation changed, we are now potentially recalculating max_mdl_resistance (currently {})".format(max_mdl_resistance[0]))
               if (max([globals.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set]) != globals.RESISTANCE_RANKING[max_mdl_resistance[0]]) and gene in responsible_gene:
                 
