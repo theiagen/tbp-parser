@@ -9,7 +9,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv0667",
-      "gene": "rpoB",
+      "gene_name": "rpoB",
       "gene_associated_drugs": [
         "rifampicin"
       ]
@@ -23,7 +23,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv0667",
-      "gene": "rpoB",
+      "gene_name": "rpoB",
       "gene_associated_drugs": [
         "rifampicin"
       ]
@@ -37,7 +37,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv0667",
-      "gene": "rpoB",
+      "gene_name": "rpoB",
       "gene_associated_drugs": [
         "rifampicin"
       ]

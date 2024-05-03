@@ -46,9 +46,9 @@ class LIMS:
       
       # set default value for lineage
       lineage = set()
-      detected_lineage = input_json["main_lin"]
+      detected_lineage = input_json["main_lineage"]
       globals.LINEAGE = detected_lineage
-      detected_sublineage = input_json["sublin"]
+      detected_sublineage = input_json["sub_lineage"]
       self.logger.debug("LIMS:The detected lineage is: '{}', and the detected sublineage is: '{}'".format(detected_lineage, detected_sublineage))
             
       sublineages = detected_sublineage.split(";")

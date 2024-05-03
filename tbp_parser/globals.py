@@ -471,7 +471,7 @@ global GENES_WITH_DELETIONS
 GENES_WITH_DELETIONS = set()
 
 """
-A string that contains the lineage of the sample from the "main_lin" field
+A string that contains the lineage of the sample from the "main_lineage" field
 """
 global LINEAGE
 LINEAGE = ""

@@ -30,9 +30,9 @@ class Variant:
       for key, value in variant.items():
         setattr(self, key, value)
   
-    if hasattr(self, "gene") and self.gene == "mmpR5":
+    if hasattr(self, "gene") and self.gene_name == "mmpR5":
       self.logger.debug("VAR:The gene is mmpR5, renaming to Rv0678")
-      self.gene = "Rv0678"
+      self.gene_name = "Rv0678"
   
   def extract_alternate_consequences(self, parent_row, row_list):
     """
@@ -51,6 +51,7 @@ class Variant:
         var = Variant(self.logger, item)
         globals.GENES_REPORTED.add(var.gene_name)
         row = Row(self.logger, var, parent_row.who_confidence, parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency)
+        row.source = parent_row.source
         row.complete_row()
         
         row_list.append(row)
@@ -75,14 +76,14 @@ class Variant:
       gene_associated_drug_list = ["rifampin" if drug == "rifampicin" else drug for drug in gene_associated_drug_list] # rename rifampicin to rifampin
 
       # iterate through the annotations
-      for item in self.annotation:
+      for item in self.annotation:      
         # turn the annotation into a Row object
-        annotation = Row(self.logger, self, item["who_confidence"], item["drug"])
-
+        annotation = Row(self.logger, self, item["confidence"], item["drug"], source=item["source"])
+        
         # if this is the first time a drug has been seen, add it to the annotation dictionary
         if annotation.antimicrobial not in self.annotation_dictionary.keys():
           self.logger.debug("VAR:This is the first time this drug ({}) has been seen; adding it to the annotation dictionary".format(annotation.antimicrobial))
-          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.who_confidence, annotation.antimicrobial)
+          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.confidence, annotation.antimicrobial, source=annotation.source)
 
           # if the drug is in the gene associated drug list, remove it because it has been accounted for
           if annotation.antimicrobial in gene_associated_drug_list:
@@ -92,7 +93,7 @@ class Variant:
         # otherwise, save only the annotation with the more severe WHO confidence (higher value)
         elif annotation.rank_annotation() > self.annotation_dictionary[annotation.antimicrobial].rank_annotation():
           self.logger.debug("VAR:A more severe WHO confidence annotation was found for this drug ({}); replacing the old annotation with the new one".format(annotation.antimicrobial))
-          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.who_confidence, annotation.antimicrobial)
+          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.confidence, annotation.antimicrobial, source=annotation.source)
         
       self.logger.debug("VAR:The annotation dictionary has been expanded; it now has a length of {}".format(len(self.annotation_dictionary)))
 
@@ -124,15 +125,15 @@ class Variant:
 
     self.logger.debug("VAR:The nucleotide position is {} and the amino acid position is {}".format(position_nt, position_aa))
     
-    if self.gene in ["Rv0678", "atpE", "pepQ", "rplC", "mmpL5", "mmpS5"]:        
-      self.logger.debug("VAR:The gene is {}, now checking if the position requires special consideration under rule 1.2".format(self.gene))
+    if self.gene_name in ["Rv0678", "atpE", "pepQ", "rplC", "mmpL5", "mmpS5"]:        
+      self.logger.debug("VAR:The gene is {}, now checking if the position requires special consideration under rule 1.2".format(self.gene_name))
      
       # check if position within promoter regions
-      if self.gene in globals.PROMOTER_REGIONS.keys():
+      if self.gene_name in globals.PROMOTER_REGIONS.keys():
         if ((len(position_nt) > 1 and 
-             (any([x in range(globals.PROMOTER_REGIONS[self.gene][0], globals.PROMOTER_REGIONS[self.gene][1]) for x in position_nt]) 
-              or any([x in range(position_nt[0], position_nt[1]) for x in globals.PROMOTER_REGIONS[self.gene]]))) 
-            or (globals.PROMOTER_REGIONS[self.gene][0] <= position_nt[0] <= globals.PROMOTER_REGIONS[self.gene][1])):
+             (any([x in range(globals.PROMOTER_REGIONS[self.gene_name][0], globals.PROMOTER_REGIONS[self.gene_name][1]) for x in position_nt]) 
+              or any([x in range(position_nt[0], position_nt[1]) for x in globals.PROMOTER_REGIONS[self.gene_name]]))) 
+            or (globals.PROMOTER_REGIONS[self.gene_name][0] <= position_nt[0] <= globals.PROMOTER_REGIONS[self.gene_name][1])):
           self.logger.debug("VAR:The position is within the promoter region; interpretation is 'U'")
           return "Urule1.2"
       
@@ -152,17 +153,17 @@ class Variant:
         else:
           return "Srule1.2"
 
-    elif self.gene == "rrl":
+    elif self.gene_name == "rrl":
       self.logger.debug("VAR:The gene is rrl, now checking if the position requires special consideration")
       
       # there is surely a better way to do this, but this works. essentially, I'm checking if the position(s) of the rrl mutation are within the special position range
       if ((len(position_nt) > 1 and 
-           (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0][0], globals.SPECIAL_POSITIONS[self.gene][0][1]) for x in position_nt]) 
-            or any([x in range(globals.SPECIAL_POSITIONS[self.gene][1][0], globals.SPECIAL_POSITIONS[self.gene][1][1]) for x in position_nt]) 
-            or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][0]]) 
-            or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene][1]]))) 
-          or ((globals.SPECIAL_POSITIONS[self.gene][0][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][0][1]) 
-              or (globals.SPECIAL_POSITIONS[self.gene][1][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene][1][1]))):
+           (any([x in range(globals.SPECIAL_POSITIONS[self.gene_name][0][0], globals.SPECIAL_POSITIONS[self.gene_name][0][1]) for x in position_nt]) 
+            or any([x in range(globals.SPECIAL_POSITIONS[self.gene_name][1][0], globals.SPECIAL_POSITIONS[self.gene_name][1][1]) for x in position_nt]) 
+            or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene_name][0]]) 
+            or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene_name][1]]))) 
+          or ((globals.SPECIAL_POSITIONS[self.gene_name][0][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene_name][0][1]) 
+              or (globals.SPECIAL_POSITIONS[self.gene_name][1][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene_name][1][1]))):
         self.logger.debug("VAR:The position is within the special positions; interpretation is 'U'")
         return "Urule1.2"
       
@@ -170,8 +171,8 @@ class Variant:
         self.logger.debug("VAR:The position is not within the special positions; interpretation is 'S/U'")
         return "Srule1.2" if interpretation_destination == "mdl" else "Urule1.2"
 
-    elif self.gene in ["katG", "pncA", "ethA", "gid"]: 
-      self.logger.debug("VAR:The gene is {}, now checking if the mutation type requires special consideration under rule 2.2".format(self.gene))
+    elif self.gene_name in ["katG", "pncA", "ethA", "gid"]: 
+      self.logger.debug("VAR:The gene is {}, now checking if the mutation type requires special consideration under rule 2.2".format(self.gene_name))
 
       if ((any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) 
            or self.nucleotide_change.endswith("*")) 
@@ -194,10 +195,10 @@ class Variant:
         return "Urule2.2.1"
 
     # rules 2.2.2.1 and 3.2.2 & 3.2.3
-    elif self.gene in ["gyrA", "gyrB", "rpoB"]: 
-      self.logger.debug("VAR:The gene is {}, now checking if the position requires special consideration".format(self.gene))
+    elif self.gene_name in ["gyrA", "gyrB", "rpoB"]: 
+      self.logger.debug("VAR:The gene is {}, now checking if the position requires special consideration".format(self.gene_name))
       self.logger.debug("VAR:length of aa: {}".format(len(position_aa)))
-      self.logger.debug("VAR:SEPCIAL POSITIONS: {}".format(globals.SPECIAL_POSITIONS[self.gene]))
+      self.logger.debug("VAR:SEPCIAL POSITIONS: {}".format(globals.SPECIAL_POSITIONS[self.gene_name]))
       
       # explanation of following giant conditional:
       # RRDR belongs to rpoB, QRDR belongs to gyrA and gyrB
@@ -207,45 +208,45 @@ class Variant:
       #  to see if (R/Q)RDR falls within, we check (R/Q)RDR start/end positions are within the AA position range
       # otherwise, check if the single AA position is within (R/Q)RDR positions
       if ((len(position_aa) > 1 and 
-           (any([x in range(globals.SPECIAL_POSITIONS[self.gene][0], globals.SPECIAL_POSITIONS[self.gene][1]) for x in position_aa]) 
-            or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene]]))) 
-          or ((globals.SPECIAL_POSITIONS[self.gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene][1]))):
+           (any([x in range(globals.SPECIAL_POSITIONS[self.gene_name][0], globals.SPECIAL_POSITIONS[self.gene_name][1]) for x in position_aa]) 
+            or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene_name]]))) 
+          or ((globals.SPECIAL_POSITIONS[self.gene_name][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene_name][1]))):
         self.logger.debug("VAR:The position is within the special positions; interpretation is 'R' if rpoB (or 'U' if not) and nonsynonymous, else 'S'")
         
-        if self.gene == "rpoB":
+        if self.gene_name == "rpoB":
           if self.type == "synonymous_variant":
             return "Srule2.2.2.1" 
           else:
             return "Rrule2.2.2.1"
           
-        if self.gene == "gyrA":
+        if self.gene_name == "gyrA":
           if self.type != "synonymous_variant":
             return "Urule3.2.2"
           
-        if self.gene == "gyrB":
+        if self.gene_name == "gyrB":
           if self.type != "synonymous_variant":
             return "Urule3.2.3"
       
       elif (self.type == "synonymous_variant"):
         self.logger.debug("VAR:The position is not within the special positions and is synonymous; interpretation is 'S'")
-        return "Srule2.2.2.2" if self.gene == "rpoB" else "Srule3.2.4"
+        return "Srule2.2.2.2" if self.gene_name == "rpoB" else "Srule3.2.4"
       elif ("upstream_gene_variant" in self.type):
         self.logger.debug("VAR:The position is not within the special positions, is nonsynomyous but is an upstream gene variant; interpretation is 'S/U'")
-        if self.gene == "rpoB":
+        if self.gene_name == "rpoB":
           return "Srule2.2.2.2" if interpretation_destination == "mdl" else "Urule2.2.2.2"
         else:
           return "Srule3.2.4" if interpretation_destination == "mdl" else "Urule3.2.4"
       else:
         self.logger.debug("VAR:The position is not within the special positions, is nonsynonymous and is NOT an upstream gene variant; interpretation is 'U'")
-        return "Urule2.2.2.2" if self.gene == "rpoB" else "Urule3.2.4"
+        return "Urule2.2.2.2" if self.gene_name == "rpoB" else "Urule3.2.4"
 
-    elif self.gene not in globals.GENE_LIST:
+    elif self.gene_name not in globals.GENE_LIST:
       self.logger.debug("VAR:The gene is not in the gene list that requires an expert rule.")
       
-      if self.gene == "rrs":
+      if self.gene_name == "rrs":
         self.logger.debug("VAR:The gene is rrs, now checking if the position requires special consideration")
         
-        if any(map(lambda position: position in position_nt, globals.SPECIAL_POSITIONS[self.gene])):
+        if any(map(lambda position: position in position_nt, globals.SPECIAL_POSITIONS[self.gene_name])):
           self.logger.debug("VAR:The position is within the special positions; interpretation is 'U'")
           return "Urule3.2.1"
         else:

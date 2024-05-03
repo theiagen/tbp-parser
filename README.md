@@ -212,7 +212,7 @@ Takes the naming convention of `<output_prefix>.lims_report.csv`. This report co
 - The set of information in ANTIMICROBIAL_CODE_TO_GENES_WGS dictionary (or, if `--tngs`, ANTIMICROBIAL_CODE_TO_GENES_tNGS) with target drug resistance information in layman's terms, and the mutations responsible for the predicted phenotype
 - **"Analysis date"** - the date of analysis in YYYY-MM-DD HH:SS format
 - **Operator** - operator information, set by the `--operator` option
-- **M_DST_O01_LINEAGE** - the `main_lin` of the sample as reported by TBProfiler
+- **M_DST_O01_LINEAGE** - the `main_lineage` of the sample as reported by TBProfiler
 
 ### Looker report
 
@@ -221,7 +221,7 @@ Takes the naming convention of `<output_prefix>.looker_report.csv`. This report 
 - **sample_id**: the sample name
 - **output_seq_method_type** - the sequencing method used to generate the data, set by the `--sequencing_method` option
 - for each antimicrobial, indication if resistant (R), uncertain (U), or susceptible (S)
-- **lineage**: the `main_lin` of the sample as reported by TBProfiler
+- **lineage**: the `main_lineage` of the sample as reported by TBProfiler
 - **ID** - the lineage of the sample in plain English (the same as `M_DST_A01_ID` in the LIMS report)
 - **analysis_date** - the date of analysis in YYYY-MM-DD HH:SS format
 - **operator** - operator information, set by the `--operator` option
@@ -275,7 +275,7 @@ The interpretation logic document is long and complicated, and the implementatio
 - 5.1 - (Laboratorian language to LIMS language) - `apply_lims_rules()` in `LIMS` (line 180 - 182, 203 - 253)
 - 5.2 - (Drug interpretation and lineage in LIMS report) - `apply_lims_rules()` in `LIMS` (line 108, 312) and `get_id()` in `LIMS` (line 49-50)
   - 5.2.1 - (Only report LIMS genes in the LIMS report) - `apply_lims_rules()` in `LIMS` (line 108)
-  - 5.2.2 - (Report the "main_lin" field from TBProfiler) - `get_id()` in `LIMS` (line 49-50) and the `create_lims_rules()` in `LIMS` (line 312)
+  - 5.2.2 - (Report the "main_lineage" field from TBProfiler) - `get_id()` in `LIMS` (line 49-50) and the `create_lims_rules()` in `LIMS` (line 312)
 - 5.3 - (Individual mutation output format in the LIMS report) - `apply_lims_rules()` in `LIMS` (lines 132 - 196)
   - 5.3.1 - (Only report "R" or "U" mutations except rpoB RRDR) - `apply_lims_rules()` in `LIMS` (lines 185 - 190)
   - 5.3.2 (Mutation output format) - `apply_lims_rules()` in `LIMS` (lines 132, 160 - 196)
@@ -304,7 +304,7 @@ For those morbidly interested in how tbp-parser works, you can read a step-by-st
 4. The section object created in the `run()` function is of the `Laboratorian` class (`Laboratorian.py`). This class is initialized with the input JSON file. The `create_laboratorian_report()` method is then called on the object, which begins by performing the `iterate_section()` method on the different variant sections belonging to its input JSON.
     - The `iterate_section()` takes two items: the variant section of the input JSON and the `row_list` which is a list of `Row` objects (explained later) to be included in the Laboratorian report. The method iterates through each variant in the section and creates a `Variant` object (`Variant.py`) for each one.
     - The `Variant` class represents a single variant reported by TBProfiler. This class is initialized by turning each item of the variant's dictionary into an attribute. The first method called on the object is `extract annotations()` which divides the annotation field of a `Variant` into individual annotations. Depending on if the object has an `annotation` attribute, each item in that field is turned into a `Row` object (`Row.py`). If not, every antimicrobial drug in the `gene_associated_drugs` attribute is transformed into a `Row`. This is because we preferentially examine the `annotation` field as it may contain a WHO resistance interpretation which takes priority over any expert rules applied in the `gene_associated_drugs` field.
-    - The `Row` class represents a single row in the Laboratorian report; each attribute is a column in the report. Its initialization step is fairly complicated. As input, it can take the originating `Variant` object, a `who_confidence`, the associated antimicrobial drug, the originating gene (default _None_), the depth of the mutation (default 0), and the frequency of the mutation (default _None_).
+    - The `Row` class represents a single row in the Laboratorian report; each attribute is a column in the report. Its initialization step is fairly complicated. As input, it can take the originating `Variant` object, a `confidence`, the associated antimicrobial drug, the originating gene (default _None_), the depth of the mutation (default 0), and the frequency of the mutation (default _None_).
         - If the originating `Variant` object is _not_ None, the `Row` object is initialized with the following attributes taken directly from the originating `Variant`:
             - `tbprofiler_gene_name`: the gene name (optionally provided during initialization)
             - `tbprofiler_locus_tag`: the locus tag
@@ -325,8 +325,8 @@ For those morbidly interested in how tbp-parser works, you can read a step-by-st
             - all other items (except `locus_tag`) are by default "NA", unless they pass quality metrics in which case they become "WT". If they fail these quality metrics, they become "Insufficient Coverage" and a `warning` is created (these quality metrics are measured using the `COVERAGE_DICTIONARY` created by the `Coverage` object).
     - The `Row` object (made in the `Variant.extract_annotation()` method is then appended to the `Variant`'s `annotation_dictionary` attribute which is returned to the `iterate_section` function in the `Laboratorian` object. The `iterate_section` function then iterates through each `Row` in the `annotation_dictinoary` and performs the `Row` object's `complete_row()` method.
         - The `complete_row()` method will either:
-            1. If the `Row` object has a `who_confidence` attribute that is _not_ absent, it will convert that confidence into a `looker_interpretation` and `mdl_interpretation` using the `ANNOTATION_TO_INTERPRETATION` global variable dictionary.
-            2. If the `Row` object is missing a `who_confidence`, it will apply the `apply_expert_rules()` method to its originating `Variant` object.
+            1. If the `Row` object has a `confidence` attribute that is _not_ absent, it will convert that confidence into a `looker_interpretation` and `mdl_interpretation` using the `ANNOTATION_TO_INTERPRETATION` global variable dictionary.
+            2. If the `Row` object is missing a `confidence`, it will apply the `apply_expert_rules()` method to its originating `Variant` object.
     - The `apply_expert_rules()` function in the `Variant` class implements the rules outlined in the CDPH interpretation document regarding the interpretation of potential resistance mutations. Each `Variant` is considered based on its originating gene and the antimicrobial drug it is associated with. Depending on the mutation and/or position, the appropriate Looker and MDL interpretations are returned to the `Row` object.
         - Depending on whether or not the rule applied is considered an "expert" rule or not, a `"noexpert"` string is sometimes appended to the interpretation. If this is the case, the `complete_row()` method calls the `Row`'s `describe_rationale()` function which removes this suffix and modifies the `rationale` field.
     - Following `Row` completion, depending on if the `Row`'s `tbprofiler_gene_name` belongs to a certain group of genes, the `extract_alternate_consequences` function is called on the `Variant`. This performs a function similar to the `iterate_section` method but upon a `Variant`'s `alternate_consequences` attribute. Any additional `Row`s made are added to the `row_list`.

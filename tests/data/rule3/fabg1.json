@@ -9,7 +9,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv1483",
-      "gene": "fabG1",
+      "gene_name": "fabG1",
       "gene_associated_drugs": [
         "ethionamide",
         "isoniazid"

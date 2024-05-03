@@ -9,8 +9,8 @@
       "lin": "lineage1.1"
     }
   ],
-  "main_lin": "lineage1",
-  "sublin": "lineage1.1.2",
+  "main_lineage": "lineage1",
+  "sub_lineage": "lineage1.1.2",
   "Rule1_Variants": [
     {
       "depth": 75,
@@ -26,7 +26,7 @@
         }
       ],
       "locus_tag": "EBG00000313339",
-      "gene": "rrl",
+      "gene_name": "rrl",
       "gene_associated_drugs": [
         "linezolid"
       ]
@@ -38,7 +38,7 @@
       "nucleotide_change": "n.2399G>T",
       "protein_change": "",
       "locus_tag": "EBG00000313339",
-      "gene": "rrl",
+      "gene_name": "rrl",
       "gene_associated_drugs": [
         "linezolid"
       ]
@@ -52,7 +52,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv0678",
-      "gene": "Rv0678",
+      "gene_name": "Rv0678",
       "gene_associated_drugs": [
         "clofazimine",
         "bedaquiline"
@@ -65,7 +65,7 @@
       "nucleotide_change": "c.fake-1294fake",
       "protein_change": "",
       "locus_tag": "Rv0678",
-      "gene": "Rv0678",
+      "gene_name": "Rv0678",
       "gene_associated_drugs": [
         "clofazimine",
         "bedaquiline"
@@ -90,7 +90,7 @@
         }
       ],
       "locus_tag": "Rv0678",
-      "gene": "Rv0678",
+      "gene_name": "Rv0678",
       "gene_associated_drugs": [
         "clofazimine",
         "bedaquiline"
@@ -105,7 +105,7 @@
       "nucleotide_change": "c.87delC",
       "protein_change": "",
       "locus_tag": "Rv1908c",
-      "gene": "katG",
+      "gene_name": "katG",
       "gene_associated_drugs": [
         "isoniazid"
       ]
@@ -119,7 +119,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv1908c",
-      "gene": "katG",
+      "gene_name": "katG",
       "gene_associated_drugs": [
         "isoniazid"
       ]
@@ -133,7 +133,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv0667",
-      "gene": "rpoB",
+      "gene_name": "rpoB",
       "gene_associated_drugs": [
         "rifampicin"
       ]
@@ -147,7 +147,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv0667",
-      "gene": "rpoB",
+      "gene_name": "rpoB",
       "gene_associated_drugs": [
         "rifampicin"
       ]
@@ -161,7 +161,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv0667",
-      "gene": "rpoB",
+      "gene_name": "rpoB",
       "gene_associated_drugs": [
         "rifampicin"
       ]
@@ -177,7 +177,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv1483",
-      "gene": "fabG1",
+      "gene_name": "fabG1",
       "gene_associated_drugs": [
         "ethionamide",
         "isoniazid"
@@ -192,7 +192,7 @@
       "annotation": [
       ],
       "locus_tag": "EBG00000313325",
-      "gene": "rrs",
+      "gene_name": "rrs",
       "gene_associated_drugs": [
         "linezolid",
         "kanamycin",
@@ -211,7 +211,7 @@
       "annotation": [
       ],
       "locus_tag": "EBG00000313325",
-      "gene": "rrs",
+      "gene_name": "rrs",
       "gene_associated_drugs": [
         "linezolid",
         "kanamycin",

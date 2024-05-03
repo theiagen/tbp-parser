@@ -9,7 +9,7 @@
       "annotation": [
       ],
       "locus_tag": "EBG00000313325",
-      "gene": "rrs",
+      "gene_name": "rrs",
       "gene_associated_drugs": [
         "linezolid",
         "kanamycin",
@@ -28,7 +28,7 @@
       "annotation": [
       ],
       "locus_tag": "EBG00000313325",
-      "gene": "rrs",
+      "gene_name": "rrs",
       "gene_associated_drugs": [
         "linezolid",
         "kanamycin",

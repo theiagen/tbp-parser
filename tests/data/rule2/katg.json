@@ -7,7 +7,7 @@
       "nucleotide_change": "c.87delC",
       "protein_change": "",
       "locus_tag": "Rv1908c",
-      "gene": "katG",
+      "gene_name": "katG",
       "gene_associated_drugs": [
         "isoniazid"
       ]
@@ -21,7 +21,7 @@
       "annotation": [
       ],
       "locus_tag": "Rv1908c",
-      "gene": "katG",
+      "gene_name": "katG",
       "gene_associated_drugs": [
         "isoniazid"
       ]

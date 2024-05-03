@@ -17,7 +17,7 @@ class Row() :
       the interpretation logic applied is not considered an expert rule
   """
   
-  def __init__(self, logger, variant, who_confidence, drug, gene_name=None, depth=0, frequency=None):
+  def __init__(self, logger, variant, who_confidence, drug, gene_name=None, depth=0, frequency=None, source=""):
     self.logger = logger
     
     self.variant = variant
@@ -35,10 +35,10 @@ class Row() :
       if variant is not None:
         self.logger.debug("ROW:Initalizing the Row object, the variant has been supplied.")
         try:
-          self.tbprofiler_gene_name = self.variant.gene
+          self.tbprofiler_gene_name = self.variant.gene_name
         except:
           self.tbprofiler_gene_name = gene_name
-          self.variant.gene = gene_name
+          self.variant.gene_name = gene_name
         self.logger.debug("ROW:The variant's gene name is {}".format(self.tbprofiler_gene_name))
         try:
           self.tbprofiler_locus_tag = self.variant.locus_tag
@@ -69,7 +69,7 @@ class Row() :
           self.read_support = self.depth * self.frequency
         self.rationale = ""
         self.warning = []
-                
+        
         # the following if statement only applies to rpoB
         # if self.tbprofiler_gene_name in globals.TNGS_REGIONS.keys():
         #   self.logger.debug("ROW:[tNGS only] This mutation's genomic position is outside the expected region.")
@@ -219,6 +219,8 @@ class Row() :
     
         except:
           self.gene_tier = "NA"
+      
+      self.source = source
                     
   def print(self):
     """
@@ -241,6 +243,7 @@ class Row() :
     self.logger.debug("ROW:\trationale: {}".format(self.rationale))
     self.logger.debug("ROW:\twarning: {}".format(self.warning))
     self.logger.debug("ROW:\ttier: {}".format(self.gene_tier))
+    self.logger.debug("ROW:\tsource: {}".format(self.source))
        
   def complete_row(self):
     """
