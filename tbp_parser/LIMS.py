@@ -36,7 +36,7 @@ class LIMS:
     else:
       number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
       percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
-    self.logger.debug("LIMS:The number of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
+    self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
     
     # if the percentage of genes above the coverage threshold is greater than 90%, then we can call the lineage
     percentage_limit = 0.9
@@ -53,20 +53,35 @@ class LIMS:
             
       sublineages = detected_sublineage.split(";")
       if percentage_lims_genes_above >= percentage_limit:
-        if "lineage" in detected_lineage:
-          lineage.add("DNA of Mycobacterium tuberculosis species detected")
+        self.logger.debug("LIMS:Percentage of LIMS genes above the coverage threshold is GREATER than 90%")
+        
+        if self.tngs:
+          self.logger.debug("LIMS:The sequencing method is tNGS; now checking for a His57Asp mutation in pncA")
+          pncA_mutations = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == "pncA")]
+          if "p.His57Asp" in pncA_mutations["tbprofiler_variant_substitution_aa"].tolist():
+            self.logger.debug("LIMS:p.His57Asp detected in pncA, lineage is likely M. bovis")
+            lineage.add("DNA of Mycobacterium bovis detected")
+          else:
+            self.logger.debug("LIMS:p.His57Asp not detected in pncA, lineage is likely M. tuberculosis")
+            lineage.add("DNA of Mycobacterium tuberculosis complex detected, not M. bovis")
           
-        for sublineage in sublineages:  
-          if "BCG" in detected_lineage or "BCG" in sublineage:
-            lineage.add("DNA of Mycobacterium bovis BCG detected")
-                  
-          elif ("La1" in detected_lineage or "La1" in sublineage) or ("bovis" in detected_lineage or "bovis" in sublineage):
-            lineage.add("DNA of Mycobacterium bovis (not BCG) detected")     
-          
-        if detected_lineage == "" or detected_lineage == "NA" or len(lineage) == 0:
-            lineage.add("DNA of Mycobacterium tuberculosis complex detected")
+        else:  
+          self.logger.debug("LIMS:The sequencing method is WGS; now checking the TBProfiler lineage calls")
+          if "lineage" in detected_lineage:
+            lineage.add("DNA of Mycobacterium tuberculosis species detected")
+            
+          for sublineage in sublineages:  
+            if "BCG" in detected_lineage or "BCG" in sublineage:
+              lineage.add("DNA of Mycobacterium bovis BCG detected")
+                    
+            elif ("La1" in detected_lineage or "La1" in sublineage) or ("bovis" in detected_lineage or "bovis" in sublineage):
+              lineage.add("DNA of Mycobacterium bovis (not BCG) detected")     
+            
+          if detected_lineage == "" or detected_lineage == "NA" or len(lineage) == 0:
+              lineage.add("DNA of Mycobacterium tuberculosis complex detected")
       
       else:
+        self.logger.debug("LIMS:Percentage of LIMS genes above the coverage threshold is LESS than 90%")
         lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
        
       lineage = "; ".join(sorted(lineage))
