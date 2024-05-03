@@ -31,7 +31,7 @@ class LIMS:
     # calculate percentage of genes in the LIMS report above the coverage threshold
     self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
     if self.tngs:
-      number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.COVERAGE_DICTIONARY.keys())
+      number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= 90 for gene in globals.COVERAGE_DICTIONARY.keys())
       percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
     else:
       number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
