@@ -27,6 +27,10 @@ ANNOTATION_TO_INTERPRETATION = {
     "looker": "R-Interim",
     "mdl": "R"
   },
+  "Assoc w R - Interim": {
+    "looker": "R-Interim",
+    "mdl": "R"
+  },
   "Uncertain significance": {
     "looker": "U", 
     "mdl": "U" 
