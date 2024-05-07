@@ -229,9 +229,9 @@ class LIMS:
                     if gene in responsible_gene:
                       all_responsible_mdl_interpretations[gene][index] = "Insufficient Coverage"
                   else:
-                    self.logger.debug("This gene ({}) has sufficient coverage a deletion being present".format(gene))
+                    self.logger.debug("LIMS:This gene ({}) has sufficient coverage despite a deletion being present".format(gene))
                 except:
-                  self.logger.debug("This gene ({})is not in the coverage dictionary".format(gene))
+                  self.logger.debug("LIMS:This gene ({})is not in the coverage dictionary".format(gene))
                
               self.logger.debug("LIMS:Since this MDL interpretation changed, we are now potentially recalculating max_mdl_resistance (currently {})".format(max_mdl_resistance[0]))
               if (max([globals.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set]) != globals.RESISTANCE_RANKING[max_mdl_resistance[0]]) and gene in responsible_gene:
@@ -321,7 +321,8 @@ class LIMS:
           self.logger.debug("LIMS:There are no mutations for this gene ({}) associated with this drug ({})".format(gene, antimicrobial_name))
           DF_LIMS[gene_code] = "No mutations detected"
 
-        if "No sequence" in DF_LIMS[gene_code]:
+        if DF_LIMS[gene_code][0] == "No sequence":
+          self.logger.debug("LIMS:This gene has insufficient coverage; changing antimicrobial code")
           DF_LIMS[antimicrobial_code] = "Pending Retest"
           
         if "Insufficient Coverage" in mdl_interpretations and max_mdl_resistance[0] in ["WT", "S", "Insufficient Coverage"]:
