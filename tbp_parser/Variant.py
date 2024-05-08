@@ -44,18 +44,27 @@ class Variant:
     self.logger.debug("VAR:Within the Variant class extract_alternate_consequences function")
 
     # check if alternate_consequences section exists, and if so, enter it
-    if hasattr(self, "alternate_consequences") and len(self.alternate_consequences) > 0:
+    if hasattr(self, "consequences") and len(self.consequences) > 0:
       self.logger.debug("VAR:Now iterating through alternate_consequences")
       
-      for item in self.alternate_consequences:
+      for item in self.consequences:
         var = Variant(self.logger, item)
-        globals.GENES_REPORTED.add(var.gene_name)
-        row = Row(self.logger, var, parent_row.who_confidence, parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency)
-        row.source = parent_row.source
-        row.complete_row()
+        if var.gene_name == "mmpR5":
+          var.gene_name = "Rv0678"
         
-        row_list.append(row)
-  
+        if var.gene_name != parent_row.tbprofiler_gene_name:
+          globals.GENES_REPORTED.add(var.gene_name)
+          self.logger.debug("VAR:This alternate consequence is not from the same gene; creating a new row")
+        
+          row = Row(self.logger, var, parent_row.who_confidence, parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency)
+          row.source = parent_row.source
+          row.complete_row()
+      
+          row_list.append(row)
+        else:
+          self.logger.debug("VAR:This alternate consequence is from the same gene; we do not want to create a new row")
+          continue
+           
     return row_list
    
   def extract_annotations(self):
