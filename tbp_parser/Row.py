@@ -17,7 +17,7 @@ class Row() :
       the interpretation logic applied is not considered an expert rule
   """
   
-  def __init__(self, logger, variant, who_confidence, drug, gene_name=None, depth=0, frequency=None, source=""):
+  def __init__(self, logger, variant, who_confidence, drug, gene_name=None, depth=0, frequency=None, source="", tbdb_comment=""):
     self.logger = logger
     
     self.variant = variant
@@ -225,6 +225,7 @@ class Row() :
           self.gene_tier = "NA"
       
       self.source = source
+      self.tbdb_comment = tbdb_comment
                     
   def print(self):
     """

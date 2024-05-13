@@ -58,6 +58,7 @@ class Variant:
         
           row = Row(self.logger, var, parent_row.who_confidence, parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency)
           row.source = parent_row.source
+          row.tbdb_comment = parent_row.tbdb_comment
           row.complete_row()
       
           row_list.append(row)
@@ -87,12 +88,12 @@ class Variant:
       # iterate through the annotations
       for item in self.annotation:      
         # turn the annotation into a Row object
-        annotation = Row(self.logger, self, item["confidence"], item["drug"], source=item["source"])
+        annotation = Row(self.logger, self, item["confidence"], item["drug"], source=item["source"], tbdb_comment=item["comment"])
         
         # if this is the first time a drug has been seen, add it to the annotation dictionary
         if annotation.antimicrobial not in self.annotation_dictionary.keys():
           self.logger.debug("VAR:This is the first time this drug ({}) has been seen; adding it to the annotation dictionary".format(annotation.antimicrobial))
-          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.confidence, annotation.antimicrobial, source=annotation.source)
+          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.confidence, annotation.antimicrobial, source=annotation.source, tbdb_comment=annotation.tbdb_comment)
 
           # if the drug is in the gene associated drug list, remove it because it has been accounted for
           if annotation.antimicrobial in gene_associated_drug_list:
@@ -102,7 +103,7 @@ class Variant:
         # otherwise, save only the annotation with the more severe WHO confidence (higher value)
         elif annotation.rank_annotation() > self.annotation_dictionary[annotation.antimicrobial].rank_annotation():
           self.logger.debug("VAR:A more severe WHO confidence annotation was found for this drug ({}); replacing the old annotation with the new one".format(annotation.antimicrobial))
-          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.confidence, annotation.antimicrobial, source=annotation.source)
+          self.annotation_dictionary[annotation.antimicrobial] = Row(self.logger, self, annotation.confidence, annotation.antimicrobial, source=annotation.source, tbdb_comment=annotation.tbdb_comment)
         
       self.logger.debug("VAR:The annotation dictionary has been expanded; it now has a length of {}".format(len(self.annotation_dictionary)))
 
