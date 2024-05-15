@@ -4,7 +4,7 @@
 
 ## Overview
 
-This repository contains the tbp-parser tool which parses the JSON output of [Jody Phelan's TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Available as a downloadable Python package and as a Docker image, tbp-parser converts the output of TBProfiler into four files:
+This repository contains the tbp-parser tool which parses the JSON output of [Jody Phelan's TB-Profiler tool](https://github.com/jodyphelan/TBProfiler). Available as a downloadable Python package and as a Docker image, tbp-parser converts the output of TB-Profiler into four files:
 
 1. A _Laboratorian_ report, which contains information regarding each mutation and its associated drug resistance profile in a CSV file. This file also contains two interpretation fields -- "Looker" and "MDL" which are generated using the CDC's expert rules for interpreting the severity of potential drug resistance mutations.
 2. A _LIMS_ report, formatted specifically for STAR LIMS. This CSV report summarizes the highest severity mutations for each antimicrobial and lists the relevant mutations for each gene.
@@ -14,6 +14,20 @@ This repository contains the tbp-parser tool which parses the JSON output of [Jo
 Please reach out to us at [support@theiagen.com](mailto:support@theiagen.com) if you would like any custom file formats and/or changes to these output files that suit your individual needs.
 
 See also [this page](https://theiagen.notion.site/tbp-parser-b02bef0cbc814b129875d861698c80a2?pvs=4) for additional documentation on how tbp-parser works and where the expert rules were derived.
+
+## Brief Description of Versions
+
+You may notice there are many releases; tbp-parser is in active development and each release is "use at your own risk." We highly recommend upgrading to the latest release as they include important bug fixes. In order to help track the different changes, we have included a brief description of each release:
+
+- **v1.2.x _& below_** - the initial developmental stages of tbp-parser for WGS data
+- **v1.3.x** - the addition of tNGS data parsing and includes some updates applicable to WGS parsing
+- **v1.4.x** - reworks how QC is performed (changes in order of operations)
+  - **v1.4.3+** - changes how tNGS lineage determination is performed
+  - **v1.4.4+** - changes how nonsynonymous mutations are interpretted; major interpretation differences between earlier versions
+- **v1.5.x** - major changes to code in that it expects results from TB-Profiler v6.2.0+; no longer backwards compatible and really should've been a v2 release but it's too late now
+  - code changes for v1.5x are available on the `who-v2` branch
+
+Again, please use tbp-parser at your own risk and be sure to perform extensive validation before using this tool in a clinical setting.
 
 ## Installation
 
@@ -52,7 +66,7 @@ The following is the help message printed by tbp-parser.
 ```markdown
 usage: python3 /tbp-parser/tbp_parser/tbp_parser.py [-h|-v] <input_json> <input_bam> [<args>]
 
-Parses Jody Phelon's TBProfiler JSON output into three files:
+Parses Jody Phelon's TB-Profiler JSON output into three files:
 - a Laboratorian report,
 - a LIMS report
 - a Looker report, and
@@ -149,6 +163,8 @@ Please note that the BAM file must have the accompanying BAI file in the same di
 
 ### Example
 
+This shows how the script can be run if used inside the Docker container provided above.
+
 ```markdown
 python3 /tbp-parser/tbp_parser/tbp_parser.py \
     /path/to/data/tbprofiler_output.json \
@@ -232,34 +248,36 @@ The interpretation logic document is long and complicated, and the implementatio
 
 ### Rule 1
 
-- 1.1 - (WHO annotation) - `complete_row()` in `Row` (lines 215 - 219)
-- 1.2 - (No WHO annotation; CDC expert rules) - `apply_expert_rules()` in `Variant` (lines 127 - 159)
-- 1.3 - (mmpR5/Rv0678, mmpL5, and mmpS5 reporting) - `iterate_section()` in `Row` (lines 63 - 65), `extract_alternate_consequences()` in `Variant` (lines 37 - 58)
+- 1.1 - (WHO annotation) - `complete_row()` in `Row` (lines 245 - 274)
+- 1.2 - (No WHO annotation; CDC expert rules) - `apply_expert_rules()` in `Variant` (lines 127 - 167)
+- 1.3 - (mmpR5/Rv0678, mmpL5, and mmpS5 reporting) - `iterate_section()` in `Laboratorian` (lines 59 - 74), `extract_alternate_consequences()` in `Variant` (lines 37 - 58)
 
 ### Rule 2
 
-- 2.1 - (WHO annotation) - `complete_row()` in `Row` (lines 215 - 219)
-- 2.2 - (No WHO annotation; CDC expert rules) - `apply_expert_rules()` in `Variant` (lines 161 - 196, 210 - 213, 216 - 218)
-  - 2.2.1 - (loss-of-function expert rule) - `apply_expert_rules()` in `Variant` (lines 164 - 176)
-  - 2.2.2.1 - (rpoB RRDR expert rule) - `apply_expert_rules()` in `Variant` (lines 192 - 196)
-  - 2.2.2.2 - (rpoB non-RRDR expert rule) - `apply_expert_rules()` in `Variant` (lines 210 - 213, 216 - 218)
+- 2.1 - (WHO annotation) - `complete_row()` in `Row` (lines 258 - 262)
+- 2.2 - (No WHO annotation; CDC expert rules) - `apply_expert_rules()` in `Variant` (lines 173 - 194, 215 - 219, 229 - 240)
+  - 2.2.1 - (loss-of-function expert rule) - `apply_expert_rules()` in `Variant` (lines 176 - 194)
+  - 2.2.2.1 - (rpoB RRDR expert rule) - `apply_expert_rules()` in `Variant` (lines 209 - 219)
+  - 2.2.2.2 - (rpoB non-RRDR expert rule) - `apply_expert_rules()` in `Variant` (lines 229 - 235, 238 - 240)
 
 ### Rule 3
 
-- 3.1 - (WHO annotation) - `complete_row()` in `Row` (lines 215 - 219)
+- 3.1 - (WHO annotation) - `complete_row()` in `Row` (lines 264 - 269)
 - 3.2 - (No WHO annotation; CDC expert rules) - `apply_expert_rules()` in `Variant` (lines 190 - 240)
-  - 3.2.1 - (rrs gene expert rule) - `apply_expert_rules()` in `Variant` (lines 223 - 231)
-  - 3.2.2 - (GyrA QRDR expert rule) - `apply_expert_rules()` in `Variant` (lines 198 - 200)
-  - 3.2.3 - (GyrB QRDR expert rule) - `apply_expert_rules()` in `Variant` (lines 204 - 206)
-  - 3.2.4 - (All else expert rule) - `apply_expert_rules()` in `Variant` (lines 198 - 202, 204 - 208, 210 - 218, 233 - 239)
+  - 3.2.1 - (rrs gene expert rule) - `apply_expert_rules()` in `Variant` (lines 245 - 253)
+  - 3.2.2 - (GyrA QRDR expert rule) - `apply_expert_rules()` in `Variant` (lines 221 - 223)
+  - 3.2.3 - (GyrB QRDR expert rule) - `apply_expert_rules()` in `Variant` (lines 225 - 227)
+  - 3.2.4 - (All else expert rule) - `apply_expert_rules()` in `Variant` (lines 229 - 233, 236 - 240, 256 - 264)
 
 ### Rule 4
 
-- 4.1 - (WT gene has coverage) - `__init__()` in `Row` (lines 107 - 123)
-- 4.2 - (QC filtering) - `__init__()` in `Row` (lines 71 - 104) and in the `create_laboratorian_report()` in `Laboratorian` (lines 118 - 153)
-  - 4.2.1.1 - (Gene coverage QC pass) - `__init__()` in `Row` (lines 94 - 95)
-  - 4.2.1.2 - (Gene coverage QC fail, but deletion) - `__init__()` in `Row` (lines 77 - 79)
-  - 4.2.1.3 - (Gene coverage QC fail, no deletion) - `__init__()` in `Row` (lines 72 - 73, 128 - 142) and the `create_laboratorian_report()` in `Laboratorian` (lines 118 - 153)
+After here, it gets a little iffy because I haven't updated it in a while and it's exhausting try to track them down; the line numbers are more like general regions than exact coordinates at this point
+
+- 4.1 - (WT gene has coverage) - `__init__()` in `Row` (lines 161 - 167, 182 - 188)
+- 4.2 - (QC filtering) - `__init__()` in `Row` (lines 77 - 124, 133 - 135, 169 - 175, 190 - 197) and in the `create_laboratorian_report()` in `Laboratorian` (lines 131 - 157)
+  - 4.2.1.1 - (Gene coverage QC pass) - `__init__()` in `Row` (lines 127 - 129)
+  - 4.2.1.2 - (Gene coverage QC fail, but deletion) - `__init__()` in `Row` (lines 117 - 121, 133 - 135)
+  - 4.2.1.3 - (Gene coverage position QC fail, no deletion) - `__init__()` in `Row` (lines 72 - 73, 128 - 142) and the `create_laboratorian_report()` in `Laboratorian` (lines 118 - 153)
     - 4.2.1.3.1 - (WT) - `__init__()` in `Row` (lines 128 - 142)
     - 4.2.1.3.2 - (No R mutations detected) - `create_laboratorian_report()` in `Laboratorian` (lines 118 - 153)
     - 4.2.1.3.3 - (R mutation detected) - `create_laboratorian_report()` in `Laboratorian` (lines 118 - 132)
