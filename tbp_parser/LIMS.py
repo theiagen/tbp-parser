@@ -320,12 +320,8 @@ class LIMS:
         else:
           self.logger.debug("LIMS:There are no mutations for this gene ({}) associated with this drug ({})".format(gene, antimicrobial_name))
           DF_LIMS[gene_code] = "No mutations detected"
-
-        if DF_LIMS[gene_code][0] == "No sequence":
-          self.logger.debug("LIMS:This gene has insufficient coverage; changing antimicrobial code")
-          DF_LIMS[antimicrobial_code] = "Pending Retest"
           
-        if "Insufficient Coverage" in mdl_interpretations and max_mdl_resistance[0] in ["WT", "S", "Insufficient Coverage"]:
+        if (DF_LIMS[gene_code][0] == "No sequence" or "Insufficient Coverage" in mdl_interpretations) and max_mdl_resistance[0] != "R":
           self.logger.debug("LIMS:This gene ({}) has insufficient coverage and no other mutations associated with this antimicrobial ({}) are 'R'; changing antimicrobial output to 'Pending Retest'".format(gene, antimicrobial_name))
           DF_LIMS[antimicrobial_code] = "Pending Retest"
     
