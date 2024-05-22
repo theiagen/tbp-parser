@@ -67,6 +67,16 @@ ANTIMICROBIAL_CODE_TO_DRUG_NAME = {
 }
 
 """
+A dictionary that matches the LIMS antimicrobial code to the relevant
+antimicrobial drug name for cycloserine; activated by the
+--add_cs_lims flag
+"""
+global ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS
+ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS = {
+  "M_DST_P01_CS": "cycloserine"
+}
+
+"""
 The dictionary that matches CDPH LIMS antimicrobial codes to the
 corresponding genes and their corresponding CDPH LIMS codes
 """
@@ -192,6 +202,18 @@ ANTIMICROBIAL_CODE_TO_GENES_WGS = {
   "M_DST_N01_LZD": {
     "rrl": "M_DST_N02_rrl", 
     "rplC": "M_DST_N03_rplC"
+  }
+}
+
+"""
+Additional optional entries for the LIMS report for cycloserine
+Activated by the --add_cs_lims flag
+"""
+global ANTIMICROBIAL_CODE_TO_GENES_CS
+ANTIMICROBIAL_CODE_TO_GENES_CS = {
+  "M_DST_P01_CS": {
+  "ald": "M_DST_P02_ALD",
+  "alr": "M_DST_PO3_ALR"
   }
 }
 
@@ -439,6 +461,15 @@ The list of genes used to generate the CDPH LIMS report
 """
 global GENES_FOR_LIMS
 GENES_FOR_LIMS = []
+
+"""
+A list of genes that will be included in the LIMS report
+if --add_cs_lims is true (cycloserine)
+"""
+global GENES_FOR_LIMS_CS
+GENES_FOR_LIMS_CS = [
+  "ald", "alr"
+]
 
 """
 A  list of genes that are to be included in the 
