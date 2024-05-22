@@ -225,7 +225,7 @@ class LIMS:
               mdl_interpretations[index] = "WT"
               if gene in responsible_gene:
                 all_responsible_mdl_interpretations[gene][index] = "WT"
-
+               
               if "del" in mutation and "Failed quality in the mutation position" in warnings[index]:
                 try:
                   if int(globals.COVERAGE_DICTIONARY[gene]) < globals.COVERAGE_THRESHOLD:
@@ -297,7 +297,10 @@ class LIMS:
         elif gene == "rpoB":
           self.logger.debug("LIMS:No mutations were identified in rpoB; changing output message")
           DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampin"
-            
+        
+        else:
+          self.logger.debug("LIMS:No mutations were identified for this gene-drug combination")
+              
         # make sure that there is a mutation associated with this gene-drug combo
         if len(nt_mutations_per_gene) > 0:
           maximum_ranking = max([globals.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])
@@ -346,7 +349,6 @@ class LIMS:
     self.logger.debug("LIMS:Now iterating through each LIMS antimicrobial code")
     for antimicrobial_code, gene_dictionary in globals.ANTIMICROBIAL_CODE_TO_GENES.items():
       drug_name = globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
-
       # get the MDL interpretations for all genes **FOR THE LIMS REPORT** associated with this drug             
       potential_mdl_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["tbprofiler_gene_name"].isin(gene_dictionary.keys())]["mdl_interpretation"]
       
@@ -357,6 +359,7 @@ class LIMS:
       try:
         max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_mdl_resistances])]
         responsible_gene = set(globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["mdl_interpretation"] == max_mdl_resistance[0]]["tbprofiler_gene_name"].tolist())
+        responsible_gene = responsible_gene.intersection(set(gene_dictionary.keys()))
         self.logger.debug("LIMS:The gene(s) responsible for the max MDL resistance for this antimicrobial ({}) is/are {}".format(drug_name, responsible_gene))
       except:
         max_mdl_resistance = ["NA"]
