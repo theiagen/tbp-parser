@@ -38,6 +38,10 @@ def main():
   general_arguments.add_argument("-o", "--output_prefix", 
                       help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b")
   
+  lims_arguments = parser.add_argument_group("LIMS arguments", "options that are used to customize the LIMS report")
+  lims_arguments.add_argument("--add_cs_lims",
+                              help="adds cycloserine (CS) fields to the LIMS report", action="store_true", default=False)
+  
   tngs_arguments = parser.add_argument_group("tNGS-specific arguments", "options that are primarily used for tNGS data\n(all frequency arguments are compatible with WGS data)")
   tngs_arguments.add_argument("--tngs",
                       help="\nindicates that the input data was generated using Deeplex + CDPH modified protocol\nTurns on tNGS-specific global parameters", action="store_true", default=False)
@@ -50,7 +54,7 @@ def main():
   tngs_arguments.add_argument("--rrl_frequency",
                       help="the minimum frequency for an rrl mutation to pass QC\n  (rrl has several problematic sites in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
   tngs_arguments.add_argument("--rrl_read_support",
-                              help="the minimum read support for an rrl mutation to pass QC\n  (rrl has several problematic sites in the Deeplex tNGS assay)\ndefault=10", default=10, metavar="\b", type=int)
+                      help="the minimum read support for an rrl mutation to pass QC\n  (rrl has several problematic sites in the Deeplex tNGS assay)\ndefault=10", default=10, metavar="\b", type=int)
   tngs_arguments.add_argument("--rpob449_frequency",
                       help="the minimum frequency for an rpoB mutation at protein position 449 to pass QC\n  (this is a problematic site in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
   tngs_arguments.add_argument("--etha237_frequency",
