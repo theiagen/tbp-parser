@@ -130,16 +130,25 @@ class Laboratorian:
         
         for row in row_list:       
           if row.tbprofiler_gene_name == gene:
-            if ("Insufficient coverage in locus" in row.warning and "Failed quality in the mutation position" in row.warning and row.mdl_interpretation == "R"):
-              self.logger.debug("LAB:This mutation cannot be trusted due to failing both QC checks; rewriting interpretation to Insufficient Coverage")
+            if row.tbprofiler_gene_name in globals.GENES_WITH_DELETIONS:
+              self.logger.debug("LAB:This gene has a valid deletion so we are removing any locus QC fails as they could be due to the deletion")
+              if "Insufficient coverage in locus" in row.warning:
+                row.warning.remove("Insufficient coverage in locus")
+            
+            if ("Insufficient coverage in locus" in row.warning and 
+                "Failed quality in the mutation position" in row.warning and 
+                row.mdl_interpretation == "R"):
+              self.logger.debug("LAB:This 'R' mutation cannot be trusted due to failing both QC checks; rewriting interpretation to Insufficient Coverage")
               row.mdl_interpretation = "Insufficient Coverage"
               row.looker_interpretation = "Insufficient Coverage"     
               
               reorder_list.append(row)
             
             # whole locus fail point D (non-R mutations with no deletions)
-            elif row.mdl_interpretation != "R" and "del" not in row.tbprofiler_variant_substitution_nt:
-              self.logger.debug("LAB:This mutation is not an 'R' mutation so we are rewriting the interpretation to Insufficient Coverage")
+            elif (row.mdl_interpretation != "R" and 
+                  "del" not in row.tbprofiler_variant_substitution_nt and
+                  "Insufficient coverage in locus" in row.warning):
+              self.logger.debug("LAB:This mutation is not an 'R' mutation with bad locus coverage so we are rewriting the interpretation to Insufficient Coverage")
               # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
               row.mdl_interpretation = "Insufficient Coverage"
               row.looker_interpretation = "Insufficient Coverage"
