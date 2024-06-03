@@ -101,7 +101,7 @@ class Row() :
         # (check rrs & rrl for low frequency and read support; 
         #  also check ethA & rpoB for specific protein position frequency)
         if ((self.depth < globals.MIN_DEPTH) 
-             and ((self.tbprofiler_gene_name not in ["rrs", "rrl"] and 
+             or ((self.tbprofiler_gene_name not in ["rrs", "rrl"] and 
                  (float(self.frequency) < globals.MIN_FREQUENCY or self.read_support < globals.MIN_READ_SUPPORT))
              or (self.tbprofiler_gene_name == "rrs" and 
                  (float(self.frequency) < globals.RRS_FREQUENCY or self.read_support < globals.RRS_READ_SUPPORT)) 
