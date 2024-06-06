@@ -33,14 +33,16 @@ class LIMS:
     if self.tngs:
       number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= 90 for gene in globals.COVERAGE_DICTIONARY.keys())
       percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.COVERAGE_DICTIONARY.keys())
+      # if the percentage of genes above the coverage threshold is greater than 70%, then we can call the lineage
+      percentage_limit = 0.7
     else:
       number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
       percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
+      # if the percentage of genes above the coverage threshold is greater than 90%, then we can call the lineage
+      percentage_limit = 0.9
+      
     self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
-    
-    # if the percentage of genes above the coverage threshold is greater than 90%, then we can call the lineage
-    percentage_limit = 0.9
-    
+ 
     with open(self.input_json) as json_fh:
       input_json = json.load(json_fh)
       
