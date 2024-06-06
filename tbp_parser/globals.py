@@ -212,8 +212,8 @@ Activated by the --add_cs_lims flag
 global ANTIMICROBIAL_CODE_TO_GENES_CS
 ANTIMICROBIAL_CODE_TO_GENES_CS = {
   "M_DST_P01_CS": {
-  "ald": "M_DST_P02_ALD",
-  "alr": "M_DST_PO3_ALR"
+  "ald": "M_DST_P02_ald",
+  "alr": "M_DST_PO3_alr"
   }
 }
 
