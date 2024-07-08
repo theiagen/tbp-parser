@@ -36,16 +36,16 @@ Again, please use tbp-parser at your own risk and be sure to perform extensive v
 We highly recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.4.4.8
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.4.4.9
 ```
 
 The entrypoint for this Docker image is the tbp-parser help message. To run this container interactively, use the following command:
 
 ```markdown
-docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.4.4.8
+docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.4.4.9
 # Once inside the container interactively, you can run the tbp-parser tool
 python3 /tbp-parser/tbp_parser/tbp_parser.py -v
-# v1.4.4.8
+# v1.4.4.9
 ```
 
 ### Locally with Python

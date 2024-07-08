@@ -23,6 +23,7 @@ class Parser:
     self.output_prefix = options.output_prefix
     self.coverage_regions = options.coverage_regions
     self.tngs_expert_regions = options.tngs_expert_regions
+    self.add_cs_lims = options.add_cs_lims
     globals.MIN_DEPTH = options.min_depth
     globals.COVERAGE_THRESHOLD = options.min_percent_coverage
     globals.SEQUENCING_METHOD = options.sequencing_method
@@ -58,6 +59,12 @@ class Parser:
       self.logger.debug("PARSER:Setting the GENES_FOR_LIMS list to include all WGS genes")
       globals.GENES_FOR_LIMS = globals.GENES_FOR_LIMS_WGS
     
+    if self.add_cs_lims:
+      self.logger.info("PARSER:Adding cycloserine (CS) fields to the LIMS report")
+      globals.GENES_FOR_LIMS.extend(globals.GENES_FOR_LIMS_CS)
+      globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME.update(globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS) 
+      globals.ANTIMICROBIAL_CODE_TO_GENES.update(globals.ANTIMICROBIAL_CODE_TO_GENES_CS)
+      
     if self.verbose:
       self.logger.setLevel(logging.INFO)
       self.logger.info("PARSER:Verbose mode enabled")

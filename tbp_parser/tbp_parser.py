@@ -38,6 +38,10 @@ def main():
   general_arguments.add_argument("-o", "--output_prefix", 
                       help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b")
   
+  lims_arguments = parser.add_argument_group("LIMS arguments", "options that are used to customize the LIMS report")
+  lims_arguments.add_argument("--add_cs_lims",
+                              help="adds cycloserine (CS) fields to the LIMS report", action="store_true", default=False)
+  
   tngs_arguments = parser.add_argument_group("tNGS-specific arguments", "options that are primarily used for tNGS data\n(all frequency arguments are compatible with WGS data)")
   tngs_arguments.add_argument("--tngs",
                       help="\nindicates that the input data was generated using Deeplex + CDPH modified protocol\nTurns on tNGS-specific global parameters", action="store_true", default=False)
