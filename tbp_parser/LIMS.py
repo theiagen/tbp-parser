@@ -347,8 +347,12 @@ class LIMS:
       drug_name = globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
 
       # get the MDL interpretations for all genes **FOR THE LIMS REPORT** associated with this drug             
-      potential_mdl_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["tbprofiler_gene_name"].isin(gene_dictionary.keys())]["mdl_interpretation"]
+      potential_mdl_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["tbprofiler_gene_name"].isin(gene_dictionary.keys())]
       
+      # remove any interpretations with failed quality warnings
+      potential_mdl_resistances = potential_mdl_resistances.loc[~potential_mdl_resistances["warning"].str.contains("Failed quality in the mutation position")]
+      potential_mdl_resistances = potential_mdl_resistances["mdl_interpretation"].tolist()
+
       # initalize list of genes responsible for the max resistance
       responsible_gene = set()
       
