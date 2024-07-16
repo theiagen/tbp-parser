@@ -236,6 +236,11 @@ class LIMS:
                   self.logger.debug("LIMS:This gene ({})is not in the coverage dictionary".format(gene))
                
               self.logger.debug("LIMS:Since this MDL interpretation changed, we are now potentially recalculating max_mdl_resistance (currently {})".format(max_mdl_resistance[0]))
+              
+              if (len(all_responsible_mdl_interpretations) == 0):
+                self.logger.debug("LIMS:There are no more potential MDL interpretations; exiting loop")
+                break
+              
               if (max([globals.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set]) != globals.RESISTANCE_RANKING[max_mdl_resistance[0]]) and gene in responsible_gene:
                                 
                 max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set])]
