@@ -29,7 +29,18 @@ You may notice there are many releases; tbp-parser is in active development and 
 - **v1.5.x** - major changes to code in that it expects results from TB-Profiler v6.2.0+; no longer backwards compatible and really should've been a v2 release but it's too late now
   - code changes for v1.5x are available on the `who-v2` branch
 
-Again, please use tbp-parser at your own risk and be sure to perform extensive validation before using this tool in a clinical setting.
+For a more exhaustive list, please visit [this Notion page](https://www.notion.so/theiagen/tbp-parser-b02bef0cbc814b129875d861698c80a2#77ba670343124f2c874e6c883e85ae28)
+
+The California Department of Public Health has clinically validated the following versions:
+
+- **v1.2.2 for WGS**, and
+- **v1.4.4.8 for tNGS**
+
+If you are running tbp-parser as part of the TheiaProk pipeline(s) with Terra, the following branches are recommended:
+
+- v1.2.2 - smw-tb-2024-01-16-dev
+- v1.4.4.8 - smw-tb-2024-05-03-dev
+- v1.5.x+ - smw-tb-2024-05-03-**who2**-dev
 
 ## Installation
 
