@@ -36,6 +36,8 @@ The California Department of Public Health has clinically validated the followin
 - **v1.2.2 for WGS**, and
 - **v1.4.4.8 for tNGS**
 
+Interpretation documents for v1.4.4.8 and v1.2.3 (very similar to v1.2.2; but implements a threshold for determining lineage for the LIMS report) are available.
+
 If you are running tbp-parser as part of the TheiaProk pipeline(s) with Terra, the following branches are recommended:
 
 - v1.2.2 - smw-tb-2024-01-16-dev
