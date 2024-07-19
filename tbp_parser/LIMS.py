@@ -366,7 +366,7 @@ class LIMS:
         max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_mdl_resistances])]
         responsible_gene = set(globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["mdl_interpretation"] == max_mdl_resistance[0]]["tbprofiler_gene_name"].tolist())
         # keep only LIMS genes
-        responsible_gene = [gene for gene in responsible_gene if gene in gene_dictionary.keys()]
+        responsible_gene = responsible_gene.intersection(set(gene_dictionary.keys()))
         self.logger.debug("LIMS:The gene(s) responsible for the max MDL resistance for this antimicrobial ({}) is/are {}".format(drug_name, responsible_gene))
       except:
         max_mdl_resistance = ["NA"]
