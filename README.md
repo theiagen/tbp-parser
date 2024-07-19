@@ -51,16 +51,16 @@ If you are running tbp-parser as part of the TheiaProk pipeline(s) with Terra, t
 We highly recommend using the following Docker image to run tbp-parser:
 
 ```markdown
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.4.5
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.6.0
 ```
 
 The entrypoint for this Docker image is the tbp-parser help message. To run this container interactively, use the following command:
 
 ```markdown
-docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.4.5
+docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.6.0
 # Once inside the container interactively, you can run the tbp-parser tool
 python3 /tbp-parser/tbp_parser/tbp_parser.py -v
-# v1.4.5
+# v1.6.0
 ```
 
 ### Locally with Python
