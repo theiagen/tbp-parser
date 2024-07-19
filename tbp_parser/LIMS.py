@@ -241,6 +241,10 @@ class LIMS:
                
               self.logger.debug("LIMS:Since this MDL interpretation changed, we are now potentially recalculating max_mdl_resistance (currently {})".format(max_mdl_resistance[0]))
               
+              if (len(all_responsible_mdl_interpretations) == 0):
+                self.logger.debug("LIMS:There are no more potential MDL interpretations; exiting loop")
+                break
+              
               if (max([globals.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set]) != globals.RESISTANCE_RANKING[max_mdl_resistance[0]]) and gene in responsible_gene:
                 max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set])]
                 self.logger.debug("LIMS:The maximum needed to be reevaluated; the potential new max_mdl_resistance is now {}".format(max_mdl_resistance[0]))
@@ -353,7 +357,11 @@ class LIMS:
     for antimicrobial_code, gene_dictionary in globals.ANTIMICROBIAL_CODE_TO_GENES.items():
       drug_name = globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
       # get the MDL interpretations for all genes **FOR THE LIMS REPORT** associated with this drug             
-      potential_mdl_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["tbprofiler_gene_name"].isin(gene_dictionary.keys())]["mdl_interpretation"]
+      potential_mdl_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["tbprofiler_gene_name"].isin(gene_dictionary.keys())]
+
+      # remove any interpretations with failed quality warnings
+      potential_mdl_resistances = potential_mdl_resistances.loc[~potential_mdl_resistances["warning"].str.contains("Failed quality in the mutation position")]
+      potential_mdl_resistances = potential_mdl_resistances["mdl_interpretation"].tolist()
       
       # initalize list of genes responsible for the max resistance
       responsible_gene = set()
