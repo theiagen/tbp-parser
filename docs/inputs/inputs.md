@@ -72,6 +72,7 @@ These options are primarily used for tNGS data, although all frequency arguments
 ### Logging Arguments
 
 These options change the verbosity of the `stdout` log
+
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
 | --verbose | Increases the output verbosity to describe which stage of the analysis is currently running | false |
