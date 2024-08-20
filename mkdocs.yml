@@ -1,0 +1,62 @@
+site_name: tbp-parser
+site_author: Sage Wright
+site_description: A TBProfiler output parser
+
+repo_url: https://github.com/theiagen/tbp-parser
+
+theme: 
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: default
+      toggle: 
+        icon: material/toggle-switch-off-outline
+        title: Switch to Dark Mode
+      primary: teal
+      accent: purple
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        title: Switch to Light Mode
+      primary: teal
+      accent: indigo
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/theiagen
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/theiagen
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/theiagen
+
+markdown_extensions: 
+  - admonition
+  - footnotes
+  - attr_list
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.mark
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+
+copyright: |
+  &copy; 2024 <a href="https://github.com/theiagen" target="_blank" rel="noopener">Theiagen Genomics</a>
