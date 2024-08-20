@@ -6,30 +6,92 @@ repo_url: https://github.com/theiagen/tbp-parser
 
 theme: 
   name: material
+  logo: assets/Theiagen-Logo-White.png
   features:
-    - navigation.tabs
-    - navigation.sections
-    - toc.integrate
-    - navigation.top
-    - search.suggest
-    - search.highlight
-    - content.tabs.link
-    - content.code.annotation
+    - content.code.annotate
     - content.code.copy
+    - content.tabs.link
+    - content.tooltips
+    - navigation.expand
+    - navigation.instant
+    - navigation.instant.preview
+    - navigation.path
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - toc.follow
+    - toc.integrate
   language: en
   palette:
     - scheme: default
       toggle: 
-        icon: material/toggle-switch-off-outline
+        icon: material/weather-night
         title: Switch to Dark Mode
       primary: teal
-      accent: purple
+      accent: light blue
     - scheme: slate
       toggle:
-        icon: material/toggle-switch
+        icon: material/white-balance-sunny
         title: Switch to Light Mode
       primary: teal
-      accent: indigo
+      accent: deep purple
+
+nav:
+  - Home: index.md
+  - Getting Started: usage.md
+  - Inputs: 
+      - inputs/inputs.md
+      - TheiaProk Inputs on Terra: inputs/theiaprok.md
+  - Outputs:
+      - outputs/index.md
+      - Laboratorian report: outputs/laboratorian.md
+      - Looker report: outputs/looker.md
+      - LIMS report: outputs/lims.md
+      - Coverage report: outputs/coverage.md
+      - TheiaProk Outputs on Terra: outputs/theiaprok.md
+  - Versioning: 
+     - versioning/index.md
+     - Brief Description of Versions: versioning/brief.md
+     - Exhaustive List of Versions: versioning/exhaustive.md
+  - Algorithm:
+      - algorithm/index.md
+      - Technical Code Breakdown: algorithm/technical.md
+      - Interpretation Document: algorithm/interpretation.md
+
+markdown_extensions: 
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: true
+
+plugins:
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: iso_date
+  - search
+
+extra_javascript:
+  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+  - javascripts/tablesort.js
 
 extra:
   social:
@@ -39,24 +101,8 @@ extra:
       link: https://twitter.com/theiagen
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/company/theiagen
-
-markdown_extensions: 
-  - admonition
-  - footnotes
-  - attr_list
-  - pymdownx.highlight:
-      anchor_linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.arithmatex:
-      generic: true
-  - pymdownx.details
-  - pymdownx.superfences
-  - pymdownx.mark
-  - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
-
+  version:
+    provider: mike
 
 copyright: |
-  &copy; 2024 <a href="https://github.com/theiagen" target="_blank" rel="noopener">Theiagen Genomics</a>
+  &copy; 2024 <a href="https://www.theiagen.com" target="_blank" rel="noopener">Theiagen Genomics</a>
