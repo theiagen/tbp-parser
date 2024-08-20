@@ -2,7 +2,7 @@
 title: TheiaProk Inputs on Terra
 ---
 
-When running `tbp-parser` as part of the TheiaProk workflow series ([find documentation for TheiaProk here](https://theiagen.notion.site/Theiagen-Public-Health-Resources-a4bd134b0c5c4fe39870e21029a30566?pvs=4)) on [Terra.bio](https://terra.bio), an optional input must be activated to instruct TheiaProk to run `tbp-parser`. 
+When running `tbp-parser` as part of the TheiaProk workflow series ([find documentation for TheiaProk here](https://theiagen.notion.site/Theiagen-Public-Health-Resources-a4bd134b0c5c4fe39870e21029a30566?pvs=4)) on [Terra.bio](https://terra.bio), an optional input must be activated to instruct TheiaProk to run `tbp-parser`.
 
 `tbp-parser` is not on by default due to the nature of this tool and its outputs.
 
@@ -35,3 +35,5 @@ The following optional inputs are also available for user modification on Terra:
 | `merlin_magic` | `tbp_parser_debug` | Boolean | false | Turn on debug mode for tbp-parser |
 | `merlin_magic` | `tbp_parser_add_cs_lims` | Boolean | false | Adds Cycloserine (CS) fields to the LIMS report |
 | `merlin_magic` | `tbp_parser_docker_image` | String | "us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.6.0" | The Docker image to use when running tbp-parser |
+
+[Find the outputs for `tbp-parser` in TheiaProk on Terra here](../outputs/theiaprok.md).

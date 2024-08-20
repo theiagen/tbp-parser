@@ -48,8 +48,8 @@ nav:
   - Outputs:
       - outputs/index.md
       - Laboratorian report: outputs/laboratorian.md
-      - Looker report: outputs/looker.md
       - LIMS report: outputs/lims.md
+      - Looker report: outputs/looker.md
       - Coverage report: outputs/coverage.md
       - TheiaProk Outputs on Terra: outputs/theiaprok.md
   - Versioning: 
