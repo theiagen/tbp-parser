@@ -55,7 +55,7 @@ Please note that the BAM file must have the accompanying BAI file in the same di
 
 ### Help Message
 
-The help message printed by `tbp-parser` is quite extensive, but has a lot of useful information regarding the input parameters. Here is the entire message in full. You can find more information regarding these inputs in the [Inputs](inputs.md) section.
+The help message printed by `tbp-parser` is quite extensive, but has a lot of useful information regarding the input parameters. Here is the entire message in full. You can find more information regarding these inputs in the [Inputs](inputs/inputs.md) section.
 
 ``` text
 usage: python3 /tbp-parser/tbp_parser/tbp_parser.py [-h|-v] <input_json> <input_bam> [<args>]

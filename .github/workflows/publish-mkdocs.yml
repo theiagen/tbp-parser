@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - docs-development
 permissions: 
   contents: write
 jobs:
@@ -10,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
           python-version: 3.x
@@ -17,5 +20,5 @@ jobs:
         with:
           key: ${{ github.ref }}
           path: .cache
-      - run: pip install mkdocs-material
+      - run: pip install mkdocs-material mkdocs-git-revision-date-localized-plugin
       - run: mkdocs gh-deploy --force
