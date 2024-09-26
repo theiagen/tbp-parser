@@ -15,7 +15,7 @@ The JSON file contains information about the mutations detected in the sample: t
 | input_json | The path to the JSON file that was produced by `TB-Profiler` |
 | input_bam  | The path to the BAM file that was produced by `TB-Profiler` |
 
-!!! info
+!!! dna "Remember the `bam.bai` file"
     The BAM file must have the accompanying BAI file in the same directory. It must also be named exactly the same as the BAM file but ending with a `.bai` suffix.
 
 ## Optional Inputs

@@ -2,11 +2,11 @@
 title: TheiaProk Inputs on Terra
 ---
 
-When running `tbp-parser` as part of the TheiaProk workflow series ([find documentation for TheiaProk here](https://theiagen.notion.site/Theiagen-Public-Health-Resources-a4bd134b0c5c4fe39870e21029a30566?pvs=4)) on [Terra.bio](https://terra.bio), an optional input must be activated to instruct TheiaProk to run `tbp-parser`.
+When running `tbp-parser` as part of the TheiaProk workflow series ([find documentation for TheiaProk here](https://theiagen.github.io/public_health_bioinformatics/v2.2.0/workflows/genomic_characterization/theiaprok/)) on [Terra.bio](https://terra.bio), an optional input must be activated to instruct TheiaProk to run `tbp-parser`.
 
 `tbp-parser` is not on by default due to the nature of this tool and its outputs.
 
-!!! info annotate "TheiaProk Version"
+!!! dna annotate "TheiaProk Version"
     This information only corresponds to PHB v2.2.0. These inputs and outputs may not be applicable to other versions of TheiaProk.
 
 *[PHB]: Public Health Bioinformatics is the GitHub repository that contains the TheiaProk workflows.
