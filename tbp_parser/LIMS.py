@@ -65,7 +65,7 @@ class LIMS:
             lineage.add("DNA of Mycobacterium bovis detected")
           else:
             self.logger.debug("LIMS:p.His57Asp not detected in pncA, lineage is likely M. tuberculosis")
-            lineage.add("DNA of Mycobacterium tuberculosis complex detected, not M. bovis")
+            lineage.add("DNA of Mycobacterium tuberculosis complex detected (not M. bovis)")
           
         else:  
           self.logger.debug("LIMS:The sequencing method is WGS; now checking the TBProfiler lineage calls")
