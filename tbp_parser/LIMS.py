@@ -258,7 +258,7 @@ class LIMS:
                 self.logger.debug("LIMS:The maximum did not need to be reevaluated; the max_mdl_resistance is still {}".format(max_mdl_resistance[0]))
           # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
           elif ((mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") 
-                or (gene == "rpoB" and (len(position_aa) > 1 and (any([x in globals.RRDR_RANGE for x in position_aa]) or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[gene]])) or (globals.SPECIAL_POSITIONS[gene][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[gene][1])))):
+                or (gene == "rpoB" and globals.is_within_range(position_aa, globals.SPECIAL_POSITIONS[gene]))):
               substitution = "{} ({})".format(mutation, aa_mutation)
         
               # the following if only captures synonymous mutations if rpoB RRDR mutations
@@ -310,6 +310,7 @@ class LIMS:
               
         # make sure that there is a mutation associated with this gene-drug combo
         if len(nt_mutations_per_gene) > 0:
+          self.logger.debug("mdl_interpretations: {}".format(mdl_interpretations))
           maximum_ranking = max([globals.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])
           # see the globals.RESISTANCE_RANKING dictionary for the ranking of each MDL interpretation
           # count up the number of non-S mutations; non-S mutations have a ranking > 2

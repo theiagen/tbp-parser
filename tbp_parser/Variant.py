@@ -139,17 +139,13 @@ class Variant:
       self.logger.debug("VAR:The gene is {}, now checking if the position requires special consideration under rule 1.2".format(self.gene_name))
      
       # check if position within promoter regions
-      if self.gene_name in globals.PROMOTER_REGIONS.keys():
-        if ((len(position_nt) > 1 and 
-             (any([x in range(globals.PROMOTER_REGIONS[self.gene_name][0], globals.PROMOTER_REGIONS[self.gene_name][1]) for x in position_nt]) 
-              or any([x in range(position_nt[0], position_nt[1]) for x in globals.PROMOTER_REGIONS[self.gene_name]]))) 
-            or (globals.PROMOTER_REGIONS[self.gene_name][0] <= position_nt[0] <= globals.PROMOTER_REGIONS[self.gene_name][1])):
+      if self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
           self.logger.debug("VAR:The position is within the promoter region; interpretation is 'U'")
-          return "Urule1.2"
+          return "Urule6"
       
       # otherwise, check if it is an upstream gene variant
       if "upstream_gene_variant" in self.type: 
-        self.logger.debug("VAR:The position is an upstream gene variant; interpretation is 'S/U'")
+        self.logger.debug("VAR:The position is an upstream gene variant and NOT in the proximal promoter regions; interpretation is 'S/U'")
         return "Srule1.2" if interpretation_destination == "mdl" else "Urule1.2"
       
       # otherwise, check if it is not in the ORF
@@ -166,28 +162,23 @@ class Variant:
     elif self.gene_name == "rrl":
       self.logger.debug("VAR:The gene is rrl, now checking if the position requires special consideration")
       
-      # there is surely a better way to do this, but this works. essentially, I'm checking if the position(s) of the rrl mutation are within the special position range
-      if ((len(position_nt) > 1 and 
-           (any([x in range(globals.SPECIAL_POSITIONS[self.gene_name][0][0], globals.SPECIAL_POSITIONS[self.gene_name][0][1]) for x in position_nt]) 
-            or any([x in range(globals.SPECIAL_POSITIONS[self.gene_name][1][0], globals.SPECIAL_POSITIONS[self.gene_name][1][1]) for x in position_nt]) 
-            or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene_name][0]]) 
-            or any([x in range(position_nt[0], position_nt[1]) for x in globals.SPECIAL_POSITIONS[self.gene_name][1]]))) 
-          or ((globals.SPECIAL_POSITIONS[self.gene_name][0][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene_name][0][1]) 
-              or (globals.SPECIAL_POSITIONS[self.gene_name][1][0] <= position_nt[0] <= globals.SPECIAL_POSITIONS[self.gene_name][1][1]))):
-        self.logger.debug("VAR:The position is within the special positions; interpretation is 'U'")
+      if globals.is_within_range(position_nt, globals.SPECIAL_POSITIONS[self.gene_name]):
         return "Urule1.2"
       
+      # check if position within promoter regions
+      if self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
+          self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
+          return "Urule6"
+      
       else:
-        self.logger.debug("VAR:The position is not within the special positions; interpretation is 'S/U'")
+        self.logger.debug("VAR:The position is not within the special positions or the proximal promoter region; interpretation is 'S/U'")   
         return "Srule1.2" if interpretation_destination == "mdl" else "Urule1.2"
 
     elif self.gene_name in ["katG", "pncA", "ethA", "gid"]: 
       self.logger.debug("VAR:The gene is {}, now checking if the mutation type requires special consideration under rule 2.2".format(self.gene_name))
 
-      if ((any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) 
-           or self.nucleotide_change.endswith("*")) 
-          or (any(indel_or_stop in self.protein_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) 
-              or self.protein_change.endswith("*"))):
+      if ((any(indel_or_stop in self.nucleotide_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.nucleotide_change.endswith("*")) 
+          or (any(indel_or_stop in self.protein_change for indel_or_stop in ["del", "ins", "fs", "delins", "_"]) or self.protein_change.endswith("*"))):
         if any([int(position) > -30 for position in position_nt]): 
           self.logger.debug("VAR:The mutation type is an indel, stop, or frameshift codon and within 30 nt of the start codon; interpretation is 'R'")
           return "Rrule2.2.1"
@@ -197,11 +188,17 @@ class Variant:
       if (self.type == "synonymous_variant"):
         self.logger.debug("VAR:The mutation type is a synonymous variant; interpretation is 'S'")
         return "Srule2.2.1"
+      
+      # check if position within promoter regions
+      if self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
+          self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
+          return "Urule6"
+        
       elif ("upstream_gene_variant" in self.type):
-        self.logger.debug("VAR:The mutation type is a NONsynonymous variant, and is an upstream gene variant; interpretation is 'S/U'")
+        self.logger.debug("VAR:The mutation type is a NONsynonymous variant, not in the proximal promoter region, and is an upstream gene variant; interpretation is 'S/U'")     
         return "Srule2.2.1" if interpretation_destination == "mdl" else "Urule2.2.1"
       else:
-        self.logger.debug("VAR:The mutation type IS a NONsynonymous variant, and is NOT an upstream gene variant; interpretation is 'U'")
+        self.logger.debug("VAR:The mutation type IS a NONsynonymous variant, not in the proximal promoter region, and is NOT an upstream gene variant; interpretation is 'U'")
         return "Urule2.2.1"
 
     # rules 2.2.2.1 and 3.2.2 & 3.2.3
@@ -210,17 +207,7 @@ class Variant:
       self.logger.debug("VAR:length of aa: {}".format(len(position_aa)))
       self.logger.debug("VAR:SEPCIAL POSITIONS: {}".format(globals.SPECIAL_POSITIONS[self.gene_name]))
       
-      # explanation of following giant conditional:
-      # RRDR belongs to rpoB, QRDR belongs to gyrA and gyrB
-      # if there are more than 2 AA positions, it's likely a deletion or frameshift thing. 
-      #  if that is the case, we want to check to see if any of those positions are within (R/Q)RDR *or* if (R/Q)RDR falls within those positions
-      #  to see if within (R/Q)RDR, we check if any of the AA positions are within the (R/Q)RDR range
-      #  to see if (R/Q)RDR falls within, we check (R/Q)RDR start/end positions are within the AA position range
-      # otherwise, check if the single AA position is within (R/Q)RDR positions
-      if ((len(position_aa) > 1 and 
-           (any([x in range(globals.SPECIAL_POSITIONS[self.gene_name][0], globals.SPECIAL_POSITIONS[self.gene_name][1]) for x in position_aa]) 
-            or any([x in range(position_aa[0], position_aa[1]) for x in globals.SPECIAL_POSITIONS[self.gene_name]]))) 
-          or ((globals.SPECIAL_POSITIONS[self.gene_name][0] <= position_aa[0] <= globals.SPECIAL_POSITIONS[self.gene_name][1]))):
+      if globals.is_within_range(position_aa, globals.SPECIAL_POSITIONS[self.gene_name]):
         self.logger.debug("VAR:The position is within the special positions; interpretation is 'R' if rpoB (or 'U' if not) and nonsynonymous, else 'S'")
         
         if self.gene_name == "rpoB":
@@ -240,14 +227,20 @@ class Variant:
       elif (self.type == "synonymous_variant"):
         self.logger.debug("VAR:The position is not within the special positions and is synonymous; interpretation is 'S'")
         return "Srule2.2.2.2" if self.gene_name == "rpoB" else "Srule3.2.4"
+            
+      if self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
+          self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
+          return "Urule6"
+        
       elif ("upstream_gene_variant" in self.type):
-        self.logger.debug("VAR:The position is not within the special positions, is nonsynomyous but is an upstream gene variant; interpretation is 'S/U'")
+        self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynomyous but is an upstream gene variant; interpretation is 'S/U'")
+        
         if self.gene_name == "rpoB":
           return "Srule2.2.2.2" if interpretation_destination == "mdl" else "Urule2.2.2.2"
         else:
           return "Srule3.2.4" if interpretation_destination == "mdl" else "Urule3.2.4"
       else:
-        self.logger.debug("VAR:The position is not within the special positions, is nonsynonymous and is NOT an upstream gene variant; interpretation is 'U'")
+        self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynonymous and is NOT an upstream gene variant; interpretation is 'U'")
         return "Urule2.2.2.2" if self.gene_name == "rpoB" else "Urule3.2.4"
 
     elif self.gene_name not in globals.GENE_LIST:
@@ -259,19 +252,27 @@ class Variant:
         if any(map(lambda position: position in position_nt, globals.SPECIAL_POSITIONS[self.gene_name])):
           self.logger.debug("VAR:The position is within the special positions; interpretation is 'U'")
           return "Urule3.2.1"
+        
+        elif self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
+            self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
+            return "Urule6"
+        
         else:
-          self.logger.debug("VAR:The position is not within the special positions; interpretation is 'S/U'")
+          self.logger.debug("VAR:The position is not within the special positions, and not in the proximal promoter region,; interpretation is 'S/U'")
           return "Srule3.2.1" if interpretation_destination == "mdl" else "Urule3.2.1"
       
       # rule 3.2.4: all remaining scenarios not covered above
       elif (self.type == "synonymous_variant"):
         self.logger.debug("VAR:The mutation is synonymous; interpretation is 'S'")
         return "Srule3.2.4"
-      elif ("upstream_gene_variant"  in self.type):
-        self.logger.debug("VAR:The mutation is a nonsynonymous variant but is an upstream gene variant; interpretation is 'S/U'")
+      elif self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
+          self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
+          return "Urule6"
+      elif ("upstream_gene_variant" in self.type):
+        self.logger.debug("VAR:The mutation is a nonsynonymous variant and not in the proximal promoter region, but is an upstream gene variant; interpretation is 'S/U'")
         return "Srule3.2.4" if interpretation_destination == "mdl" else "Urule3.2.4"
       else:
-        self.logger.debug("VAR:The mutation is a nonsynonymous variant or is an upstream gene variant; interpretation is 'U'")
+        self.logger.debug("VAR:The mutation is a nonsynonymous variant, not in the proximal promoter region, and is NOT an upstream gene variant; interpretation is 'U'")
         return "Urule3.2.4"
       
     return ""

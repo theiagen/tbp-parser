@@ -13,6 +13,39 @@ def get_position(mutation):
     return [int(x) for x in match]
   return [0]
 
+def is_within_range(position, range_positions):
+  """
+  This function determines if a position (aa or nucleotide) are within a particular range
+  position is a list of either one or two items
+  range_positions is a list of the start and end regions of the range. 
+    occasionally, range_positions can be a list of lists, in which case the function will check both ranges and return the result
+  """
+  print("function")
+  print("position", position)
+  print("range_positions", range_positions)
+  if isinstance(range_positions[0], list):
+    # check if the value is a list of lists; if so, check both lists
+    print("is list")
+    return is_within_range(position, range_positions[0]) or is_within_range(position, range_positions[1])
+
+  if len(position) > 1:
+    print("mulitple positions")
+    # if the value is a list of two items, check if the position is within the range
+    if any([x in range(range_positions[0], range_positions[1]) for x in position]):
+      return True
+    if any([x in range(position[0], position[1]) for x in range_positions]):
+      return True
+ 
+  # the position is a single item
+  elif range_positions[0] <= position[0] <= range_positions[1]:
+    print('single position')
+    return True
+  
+  print('not in positions')
+  return False
+
+
+
 """
 A dictionary to turn TBProfiler WHO annotations into
 their corresponding CDPH Looker or MDL interpretations
@@ -559,14 +592,82 @@ OPERATOR = ""
           
 """
 A dictionary that matches certain genes to their promoter regions.
-If a mutation is within these promoter regions, it needs special consideration.
+If a mutation is within these promoter regions, it needs special consideration; these are nucleotide positions
 """
 global PROMOTER_REGIONS
 PROMOTER_REGIONS = {
-  "atpE": [-48, -1],
-  "pepQ": [-33, -1],
-  "rplC": [-18, -1],
-  "Rv0678": [-84, -1]
+  "atpE": [-48, -1], # CDPH range
+  "pepQ": [-33, -1], # CDPH range
+  "rplC": [-18, -1], # CDPH range
+  "Rv0678": [-84, -1], # CDPH range
+}
+
+"""
+A dictionary that matches the promoter regions from the WHO v2 catalogue.
+If a mutation is within these regions, it needs special consideration; these are nucleotide positions
+"""
+global WHOV2_PROMOTER_REGIONS
+WHOV2_PROMOTER_REGIONS = {
+  "aftB": [-129, -1],
+  "ahpC": [-93, -1],
+  "atpE": [-51, -1],
+  "bacA": [-81, -1],
+  "ccsA": [-191, -1],
+  "clpC1": [-106, -1],
+  "ddn": [-51, -1],
+  "dnaA": [-314, -1],
+  "eis": [-84, -1],
+  "embA": [-86, -1],
+  "embC": [-1982, -1],
+  "embR": [-103, -1],
+  "ethA": [-51, -1],
+  "ethR": [-26, -1],
+  "fbiA": [-138, -1],
+  "fbiC": [-127, -1],
+  "fgd1": [-51, -1],
+  "gid": [-79, -1],
+  "glpK": [-52, -1],
+  "gyrA": [-35, -1],
+  "gyrB": [-108, -1],
+  "hadA": [-51, -1],
+  "inhA": [-813, -1],
+  "katG": [-532, -1],
+  "mmpS5": [-85, -1],
+  "mshA": [-669, -1],
+  "mtrA": [-376, -1],
+  "mtrB": [-50, -1],
+  "ndh": [-96, -1],
+  "nusG": [-201, -1],
+  "panD": [[-51, -1], [-1949, -1838]],
+  "pepQ": [-51, -1],
+  "pncA": [-51, -1],
+  "PPE35": [-122, -1],
+  "rplC": [[-51, -1], [-503, -323]],
+  "rpoA": [-536, -1],
+  "rpoB": [-263, -1],
+  "rpoC": [-45, -1],
+  "rpsA": [-100, -1],
+  "rpsL": [-234, -1],
+  "rrl": [-51, -1],
+  "rrs": [-151, -1],
+  "Rv0010c": [-156, -1],
+  "Rv0565c": [-78, -1],
+  "Rv1129c": [-51, -1],
+  "Rv1258c": [-58, -1],
+  "Rv1979c": [-470, -1],
+  "Rv2477c": [-88, -1],
+  "Rv2680": [-153, -1],
+  "Rv2681": [-2, -1],
+  "Rv2752c": [[-51, -1], [-984, -934]],
+  "Rv2983": [-51, -1],
+  "Rv3083": [-51, -1],
+  "Rv3236c": [[-51, -1], [-538, -488]],
+  "sigE": [-51, -1],
+  "tlyA": [[-51, -1], [-236, -185]],
+  "tsnR": [-51, -1],
+  "ubiA": [-51, -1],
+  "whiB6": [-126, -1],
+  "whiB7": [-404, -1],
 }
 
 """
@@ -606,12 +707,6 @@ global RPOB449_FREQUENCY
 RPOB449_FREQUENCY = 0.1
 
 """
-The range of rpoB special positions
-"""
-global RRDR_RANGE
-RRDR_RANGE = range(426, 452)
-
-"""
 The minimum frequency for a mutation to be considered for rrl
 """
 global RRL_FREQUENCY
@@ -647,7 +742,8 @@ RULE_TO_RATIONALE = {
   "rule3.2.1": "Expert rule 3.2.1. rrs",
   "rule3.2.2": "Expert rule 3.2.3. gyrA QRDR",
   "rule3.2.3": "Expert rule 3.2.3. gyrB QRDR",
-  "rule3.2.4": "No WHO annotation or expert rule"
+  "rule3.2.4": "No WHO annotation or expert rule",
+  "rule6": "Mutation in proximal promoter region"
 }
 
 """
