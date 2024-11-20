@@ -593,6 +593,7 @@ OPERATOR = ""
 """
 A dictionary that matches certain genes to their promoter regions.
 If a mutation is within these promoter regions, it needs special consideration; these are nucleotide positions
+DEPRECATED as of v2.0.1
 """
 global PROMOTER_REGIONS
 PROMOTER_REGIONS = {
