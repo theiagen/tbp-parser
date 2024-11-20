@@ -39,10 +39,10 @@ class LIMS:
       number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
       percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
       # if the percentage of genes above the coverage threshold is greater than 90%, then we can call the lineage
-      percentage_limit = 0.9
-      
+      percentage_limit = 0.9      
+    
     self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
- 
+
     with open(self.input_json) as json_fh:
       input_json = json.load(json_fh)
       
@@ -332,7 +332,7 @@ class LIMS:
         if (DF_LIMS[gene_code][0] == "No sequence" or "Insufficient Coverage" in mdl_interpretations) and max_mdl_resistance[0] != "R" and gene not in globals.GENES_WITH_DELETIONS:
           self.logger.debug("LIMS:This gene ({}) has insufficient coverage without a valid deletion and no other mutations associated with this antimicrobial ({}) are 'R'; changing antimicrobial output to 'Pending Retest'".format(gene, antimicrobial_name))
           DF_LIMS[antimicrobial_code] = "Pending Retest"    
-    
+
     self.logger.info("LIMS:Finished applying rules to mutations associated with {}, exiting function".format(globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
     return DF_LIMS
   
@@ -359,11 +359,11 @@ class LIMS:
       drug_name = globals.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
       # get the MDL interpretations for all genes **FOR THE LIMS REPORT** associated with this drug             
       potential_mdl_resistances = globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["tbprofiler_gene_name"].isin(gene_dictionary.keys())]
-
+      
       # remove any interpretations with failed quality warnings
       potential_mdl_resistances = potential_mdl_resistances.loc[~potential_mdl_resistances["warning"].str.contains("Failed quality in the mutation position")]
       potential_mdl_resistances = potential_mdl_resistances["mdl_interpretation"].tolist()
-      
+
       # initalize list of genes responsible for the max resistance
       responsible_gene = set()
       
@@ -371,6 +371,8 @@ class LIMS:
       try:
         max_mdl_resistance = [annotation for annotation, rank in globals.RESISTANCE_RANKING.items() if rank == max([globals.RESISTANCE_RANKING[interpretation] for interpretation in potential_mdl_resistances])]
         responsible_gene = set(globals.DF_LABORATORIAN[globals.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals.DF_LABORATORIAN["mdl_interpretation"] == max_mdl_resistance[0]]["tbprofiler_gene_name"].tolist())
+
+        # keep only LIMS genes
         responsible_gene = responsible_gene.intersection(set(gene_dictionary.keys()))
         self.logger.debug("LIMS:The gene(s) responsible for the max MDL resistance for this antimicrobial ({}) is/are {}".format(drug_name, responsible_gene))
       except:

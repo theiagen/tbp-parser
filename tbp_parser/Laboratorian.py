@@ -139,7 +139,7 @@ class Laboratorian:
                 "Failed quality in the mutation position" in row.warning and 
                 row.mdl_interpretation == "R"):
               self.logger.debug("LAB:This 'R' mutation cannot be trusted due to failing both QC checks; rewriting interpretation to Insufficient Coverage")
-              
+
               row.mdl_interpretation = "Insufficient Coverage"
               row.looker_interpretation = "Insufficient Coverage"     
               
@@ -150,6 +150,7 @@ class Laboratorian:
                   "del" not in row.tbprofiler_variant_substitution_nt and
                   "Insufficient coverage in locus" in row.warning):
               self.logger.debug("LAB:This mutation is not an 'R' mutation and has bad locus coverage so we are rewriting the interpretation to Insufficient Coverage")
+
               # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
               row.mdl_interpretation = "Insufficient Coverage"
               row.looker_interpretation = "Insufficient Coverage"

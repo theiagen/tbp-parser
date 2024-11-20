@@ -80,7 +80,7 @@ ANNOTATION_TO_INTERPRETATION = {
 
 """
 A dictionary that matches CDPH LIMS antimicrobial codes to the 
-corresponding drug name
+corresponding drug name; used to create the LIMS report
 """
 global ANTIMICROBIAL_CODE_TO_DRUG_NAME
 ANTIMICROBIAL_CODE_TO_DRUG_NAME = {
@@ -111,14 +111,16 @@ ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS = {
 
 """
 The dictionary that matches CDPH LIMS antimicrobial codes to the
-corresponding genes and their corresponding CDPH LIMS codes
+corresponding genes and their corresponding CDPH LIMS codes;
+used to create the LIMS report
 """
 global ANTIMICROBIAL_CODE_TO_GENES
 ANTIMICROBIAL_CODE_TO_GENES = {}
   
 """
 A dictionary that matches CDPH LIMS antimicrobial codes to the
-corresponding genes and their corresponding CDPH LIMS codes for tNGS data
+corresponding genes and their corresponding CDPH LIMS codes for tNGS data;
+used to create the LIMS report
 """
 global ANTIMICROBIAL_CODE_TO_GENES_tNGS
 ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
@@ -175,7 +177,8 @@ ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
 
 """
 A dictionary that matches CDPH LIMS antimicrobial codes to the
-corresponding genes and their corresponding CDPH LIMS codes for WGS data
+corresponding genes and their corresponding CDPH LIMS codes for WGS data;
+used to create the LIMS report
 """
 global ANTIMICROBIAL_CODE_TO_GENES_WGS
 ANTIMICROBIAL_CODE_TO_GENES_WGS = {
@@ -251,7 +254,8 @@ ANTIMICROBIAL_CODE_TO_GENES_CS = {
 }
 
 """
-A dictionary that contains a list of the antimicrobial drug names
+A dictionary that contains a list of the antimicrobial drug names;
+used to create the Looker report
 """
 global ANTIMICROBIAL_DRUG_NAME_LIST
 ANTIMICROBIAL_DRUG_NAME_LIST = [
@@ -264,7 +268,8 @@ ANTIMICROBIAL_DRUG_NAME_LIST = [
 """
 A dictionary that matches the antimicrobial drugs to the
 genes that may confer resistance to them; 
-see also https://github.com/jodyphelan/tbdb/blob/master/tbdb.csv
+see also https://github.com/jodyphelan/tbdb/blob/master/tbdb.csv;
+used to create the Looker report
 """
 global ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME
 ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME = { 
@@ -338,7 +343,8 @@ GENE_LIST_MDL_2_1 = ["ethA", "gid", "katG", "pncA", "rpoB"]
 A dictionary corresponding each gene to the drug they may confer
 resistance to, including the genes in the TBDB watchlist.
 See also: https://github.com/jodyphelan/tbdb/blob/master/tbdb.csv, and
-https://github.com/jodyphelan/tbdb/blob/master/tbdb.watchlist.csv
+https://github.com/jodyphelan/tbdb/blob/master/tbdb.watchlist.csv;
+used to create the Laboratorian report
 """
 global GENE_TO_ANTIMICROBIAL_DRUG_NAME
 GENE_TO_ANTIMICROBIAL_DRUG_NAME = {
@@ -404,7 +410,8 @@ GENE_TO_ANTIMICROBIAL_DRUG_NAME = {
   
 """
 A dictionary that matches each gene to its corresponding locus tag;
-see also: https://github.com/jodyphelan/TBProfiler/blob/master/db/tbdb.bed
+see also: https://github.com/jodyphelan/TBProfiler/blob/master/db/tbdb.bed;
+used to create the Laboratorian report
 """  
 global GENE_TO_LOCUS_TAG
 GENE_TO_LOCUS_TAG = {
@@ -470,7 +477,7 @@ GENE_TO_LOCUS_TAG = {
 
 """
 A dictionary that matches each gene to it's corresponding tier;
-tier information provided by CDPH
+tier information provided by CDPH; used to create the Laboratorian report
 """   
 global GENE_TO_TIER
 GENE_TO_TIER = {
@@ -490,7 +497,8 @@ GENE_TO_TIER = {
 }
 
 """
-The list of genes used to generate the CDPH LIMS report
+The list of genes used to generate the CDPH LIMS report;
+used to create the LIMS report
 """
 global GENES_FOR_LIMS
 GENES_FOR_LIMS = []
@@ -506,7 +514,7 @@ GENES_FOR_LIMS_CS = [
 
 """
 A  list of genes that are to be included in the 
-CDPH LIMS report for tNGS data
+CDPH LIMS report for tNGS data; used to create the LIMS report
 """
 global GENES_FOR_LIMS_tNGS
 GENES_FOR_LIMS_tNGS = [
@@ -517,7 +525,7 @@ GENES_FOR_LIMS_tNGS = [
 
 """
 A list of genes that are to be included in the 
-CDPH LIMS report for WGS data
+CDPH LIMS report for WGS data; used to create the LIMS report
 """
 global GENES_FOR_LIMS_WGS
 GENES_FOR_LIMS_WGS = [

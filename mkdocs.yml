@@ -1,0 +1,108 @@
+site_name: tbp-parser
+site_author: Sage Wright
+site_description: A TBProfiler output parser
+
+repo_url: https://github.com/theiagen/tbp-parser
+
+theme: 
+  name: material
+  logo: assets/Theiagen-Logo-White.png
+  features:
+    - content.code.annotate
+    - content.code.copy
+    - content.tabs.link
+    - content.tooltips
+    - navigation.expand
+    - navigation.instant
+    - navigation.instant.preview
+    - navigation.path
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - toc.follow
+    - toc.integrate
+  language: en
+  palette:
+    - scheme: default
+      toggle: 
+        icon: material/weather-night
+        title: Switch to Dark Mode
+      primary: teal
+      accent: light blue
+    - scheme: slate
+      toggle:
+        icon: material/white-balance-sunny
+        title: Switch to Light Mode
+      primary: teal
+      accent: deep purple
+
+nav:
+  - Home: index.md
+  - Getting Started: usage.md
+  - Inputs: 
+      - inputs/inputs.md
+      - TheiaProk Inputs on Terra: inputs/theiaprok.md
+  - Outputs:
+      - outputs/index.md
+      - Laboratorian report: outputs/laboratorian.md
+      - LIMS report: outputs/lims.md
+      - Looker report: outputs/looker.md
+      - Coverage report: outputs/coverage.md
+      - TheiaProk Outputs on Terra: outputs/theiaprok.md
+  - Versioning: 
+     - versioning/index.md
+     - Brief Description of Versions: versioning/brief.md
+     - Exhaustive List of Versions: versioning/exhaustive.md
+  - Algorithm:
+      - algorithm/index.md
+      - Technical Code Breakdown: algorithm/technical.md
+      - Interpretation Document: algorithm/interpretation.md
+
+markdown_extensions: 
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: true
+
+plugins:
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: iso_date
+  - search
+
+extra_javascript:
+  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+  - javascripts/tablesort.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/theiagen
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/theiagen
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/theiagen
+  version:
+    provider: mike
+
+copyright: |
+  &copy; 2024 <a href="https://www.theiagen.com" target="_blank" rel="noopener">Theiagen Genomics</a>
