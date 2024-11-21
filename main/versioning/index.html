@@ -753,6 +753,17 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Versioning and Releases
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -762,6 +773,61 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#validated-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validated Versions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpretation-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interpretation Documents
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-using-theiaprok" class="md-nav__link">
+    <span class="md-ellipsis">
+      When Using TheiaProk
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-differences" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version Differences
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -944,18 +1010,36 @@
 
 
 <h1 id="versioning-and-releases">Versioning and Releases<a class="headerlink" href="#versioning-and-releases" title="Permanent link">&para;</a></h1>
+<h2 id="validated-versions">Validated Versions<a class="headerlink" href="#validated-versions" title="Permanent link">&para;</a></h2>
 <p>The California Department of Public Health has clinically validated the following versions:</p>
 <ul>
 <li><strong>v1.2.2 for WGS</strong>, and</li>
 <li><strong>v1.4.4.8 for tNGS</strong></li>
 </ul>
-<p>Interpretation documents for v1.2.2 and v1.4.4.8 are available in the <a href="https://www.github.com/theiagen/tbp-parser">root directory</a> of the <code>tbp-parser</code> repository; others are available in the <a href="https://github.com/theiagen/tbp-parser/tree/main/interpretation_docs">interpretation_docs</a> directory on GitHub.</p>
+<div class="admonition warning">
+<p class="admonition-title">Validate Before Use</p>
+<p><strong>CAUTION</strong>: The information produced by this program should <strong>not</strong> be used for clinical reporting unless and until extensive validation has occured in <mark><em><strong>your</strong></em></mark> laboratory on a stable version. Otherwise, the outputs of tbp-parser are for research use only.</p>
+</div>
+<h2 id="interpretation-documents">Interpretation Documents<a class="headerlink" href="#interpretation-documents" title="Permanent link">&para;</a></h2>
+<p>Interpretation documents for v1.2.2 and v1.4.4.8 are available in the <a href="https://www.github.com/theiagen/tbp-parser">root directory</a> of the <code>tbp-parser</code> repository.</p>
+<p>Interpretation documents for other versions are available in the <a href="https://github.com/theiagen/tbp-parser/tree/main/interpretation_docs">interpretation_docs</a> directory on GitHub.</p>
+<h2 id="when-using-theiaprok">When Using TheiaProk<a class="headerlink" href="#when-using-theiaprok" title="Permanent link">&para;</a></h2>
+<div class="admonition dna">
+<p class="admonition-title">FUTURE DEPRECATION NOTICE</p>
+<p><mark><strong>At the time of the PHB v2.3.0 release:</strong></mark></p>
+<ul>
+<li><strong>all</strong> branches on Terra that have been mentioned in this documentation will be deleted. Please use the v2.3.0 version of TheiaProk moving forward.</li>
+<li>the <code>main</code> branch of tbp-parser will host v2.1.0 and above; earlier versions of tbp-parser will no longer be supported</li>
+</ul>
+</div>
 <p>If you are running tbp-parser as part of the TheiaProk pipeline(s) with Terra, the following branches are recommended:</p>
 <ul>
 <li>To run v1.2.2 on Terra, please use the <strong>smw-tb-2024-01-16-dev</strong> branch.</li>
 <li>To run v1.4.4.8+ and v1.6.x+, please use the <strong>smw-tb-2024-05-03-dev</strong> branch.</li>
 <li>To run v1.5.x+ and v2.x+, please use the <strong>smw-tb-2024-05-03-<em>who2</em>-dev</strong> branch.</li>
+<li>To run v2.1.0+, please use the <strong>smw-tbprofiler-updates-dev</strong> branch <em>until the time of the v2.3.0 PHB release</em>.</li>
 </ul>
+<h2 id="version-differences">Version Differences<a class="headerlink" href="#version-differences" title="Permanent link">&para;</a></h2>
 <p>For more information on the differences between versions, you can see the <a href="brief/">Brief Description of Versions</a> or the <a href="exhaustive/">Exhaustive List of Versions</a>.</p>
 
 
@@ -979,7 +1063,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-08-20</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-11-21</span>
   </span>
 
     
