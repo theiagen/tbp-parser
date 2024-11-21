@@ -989,11 +989,11 @@
 
   <h1>TheiaProk Inputs on Terra</h1>
 
-<p>When running <code>tbp-parser</code> as part of the TheiaProk workflow series (<a href="https://theiagen.notion.site/Theiagen-Public-Health-Resources-a4bd134b0c5c4fe39870e21029a30566?pvs=4">find documentation for TheiaProk here</a>) on <a href="https://terra.bio">Terra.bio</a>, an optional input must be activated to instruct TheiaProk to run <code>tbp-parser</code>.</p>
+<p>When running <code>tbp-parser</code> as part of the TheiaProk workflow series (<a href="https://theiagen.github.io/public_health_bioinformatics/latest/workflows/genomic_characterization/theiaprok/">find documentation for TheiaProk here</a>) on <a href="https://terra.bio">Terra.bio</a>, an optional input must be activated to instruct TheiaProk to run <code>tbp-parser</code>.</p>
 <p><code>tbp-parser</code> is not on by default due to the nature of this tool and its outputs.</p>
 <div class="admonition info annotate">
 <p class="admonition-title">TheiaProk Version</p>
-<p>This information only corresponds to <abbr title="Public Health Bioinformatics is the GitHub repository that contains the TheiaProk workflows.">PHB</abbr> v2.2.0. These inputs and outputs may not be applicable to other versions of TheiaProk.</p>
+<p>This information only corresponds to the upcoming <abbr title="Public Health Bioinformatics is the GitHub repository that contains the TheiaProk workflows.">PHB</abbr> v2.3.0 release. These inputs and outputs may not be applicable to other versions of TheiaProk.</p>
 </div>
 <h2 id="required-inputs">Required Inputs<a class="headerlink" href="#required-inputs" title="Permanent link">&para;</a></h2>
 <p>To activate <code>tbp-parser</code> you must set the following variable to true:</p>
@@ -1003,17 +1003,17 @@
 <th style="text-align: left;">Terra Task name</th>
 <th style="text-align: left;">Variable</th>
 <th style="text-align: left;">Type</th>
-<th style="text-align: left;">Default value</th>
 <th style="text-align: left;">Description</th>
+<th style="text-align: left;">Default Value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbprofiler_additional_outputs</code></td>
+<td style="text-align: left;"><strong>call_tbp_parser</strong></td>
 <td style="text-align: left;">Boolean</td>
-<td style="text-align: left;"><code>false</code></td>
 <td style="text-align: left;">Set to <code>true</code> to activate <code>tbp-parser</code></td>
+<td style="text-align: left;"><code>false</code></td>
 </tr>
 </tbody>
 </table>
@@ -1025,80 +1025,136 @@
 <th style="text-align: left;">Terra Task name</th>
 <th style="text-align: left;">Variable</th>
 <th style="text-align: left;">Type</th>
-<th style="text-align: left;">Default value</th>
 <th style="text-align: left;">Description</th>
+<th style="text-align: left;">Default Value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_output_seq_method_type</code></td>
-<td style="text-align: left;">String</td>
-<td style="text-align: left;">"WGS"</td>
-<td style="text-align: left;">Fills out the “seq_method” field in the tbp_parser output files</td>
+<td style="text-align: left;"><strong>tbp_parser_add_cs_lims</strong></td>
+<td style="text-align: left;">Boolean</td>
+<td style="text-align: left;">Set to <code>true</code> to add Cycloserine (CS) fields to the LIMS report</td>
+<td style="text-align: left;"><code>false</code></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_operator</code></td>
-<td style="text-align: left;">String</td>
-<td style="text-align: left;">"Operator not provided"</td>
-<td style="text-align: left;">The operator who ran the analysis; used in the LIMS &amp; Looker reports</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_min_depth</code></td>
-<td style="text-align: left;">Int</td>
-<td style="text-align: left;">10</td>
-<td style="text-align: left;">The minimum depth of coverage required for a site to pass QC</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_min_frequency</code></td>
-<td style="text-align: left;">Int</td>
-<td style="text-align: left;">0.1</td>
-<td style="text-align: left;">The minimum frequency for a mutation to pass QC (0.1 -&gt; 10%)</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_min_read_support</code></td>
-<td style="text-align: left;">Int</td>
-<td style="text-align: left;">10</td>
-<td style="text-align: left;">The minimum read support for a mutation to pass QC</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_coverage_threshold</code></td>
-<td style="text-align: left;">Int</td>
-<td style="text-align: left;">100</td>
-<td style="text-align: left;">The minimum percentage of a region that has depth above the threshold set by <code>min_depth</code> (used for a gene/locus to pass QC)</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_coverage_regions_bed</code></td>
+<td style="text-align: left;"><strong>tbp_parser_coverage_regions_bed</strong></td>
 <td style="text-align: left;">File</td>
-<td style="text-align: left;"><a href="https://github.com/theiagen/tbp-parser/blob/v1.6.0/data/tbdb-modified-regions.bed">tbdb-modified-regions.md</a></td>
 <td style="text-align: left;">A BED file containing the regions to calculate percent coverage for</td>
+<td style="text-align: left;"><a href="https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-modified-regions.bed">tbdb-modified-regions.md</a></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_debug</code></td>
+<td style="text-align: left;"><strong>tbp_parser_coverage_threshold</strong></td>
+<td style="text-align: left;">Int</td>
+<td style="text-align: left;">The minimum percentage of a region that has depth above the threshold set by <code>min_depth</code> (used for a gene/locus to pass QC)</td>
+<td style="text-align: left;">100</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_debug</strong></td>
 <td style="text-align: left;">Boolean</td>
-<td style="text-align: left;">false</td>
-<td style="text-align: left;">Turn on debug mode for tbp-parser</td>
+<td style="text-align: left;">Set to <code>false</code> to turn off debug mode for <code>tbp-parser</code></td>
+<td style="text-align: left;"><code>true</code></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_add_cs_lims</code></td>
-<td style="text-align: left;">Boolean</td>
-<td style="text-align: left;">false</td>
-<td style="text-align: left;">Adds Cycloserine (CS) fields to the LIMS report</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>merlin_magic</code></td>
-<td style="text-align: left;"><code>tbp_parser_docker_image</code></td>
+<td style="text-align: left;"><strong>tbp_parser_docker_image</strong></td>
 <td style="text-align: left;">String</td>
-<td style="text-align: left;">"us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.6.0"</td>
-<td style="text-align: left;">The Docker image to use when running tbp-parser</td>
+<td style="text-align: left;">The Docker image to use when running <code>tbp-parser</code></td>
+<td style="text-align: left;">"us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.1.0"</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_etha237_frequency</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Minimum frequency for a mutation in ethA at protein position 237 to pass QC in <code>tbp-parser</code></td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_expert_rule_regions_bed</strong></td>
+<td style="text-align: left;">File</td>
+<td style="text-align: left;">A file that contains the regions where R mutations and expert rules are applied</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_min_depth</strong></td>
+<td style="text-align: left;">Int</td>
+<td style="text-align: left;">Minimum depth for a variant to pass QC in tbp_parser</td>
+<td style="text-align: left;">10</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_min_frequency</strong></td>
+<td style="text-align: left;">Int</td>
+<td style="text-align: left;">The minimum frequency for a mutation to pass QC</td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_min_read_support</strong></td>
+<td style="text-align: left;">Int</td>
+<td style="text-align: left;">The minimum read support for a mutation to pass QC</td>
+<td style="text-align: left;">10</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_operator</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Fills the "operator" field in the tbp_parser output files</td>
+<td style="text-align: left;">"Operator not provided"</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_output_seq_method_type</strong></td>
+<td style="text-align: left;">String</td>
+<td style="text-align: left;">Fills out the "seq_method" field in the tbp_parser output files</td>
+<td style="text-align: left;">"Sequencing method not provided"</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_rpob449_frequency</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Minimum frequency for a mutation at protein position 449 to pass QC in <code>tbp-parser</code></td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_rrl_frequency</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Minimum frequency for a mutation in rrl to pass QC in <code>tbp-parser</code></td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_rrl_read_support</strong></td>
+<td style="text-align: left;">Int</td>
+<td style="text-align: left;">Minimum read support for a mutation in rrl to pass QC in <code>tbp-parser</code></td>
+<td style="text-align: left;">10</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_rrs_frequency</strong></td>
+<td style="text-align: left;">Float</td>
+<td style="text-align: left;">Minimum frequency for a mutation in rrs to pass QC in <code>tbp-parser</code></td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_rrs_read_support</strong></td>
+<td style="text-align: left;">Int</td>
+<td style="text-align: left;">Minimum read support for a mutation in rrs to pass QC in <code>tbp-parser</code></td>
+<td style="text-align: left;">10</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>merlin_magic</code></td>
+<td style="text-align: left;"><strong>tbp_parser_tngs_data</strong></td>
+<td style="text-align: left;">Boolean</td>
+<td style="text-align: left;">Set to <code>true</code> to enable tNGS-specific parameters and runs in <code>tbp-parser</code></td>
+<td style="text-align: left;"><code>false</code></td>
 </tr>
 </tbody>
 </table>
@@ -1125,7 +1181,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-08-20</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-11-21</span>
   </span>
 
     

@@ -963,7 +963,7 @@
 <li>v1.3.3 - condenses most gene segments into one, for WT mutations, set the mutation to “WT” not “NA”</li>
 <li>v1.3.4 - error-proofs maximum mdl interpretation determination and maximum looker interpretation determination</li>
 <li>v1.3.5 - adds rrs &amp; rrl frequency input parameters to customize mutation frequency for those genes , overwrites gene MDL interpretation when “Insufficient Coverage” to act as if “WT” if greater than S</li>
-<li>v1.3.6 - adds the TB-Profiler lineage to the end of the LIMS report and the Looker report, adds LIMS lineage to Looker report, introduces check if max MDL interpretation is also Insufficient Coverage to change output to Pending Retest</li>
+<li>v1.3.6 - adds the TBProfiler lineage to the end of the LIMS report and the Looker report, adds LIMS lineage to Looker report, introduces check if max MDL interpretation is also Insufficient Coverage to change output to Pending Retest</li>
 <li>v1.3.7 - add to the coverage report the “expert rule regions” column for tNGS, overwrites gene MDL interpretation when “Insufficient Coverage” to act as if “WT” if gr **<em><em>eater than </em>or equal to</em> S</li>
 <li>v1.3.8 - add frequency input parameters for rpoB 449 and ethA 237, renames coverage threshold to minimum percent coverage</li>
 <li>v1.3.9 - check if gene name is rpoB because that means it’s outside the expected region (tNGS - rpoB is in two segments), add rrs and rrl read support input parameters</li>
@@ -997,6 +997,10 @@
 <li>v1.5.10 - correct spelling of two genes in the LIMS report for cycloserine</li>
 <li>v1.6.0 (branched off of v1.4.4.11) - ensures that only LIMS genes are being considered for the LIMS report. <em>Use the smw-tb-2024-05-03-dev branch on Terra for this and all subsequent v1.6.x+ versions.</em></li>
 <li>v2.0.0 (branched off of v1.5.10; same change in v1.4.4.10 and v1.4.4.11) - fix issue when MDL resistance was being overwritten to Pending Retest but without considering other genes when calculating the highest MDL resistance (as the other genes may have had higher resistances that were not captured at first) and fixes the resulting issue where indexing errors occurred due to no more MDL interpretations. <em>Use the smw-tb-2024-05-03-who2-dev branch on Terra for this and all subsequent v2.x+ versions.</em></li>
+<li>v2.1.0 - any mutations in the 60 proximal promoter regions included in the WHO v2 database (Table 22, page 89-90). <em>Use either the smw-tbprofiler-updates-dev branch until the time of the v2.3.0 release of TheiaProk on Terra for this and all subsequent v2.1.x+ versions</em><ul>
+<li>Earlier versions are now deprecated and will no longer be supported.</li>
+</ul>
+</li>
 </ul>
 <hr />
 <p>The following diagram shows how each version is related to the others without technical details:
@@ -1023,7 +1027,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-08-20</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-11-21</span>
   </span>
 
     

@@ -1042,7 +1042,7 @@
 
 <p>The inputs on this page reflect the parameters that are applicable for the command-line tool. To see the inputs required for <code>tbp-parser</code> when run as part of the TheiaProk workflow series, please refer to the <a href="../theiaprok/">TheiaProk Inputs</a> page.</p>
 <h2 id="required-inputs">Required Inputs<a class="headerlink" href="#required-inputs" title="Permanent link">&para;</a></h2>
-<p><code>tbp-parser</code> is designed to run immediately after <a href="https://github.com/jodyphelan/TBProfiler">Jody Phelan’s TB-Profiler tool</a>. Only two inputs are required: the JSON file produced by <code>TB-Profiler</code> and the BAM file produced by <code>TB-Profiler</code>.</p>
+<p><code>tbp-parser</code> is designed to run immediately after <a href="https://github.com/jodyphelan/TBProfiler">Jody Phelan’s TBProfiler tool</a>. Only two inputs are required: the JSON file produced by <code>TBProfiler</code> and the BAM file produced by <code>TBProfiler</code>.</p>
 <p>The JSON file contains information about the mutations detected in the sample: the quality, the type, and if that mutation confers resistance to an antimicrobial drug. The BAM file contains the alignment information for the sample and is needed for determining sequencing quality. </p>
 <table>
 <thead>
@@ -1054,16 +1054,16 @@
 <tbody>
 <tr>
 <td style="text-align: left;">input_json</td>
-<td style="text-align: left;">The path to the JSON file that was produced by <code>TB-Profiler</code></td>
+<td style="text-align: left;">The path to the JSON file that was produced by <code>TBProfiler</code></td>
 </tr>
 <tr>
 <td style="text-align: left;">input_bam</td>
-<td style="text-align: left;">The path to the BAM file that was produced by <code>TB-Profiler</code></td>
+<td style="text-align: left;">The path to the BAM file that was produced by <code>TBProfiler</code></td>
 </tr>
 </tbody>
 </table>
 <div class="admonition info">
-<p class="admonition-title">Info</p>
+<p class="admonition-title">BAM index file required</p>
 <p>The BAM file must have the accompanying BAI file in the same directory. It must also be named exactly the same as the BAM file but ending with a <code>.bai</code> suffix.</p>
 </div>
 <h2 id="optional-inputs">Optional Inputs<a class="headerlink" href="#optional-inputs" title="Permanent link">&para;</a></h2>
@@ -1109,7 +1109,7 @@
 <td style="text-align: left;">-r</td>
 <td style="text-align: left;">--coverage_regions</td>
 <td style="text-align: left;">A BED file containing the regions to calculate percent coverage for</td>
-<td style="text-align: left;"><a href="https://github.com/theiagen/tbp-parser/blob/v1.6.0/data/tbdb-modified-regions.bed">/data/tbdb-modified-regions.md</a></td>
+<td style="text-align: left;"><a href="https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-modified-regions.bed">/data/tbdb-modified-regions.md</a></td>
 </tr>
 </tbody>
 </table>
@@ -1164,7 +1164,7 @@
 </tbody>
 </table>
 <h3 id="tngs-specific-arguments">tNGS-specific Arguments<a class="headerlink" href="#tngs-specific-arguments" title="Permanent link">&para;</a></h3>
-<p>These options are primarily used for tNGS data, although all frequency arguments are compatible with WGS data.</p>
+<p>These options are primarily used for tNGS data, although all frequency and read support arguments are compatible with WGS data.</p>
 <table>
 <thead>
 <tr>
@@ -1182,7 +1182,7 @@
 <tr>
 <td style="text-align: left;">--tngs_expert_regions</td>
 <td style="text-align: left;">A BED file containing the regions to calculate coverage for expert rule regions. This is used to determine coverage quality in the regions where resistance-conferring mutations are found, or where a CDC expert rule is applied. This is not used for QC purposes</td>
-<td style="text-align: left;"><a href="https://github.com/theiagen/tbp-parser/blob/v1.6.0/data/tbdb-expert-regions.bed">/data/tbdb-expert-regions.bed</a></td>
+<td style="text-align: left;"><a href="https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-expert-regions.bed">/data/tbdb-expert-regions.bed</a></td>
 </tr>
 <tr>
 <td style="text-align: left;">--rrs_frequency</td>
@@ -1217,11 +1217,28 @@
 </tbody>
 </table>
 <h3 id="logging-arguments">Logging Arguments<a class="headerlink" href="#logging-arguments" title="Permanent link">&para;</a></h3>
-<p>These options change the verbosity of the <code>stdout</code> log
-| Name | Description | Default Value |
-| :--- | :---------- | :------------ |
-| --verbose | Increases the output verbosity to describe which stage of the analysis is currently running | false |
-| --debug | The highest level of output verbosity detailing every step of the analysis and logic implemented; overwrites --verbose | false |</p>
+<p>These options change the verbosity of the <code>stdout</code> log</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">--verbose</td>
+<td style="text-align: left;">Increases the output verbosity to describe which stage of the analysis is currently running</td>
+<td style="text-align: left;">false</td>
+</tr>
+<tr>
+<td style="text-align: left;">--debug</td>
+<td style="text-align: left;">The highest level of output verbosity detailing every step of the analysis and logic implemented; overwrites --verbose</td>
+<td style="text-align: left;">false</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -1244,7 +1261,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-08-20</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-11-21</span>
   </span>
 
     
