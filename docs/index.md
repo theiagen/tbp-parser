@@ -13,3 +13,10 @@
 4. A *coverage* report, which contains the percent coverage of each gene relative to the H37Rv reference genome in addition to any warnings, such as any deletions identified in the gene that might have contributed to a reduced percent coverage
 
 Please reach out to us at <support@theiagen.com> if you would like any custom file formats and/or changes to these output files that suit your individual needs.
+
+!!! tip "DEPRECATION NOTICE"
+    ==**At the time of the PHB v2.3.0 release:**==
+
+    - **all** branches on Terra that have been mentioned in this documentation will be deleted. Please use the v2.3.0 version of TheiaProk moving forward.
+    - the `main` branch of tbp-parser will host v2.1.0 and above; earlier versions of tbp-parser will no longer be supported
+    - 
