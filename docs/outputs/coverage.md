@@ -27,6 +27,6 @@ If the `--tngs` flag is used, the report contains the following fields:
 | QC_Warning | Indicates if any deletions were identified in the gene which may contribute to lower than expected coverage |
 | Coverage_Breadth_R_expert-rule_region | The percent of the regions (positions that could contain any resistance-conferring mutations or require expert-rule application) that is covered at a depth greater than the `--min_depth` value |
 
-Coverage regions are determined with either the default "../data/tbdb-modified-regions.bed" (collected on Sep 1, 2023 from the TBProfiler repository, or if `--tngs`, "../data/tngs-reportable-regions.bed".
+Coverage regions are determined with either the default [/data/tbdb-modified-regions.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-modified-regions.bed) (collected on Sep 1, 2023 from the TBProfiler repository, or if `--tngs`, [/data/tngs-reportable-regions.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tngs-reportable-regions.bed).
 
-The R-expert rule region is determined only if `--tngs` is indicated and uses the ranges in "../data/tngs-expert-rule-regions.bed".
+The R-expert rule region is determined only if `--tngs` is indicated and uses the ranges in [/data/tbdb-expert-regions.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-expert-regions.bed).

@@ -10,7 +10,7 @@ You may notice there are many releases; `tbp-parser` is in active development an
     - **v1.4.3+** - changes how tNGS lineage determination is performed
     - **v1.4.4+** - changes how nonsynonymous mutations are interpretted; major interpretation differences between earlier versions
 - **v1.6.x** - only considers the genes included in the LIMS report to determine the drug output in the LIMS report
-- **v1.5.x+ and v2.0.0** - major changes to code in due to using results from TB-Profiler v6.2.0+
-- **v2.1.0** - v1.6.0 and earlier versions are no longer supported; v2+ changes are included on `main` branch moving foward.
+- **v1.5.x+ and v2.0.0** - major changes to code in due to using results from TBProfiler v6.2.0+
+- **v2.1.0** - ==_v1.6.0 and earlier versions are no longer supported_==; v2.1+ changes are included on `main` branch moving foward.
 
 For a more exhaustive list, please visit [the Exhaustive List of Versions](exhaustive.md).
