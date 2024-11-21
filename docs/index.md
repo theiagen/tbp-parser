@@ -22,5 +22,3 @@
 4. A *coverage* report, which contains the percent coverage of each gene relative to the H37Rv reference genome in addition to any warnings, such as any deletions identified in the gene that might have contributed to a reduced percent coverage
 
 Please reach out to us at <support@theiagen.com> if you would like any custom file formats and/or changes to these output files that suit your individual needs.
-
-
