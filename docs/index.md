@@ -1,7 +1,7 @@
 # tbp-parser
 
 !!! warning "Not for Diagnostic Use"
-    **CAUTION**: The information produced by this program should **not** be used for clinical reporting unless and until extensive validation has occured in your laboratory on a stable version. Otherwise, the outputs of tbp-parser are for research use only.
+    **CAUTION**: The information produced by this program should **not** be used for clinical reporting unless and until extensive validation has occured in ==_your_== laboratory on a stable version. Otherwise, the outputs of tbp-parser are for research use only.
 
 !!! dna "FUTURE DEPRECATION NOTICE"
     ==**At the time of the PHB v2.3.0 release:**==
