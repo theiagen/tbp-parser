@@ -36,5 +36,3 @@ jobs:
           git config user.name sage-wright
           git config user.email sage.wright@theiagen.com 
           mike deploy --push main
-          mike delete null
-          mike delete v2.2.1
