@@ -1,7 +1,6 @@
 name: version-documentation
 on:
- workflow_dispatch:
- release:
+  release:
    types: [published]
 
 permissions: 
