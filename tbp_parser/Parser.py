@@ -36,7 +36,7 @@ class Parser:
     globals.RPOB449_FREQUENCY = options.rpob449_frequency
     globals.ETHA237_FREQUENCY = options.etha237_frequency
     globals.OPERATOR = options.operator
-    
+
     if self.tngs:
       self.logger.info("PARSER:Deeplex + CDPH modified protocol flag detected; adjusting outputs to reflect this")
       if (self.coverage_regions == "../data/tbdb-modified-regions.bed"):

@@ -3,10 +3,10 @@ title: TheiaProk Outputs on Terra
 ---
 
 
-When running `tbp-parser` as part of the TheiaProk workflow series ([find documentation for TheiaProk here](https://theiagen.notion.site/Theiagen-Public-Health-Resources-a4bd134b0c5c4fe39870e21029a30566?pvs=4)) on [Terra.bio](https://terra.bio), you will find the following outputs in your data table.
+When running `tbp-parser` as part of the TheiaProk workflow series ([find documentation for TheiaProk here](https://theiagen.github.io/public_health_bioinformatics/latest/workflows/genomic_characterization/theiaprok/)) on [Terra.bio](https://terra.bio), you will find the following outputs in your data table.
 
 !!! info annotate "TheiaProk Version"
-    This information only corresponds to PHB v2.2.0. These inputs and outputs may not be applicable to other versions of TheiaProk.
+    This information only corresponds to the upcoming PHB v2.3.0 release. These inputs and outputs may not be applicable to other versions of TheiaProk.
 
 *[PHB]: Public Health Bioinformatics is the GitHub repository that contains the TheiaProk workflows.
 

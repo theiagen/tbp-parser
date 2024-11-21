@@ -14,7 +14,7 @@
         }
       ],
       "locus_tag": "EBG00000313339",
-      "gene": "rrl",
+      "gene_name": "rrl",
       "gene_associated_drugs": [
         "linezolid"
       ]
@@ -26,7 +26,7 @@
       "nucleotide_change": "n.2399G>T",
       "protein_change": "",
       "locus_tag": "EBG00000313339",
-      "gene": "rrl",
+      "gene_name": "rrl",
       "gene_associated_drugs": [
         "linezolid"
       ]

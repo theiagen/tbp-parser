@@ -1,10 +1,11 @@
---- 
-title: "Technical Code Breakdown"
----
+!!! tip inline end "Examples from TBProfiler v4.4.2"
+    The examples in this document are based on the output of TBProfiler v4.4.2. However, the general principles apply to all versions of TBProfiler and tbp-parser.
+
+# Technical Code Breakdown
 
 `tbp-parser` is object-oriented, with each class representing either *an output file*, *a part of an output file*, or *a part of the input JSON file* produced by TBProfiler.
 
-The first class that is invoked by the `tbp-parser.py` script is `Parser` which is a control class that orchestrates the creation of the different output reports. 
+The first class that is invoked by the `tbp-parser.py` script is `Parser` which is a control class that orchestrates the creation of the different output reports.
 
 ## Calculating percent gene coverage
 

@@ -24,7 +24,7 @@ The Looker report is intended for use in Google's Looker Studio Data Studio for 
 | pyrazinamide | The highest `looker_interpretation` resistance identified for mutations associated with this drug |
 | rifampin | The highest `looker_interpretation` resistance identified for mutations associated with this drug |
 | streptomycin | The highest `looker_interpretation` resistance identified for mutations associated with this drug |
-| lineage | The lineage of the sample (the `main_lin` field as reported by TB-Profiler); for example, lineage1.2.1.2.1  |
+| lineage | The lineage of the sample (the `main_lin` field as reported by TBProfiler); for example, lineage1.2.1.2.1  |
 | ID | The lineage of the sample in human-readable language (the same as `M_DST_A01_ID` in the LIMS report) |
 | analysis_date | The date `tbp-parser` was run in YYYY-MM-DD HH:SS format |
 | operator | The name of the person who ran `tbp-parser`; can be provided with the `--operator` input parameter. If left blank, “Operator not provided” is the default value. |

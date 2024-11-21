@@ -6,16 +6,16 @@ The inputs on this page reflect the parameters that are applicable for the comma
 
 ## Required Inputs
 
-`tbp-parser` is designed to run immediately after [Jody Phelan’s TB-Profiler tool](https://github.com/jodyphelan/TBProfiler). Only two inputs are required: the JSON file produced by `TB-Profiler` and the BAM file produced by `TB-Profiler`.
+`tbp-parser` is designed to run immediately after [Jody Phelan’s TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Only two inputs are required: the JSON file produced by `TBProfiler` and the BAM file produced by `TBProfiler`.
 
 The JSON file contains information about the mutations detected in the sample: the quality, the type, and if that mutation confers resistance to an antimicrobial drug. The BAM file contains the alignment information for the sample and is needed for determining sequencing quality. 
 
 | Parameter  | Description |
 | :--------- | :---------- |
-| input_json | The path to the JSON file that was produced by `TB-Profiler` |
-| input_bam  | The path to the BAM file that was produced by `TB-Profiler` |
+| input_json | The path to the JSON file that was produced by `TBProfiler` |
+| input_bam  | The path to the BAM file that was produced by `TBProfiler` |
 
-!!! info
+!!! info "BAM index file required"
     The BAM file must have the accompanying BAI file in the same directory. It must also be named exactly the same as the BAM file but ending with a `.bai` suffix.
 
 ## Optional Inputs
@@ -34,7 +34,7 @@ These options determine the thresholds for quality control.
 | -c            | --min_percent_coverage | The minimum percentage of a region that has depth above the threshold set by `min_depth` (used for a gene/locus to pass QC) | 100 |
 | -s            | --min_read_support     | The minimum read support for a mutation to pass QC | 10
 | -f            | --min_frequency        | The minimum frequency for a mutation to pass QC (0.1 -> 10%)| 0.1 |
-| -r            | --coverage_regions     | A BED file containing the regions to calculate percent coverage for | [/data/tbdb-modified-regions.md](https://github.com/theiagen/tbp-parser/blob/v1.6.0/data/tbdb-modified-regions.bed) |
+| -r            | --coverage_regions     | A BED file containing the regions to calculate percent coverage for | [/data/tbdb-modified-regions.md](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-modified-regions.bed) |
 
 ### Text Arguments
 
@@ -56,12 +56,12 @@ These options are used to customize the LIMS report
 
 ### tNGS-specific Arguments
 
-These options are primarily used for tNGS data, although all frequency arguments are compatible with WGS data.
+These options are primarily used for tNGS data, although all frequency and read support arguments are compatible with WGS data.
 
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
 | --tngs | Indicates that the input data was generated using the Deeplex + CDPH modified protocol. Turns on tNGS-specific global parameters | false |
-| --tngs_expert_regions | A BED file containing the regions to calculate coverage for expert rule regions. This is used to determine coverage quality in the regions where resistance-conferring mutations are found, or where a CDC expert rule is applied. This is not used for QC purposes | [/data/tbdb-expert-regions.bed](https://github.com/theiagen/tbp-parser/blob/v1.6.0/data/tbdb-expert-regions.bed) |
+| --tngs_expert_regions | A BED file containing the regions to calculate coverage for expert rule regions. This is used to determine coverage quality in the regions where resistance-conferring mutations are found, or where a CDC expert rule is applied. This is not used for QC purposes | [/data/tbdb-expert-regions.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-expert-regions.bed) |
 | --rrs_frequency | The minimum frequency for an _rrs_ mutation to pass QC, as _rrs_ has several problematic sites in the Deeplex tNGS assay | 0.1 |
 | --rrl_frequency | The minimum frequency for an _rrl_ mutation to pass QC, as _rrl_ has several problematic sites in the Deeplex tNGS assay | 0.1 |
 | --rrs_read_support | The minimum read support for an _rrs_ mutation to pass QC, as _rrs_ has several problematic sites in the Deeplex tNGS assay | 10 |
@@ -72,6 +72,7 @@ These options are primarily used for tNGS data, although all frequency arguments
 ### Logging Arguments
 
 These options change the verbosity of the `stdout` log
+
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
 | --verbose | Increases the output verbosity to describe which stage of the analysis is currently running | false |

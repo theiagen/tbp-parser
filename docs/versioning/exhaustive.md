@@ -28,7 +28,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v1.3.3 - condenses most gene segments into one, for WT mutations, set the mutation to “WT” not “NA”
 - v1.3.4 - error-proofs maximum mdl interpretation determination and maximum looker interpretation determination
 - v1.3.5 - adds rrs & rrl frequency input parameters to customize mutation frequency for those genes , overwrites gene MDL interpretation when “Insufficient Coverage” to act as if “WT” if greater than S
-- v1.3.6 - adds the TB-Profiler lineage to the end of the LIMS report and the Looker report, adds LIMS lineage to Looker report, introduces check if max MDL interpretation is also Insufficient Coverage to change output to Pending Retest
+- v1.3.6 - adds the TBProfiler lineage to the end of the LIMS report and the Looker report, adds LIMS lineage to Looker report, introduces check if max MDL interpretation is also Insufficient Coverage to change output to Pending Retest
 - v1.3.7 - add to the coverage report the “expert rule regions” column for tNGS, overwrites gene MDL interpretation when “Insufficient Coverage” to act as if “WT” if gr ****eater than *or equal to* S
 - v1.3.8 - add frequency input parameters for rpoB 449 and ethA 237, renames coverage threshold to minimum percent coverage
 - v1.3.9 - check if gene name is rpoB because that means it’s outside the expected region (tNGS - rpoB is in two segments), add rrs and rrl read support input parameters
@@ -62,6 +62,8 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v1.5.10 - correct spelling of two genes in the LIMS report for cycloserine
 - v1.6.0 (branched off of v1.4.4.11) - ensures that only LIMS genes are being considered for the LIMS report. *Use the smw-tb-2024-05-03-dev branch on Terra for this and all subsequent v1.6.x+ versions.*
 - v2.0.0 (branched off of v1.5.10; same change in v1.4.4.10 and v1.4.4.11) - fix issue when MDL resistance was being overwritten to Pending Retest but without considering other genes when calculating the highest MDL resistance (as the other genes may have had higher resistances that were not captured at first) and fixes the resulting issue where indexing errors occurred due to no more MDL interpretations. *Use the smw-tb-2024-05-03-who2-dev branch on Terra for this and all subsequent v2.x+ versions.*
+- v2.1.0 - any mutations in the 60 proximal promoter regions included in the WHO v2 database (Table 22, page 89-90). *Use either the smw-tbprofiler-updates-dev branch until the time of the v2.3.0 release of TheiaProk on Terra for this and all subsequent v2.1.x+ versions*
+    - Earlier versions are now deprecated and will no longer be supported.
 
 ---
 

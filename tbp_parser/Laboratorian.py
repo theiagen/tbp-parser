@@ -33,30 +33,30 @@ class Laboratorian:
     for variant in variant_section:
       # create a Variant object and add the origin gene to the global GENES_REPORTED set variable
       variant = Variant(self.logger, variant)
-      globals.GENES_REPORTED.add(variant.gene)
+      globals.GENES_REPORTED.add(variant.gene_name)
       
       # this currently only applies to rpoB -- renaming the gene to the segment name to get the coverage for QC
-      if self.tngs and variant.gene in globals.TNGS_REGIONS.keys():
+      if self.tngs and variant.gene_name in globals.TNGS_REGIONS.keys():
         self.logger.debug("LAB:[tNGS only]: checking to see which segment this gene is found in")
-        for segment in globals.TNGS_REGIONS[variant.gene]:
-          self.logger.debug("LAB:[tNGS only]: checking if variant from {} is found in segment {}".format(variant.gene, segment))
-          if (globals.TNGS_REGIONS[variant.gene][segment][0] <= variant.genome_pos <= globals.TNGS_REGIONS[variant.gene][segment][1]):
-            self.logger.debug("LAB:[tNGS only]: variant from {} is found in segment {}; renaming gene to segment name".format(variant.gene, segment))
-            variant.gene = segment
+        for segment in globals.TNGS_REGIONS[variant.gene_name]:
+          self.logger.debug("LAB:[tNGS only]: checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
+          if (globals.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals.TNGS_REGIONS[variant.gene_name][segment][1]):
+            self.logger.debug("LAB:[tNGS only]: variant from {} is found in segment {}; renaming gene to segment name".format(variant.gene_name, segment))
+            variant.gene_name = segment
             break
           else:
-            self.logger.debug("LAB:[tNGS only]: variant from {} is NOT found in segment {}".format(variant.gene, segment))
+            self.logger.debug("LAB:[tNGS only]: variant from {} is NOT found in segment {}".format(variant.gene_name, segment))
         
         ##### FUTURE NOTICE: IF WE HAVE MORE SEGMENTS ADDED THEN WE'LL NEED TO ADJUST THIS
         # if the gene name is still rpoB, then it means that the variant was outside of the expected region
-        # if variant.gene == "rpoB":
+        # if variant.gene_name == "rpoB":
         #   self.logger.debug("LAB:[tNGS only]: since this was outside of the expected region, we're setting the coverage for rpoB to 0")
-        #   globals.COVERAGE_DICTIONARY[variant.gene] = 0
+        #   globals.COVERAGE_DICTIONARY[variant.gene_name] = 0
         
       # extract all of the annotations for the variant
       variant.extract_annotations()
       
-      self.logger.debug("LAB:The current variant (gene: {}) has {} annotations; now iterating through them".format(variant.gene, len(variant.annotation_dictionary)))
+      self.logger.debug("LAB:The current variant (gene: {}) has {} annotations; now iterating through them".format(variant.gene_name, len(variant.annotation_dictionary)))
       for annotation_row in variant.annotation_dictionary.values():
         # complete the row objects
         annotation_row.complete_row()
@@ -134,11 +134,12 @@ class Laboratorian:
               self.logger.debug("LAB:This gene has a valid deletion so we are removing any locus QC fails as they could be due to the deletion")
               if "Insufficient coverage in locus" in row.warning:
                 row.warning.remove("Insufficient coverage in locus")
-            
+
             if ("Insufficient coverage in locus" in row.warning and 
                 "Failed quality in the mutation position" in row.warning and 
                 row.mdl_interpretation == "R"):
               self.logger.debug("LAB:This 'R' mutation cannot be trusted due to failing both QC checks; rewriting interpretation to Insufficient Coverage")
+
               row.mdl_interpretation = "Insufficient Coverage"
               row.looker_interpretation = "Insufficient Coverage"     
               
@@ -148,7 +149,8 @@ class Laboratorian:
             elif (row.mdl_interpretation != "R" and 
                   "del" not in row.tbprofiler_variant_substitution_nt and
                   "Insufficient coverage in locus" in row.warning):
-              self.logger.debug("LAB:This mutation is not an 'R' mutation with bad locus coverage so we are rewriting the interpretation to Insufficient Coverage")
+              self.logger.debug("LAB:This mutation is not an 'R' mutation and has bad locus coverage so we are rewriting the interpretation to Insufficient Coverage")
+
               # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
               row.mdl_interpretation = "Insufficient Coverage"
               row.looker_interpretation = "Insufficient Coverage"

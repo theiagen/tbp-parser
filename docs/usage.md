@@ -9,18 +9,19 @@ title: Getting Started
 We highly recommend using the following Docker iamge to run tbp-parser:
 
 ``` bash
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.6.0 #(1)!
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.1.0 #(1)!
 ```
 
 1. We host our Docker images on the Google Artifact Registry so that they are always availble for usage.
 
-The entrypoint for this Docker iamge is the `tbp-parser` help message. To run this container *interactively*, use the following command:
+The entrypoint for this Docker image is the `tbp-parser` help message. To run this container *interactively*, you can use the following command:
 
 ``` bash
-docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:1.6.0
+docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.1.0
+
 # Once inside the container interactively, you can run the tbp-parser tool
 python3 /tbp-parser/tbp_parser/tbp_parser.py -v
-# v1.6.0
+# v2.1.0
 ```
 
 ### Locally with Python
@@ -32,7 +33,7 @@ python3 /tbp-parser/tbp_parser/tbp_parser.py -v
 - importlib_resources
 - samtools
 
-After installation of these dependencies, download and extract the latest release of `tbp-parser` and run the script with `Python`.
+After installation of these dependencies, download and extract the latest release of `tbp-parser` and run the script with `python3`.
 
 ## Usage
 
@@ -51,7 +52,7 @@ python3 /tbp-parser/tbp_parser/tbp_parser.py \
     --operator "John Doe" 
 ```
 
-Please note that the BAM file must have the accompanying BAI file in the same directory. It must also be named exactly the same as the BAM file but ending with a .bai suffix.
+Please note that the BAM file must have the accompanying BAI file in the same directory.
 
 ### Help Message
 

@@ -52,7 +52,7 @@ class Looker:
     # get time stamp
     current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
     
-    # as per rule 6.1.2 and 6.1.3, the lineage field is the main_lin field from TBProfiler and the ID field is the same as ID in the LIMS report
+    # as per rule 6.1.2 and 6.1.3, the lineage field is the main_lineage field from TBProfiler and the ID field is the same as ID in the LIMS report
     DF_LOOKER["lineage"] = globals.LINEAGE
     DF_LOOKER["ID"] = globals.LINEAGE_ENGLISH
     

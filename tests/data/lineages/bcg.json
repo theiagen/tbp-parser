@@ -1,6 +1,6 @@
 {
   "id": "bcg",
   "tbprofiler_version": "4.4.2",
-  "main_lin": "La1.2",
-  "sublin": "La1.2.1.BCG"
+  "main_lineage": "La1.2",
+  "sub_lineage": "La1.2.1.BCG"
 }
