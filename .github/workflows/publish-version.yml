@@ -1,5 +1,6 @@
 name: version-documentation
 on:
+ workflow_dispatch:
  release:
    types: [published]
 
@@ -34,6 +35,6 @@ jobs:
         run: |
           git config user.name sage-wright
           git config user.email sage.wright@theiagen.com 
-          LATEST_RELEASE=$(curl -sL https://api.github.com/repos/theiagen/tbp-parser/releases/latest | jq -r ".tag_name")
+          LATEST_RELEASE=$(curl -sL https://api.github.com/repos/theiagen/tbp-parser/releases/1.6.0 | jq -r ".tag_name")
           mike deploy --push --update-aliases ${LATEST_RELEASE} latest
           mike set-default --push latest
