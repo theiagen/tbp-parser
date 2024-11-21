@@ -1,22 +1,22 @@
 site_name: tbp-parser
 site_author: Sage Wright
 site_description: A TBProfiler output parser
+site_url: https://theiagen.github.io/tbp-parser/
 
 repo_url: https://github.com/theiagen/tbp-parser
 
 theme: 
   name: material
   logo: assets/Theiagen-Logo-White.png
+  favicon: assets/Theiagen-Symbol-Standard-01.png
+  custom_dir: docs/overrides
   features:
     - content.code.annotate
     - content.code.copy
     - content.tabs.link
     - content.tooltips
-    - navigation.expand
     - navigation.instant
-    - navigation.instant.preview
     - navigation.path
-    - navigation.sections
     - navigation.tabs
     - navigation.top
     - navigation.tracking
@@ -26,18 +26,18 @@ theme:
     - toc.integrate
   language: en
   palette:
-    - scheme: default
-      toggle: 
+    - media: "(prefers-color-scheme: light)"
+      scheme: light 
+      toggle:
         icon: material/weather-night
-        title: Switch to Dark Mode
-      primary: teal
-      accent: light blue
-    - scheme: slate
+        name: Switch to Dark Mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      accent: indigo
+      primary: black
       toggle:
         icon: material/white-balance-sunny
-        title: Switch to Light Mode
-      primary: teal
-      accent: deep purple
+        name: Switch to Light Mode
 
 nav:
   - Home: index.md
@@ -76,6 +76,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.keys
   - pymdownx.mark
+  - pymdownx.caret
   - pymdownx.snippets
   - pymdownx.superfences
   - pymdownx.tasklist:
@@ -88,14 +89,19 @@ plugins:
       enable_creation_date: true
       type: iso_date
   - search
+  - glightbox
+  - mike
 
 extra_javascript:
   - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
   - javascripts/tablesort.js
 
+extra_css:
+  - stylesheets/extra.css        
+
 extra:
   social:
-    - icon: fontawesome/brands/github-alt
+    - icon: fontawesome/brands/github
       link: https://github.com/theiagen
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/theiagen
@@ -103,6 +109,8 @@ extra:
       link: https://www.linkedin.com/company/theiagen
   version:
     provider: mike
+    default: latest
+    alias: true
 
 copyright: |
-  &copy; 2024 <a href="https://www.theiagen.com" target="_blank" rel="noopener">Theiagen Genomics</a>
+  &copy; 2023-2024 <a href="https://www.theiagen.com" target="_blank" rel="noopener">Theiagen Genomics</a>
