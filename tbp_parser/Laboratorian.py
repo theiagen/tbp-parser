@@ -95,6 +95,8 @@ class Laboratorian:
       - read_support: the number of reads supporting the mutation (10, depth*frequency)
       - rationale: the rationale for resistance calling (WHO classification, Expert rule)
       - warning: a column reserved for warnings such as low depth of coverage 
+      - source: a column used to indicate the resistance source as specified by TBDB
+      - tbdb_comment: a column used to include any additional comments as specified by TBDB
     """
     self.logger.info("LAB:Within the Laboratorian class create_laboratorian_report function")   
     

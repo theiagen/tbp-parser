@@ -253,6 +253,7 @@ class Row() :
     self.logger.debug("ROW:\twarning: {}".format(self.warning))
     self.logger.debug("ROW:\ttier: {}".format(self.gene_tier))
     self.logger.debug("ROW:\tsource: {}".format(self.source))
+    self.logger.debug("ROW:\ttbdb_comment: {}".format(self.tbdb_comment))
        
   def complete_row(self):
     """

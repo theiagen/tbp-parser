@@ -20,16 +20,11 @@ def is_within_range(position, range_positions):
   range_positions is a list of the start and end regions of the range. 
     occasionally, range_positions can be a list of lists, in which case the function will check both ranges and return the result
   """
-  print("function")
-  print("position", position)
-  print("range_positions", range_positions)
   if isinstance(range_positions[0], list):
     # check if the value is a list of lists; if so, check both lists
-    print("is list")
     return is_within_range(position, range_positions[0]) or is_within_range(position, range_positions[1])
 
   if len(position) > 1:
-    print("mulitple positions")
     # if the value is a list of two items, check if the position is within the range
     if any([x in range(range_positions[0], range_positions[1]) for x in position]):
       return True
@@ -38,10 +33,8 @@ def is_within_range(position, range_positions):
  
   # the position is a single item
   elif range_positions[0] <= position[0] <= range_positions[1]:
-    print('single position')
     return True
   
-  print('not in positions')
   return False
 
 

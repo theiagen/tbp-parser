@@ -30,7 +30,7 @@ class Variant:
       for key, value in variant.items():
         setattr(self, key, value)
   
-    if hasattr(self, "gene") and self.gene_name == "mmpR5":
+    if hasattr(self, "gene_name") and self.gene_name == "mmpR5":
       self.logger.debug("VAR:The gene is mmpR5, renaming to Rv0678")
       self.gene_name = "Rv0678"
   
