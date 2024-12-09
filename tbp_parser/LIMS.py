@@ -142,6 +142,7 @@ class LIMS:
         mdl_interpretations = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["mdl_interpretation"].tolist()
         warnings = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["warning"].tolist()
         read_supports = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["read_support"].tolist()  
+        tbdb_comments = globals.DF_LABORATORIAN[(globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["tbdb_comment"].tolist()
                  
         self.logger.debug("LIMS:The following mutations belong to this gene ({}) and are associated with this drug ({})".format(gene, antimicrobial_name))
         self.logger.debug("LIMS:Amino acid mutations: {}".format(aa_mutations_per_gene))
@@ -267,6 +268,12 @@ class LIMS:
               # the following if only captures synonymous mutations if rpoB RRDR mutations
               if mutation_type == "synonymous_variant":
                 substitution = "{} [synonymous]".format(substitution)
+              
+              # add a high-level or low-level resistance annotation to the LIMS report
+              for key, value in globals.COMMENT_TO_LIMS.items():
+                if key in tbdb_comments[index]:
+                  substitution = "{} [{}]".format(substitution, value)
+                  break
               
               # add the formatted mutation to mutations_per_gene dictionary (formatted as a list)
               if gene not in mutations_per_gene.keys():

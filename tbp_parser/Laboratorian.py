@@ -119,10 +119,10 @@ class Laboratorian:
     for gene, antimicrobial_drug_names in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
       for drug_name in antimicrobial_drug_names:
         if gene not in globals.GENES_REPORTED:
-          self.logger.debug("LAB:Gene {} not in report, now adding it to the report".format(gene))
+          self.logger.debug("LAB:Gene {} with antimicrobial {} not in report, now adding it to the report".format(gene, drug_name))
           row_list.append(Row(self.logger, None, "NA", drug_name, gene))
         else:
-          self.logger.debug("LAB:Gene {} already in report".format(gene))
+          self.logger.debug("LAB:Gene {} with antimicrobial {} already in report".format(gene, drug_name))
       
       # make a list to add QC fail rows to end of laboratorian report
       reorder_list = [] 
