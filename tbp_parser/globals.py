@@ -397,7 +397,7 @@ GENE_TO_ANTIMICROBIAL_DRUG_NAME = {
   "rpsA": ["pyrazinamide"],
   "rpsL": ["streptomycin"],
   "rrl": ["linezolid"],
-  "rrs": ["amikacin", "aminoglycosides", "capreomycin", "kanamycin", "linezolid"],
+  "rrs": ["amikacin", "capreomycin", "kanamycin", "linezolid"],
   "Rv0678": ["bedaquiline", "clofazimine"],
   "Rv1258c": ["isoniazid",  "pyrazinamide", "streptomycin"],
   "Rv1979c": ["bedaquiline", "clofazimine"],

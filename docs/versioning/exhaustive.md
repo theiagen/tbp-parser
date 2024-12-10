@@ -65,7 +65,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.1.0 - any mutations in the 60 proximal promoter regions included in the WHO v2 database (Table 22, page 89-90). *Use either the smw-tbprofiler-updates-dev branch until the time of the v2.3.0 release of TheiaProk on Terra for this and all subsequent v2.1.x+ versions*
     - Earlier versions are now deprecated and will no longer be supported.
 - v2.1.1 - adds the source and comment fields from TBDB to the Laboratorian report; fixes a bug where mmpR5 was not being completly renamed to Rv0678; fixes a bug where mutations that didn't share the same position were being compared
-- v2.2.0 - removes ciprofloxacin, fluoroquinolones, and ofloxacin from gyrA and gyrB in the `globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME` dictionary; if a drug is missing in the TBProfiler JSON's gene_associated_drug field that is present in that global dictionary, it will be added for the mutation.
+- v2.2.0 - removes ciprofloxacin, fluoroquinolones, and ofloxacin from gyrA and gyrB and aminoglycosides from rrs in the `globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME` dictionary; if a drug is missing in the TBProfiler JSON's gene_associated_drug field that is present in that global dictionary, it will be added for the mutation.
 
 ---
 
