@@ -283,6 +283,17 @@ ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME = {
 }
 
 """
+A dictionary that converts the mutation comment to a reportable LIMS values for the corresponding mutation
+The key is the search term in the comment (comment.contains(key)) and the value will be output in square brackets
+"""
+global COMMENT_TO_LIMS
+COMMENT_TO_LIMS = {
+  "Low-level resistance (multiple, genetically linked low-level resistance mutations are additive and confer high-level resistance)": "Low-level resistance",
+  "High-level resistance": "High-level resistance"
+}
+
+
+"""
 A dictionary that will contain the percent coverage for each gene
 """
 global COVERAGE_DICTIONARY
@@ -365,8 +376,8 @@ GENE_TO_ANTIMICROBIAL_DRUG_NAME = {
   "folC": ["para-aminosalicylic_acid"],
   "fprA": ["amikacin", "capreomycin"],
   "gid": ["streptomycin"],
-  "gyrA": ["ciprofloxacin", "fluoroquinolones", "levofloxacin", "moxifloxacin", "ofloxacin"],
-  "gyrB": ["ciprofloxacin", "fluoroquinolones", "levofloxacin", "moxifloxacin", "ofloxacin"],
+  "gyrA": ["levofloxacin", "moxifloxacin"],
+  "gyrB": ["levofloxacin", "moxifloxacin"],
   "inhA": ["ethionamide", "isoniazid"],
   "kasA": ["isoniazid"],
   "katG": ["isoniazid"],
@@ -386,7 +397,7 @@ GENE_TO_ANTIMICROBIAL_DRUG_NAME = {
   "rpsA": ["pyrazinamide"],
   "rpsL": ["streptomycin"],
   "rrl": ["linezolid"],
-  "rrs": ["amikacin", "aminoglycosides", "capreomycin", "kanamycin", "linezolid"],
+  "rrs": ["amikacin", "capreomycin", "kanamycin", "linezolid"],
   "Rv0678": ["bedaquiline", "clofazimine"],
   "Rv1258c": ["isoniazid",  "pyrazinamide", "streptomycin"],
   "Rv1979c": ["bedaquiline", "clofazimine"],
@@ -550,8 +561,7 @@ A string that contains the lineage of the sample in English
 """
 global LINEAGE_ENGLISH
 LINEAGE_ENGLISH = ""
-            
-                
+                          
 """
 A list that will contain the names of genes that have coverages
 below the coverage threshold (see also COVERAGE_THRESHOLD)
@@ -745,7 +755,7 @@ RULE_TO_RATIONALE = {
   "rule3.2.2": "Expert rule 3.2.3. gyrA QRDR",
   "rule3.2.3": "Expert rule 3.2.3. gyrB QRDR",
   "rule3.2.4": "No WHO annotation or expert rule",
-  "rule6": "Mutation in proximal promoter region"
+  "whov2": "Mutation in proximal promoter region"
 }
 
 """

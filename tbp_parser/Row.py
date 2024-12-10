@@ -283,7 +283,7 @@ class Row() :
       
     self.logger.debug("ROW:Interpretation logic applied or skipped; now removing any 'noexpert' suffixes")
     self.describe_rationale()
-    
+    self.logger.debug("rationale = {}".format(self.rationale))
     self.logger.debug("ROW:Finished completing the row's values, now exiting function")
     
   def rank_annotation(self): 
@@ -328,7 +328,10 @@ class Row() :
     if any(rule in self.mdl_interpretation for rule in globals.RULE_TO_RATIONALE.keys()):
       interpretation = self.mdl_interpretation[0]
       rule = self.mdl_interpretation[1:]
+      self.logger.debug("rule={}".format(rule))
       self.mdl_interpretation = interpretation
+      self.logger.debug(globals.RULE_TO_RATIONALE[rule])
+      globals.RULE_TO_RATIONALE[rule]
       self.rationale = globals.RULE_TO_RATIONALE[rule]
       self.confidence = "No WHO annotation"
       

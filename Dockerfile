@@ -3,9 +3,9 @@
 # Shelby Bennett, Erin Young, Curtis Kapsak, & Kutluhan Incekara
 
 ARG SAMTOOLS_VER="1.18"
-ARG TBP_PARSER_VER="2.1.1"
+ARG TBP_PARSER_VER="2.2.0"
 
-FROM ubuntu:jammy as builder
+FROM ubuntu:jammy AS builder
 
 ARG SAMTOOLS_VER
 
@@ -34,7 +34,7 @@ RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VER}/
     make install
 
 ### start of app stage ###
-FROM ubuntu:jammy as app
+FROM ubuntu:jammy AS app
 
 ARG SAMTOOLS_VER
 ARG TBP_PARSER_VER
@@ -42,7 +42,7 @@ ARG TBP_PARSER_VER
 LABEL base.image="ubuntu:jammy"
 LABEL dockerfile.version="1"
 LABEL software="tbp-parser"
-LABEL software.version="2.1.1"
+LABEL software.version="2.2.0"
 LABEL description="tbp-parser and samtools"
 LABEL website="https://github.com/theiagen/tbp-parser"
 LABEL license="https://github.com/theiagen/tbp-parser/blob/main/LICENSE"
@@ -95,7 +95,7 @@ WORKDIR /data
 CMD [ "python3", "/tbp-parser/tbp_parser/tbp_parser.py", "--help"]
 
 ### start of test stage ###
-FROM app as test
+FROM app AS test
 
 # # install wget for downloading test files
 RUN apt-get update && apt-get install --no-install-recommends -y wget ca-certificates

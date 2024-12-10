@@ -111,8 +111,15 @@ class Variant:
       for drug in gene_associated_drug_list:  
         self.logger.debug("VAR:The drug ({}) was not found in the annotation dictionary; adding it with a WHO confidence of 'No WHO annotation'".format(drug))
         self.annotation_dictionary[drug] = Row(self.logger, self, "No WHO annotation", drug)
-        
+      
+      if self.gene_name in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
+        for antimicrobial in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
+          if antimicrobial not in self.annotation_dictionary.keys():
+            self.logger.debug("VAR: The drug ({}) was not found in the gene associated drug list; adding it with a WHO confidence of 'No WHO annotation'".format(antimicrobial))
+            self.annotation_dictionary[antimicrobial] = Row(self.logger, self, "No WHO annotation", antimicrobial, source="Mutation effect for given drug is not in TBDB")
+  
       self.logger.debug("VAR:The annotation dictionary has all gene associated drugs included; it now has a length of {}".format(len(self.annotation_dictionary)))
+    
     else:
       # possibilities 1b and 2: the annotation field has no content or the field does not exist
       self.logger.debug("VAR:The annotation field has no content or does not exist. Now iterating through gene associated drugs.")
@@ -120,6 +127,11 @@ class Variant:
       for drug in self.gene_associated_drugs:
         self.annotation_dictionary[drug] = Row(self.logger, self, "No WHO annotation", drug)
   
+      if self.gene_name in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
+          for antimicrobial in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
+            if antimicrobial not in self.annotation_dictionary.keys():
+              self.annotation_dictionary[antimicrobial] = Row(self.logger, self, "No WHO annotation", antimicrobial)
+    
       self.logger.debug("VAR:After iterating through gene_associated_drugs, the annotation dictionary has a length of {}".format(len(self.annotation_dictionary)))
 
     self.logger.debug("VAR:Annotations extracted, now exiting function")
@@ -141,7 +153,7 @@ class Variant:
       # check if position within promoter regions
       if self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
           self.logger.debug("VAR:The position is within the promoter region; interpretation is 'U'")
-          return "Urule6"
+          return "Uwhov2"
       
       # otherwise, check if it is an upstream gene variant
       if "upstream_gene_variant" in self.type: 
@@ -168,7 +180,7 @@ class Variant:
       # check if position within promoter regions
       if self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
           self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
-          return "Urule6"
+          return "Uwhov2"
       
       else:
         self.logger.debug("VAR:The position is not within the special positions or the proximal promoter region; interpretation is 'S/U'")   
@@ -192,7 +204,7 @@ class Variant:
       # check if position within promoter regions
       if self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
           self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
-          return "Urule6"
+          return "Uwhov2"
         
       elif ("upstream_gene_variant" in self.type):
         self.logger.debug("VAR:The mutation type is a NONsynonymous variant, not in the proximal promoter region, and is an upstream gene variant; interpretation is 'S/U'")     
@@ -230,7 +242,7 @@ class Variant:
             
       if self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
           self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
-          return "Urule6"
+          return "Uwhov2"
         
       elif ("upstream_gene_variant" in self.type):
         self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynomyous but is an upstream gene variant; interpretation is 'S/U'")
@@ -255,7 +267,7 @@ class Variant:
         
         elif self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
             self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
-            return "Urule6"
+            return "Uwhov2"
         
         else:
           self.logger.debug("VAR:The position is not within the special positions, and not in the proximal promoter region,; interpretation is 'S/U'")
@@ -267,7 +279,7 @@ class Variant:
         return "Srule3.2.4"
       elif self.gene_name in globals.WHOV2_PROMOTER_REGIONS.keys() and globals.is_within_range(position_nt, globals.WHOV2_PROMOTER_REGIONS[self.gene_name]):
           self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
-          return "Urule6"
+          return "Uwhov2"
       elif ("upstream_gene_variant" in self.type):
         self.logger.debug("VAR:The mutation is a nonsynonymous variant and not in the proximal promoter region, but is an upstream gene variant; interpretation is 'S/U'")
         return "Srule3.2.4" if interpretation_destination == "mdl" else "Urule3.2.4"

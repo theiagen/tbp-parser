@@ -54,7 +54,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v1.5.2 - a mistake; somehow exactly the same as 1.4.4.2?? (this release is also a mystery)
 - v1.5.3 - make additional language changes and fix an unusual edge case where the same mutation was identified; rename mmpR5 to Rv0678 again
 - v1.5.4 (same change in v1.4.2.1) - prevent overwriting “R” mutations with No Sequence
-- v1.5.5 (same change in v1.4.4.3 - fix an issue where “Pending Retest” was not properly appearing; consider only LIMS genes for LIMS reort
+- v1.5.5 (same change in v1.4.4.3) - fix an issue where “Pending Retest” was not properly appearing; consider only LIMS genes for LIMS reort
 - v1.5.6 (same change in v1.4.4.4) - prevent “Pending Retest” if Insufficient Coverage is in a gene that also has a valid deletion
 - v1.5.7 (same change in v1.4.4.9) - add optional input to add cycloserine to LIMS report
 - v1.5.8 (same change in v1.4.4.7) - change tNGS LIMS lineage designation to check items in the coverage dictionary (to represent both rpoB segments; percentage calculation erroneously combined them)
@@ -65,6 +65,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.1.0 - any mutations in the 60 proximal promoter regions included in the WHO v2 database (Table 22, page 89-90). *Use either the smw-tbprofiler-updates-dev branch until the time of the v2.3.0 release of TheiaProk on Terra for this and all subsequent v2.1.x+ versions*
     - Earlier versions are now deprecated and will no longer be supported.
 - v2.1.1 - adds the source and comment fields from TBDB to the Laboratorian report; fixes a bug where mmpR5 was not being completly renamed to Rv0678; fixes a bug where mutations that didn't share the same position were being compared
+- v2.2.0 - removes ciprofloxacin, fluoroquinolones, and ofloxacin from gyrA and gyrB and aminoglycosides from rrs in the `globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME` dictionary; if a drug is missing in the TBProfiler JSON's gene_associated_drug field that is present in that global dictionary, it will be added for the mutation.
 
 ---
 
