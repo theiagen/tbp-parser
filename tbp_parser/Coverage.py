@@ -140,8 +140,10 @@ class Coverage:
       except:
         self.logger.error("An expected gene ({}) was not found in laboratorian report.\nSomething may have gone wrong.".format(gene))
       
-      DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])], ignore_index=True)
-
+      if len(DF_COVERAGE) == 0:
+        DF_COVERAGE = pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])
+      else:
+        DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])], ignore_index=True)
 
     if self.tngs:
       self.logger.debug("COV:Merging the tNGS expert rule regions coverage with the initial coverage report and renaming columns")
