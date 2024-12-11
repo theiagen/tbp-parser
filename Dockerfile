@@ -42,7 +42,7 @@ ARG TBP_PARSER_VER
 LABEL base.image="ubuntu:jammy"
 LABEL dockerfile.version="1"
 LABEL software="tbp-parser"
-LABEL software.version="2.2.1"
+LABEL software.version="2.1.1"
 LABEL description="tbp-parser and samtools"
 LABEL website="https://github.com/theiagen/tbp-parser"
 LABEL license="https://github.com/theiagen/tbp-parser/blob/main/LICENSE"

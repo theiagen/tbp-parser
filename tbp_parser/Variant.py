@@ -118,7 +118,15 @@ class Variant:
             self.logger.debug("VAR: The drug ({}) was not found in the gene associated drug list; adding it with a WHO confidence of 'No WHO annotation'".format(antimicrobial))
             self.annotation_dictionary[antimicrobial] = Row(self.logger, self, "No WHO annotation", antimicrobial, source="Mutation effect for given drug is not in TBDB")
   
+      
+      if self.gene_name in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
+        for antimicrobial in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
+          if antimicrobial not in self.annotation_dictionary.keys():
+            self.logger.debug("VAR: The drug ({}) was not found in the gene associated drug list; adding it with a WHO confidence of 'No WHO annotation'".format(antimicrobial))
+            self.annotation_dictionary[antimicrobial] = Row(self.logger, self, "No WHO annotation", antimicrobial, source="Mutation effect for given drug is not in TBDB")
+  
       self.logger.debug("VAR:The annotation dictionary has all gene associated drugs included; it now has a length of {}".format(len(self.annotation_dictionary)))
+    
     
     else:
       # possibilities 1b and 2: the annotation field has no content or the field does not exist
@@ -134,7 +142,9 @@ class Variant:
             if antimicrobial not in self.annotation_dictionary.keys():
               self.annotation_dictionary[antimicrobial] = Row(self.logger, self, "No WHO annotation", antimicrobial)
     
-    self.logger.debug("VAR:{} annotation(s) extracted, now exiting function".format(len(self.annotation_dictionary)))
+      self.logger.debug("VAR:After iterating through gene_associated_drugs, the annotation dictionary has a length of {}".format(len(self.annotation_dictionary)))
+
+    self.logger.debug("VAR:Annotations extracted, now exiting function")
     
   def apply_expert_rules(self, interpretation_destination):
     """

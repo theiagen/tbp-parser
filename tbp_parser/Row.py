@@ -327,6 +327,7 @@ class Row() :
     if any(rule in self.mdl_interpretation for rule in globals.RULE_TO_RATIONALE.keys()):
       interpretation = self.mdl_interpretation[0]
       rule = self.mdl_interpretation[1:]
+      self.logger.debug("rule={}".format(rule))
       self.mdl_interpretation = interpretation
       self.logger.debug(globals.RULE_TO_RATIONALE[rule])
       globals.RULE_TO_RATIONALE[rule]
