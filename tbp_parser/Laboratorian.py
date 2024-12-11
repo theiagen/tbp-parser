@@ -56,7 +56,7 @@ class Laboratorian:
       # extract all of the annotations for the variant
       variant.extract_annotations()
       
-      self.logger.debug("LAB:The current variant (gene: {}) has {} annotations; now iterating through them".format(variant.gene_name, len(variant.annotation_dictionary)))
+      self.logger.debug("LAB:The current variant (gene: {}) has {} annotation(s); now iterating through them".format(variant.gene_name, len(variant.annotation_dictionary)))
       for annotation_row in variant.annotation_dictionary.values():
         # complete the row objects
         annotation_row.complete_row()

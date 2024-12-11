@@ -281,7 +281,7 @@ class LIMS:
               elif substitution not in mutations_per_gene[gene]:
                   mutations_per_gene[gene] = "{}; {}".format("".join(mutations_per_gene[gene]), substitution)
           else:
-            self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it is a non-rpoB RRDR \"S\" mutation".format(mutation, gene))
+            self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it is not an rpoB RRDR \"S\" mutation".format(mutation, gene))
         
         # Mutations for a particular gene have been added to the mutations_per_gene dictionary.
         # if that gene has mutations associated with it, we want to perform some additional filtration,
