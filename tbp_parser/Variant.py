@@ -120,11 +120,14 @@ class Variant:
   
       self.logger.debug("VAR:The annotation dictionary has all gene associated drugs included; it now has a length of {}".format(len(self.annotation_dictionary)))
     
+    
     else:
       # possibilities 1b and 2: the annotation field has no content or the field does not exist
-      self.logger.debug("VAR:The annotation field has no content or does not exist. Now iterating through gene associated drugs.")
+      self.logger.debug("VAR:The annotation field has no content or does not exist. Now iterating through gene associated drugs and gene-drug combination dictionary.")
        
       for drug in self.gene_associated_drugs:
+        if drug == "rifampicin":
+          drug = "rifampin"
         self.annotation_dictionary[drug] = Row(self.logger, self, "No WHO annotation", drug)
   
       if self.gene_name in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
@@ -140,7 +143,7 @@ class Variant:
     """
     Apply rules 1-3 from the CDPH interpretation logic document regarding the interpretation of potential resistance mutations.
     """
-    self.logger.debug("VAR:Within the Variant class apply_expert_rules function")
+    self.logger.debug("VAR:Within the Variant class apply_expert_rules function for {}".format(interpretation_destination))
     
     position_nt = globals.get_position(self.nucleotide_change)
     position_aa = globals.get_position(self.protein_change)
@@ -216,8 +219,6 @@ class Variant:
     # rules 2.2.2.1 and 3.2.2 & 3.2.3
     elif self.gene_name in ["gyrA", "gyrB", "rpoB"]: 
       self.logger.debug("VAR:The gene is {}, now checking if the position requires special consideration".format(self.gene_name))
-      self.logger.debug("VAR:length of aa: {}".format(len(position_aa)))
-      self.logger.debug("VAR:SEPCIAL POSITIONS: {}".format(globals.SPECIAL_POSITIONS[self.gene_name]))
       
       if globals.is_within_range(position_aa, globals.SPECIAL_POSITIONS[self.gene_name]):
         self.logger.debug("VAR:The position is within the special positions; interpretation is 'R' if rpoB (or 'U' if not) and nonsynonymous, else 'S'")

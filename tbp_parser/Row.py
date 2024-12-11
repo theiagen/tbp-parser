@@ -51,7 +51,7 @@ class Row() :
         self.tbprofiler_variant_substitution_type = self.variant.type
         self.tbprofiler_variant_substitution_nt = self.variant.nucleotide_change
         self.tbprofiler_variant_substitution_aa = self.variant.protein_change
-        self.logger.debug("ROW:This mutations is a {} with {} and {}".format(self.tbprofiler_variant_substitution_type, self.tbprofiler_variant_substitution_nt, self.tbprofiler_variant_substitution_aa))
+        self.logger.debug("ROW:This mutation is a {} with nucleotide change \"{}\" and protein change \"{}\"".format(self.tbprofiler_variant_substitution_type, self.tbprofiler_variant_substitution_nt, self.tbprofiler_variant_substitution_aa))
         # change blank aa substitutions to NA
         if self.tbprofiler_variant_substitution_aa == "":
           self.tbprofiler_variant_substitution_aa = "NA"
@@ -283,7 +283,6 @@ class Row() :
       
     self.logger.debug("ROW:Interpretation logic applied or skipped; now removing any 'noexpert' suffixes")
     self.describe_rationale()
-    self.logger.debug("rationale = {}".format(self.rationale))
     self.logger.debug("ROW:Finished completing the row's values, now exiting function")
     
   def rank_annotation(self): 
