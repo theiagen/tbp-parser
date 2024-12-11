@@ -66,7 +66,8 @@ The following is a list of every version of `tbp-parser` and a short summary of 
     - Earlier versions are now deprecated and will no longer be supported.
 - v2.1.1 - adds the source and comment fields from TBDB to the Laboratorian report; fixes a bug where mmpR5 was not being completly renamed to Rv0678; fixes a bug where mutations that didn't share the same position were being compared
 - v2.2.0 - removes ciprofloxacin, fluoroquinolones, and ofloxacin from gyrA and gyrB and aminoglycosides from rrs in the `globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME` dictionary; if a drug is missing in the TBProfiler JSON's gene_associated_drug field that is present in that global dictionary, it will be added for the mutation.
-
+- v2.2.1 - fixes a bug where rifampicin was not being renamed to rifampin and resulted in duplicate rows in the laboratorian report 
+- 
 ---
 
 The following diagram shows how each version is related to the others without technical details:
