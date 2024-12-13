@@ -9,7 +9,7 @@ title: Getting Started
 We highly recommend using the following Docker iamge to run tbp-parser:
 
 ``` bash
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.2.1 #(1)!
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.2.2 #(1)!
 ```
 
 1. We host our Docker images on the Google Artifact Registry so that they are always availble for usage.
@@ -21,7 +21,7 @@ docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiage
 
 # Once inside the container interactively, you can run the tbp-parser tool
 python3 /tbp-parser/tbp_parser/tbp_parser.py -v
-# v2.2.1
+# v2.2.2
 ```
 
 ### Locally with Python
