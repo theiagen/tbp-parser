@@ -283,17 +283,6 @@ ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME = {
 }
 
 """
-A dictionary that converts the mutation comment to a reportable LIMS values for the corresponding mutation
-The key is the search term in the comment (comment.contains(key)) and the value will be output in square brackets
-"""
-global COMMENT_TO_LIMS
-COMMENT_TO_LIMS = {
-  "Low-level resistance (multiple, genetically linked low-level resistance mutations are additive and confer high-level resistance)": "Low-level resistance",
-  "High-level resistance": "High-level resistance"
-}
-
-
-"""
 A dictionary that will contain the percent coverage for each gene
 """
 global COVERAGE_DICTIONARY

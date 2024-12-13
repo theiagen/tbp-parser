@@ -120,7 +120,6 @@ class Variant:
   
       self.logger.debug("VAR:The annotation dictionary has all gene associated drugs included; it now has a length of {}".format(len(self.annotation_dictionary)))
     
-    
     else:
       # possibilities 1b and 2: the annotation field has no content or the field does not exist
       self.logger.debug("VAR:The annotation field has no content or does not exist. Now iterating through gene associated drugs and gene-drug combination dictionary.")
