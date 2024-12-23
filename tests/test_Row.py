@@ -21,7 +21,7 @@ class TestRow:
                                           "The detected mutation(s) have uncertain significance. Resistance to test cannot be ruled out", 
                                           "No mutations associated with resistance to test detected")
     
-  def test_describe_rationale(self):
+  def test_describe_rationale_rule324(self):
     a = Row(logging.getLogger(__name__), None, "Assoc w R", "test", "test")
     a.looker_interpretation = "Urule3.2.4"
     a.mdl_interpretation = "Srule3.2.4"
@@ -31,6 +31,17 @@ class TestRow:
     a.describe_rationale()
     
     assert (a.looker_interpretation, a.mdl_interpretation, a.rationale, a.confidence) == ("U", "S", "No WHO annotation or expert rule", "No WHO annotation")
+  
+  def test_describe_rationale_whov2(self):
+    a = Row(logging.getLogger(__name__), None, "", "test", "test")
+    a.looker_interpretation = "Rwhov2"
+    a.mdl_interpretation = "Uwhov2"
+    a.rationale = ""
+    a.confidence = ""
+    
+    a.describe_rationale()
+    
+    assert (a.looker_interpretation, a.mdl_interpretation, a.rationale, a.confidence) == ("R", "U", "Mutation in proximal promoter region", "No WHO annotation")
     
   def test_complete_row(self):
     a = Row(logging.getLogger(__name__), None, "Assoc w R", "test", "katG")

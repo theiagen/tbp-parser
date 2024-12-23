@@ -111,9 +111,8 @@ RUN wget -q https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests
 
 # test version and help option outputs
 # run pytest suite
-# expect to see a warning regarding pandas data frame concatenation
 RUN python3 /tbp-parser/tbp_parser/tbp_parser.py --version && \
 python3 /tbp-parser/tbp_parser/tbp_parser.py --help && \
 python3 -m pip install pytest && \
-cd /tbp-parser 
-#pytest
+cd /tbp-parser && \
+pytest

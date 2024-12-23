@@ -1,6 +1,6 @@
 {
   "id": "lineageandla1",
-  "tbprofiler_version": "4.4.2",
+  "tbprofiler_version": "6.4.1",
   "main_lineage": "lineage4",
   "sub_lineage": "lineage4;La1.8.1"
 }

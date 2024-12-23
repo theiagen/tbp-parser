@@ -10,7 +10,9 @@
         {
           "type": "who_confidence",
           "drug": "linezolid",
-          "WHO confidence": "Uncertain significance"
+          "WHO confidence": "Uncertain significance",
+          "source": "WHO catalogue v2",
+          "comment": ""          
         }
       ],
       "locus_tag": "EBG00000313339",

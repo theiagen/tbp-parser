@@ -1,5 +1,6 @@
 import os
 import logging
+import tbp_parser.globals
 from tbp_parser.LIMS import LIMS
 from tbp_parser.Coverage import Coverage
 from tbp_parser.Laboratorian import Laboratorian
@@ -12,68 +13,68 @@ class TestLIMS:
 
   BAM = os.path.join(data_dir, "mtb.bam")
   COVERAGE_BED = os.path.join(data_dir, "tbdb-modified-regions-for-tests.bed")
-  COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, coverage_regions=COVERAGE_BED, output_prefix="test")
+  COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, coverage_regions=COVERAGE_BED, output_prefix="test", tngs=False, tngs_expert_regions=None)
   COVERAGE1.calculate_coverage()
   
   INPUT_JSON = os.path.join(data_dir, "combined.json")
   LABORATORIAN = Laboratorian(logger=LOGGER, input_json=INPUT_JSON, output_prefix="test", tngs=False)
   LABORATORIAN.create_laboratorian_report()
+        
+  def test_get_id_bcg(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "bcg.json")
     
-  # def test_get_id_bcg(self):
-  #   JSON = os.path.join(self.data_dir + '/lineages', "bcg.json")
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
+    lineage = LIMS1.get_id()
     
-  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_id()
-    
-  #   assert lineage == "DNA of Mycobacterium bovis BCG detected"
+    assert lineage == "DNA of Mycobacterium bovis BCG detected"
 
-  # def test_get_id_bovis(self): 
-  #   JSON = os.path.join(self.data_dir + '/lineages', "bovis.json")
+  def test_get_id_bovis(self): 
+    JSON = os.path.join(self.data_dir + '/lineages', "bovis.json")
     
-  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_id()
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
+    lineage = LIMS1.get_id()
     
-  #   assert lineage == "DNA of Mycobacterium bovis (not BCG) detected"
+    assert lineage == "DNA of Mycobacterium bovis (not BCG) detected"
 
-  # def test_get_id_la1(self):
-  #   JSON = os.path.join(self.data_dir + '/lineages', "la1.json")
+  def test_get_id_la1(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "la1.json")
     
-  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_id()
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
+    lineage = LIMS1.get_id()
     
-  #   assert lineage == "DNA of Mycobacterium bovis (not BCG) detected"
+    assert lineage == "DNA of Mycobacterium bovis (not BCG) detected"
   
-  # def test_get_id_la1andbcg(self):
-  #   JSON = os.path.join(self.data_dir + '/lineages', "la1andbcg.json")
+  def test_get_id_la1andbcg(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "la1andbcg.json")
     
-  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_id()
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
+    lineage = LIMS1.get_id()
     
-  #   assert lineage == "DNA of Mycobacterium bovis (not BCG) detected; DNA of Mycobacterium bovis BCG detected"
+    assert lineage == "DNA of Mycobacterium bovis (not BCG) detected; DNA of Mycobacterium bovis BCG detected"
   
-  # def test_get_id_lineage(self):
-  #   JSON = os.path.join(self.data_dir + '/lineages', "lineage.json")
+  def test_get_id_lineage(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "lineage.json")
     
-  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_id()
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
+    lineage = LIMS1.get_id()
     
-  #   assert lineage == "DNA of Mycobacterium tuberculosis species detected"
+    assert lineage == "DNA of Mycobacterium tuberculosis species detected"
     
-  # def test_get_id_lineageandla1(self):
-  #   JSON = os.path.join(self.data_dir + '/lineages', "lineageandla1.json")
+  def test_get_id_lineageandla1(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "lineageandla1.json")
     
-  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test")
-  #   lineage = LIMS1.get_id()
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
+    lineage = LIMS1.get_id()
   
-  #   assert lineage == "DNA of Mycobacterium bovis (not BCG) detected; DNA of Mycobacterium tuberculosis species detected"
+    assert lineage == "DNA of Mycobacterium bovis (not BCG) detected; DNA of Mycobacterium tuberculosis species detected"
   
-  # def test_get_id_nolineage(self):
-  #   JSON = os.path.join(self.data_dir + '/lineages', "nolineage.json")
+  def test_get_id_nolineage(self):
+    JSON = os.path.join(self.data_dir + '/lineages', "nolineage.json")
     
-  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
-  #   lineage = LIMS1.get_id()
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=JSON, output_prefix="test", tngs=False)
+    lineage = LIMS1.get_id()
     
-  #   assert lineage == "DNA of Mycobacterium tuberculosis complex NOT detected"
+    assert lineage == "DNA of Mycobacterium tuberculosis complex NOT detected"
   
   def test_convert_annotation(self):
     LIMS1 = LIMS(logger=self.LOGGER, input_json=self.INPUT_JSON, output_prefix="test", tngs=False)
@@ -88,10 +89,10 @@ class TestLIMS:
                                               "The detected mutation(s) have uncertain significance. Resistance to ethambutol cannot be ruled out",
                                               "Pending Retest")
   
-  # def test_create_lims_report(self):   
-  #   LIMS1 = LIMS(logger=self.LOGGER, input_json=self.INPUT_JSON, output_prefix="test", tngs=False)
-  #   LIMS1.create_lims_report()
+  def test_create_lims_report(self):   
+    LIMS1 = LIMS(logger=self.LOGGER, input_json=self.INPUT_JSON, output_prefix="test", tngs=False)
+    LIMS1.create_lims_report()
     
-  #   assert os.path.exists("test.lims_report.csv")
+    assert os.path.exists("test.lims_report.csv")
     
-  #   os.remove("test.lims_report.csv")
+    os.remove("test.lims_report.csv")

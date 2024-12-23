@@ -38,12 +38,16 @@
         {
           "type": "who_confidence",
           "drug": "clofazimine",
-          "who_confidence": "Uncertain significance"
+          "who_confidence": "Uncertain significance",
+          "source": "WHO catalogue v2",
+          "comment": ""
         },
         {
           "type": "who_confidence",
           "drug": "bedaquiline",
-          "who_confidence": "Uncertain significance"
+          "who_confidence": "Uncertain significance",
+          "source": "WHO catalogue v2",
+          "comment": ""
         }
       ],
       "locus_tag": "Rv0678",

@@ -52,7 +52,7 @@ class TestVariant:
         results["mdl"].append(katg_variant.apply_expert_rules("mdl"))
         results["looker"].append(katg_variant.apply_expert_rules("looker"))
 
-    assert (results["looker"], results["mdl"]) == (["Urule2.2.1", "Urule2.2.1"], ["Urule2.2.1", "Srule2.2.1"])
+    assert (results["looker"], results["mdl"]) == (["Rrule2.2.1", "Urule2.2.1"], ["Rrule2.2.1", "Urule2.2.1"])
   
   def test_expert_rule_rpob(self):
     with open(os.path.join(self.data_dir + "/rule2", "rpob.json"), "r") as rpob:
@@ -65,7 +65,7 @@ class TestVariant:
         results["mdl"].append(rpob_variant.apply_expert_rules("mdl"))
         results["looker"].append(rpob_variant.apply_expert_rules("looker"))
     
-    assert (results["looker"], results["mdl"]) == (["Urule2.2.2.2", "Urule2.2.2.2", "Rrule2.2.2.1"], ["Srule2.2.2.2", "Srule2.2.2.2", "Rrule2.2.2.1"])
+    assert (results["looker"], results["mdl"]) == (["Urule2.2.2.2", "Uwhov2", "Rrule2.2.2.1"], ["Urule2.2.2.2", "Uwhov2", "Rrule2.2.2.1"])
   
   def test_expert_rule_fabg1(self):
     with open(os.path.join(self.data_dir + "/rule3", "fabg1.json"), "r") as fabg1:
@@ -78,7 +78,7 @@ class TestVariant:
         results["mdl"].append(fabg1_variant.apply_expert_rules("mdl"))
         results["looker"].append(fabg1_variant.apply_expert_rules("looker"))
     
-    assert (results["looker"], results["mdl"]) == (["Urule3.2.4"], ["Srule3.2.4"])
+    assert (results["looker"], results["mdl"]) == (["Urule3.2.4"], ["Urule3.2.4"])
   
   def test_expert_rule_rrs(self):
     with open(os.path.join(self.data_dir + "/rule3", "rrs.json"), "r") as rrs:

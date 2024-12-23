@@ -28,21 +28,6 @@ class LIMS:
     """
     self.logger.info("LIMS:Within LIMS class get_id function")
     
-    # if the percentage of genes above the coverage threshold is greater than 70%, then we can call the lineage if TBProfiler did not designate it
-    percentage_limit = 0.7
-    
-    # calculate percentage of genes in the LIMS report above the coverage threshold
-    self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
-    if self.tngs:
-      number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= 90 for gene in globals.COVERAGE_DICTIONARY.keys())
-      percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.COVERAGE_DICTIONARY.keys())
-
-    else:
-      number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
-      percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
-    
-    self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
-
     with open(self.input_json) as json_fh:
       input_json = json.load(json_fh)
       
@@ -78,15 +63,35 @@ class LIMS:
             lineage.add("DNA of Mycobacterium bovis (not BCG) detected")     
           
       if len(lineage) == 0:
-        if (percentage_lims_genes_above >= percentage_limit):
-          self.logger.debug("LIMS:Percentage of LIMS genes above the coverage threshold is GREATER than 90% AND no lineage has been detected")
-          self.logger.debug("LIMS:TBProfiler was likely unable to determine the lineage, but since percentage_lims_genes_above >= percentage_limit, we will assume M.tb")
+        self.logger.debug("No recognizable lineage detected by TBProfiler")
+        # if the percentage of genes above the coverage threshold is greater than 70%, then we can call the lineage if TBProfiler did not designate it
+        percentage_limit = 0.7
+
+        # calculate percentage of genes in the LIMS report above the coverage threshold
+        self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
+        try:
+          if self.tngs:
+            number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= 90 for gene in globals.COVERAGE_DICTIONARY.keys())
+            percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.COVERAGE_DICTIONARY.keys())
+
+          else:
+            number_of_lims_genes_above_coverage_threshold = sum(int(globals.COVERAGE_DICTIONARY[gene]) >= globals.COVERAGE_THRESHOLD for gene in globals.GENES_FOR_LIMS)
+            percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals.GENES_FOR_LIMS)
           
-          if detected_lineage == "" or detected_lineage == "NA" or len(lineage) == 0:
-              lineage.add("DNA of Mycobacterium tuberculosis complex detected")
+          self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
             
-        else:
-          self.logger.debug("LIMS:Percentage of LIMS genes above the coverage threshold is LESS than 90% AND no lineage has been detected")
+          if (percentage_lims_genes_above >= percentage_limit):
+            self.logger.debug("LIMS:Percentage of LIMS genes above the coverage threshold is GREATER than 90% AND no lineage has been detected; assuming M.tb")
+          
+            if detected_lineage == "" or detected_lineage == "NA" or len(lineage) == 0:
+                lineage.add("DNA of Mycobacterium tuberculosis complex detected")
+              
+          else:
+            self.logger.debug("LIMS:Percentage of LIMS genes above the coverage threshold is LESS than 90% AND no lineage has been detectedl; assuming NOT M.tb")
+            lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
+            
+        except:
+          self.logger.error("LIMS:This shouldn't happen unless a test is running!")
           lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
        
       lineage = "; ".join(sorted(lineage))

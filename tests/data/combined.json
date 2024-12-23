@@ -1,6 +1,6 @@
 {
   "id": "combined_test",
-  "tbprofiler_version": "4.4.2",
+  "tbprofiler_version": "6.4.1",
   "lineage": [
     {
       "lin": "lineage1"
@@ -22,7 +22,9 @@
         {
           "type": "who_confidence",
           "drug": "linezolid",
-          "who_confidence": "Uncertain significance"
+          "confidence": "Uncertain significance",
+          "source": "WHO catalogue v2",
+          "comment": ""
         }
       ],
       "locus_tag": "EBG00000313339",
@@ -81,12 +83,16 @@
         {
           "type": "who_confidence",
           "drug": "clofazimine",
-          "who_confidence": "Uncertain significance"
+          "confidence": "Uncertain significance",
+          "source": "WHO catalogue v2",
+          "comment": ""
         },
         {
           "type": "who_confidence",
           "drug": "bedaquiline",
-          "who_confidence": "Uncertain significance"
+          "confidence": "Uncertain significance",
+          "source": "WHO catalogue v2",
+          "comment": ""
         }
       ],
       "locus_tag": "Rv0678",

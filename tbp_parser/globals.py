@@ -37,8 +37,6 @@ def is_within_range(position, range_positions):
   
   return False
 
-
-
 """
 A dictionary to turn TBProfiler WHO annotations into
 their corresponding CDPH Looker or MDL interpretations
