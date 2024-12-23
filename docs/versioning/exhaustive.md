@@ -68,7 +68,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.2.0 - removes ciprofloxacin, fluoroquinolones, and ofloxacin from gyrA and gyrB and aminoglycosides from rrs in the `globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME` dictionary; if a drug is missing in the TBProfiler JSON's gene_associated_drug field that is present in that global dictionary, it will be added for the mutation.
 - v2.2.1 - fixes a bug where rifampicin was not renamed to rifampin, which caused duplicate lines to appear in the Laboratorian report.
 - v2.2.2 - removes the high-level and low-level resistance comments from the LIMS report
-- v2.3.0 - reworks the lineage detection so that if TBProfiler detects a lineage, it is reported; if no lineage is reported by TBProfiler, then whether or not M.tb was detected depends on the percentage of LIMS genes above a (now lower) default percentage of 0.7
+- v2.3.0 - reworks the lineage detection so that if TBProfiler detects a lineage, it is reported; if no lineage is reported by TBProfiler, then whether or not M.tb was detected depends on the percentage of LIMS genes above a (now lower) default percentage of 0.7; all pytests have been fixed as well
   
 ---
 
