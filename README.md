@@ -1,5 +1,7 @@
 # tbp-parser
 
+Please contact support@theiagen.com or sage.wright@theiagen.com with any questions.
+
 **NOT FOR DIAGNOSTIC USE**
 
 **CAUTION:** The information produced by this program should **not** be used for clinical reporting unless and until extensive validation has occured in your laboratory on a stable version. Otherwise, the outputs of tbp-parser are for research use only.
