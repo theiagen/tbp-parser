@@ -513,6 +513,14 @@ GENES_FOR_LIMS_tNGS = [
   "gyrB", "inhA", "katG", "pncA", "rplC", 
   "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
 ]
+# this is for NY primers
+# global GENES_FOR_LIMS_tNGS
+# GENES_FOR_LIMS_tNGS = [
+#   "ahpC", "eis", "embA", "embB", "embC", 
+#   "ethA", "fabG1", "gyrA", "gyrB", "inhA", 
+#   "katG", "oxyR", "pncA", "rpoB", "rpsL", "rrs"
+#]
+
 
 """
 A list of genes that are to be included in the 

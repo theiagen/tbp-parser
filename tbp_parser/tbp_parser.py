@@ -17,8 +17,11 @@ def main():
                       help="the BAM file produced by TBProfiler", type=CheckInputs.is_bam_valid)
   parser.add_argument("-v", "--version", 
                       action='version', version=str(__VERSION__))
+  parser.add_argument("--config",
+                      help="the configuration file to use, in YAML format\n(overrides all other arguments except input_json and input_bam)", default="", metavar="\b", type=CheckInputs.is_config_valid)
   
-  qc_arguments = parser.add_argument_group("quality control arguments", "options that determine what passes QC")
+  qc_arguments = parser.add_argument_group("quality control arguments", 
+                                            "options that determine what passes QC")
   qc_arguments.add_argument("-d", "--min_depth", 
                       help="the minimum depth of coverage for a site to pass QC\ndefault=10", default=10, metavar="\b", type=int)
   qc_arguments.add_argument("-c", "--min_percent_coverage", 
@@ -30,7 +33,8 @@ def main():
   qc_arguments.add_argument("-r", "--coverage_regions",
                       help="the BED file containing the regions to calculate percent coverage for\ndefault=data/tbdb-modified-regions.bed", default="../data/tbdb-modified-regions.bed", metavar="\b", type=CheckInputs.is_bed_valid)
   
-  general_arguments = parser.add_argument_group("text arguments", "arguments that are used verbatim in the reports or to name the output files")
+  general_arguments = parser.add_argument_group("text arguments", 
+                                                "arguments that are used verbatim in the reports or to name the output files")
   general_arguments.add_argument("-m", "--sequencing_method", 
                       help="the sequencing method used to generate the data; used in the LIMS & Looker reports\n** Enclose in quotes if includes a space\ndefault=\"Sequencing method not provided\"", default="Sequencing method not provided", metavar="\b")
   general_arguments.add_argument("-p", "--operator", 
@@ -42,7 +46,8 @@ def main():
   lims_arguments.add_argument("--add_cs_lims",
                               help="adds cycloserine (CS) fields to the LIMS report", action="store_true", default=False)
   
-  tngs_arguments = parser.add_argument_group("tNGS-specific arguments", "options that are primarily used for tNGS data\n(all frequency arguments are compatible with WGS data)")
+  tngs_arguments = parser.add_argument_group("tNGS-specific arguments", 
+                                              "options that are primarily used for tNGS data\n(all frequency arguments are compatible with WGS data)")
   tngs_arguments.add_argument("--tngs",
                       help="\nindicates that the input data was generated using Deeplex + CDPH modified protocol\nTurns on tNGS-specific global parameters", action="store_true", default=False)
   tngs_arguments.add_argument("--tngs_expert_regions",
@@ -60,7 +65,8 @@ def main():
   tngs_arguments.add_argument("--etha237_frequency",
                       help="the minimum frequency for an ethA mutation at protein position 237 to pass QC\n  (this is a problematic site in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
   
-  logging_arguments = parser.add_argument_group("logging arguments", "options that change the verbosity of the stdout log")
+  logging_arguments = parser.add_argument_group("logging arguments", 
+                                                "options that change the verbosity of the stdout log")
   logging_arguments.add_argument("--verbose", 
                       help="increase output verbosity", action="store_true", default=False)
   logging_arguments.add_argument("--debug", 
@@ -70,7 +76,7 @@ def main():
   
   parse = Parser(options)
   parse.run()
-  
-  
+
+
 if __name__ == "__main__":
   main()
