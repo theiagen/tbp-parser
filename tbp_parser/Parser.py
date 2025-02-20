@@ -38,7 +38,7 @@ class Parser:
     globals.OPERATOR = options.operator
 
     if self.tngs:
-      self.logger.info("PARSER:Deeplex + CDPH modified protocol flag detected; adjusting outputs to reflect this")
+      self.logger.info("PARSER:tNGS flag detected; adjusting outputs to reflect this")
       if (self.coverage_regions == "../data/tbdb-modified-regions.bed"):
         self.logger.debug("PARSER:Changing default coverage regions to ../data/tngs-reportable-regions.bed")
         self.coverage_regions = "../data/tngs-reportable-regions.bed"
@@ -99,7 +99,7 @@ class Parser:
     coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions, self.tngs, self.tngs_expert_regions)
     coverage.calculate_coverage()
     
-    if self.tngs:
+    if self.tngs and self.tngs_expert_regions != "":
       self.logger.info("PARSER:Calculating the coverage for the expert rule regions")
       coverage.calculate_r_expert_rule_regions_coverage()
     
