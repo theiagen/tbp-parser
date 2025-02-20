@@ -130,9 +130,9 @@ class Variant:
         self.annotation_dictionary[drug] = Row(self.logger, self, "No WHO annotation", drug)
   
       if self.gene_name in globals_.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
-          for antimicrobial in globals_.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
-            if antimicrobial not in self.annotation_dictionary.keys():
-              self.annotation_dictionary[antimicrobial] = Row(self.logger, self, "No WHO annotation", antimicrobial)
+        for antimicrobial in globals_.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
+          if antimicrobial not in self.annotation_dictionary.keys():
+            self.annotation_dictionary[antimicrobial] = Row(self.logger, self, "No WHO annotation", antimicrobial)
     
       self.logger.debug("VAR:After iterating through gene_associated_drugs, the annotation dictionary has a length of {}".format(len(self.annotation_dictionary)))
 
@@ -154,8 +154,8 @@ class Variant:
      
       # check if position within promoter regions
       if self.gene_name in globals_.WHOV2_PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, globals_.WHOV2_PROMOTER_REGIONS[self.gene_name]):
-          self.logger.debug("VAR:The position is within the promoter region; interpretation is 'U'")
-          return "Uwhov2"
+        self.logger.debug("VAR:The position is within the promoter region; interpretation is 'U'")
+        return "Uwhov2"
       
       # otherwise, check if it is an upstream gene variant
       if "upstream_gene_variant" in self.type: 
@@ -181,8 +181,8 @@ class Variant:
       
       # check if position within promoter regions
       if self.gene_name in globals_.WHOV2_PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, globals_.WHOV2_PROMOTER_REGIONS[self.gene_name]):
-          self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
-          return "Uwhov2"
+        self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
+        return "Uwhov2"
       
       else:
         self.logger.debug("VAR:The position is not within the special positions or the proximal promoter region; interpretation is 'S/U'")   
@@ -205,8 +205,8 @@ class Variant:
       
       # check if position within promoter regions
       if self.gene_name in globals_.WHOV2_PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, globals_.WHOV2_PROMOTER_REGIONS[self.gene_name]):
-          self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
-          return "Uwhov2"
+        self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
+        return "Uwhov2"
         
       elif ("upstream_gene_variant" in self.type):
         self.logger.debug("VAR:The mutation type is a NONsynonymous variant, not in the proximal promoter region, and is an upstream gene variant; interpretation is 'S/U'")     
@@ -241,8 +241,8 @@ class Variant:
         return "Srule2.2.2.2" if self.gene_name == "rpoB" else "Srule3.2.4"
             
       if self.gene_name in globals_.WHOV2_PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, globals_.WHOV2_PROMOTER_REGIONS[self.gene_name]):
-          self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
-          return "Uwhov2"
+        self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
+        return "Uwhov2"
         
       elif ("upstream_gene_variant" in self.type):
         self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynomyous but is an upstream gene variant; interpretation is 'S/U'")
@@ -266,8 +266,8 @@ class Variant:
           return "Urule3.2.1"
         
         elif self.gene_name in globals_.WHOV2_PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, globals_.WHOV2_PROMOTER_REGIONS[self.gene_name]):
-            self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
-            return "Uwhov2"
+          self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
+          return "Uwhov2"
         
         else:
           self.logger.debug("VAR:The position is not within the special positions, and not in the proximal promoter region,; interpretation is 'S/U'")

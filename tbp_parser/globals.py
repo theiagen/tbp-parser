@@ -132,8 +132,6 @@ ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
     "pncA": "M_DST_E02_pncA"
   },
   "M_DST_F01_EMB": {
-    "embA": "M_DST_F02_embA", 
-# embA is new^^
     "embB": "M_DST_F03_embB"
   },
   "M_DST_G01_AMK": {
@@ -145,8 +143,8 @@ ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
     "eis": "M_DST_H03_eis"
   },
   "M_DST_I01_CAP": {
-    "rrs": "M_DST_I02_rrs"#, 
-    #"tlyA": "M_DST_I03_tlyA"
+    "rrs": "M_DST_I02_rrs", 
+    "tlyA": "M_DST_I03_tlyA"
   },
   "M_DST_J01_MFX": {
     "gyrA": "M_DST_J02_gyrA", 
@@ -156,15 +154,15 @@ ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
     "gyrA": "M_DST_K02_gyrA", 
     "gyrB": "M_DST_K03_gyrB"
   },
-  # "M_DST_L01_BDQ": {
-  #   "Rv0678": "M_DST_L02_Rv0678", 
-  # },
-  # "M_DST_M01_CFZ": {
-  #   "Rv0678":"M_DST_M02_Rv0678", 
-  # },
+  "M_DST_L01_BDQ": {
+    "Rv0678": "M_DST_L02_Rv0678", 
+  },
+  "M_DST_M01_CFZ": {
+    "Rv0678":"M_DST_M02_Rv0678", 
+  },
   "M_DST_N01_LZD": {
     "rrl": "M_DST_N02_rrl", 
-    # "rplC": "M_DST_N03_rplC"
+    "rplC": "M_DST_N03_rplC"
   }
 }
 
@@ -793,8 +791,8 @@ The specific primer regions for the gene(s) that is(are) split into multiple sec
 """
 global TNGS_REGIONS_ACTIVATED
 TNGS_REGIONS_ACTIVATED = {
-  # "rpoB": {
-  #   "rpoB_1": [760957, 761355],
-  #   "rpoB_2": [760280, 760812]
-  # }
+  "rpoB": {
+    "rpoB_1": [760957, 761355],
+    "rpoB_2": [760280, 760812]
+  }
 }
