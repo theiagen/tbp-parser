@@ -1,6 +1,6 @@
 from Row import Row
 from Variant import Variant
-import globals
+import globals as globals_
 import pandas as pd
 import json
 
@@ -33,14 +33,14 @@ class Laboratorian:
     for variant in variant_section:
       # create a Variant object and add the origin gene to the global GENES_REPORTED set variable
       variant = Variant(self.logger, variant)
-      globals.GENES_REPORTED.add(variant.gene_name)
+      globals_.GENES_REPORTED.add(variant.gene_name)
       
       # this currently only applies to rpoB -- renaming the gene to the segment name to get the coverage for QC
-      if self.tngs and variant.gene_name in globals.TNGS_REGIONS.keys():
+      if self.tngs and variant.gene_name in globals_.TNGS_REGIONS.keys():
         self.logger.debug("LAB:[tNGS only]: checking to see which segment this gene is found in")
-        for segment in globals.TNGS_REGIONS[variant.gene_name]:
+        for segment in globals_.TNGS_REGIONS[variant.gene_name]:
           self.logger.debug("LAB:[tNGS only]: checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
-          if (globals.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals.TNGS_REGIONS[variant.gene_name][segment][1]):
+          if (globals_.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals_.TNGS_REGIONS[variant.gene_name][segment][1]):
             self.logger.debug("LAB:[tNGS only]: variant from {} is found in segment {}; renaming gene to segment name".format(variant.gene_name, segment))
             variant.gene_name = segment
             break
@@ -51,7 +51,7 @@ class Laboratorian:
         # if the gene name is still rpoB, then it means that the variant was outside of the expected region
         # if variant.gene_name == "rpoB":
         #   self.logger.debug("LAB:[tNGS only]: since this was outside of the expected region, we're setting the coverage for rpoB to 0")
-        #   globals.COVERAGE_DICTIONARY[variant.gene_name] = 0
+        #   globals_.COVERAGE_DICTIONARY[variant.gene_name] = 0
         
       # extract all of the annotations for the variant
       variant.extract_annotations()
@@ -106,9 +106,9 @@ class Laboratorian:
     with open(self.input_json) as json_fh:
       input_json = json.load(json_fh)
       
-      globals.SAMPLE_NAME = input_json["id"]
+      globals_.SAMPLE_NAME = input_json["id"]
       
-      self.logger.debug("LAB:About to parse through the variant sections for the sample with name {}".format(globals.SAMPLE_NAME))
+      self.logger.debug("LAB:About to parse through the variant sections for the sample with name {}".format(globals_.SAMPLE_NAME))
       
       row_list = self.iterate_section(input_json["dr_variants"], row_list)
       row_list = self.iterate_section(input_json["other_variants"], row_list)
@@ -116,9 +116,9 @@ class Laboratorian:
       self.logger.debug("LAB:Iteration complete, there are now {} rows".format(len(row_list)))
 
     self.logger.debug("LAB:Now adding any genes that are missing from the report and editing any rows that need to be edited")
-    for gene, antimicrobial_drug_names in globals.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
+    for gene, antimicrobial_drug_names in globals_.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
       for drug_name in antimicrobial_drug_names:
-        if gene not in globals.GENES_REPORTED:
+        if gene not in globals_.GENES_REPORTED:
           self.logger.debug("LAB:Gene {} with antimicrobial {} not in report, now adding it to the report".format(gene, drug_name))
           row_list.append(Row(self.logger, None, "NA", drug_name, gene))
         else:
@@ -127,12 +127,12 @@ class Laboratorian:
       # make a list to add QC fail rows to end of laboratorian report
       reorder_list = [] 
 
-      if gene in globals.LOW_DEPTH_OF_COVERAGE_LIST:
+      if gene in globals_.LOW_DEPTH_OF_COVERAGE_LIST:
         self.logger.debug("LAB:Checking if the gene ({}) has poor coverage, if so the row will be overwritten".format(gene))
         
         for row in row_list:       
           if row.tbprofiler_gene_name == gene:
-            if row.tbprofiler_gene_name in globals.GENES_WITH_DELETIONS:
+            if row.tbprofiler_gene_name in globals_.GENES_WITH_DELETIONS:
               self.logger.debug("LAB:This gene has a valid deletion so we are removing any locus QC fails as they could be due to the deletion")
               if "Insufficient coverage in locus" in row.warning:
                 row.warning.remove("Insufficient coverage in locus")
@@ -179,7 +179,7 @@ class Laboratorian:
       # make a temporary dataframe out of the Row object using vars(row) which converts the object into a dictionary
       row_dictionary = pd.DataFrame(vars(row), index=[0])
       row_dictionary.drop(["logger", "variant", "who_confidence"], axis=1, inplace=True)
-      globals.DF_LABORATORIAN = pd.concat([globals.DF_LABORATORIAN, row_dictionary], ignore_index=True)
+      globals_.DF_LABORATORIAN = pd.concat([globals_.DF_LABORATORIAN, row_dictionary], ignore_index=True)
               
-    globals.DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
+    globals_.DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
     self.logger.info("LAB:Laboratorian report created, now exiting function\n")

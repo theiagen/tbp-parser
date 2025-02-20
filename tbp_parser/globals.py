@@ -509,19 +509,19 @@ GENES_FOR_LIMS_CS = [
 A  list of genes that are to be included in the 
 CDPH LIMS report for tNGS data; used to create the LIMS report
 """
-# global GENES_FOR_LIMS_tNGS
-# GENES_FOR_LIMS_tNGS = [
-#   "eis", "embB", "ethA", "fabG1", "gyrA", 
-#   "gyrB", "inhA", "katG", "pncA", "rplC", 
-#   "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
-# ]
-# this is for NY primers
 global GENES_FOR_LIMS_tNGS
 GENES_FOR_LIMS_tNGS = [
-  "ahpC", "eis", "embA", "embB", "embC", 
-  "ethA", "fabG1", "gyrA", "gyrB", "inhA", 
-  "katG", "oxyR", "pncA", "rpoB", "rpsL", "rrs"
+  "eis", "embB", "ethA", "fabG1", "gyrA", 
+  "gyrB", "inhA", "katG", "pncA", "rplC", 
+  "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
 ]
+# this is for NY primers
+# global GENES_FOR_LIMS_tNGS
+# GENES_FOR_LIMS_tNGS = [
+#   "ahpC", "eis", "embA", "embB", "embC", 
+#   "ethA", "fabG1", "gyrA", "gyrB", "inhA", 
+#   "katG", "oxyR", "pncA", "rpoB", "rpsL", "rrs"
+#]
 
 
 """
