@@ -131,7 +131,7 @@ class Parser:
     lims.create_lims_report()
     
     self.logger.info("PARSER:Creating Looker report")
-    looker = Looker(self.logger, self.input_json, self.output_prefix)
+    looker = Looker(self.logger, self.output_prefix)
     looker.create_looker_report()
     
     self.logger.info("PARSER:Finalizing coverage report")

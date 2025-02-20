@@ -54,7 +54,7 @@ def is_config_valid(filename):
   Returns:
     String: the name of the file if accessible
   """
-  if not os.path.exists(filename) and filename != "-":
+  if filename != "" and not os.path.exists(filename) and filename != "-":
     raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
   return filename
 
