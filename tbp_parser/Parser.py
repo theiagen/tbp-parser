@@ -75,16 +75,6 @@ class Parser:
       globals_.GENES_FOR_LIMS.extend(globals_.GENES_FOR_LIMS_CS)
       globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME.update(globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS) 
       globals_.ANTIMICROBIAL_CODE_TO_GENES.update(globals_.ANTIMICROBIAL_CODE_TO_GENES_CS)
-
-    if self.verbose:
-      self.logger.setLevel(logging.INFO)
-      self.logger.info("PARSER:Verbose mode enabled")
-    else:
-      self.logger.setLevel(logging.ERROR)
-      
-    if self.debug:
-      self.logger.setLevel(logging.DEBUG)
-      self.logger.debug("PARSER:Debug mode enabled")
       
     if self.config != "":
       self.logger.info("PARSER:Overwriting variables with the provided config file")
