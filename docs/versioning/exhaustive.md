@@ -70,6 +70,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.2.2 - removes the high-level and low-level resistance comments from the LIMS report
 - v2.3.0 - reworks the lineage detection so that if TBProfiler detects a lineage, it is reported; if no lineage is reported by TBProfiler, then whether or not M.tb was detected depends on the percentage of LIMS genes above a (now lower) default percentage of 0.7; all pytests have been fixed as well
 - v2.4.0 - enables ability to provide a configuration file that will overwrite all command-line parameters. This is useful for tNGS assays when you use different primer assays can target only some genes, and not others.
+- v2.4.1 - cleans up some code and updates the DockerFile to build properly
 
 ---
 

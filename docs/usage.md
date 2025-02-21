@@ -6,10 +6,10 @@ title: Getting Started
 
 ### Docker
 
-We highly recommend using the following Docker iamge to run tbp-parser:
+We highly recommend using the following Docker image to run tbp-parser:
 
 ``` bash
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.4.0 #(1)!
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.4.1 #(1)!
 ```
 
 1. We host our Docker images on the Google Artifact Registry so that they are always availble for usage.
@@ -17,11 +17,11 @@ docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.4.0 #(1)!
 The entrypoint for this Docker image is the `tbp-parser` help message. To run this container *interactively*, you can use the following command:
 
 ``` bash
-docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.4.0
+docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.4.1
 
 # Once inside the container interactively, you can run the tbp-parser tool
 python3 /tbp-parser/tbp_parser/tbp_parser.py -v
-# 2.4.0
+# 2.4.1
 ```
 
 ### Locally with Python
@@ -31,6 +31,7 @@ python3 /tbp-parser/tbp_parser/tbp_parser.py -v
 - python3
 - pandas >= 1.4.2
 - importlib_resources
+- pyyaml
 - samtools
 
 After installation of these dependencies, download and extract the latest release of `tbp-parser` and run the script with `python3`.
@@ -78,7 +79,10 @@ optional arguments:
           show this help message and exit
   -v, --version
           show program's version number and exit
-
+  --config 
+          the configuration file to use, in YAML format
+          (overrides all other arguments except input_json and input_bam)
+          
 quality control arguments:
   options that determine what passes QC
 

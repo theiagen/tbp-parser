@@ -60,6 +60,7 @@ nav:
       - algorithm/index.md
       - Technical Code Breakdown: algorithm/technical.md
       - Interpretation Document: algorithm/interpretation.md
+      - Global Variables: algorithm/globals.md
 
 markdown_extensions: 
   - abbr
