@@ -85,7 +85,8 @@ ENV DEB_PYTHON_INSTALL_LAYOUT=deb_system
 # updating setuptools because the version in apt for ubuntu:jammy is a bit old
 # just using a requrements.txt file for now; pyproject.toml is the current recommended approach, but I'm not too familiar with it
 RUN cd /tbp-parser && \
-python3 -m pip install 'setuptools==68.2.0' && \
+python3 -m pip install "setuptools==68.2.0" && \
+python3 -m pip install pyyaml && \
 python3 -m pip install -r requirements.txt
 
 # final working directory is /data
