@@ -7,7 +7,7 @@ When running `tbp-parser` as part of the TheiaProk workflow series ([find docume
 `tbp-parser` is not on by default due to the nature of this tool and its outputs.
 
 !!! info annotate "TheiaProk Version"
-    This information only corresponds to the upcoming PHB v2.3.0 release. These inputs and outputs may not be applicable to other versions of TheiaProk.
+    This information only corresponds to the PHB v2.3.0 release. These inputs and outputs may not be applicable to other versions of TheiaProk.
 
 *[PHB]: Public Health Bioinformatics is the GitHub repository that contains the TheiaProk workflows.
 
@@ -29,7 +29,7 @@ The following optional inputs are also available for user modification on Terra:
 | `merlin_magic` | **tbp_parser_coverage_regions_bed** | File | A BED file containing the regions to calculate percent coverage for | [tbdb-modified-regions.md](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-modified-regions.bed) |
 | `merlin_magic` | **tbp_parser_coverage_threshold** | Int | The minimum percentage of a region that has depth above the threshold set by `min_depth` (used for a gene/locus to pass QC) | 100 |
 | `merlin_magic` | **tbp_parser_debug** | Boolean | Set to `false` to turn off debug mode for `tbp-parser` | `true` |
-| `merlin_magic` | **tbp_parser_docker_image** | String | The Docker image to use when running `tbp-parser` | "us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.4.0" |
+| `merlin_magic` | **tbp_parser_docker_image** | String | The Docker image to use when running `tbp-parser` | "us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.2.2" |
 | `merlin_magic` | **tbp_parser_etha237_frequency** | Float | Minimum frequency for a mutation in ethA at protein position 237 to pass QC in `tbp-parser` | 0.1 |
 | `merlin_magic` | **tbp_parser_expert_rule_regions_bed** | File | A file that contains the regions where R mutations and expert rules are applied |  |
 | `merlin_magic` | **tbp_parser_min_depth** | Int | Minimum depth for a variant to pass QC in tbp_parser | 10 |

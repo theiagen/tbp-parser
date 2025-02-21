@@ -18,18 +18,11 @@ Interpretation documents for other versions are available in the [interpretation
 
 ## When Using TheiaProk
 
-!!! dna "FUTURE DEPRECATION NOTICE"
-    ==**At the time of the PHB v2.3.0 release:**==
-
-    - **all** branches on Terra that have been mentioned in this documentation will be deleted. Please use the v2.3.0 version of TheiaProk moving forward.
-    - the `main` branch of tbp-parser will host v2.1.0 and above; earlier versions of tbp-parser will no longer be supported
-
 If you are running tbp-parser as part of the TheiaProk pipeline(s) with Terra, the following branches are recommended:
 
 - To run v1.2.2 on Terra, please use the **smw-tb-2024-01-16-dev** branch.
-- To run v1.4.4.8+ and v1.6.x+, please use the **smw-tb-2024-05-03-dev** branch.
-- To run v1.5.x+ and v2.x+, please use the **smw-tb-2024-05-03-*who2*-dev** branch.
-- To run v2.1.0+, please use the **smw-tbprofiler-updates-dev** branch _until the time of the v2.3.0 PHB release_.
+- To run v1.4.4.8+, please use the **smw-tngs-tbprofiler-dev** branch.
+- To run v2.1.0+, please use **v2.3.0 or later**.
 
 ## Version Differences
 

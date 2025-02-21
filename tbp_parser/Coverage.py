@@ -1,7 +1,6 @@
 import subprocess
 import globals
 import pandas as pd
-import importlib_resources
 
 class Coverage:
   """
@@ -78,7 +77,7 @@ class Coverage:
     
     self.logger.debug("COV:The BAM file chromosome name is: {}".format(self.chromosome))    
     
-    with open(importlib_resources.files(__name__) / self.coverage_regions, "r") as bedfile_fh:
+    with open(self.coverage_regions, "r") as bedfile_fh:
       self.logger.debug("COV:Now calculating coverage for each gene in the {} file".format(self.coverage_regions))
       for line in bedfile_fh:
         line = line.split("\t")
@@ -104,7 +103,7 @@ class Coverage:
     self.logger.info("COV:Within the Coverage class calculate_r_expert_rule_regions_coverage function")
     self.logger.debug("COV:Now calculating coverage with the tngs-expert-rule-regions.bed file")
     
-    with open(importlib_resources.files(__name__) / self.tngs_expert_regions, "r") as bedfile_fh:
+    with open(self.tngs_expert_regions, "r") as bedfile_fh:
       self.logger.debug("COV:Now calculating coverage for each gene in the {} file".format(self.tngs_expert_regions))
       for line in bedfile_fh:
         line = line.split("\t")

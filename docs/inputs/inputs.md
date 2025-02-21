@@ -6,9 +6,9 @@ The inputs on this page reflect the parameters that are applicable for the comma
 
 ## Required Inputs
 
-`tbp-parser` is designed to run immediately after [Jody Phelan’s TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Only two inputs are required: the JSON file produced by `TBProfiler` and the BAM file produced by `TBProfiler`.
+`tbp-parser` is designed to run immediately after [Jody Phelan’s TBProfiler tool](https://github.com/jodyphelan/TBProfiler). Only three inputs are required: the JSON file produced by `TBProfiler` and the BAM and BAI file produced by `TBProfiler`.
 
-The JSON file contains information about the mutations detected in the sample: the quality, the type, and if that mutation confers resistance to an antimicrobial drug. The BAM file contains the alignment information for the sample and is needed for determining sequencing quality. 
+The JSON file contains information about the mutations detected in the sample: the quality, the type, and if that mutation confers resistance to an antimicrobial drug. The BAM file contains the alignment information for the sample and is needed for determining sequencing quality.
 
 | Parameter  | Description |
 | :--------- | :---------- |
@@ -24,6 +24,34 @@ The JSON file contains information about the mutations detected in the sample: t
 
 In addition to these arguments, `tbp-parser` also has a `-h, --help` argument that will out the list of possible arguments and their descriptions and a `-v, --version` argument that will print out the version of `tbp-parser` that is installed. Both of these commands exit the program after printing their output.
 
+### Configuration File
+
+Instead of providing the input parameters on the command line, the ability to provide a configuration file in YAML format is available. The configuration file will overwrite all command-line arguments, except for the `--verbose` and `--debug` arguments. The configuration file can be provided using the `--config` argument.
+
+The configuration file can also be used to _overwrite_ the global variables that are in use. The global variables available can be found in the [Global Variables](../algorithm/globals.md) page.
+
+To overwriite a variable, please use the following format in the configuration file. The variable names are case-sensitive.
+
+```yaml
+# this variable is found in the globals.py file
+GENES_FOR_LIMS:
+  - "rpoB"
+  - "inhA"
+  - "pncA"
+  - "inhA"
+
+# although this variable can be set with an input parameter, it must be in uppercase here as it appears in the globals.py file
+MIN_DEPTH: 15
+
+# these command-line input parameters are not found in the globals.py file so they are indicated in lowercase
+add_cs_lims: True
+output_prefix: "Test"
+coverage_regions: "/path/to/file"
+
+# only variables that can be found in either globals.py or in the command-line arguments will be used
+extra_variable: "This will be ignored"
+```
+
 ### Quality Control Arguments
 
 These options determine the thresholds for quality control.
@@ -32,7 +60,7 @@ These options determine the thresholds for quality control.
 | :------------ | :--------------------- | :---------- | :------------ |
 | -d            | --min_depth            | The minimum depth of coverage required for a site to pass QC | 10 |
 | -c            | --min_percent_coverage | The minimum percentage of a region that has depth above the threshold set by `min_depth` (used for a gene/locus to pass QC) | 100 |
-| -s            | --min_read_support     | The minimum read support for a mutation to pass QC | 10
+| -s            | --min_read_support     | The minimum read support for a mutation to pass QC | 10 |
 | -f            | --min_frequency        | The minimum frequency for a mutation to pass QC (0.1 -> 10%)| 0.1 |
 | -r            | --coverage_regions     | A BED file containing the regions to calculate percent coverage for | [/data/tbdb-modified-regions.md](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-modified-regions.bed) |
 
