@@ -22,6 +22,8 @@ class Row() :
     
     self.variant = variant
     self.who_confidence = who_confidence
+    if tbdb_comment == "Not found in WHO catalogue":
+      self.who_confidence = "No WHO confidence"
     self.antimicrobial = drug
 
     # create a row for the sample if the gene is in the coverage dictionary (should occur for all except in tNGS where only certain genes are sequenced)
