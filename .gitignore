@@ -8,3 +8,5 @@ __pycache__/
 *.csv
 .pytest_cache/
 *.pyc
+
+secret/
