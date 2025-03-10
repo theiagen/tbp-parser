@@ -72,6 +72,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.4.0 - enables ability to provide a configuration file that will overwrite all command-line parameters. This is useful for tNGS assays when you use different primer assays can target only some genes, and not others.
 - v2.4.1 - cleans up some code and updates the DockerFile to build properly
 - v2.4.2 - ensures that mutations that are not found in WHO catalogue are run through the expert rules
+- v2.4.3 - fixes a typo in Row.py, "No WHO confidence" should be "No WHO annotation". Fixes empty M_DST_E02_pncA column on LIMS report.
 
 ---
 
