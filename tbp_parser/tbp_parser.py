@@ -9,6 +9,7 @@ def main():
   home_dir = importlib_resources.files("tbp_parser")
   default_coverage_regions = home_dir.joinpath("..", "data", "tbdb-modified-regions.bed")
   default_tngs_expert_regions = home_dir.joinpath("..", "data", "tngs-expert-rule-regions.bed")
+
   parser = argparse.ArgumentParser(
     prog = "tbp-parser",
     description = "Parses Jody Phelon's TBProfiler JSON output into three files:\n- a Laboratorian report,\n- a LIMS report\n- a Looker report, and\n- a coverage report",
