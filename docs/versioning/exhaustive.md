@@ -74,6 +74,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.4.2 - ensures that mutations that are not found in WHO catalogue are run through the expert rules
 - v2.4.3 - fixes a typo in Row.py, "No WHO confidence" should be "No WHO annotation". Fixes empty M_DST_E02_pncA column on LIMS report.
 - v2.4.4 - fixes default file paths for --coverage_regions and --tngs-expert-regions.
+- v2.4.5 - fixes the data type of the --min_percent_coverage (COVERAGE_THRESHOLD) variable to be a float rather than an int
 
 ---
 
