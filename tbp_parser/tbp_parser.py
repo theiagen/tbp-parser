@@ -30,7 +30,7 @@ def main():
   qc_arguments.add_argument("-d", "--min_depth", 
                       help="the minimum depth of coverage for a site to pass QC\ndefault=10", default=10, metavar="\b", type=int)
   qc_arguments.add_argument("-c", "--min_percent_coverage", 
-                      help="the minimum percentage of a region that has depth above the threshold set by min_depth\n  (used for a gene/locus to pass QC)\ndefault=100", default=100, metavar="\b", type=int)
+                      help="the minimum percentage of a region that has depth above the threshold set by min_depth\n  (used for a gene/locus to pass QC)\ndefault=100", default=100, metavar="\b", type=float)
   qc_arguments.add_argument("-s", "--min_read_support",
                       help="the minimum read support for a mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
   qc_arguments.add_argument("-f", "--min_frequency",

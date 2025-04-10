@@ -27,7 +27,7 @@ The following optional inputs are also available for user modification on Terra:
 | :-------------- | :------- | :--- | :------------ | :---------- |
 | `merlin_magic` | **tbp_parser_add_cs_lims** | Boolean | Set to `true` to add Cycloserine (CS) fields to the LIMS report | `false` |
 | `merlin_magic` | **tbp_parser_coverage_regions_bed** | File | A BED file containing the regions to calculate percent coverage for | [tbdb-modified-regions.md](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb-modified-regions.bed) |
-| `merlin_magic` | **tbp_parser_coverage_threshold** | Int | The minimum percentage of a region that has depth above the threshold set by `min_depth` (used for a gene/locus to pass QC) | 100 |
+| `merlin_magic` | **tbp_parser_coverage_threshold** | Float | The minimum percentage of a region that has depth above the threshold set by `min_depth` (used for a gene/locus to pass QC) | 100 |
 | `merlin_magic` | **tbp_parser_debug** | Boolean | Set to `false` to turn off debug mode for `tbp-parser` | `true` |
 | `merlin_magic` | **tbp_parser_docker_image** | String | The Docker image to use when running `tbp-parser` | "us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:2.2.2" |
 | `merlin_magic` | **tbp_parser_etha237_frequency** | Float | Minimum frequency for a mutation in ethA at protein position 237 to pass QC in `tbp-parser` | 0.1 |
