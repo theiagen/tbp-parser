@@ -23,7 +23,7 @@ Some global variables are excluded as their modifications will either have no ef
 | ANTIMICROBIAL_CODE_TO_GENES_CS | A dictionary that adds CDPH LIMS antimicrobial codes to the corresponding genes and their corresponding CDPH LIMS codes for cycloserine; activated by the --add_cs_lims flag; used to create the LIMS report; is added to `ANTIMICROBIAL_CODE_TO_GENES` | Dict[Dict[String: String]] |
 | ANTIMICROBIAL_DRUG_NAME_LIST | A list of the antimicrobial drug names; used to create the Looker report | List[String] |
 | ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME | A dictionary that matches the antimicrobial drugs to the genes that may confer resistance to them; see also <https://github.com/jodyphelan/tbdb/blob/master/tbdb.csv>; used to create the Looker report | Dict[String: List[String]] |
-| COVERAGE_THRESHOLD | The coverage threshold (the minimum percent coverage of a gene/locus over the minimum depth); See also MIN_DEPTH | Int |
+| COVERAGE_THRESHOLD | The coverage threshold (the minimum percent coverage of a gene/locus over the minimum depth); See also MIN_DEPTH | Float |
 | ETHA237_FREQUENCY | The minimum frequency for a mutation to be considered for ethA at protein position 237 | Float |
 | GENE_LIST | A list of genes that correspond to a certain set of expert rules; Rv0678 is equivalent to mmpR5 | List[String] |
 | GENE_TO_ANTIMICROBIAL_DRUG_NAME | A dictionary corresponding each gene to the drug they may confer resistance to, including the genes in the TBDB watchlist. See also: <https://github.com/jodyphelan/tbdb/blob/master/tbdb.csv>, and <https://github.com/jodyphelan/tbdb/blob/master/tbdb.watchlist.csv>; used to create the Laboratorian report | Dict[String: List[String]] |

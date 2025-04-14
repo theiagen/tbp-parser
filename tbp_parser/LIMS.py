@@ -71,11 +71,11 @@ class LIMS:
         self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
         try:
           if self.tngs:
-            number_of_lims_genes_above_coverage_threshold = sum(int(globals_.COVERAGE_DICTIONARY[gene]) >= 90 for gene in globals_.COVERAGE_DICTIONARY.keys())
+            number_of_lims_genes_above_coverage_threshold = sum(float(globals_.COVERAGE_DICTIONARY[gene]) >= 90 for gene in globals_.COVERAGE_DICTIONARY.keys())
             percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals_.COVERAGE_DICTIONARY.keys())
 
           else:
-            number_of_lims_genes_above_coverage_threshold = sum(int(globals_.COVERAGE_DICTIONARY[gene]) >= globals_.COVERAGE_THRESHOLD for gene in globals_.GENES_FOR_LIMS)
+            number_of_lims_genes_above_coverage_threshold = sum(float(globals_.COVERAGE_DICTIONARY[gene]) >= globals_.COVERAGE_THRESHOLD for gene in globals_.GENES_FOR_LIMS)
             percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals_.GENES_FOR_LIMS)
           
           self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
@@ -241,7 +241,7 @@ class LIMS:
                
               if "del" in mutation and "Failed quality in the mutation position" in warnings[index]:
                 try:
-                  if int(globals_.COVERAGE_DICTIONARY[gene]) < globals_.COVERAGE_THRESHOLD:
+                  if float(globals_.COVERAGE_DICTIONARY[gene]) < globals_.COVERAGE_THRESHOLD:
                     mdl_interpretations[index] = "Insufficient Coverage"
                     if gene in responsible_gene:
                       all_responsible_mdl_interpretations[gene][index] = "Insufficient Coverage"
