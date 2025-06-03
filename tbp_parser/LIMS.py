@@ -31,15 +31,32 @@ class LIMS:
     with open(self.input_json) as json_fh:
       input_json = json.load(json_fh)
       
-      # set default value for lineage
+      # set default values for lineage and sublineage from tbprofiler
       lineage = set()
       detected_lineage = input_json["main_lineage"]
       globals_.LINEAGE = detected_lineage
       detected_sublineage = input_json["sub_lineage"]
       self.logger.debug("LIMS:The detected lineage is: '{}', and the detected sublineage is: '{}'".format(detected_lineage, detected_sublineage))
+      
+      
+      self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
+      percentage_limit = 0.7
+      
+      try:
+        if self.tngs:
+          number_of_lims_genes_above_coverage_threshold = sum(float(globals_.COVERAGE_DICTIONARY[gene]) >= 90 for gene in globals_.COVERAGE_DICTIONARY.keys())
+          percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals_.COVERAGE_DICTIONARY.keys())
+          self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}; this value will not be used though since the method is tNGS".format(percentage_lims_genes_above))
+        else:
+          number_of_lims_genes_above_coverage_threshold = sum(float(globals_.COVERAGE_DICTIONARY[gene]) >= globals_.COVERAGE_THRESHOLD for gene in globals_.GENES_FOR_LIMS)
+          percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals_.GENES_FOR_LIMS)
+          
+        self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
             
-      sublineages = detected_sublineage.split(";")
-        
+      except:
+        self.logger.error("LIMS:Something went wrong -- this line shouldn't be printed unless a test is running!")
+        lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
+          
       if self.tngs:
         self.logger.debug("LIMS:The sequencing method is tNGS; now checking for a His57Asp mutation in pncA")
         pncA_mutations = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == "pncA")]
@@ -50,8 +67,11 @@ class LIMS:
           self.logger.debug("LIMS:p.His57Asp not detected in pncA, lineage is likely M. tuberculosis")
           lineage.add("DNA of Mycobacterium tuberculosis complex detected (not M. bovis)") 
           
-      else:  
-        self.logger.debug("LIMS:The sequencing method is WGS; now checking the TBProfiler lineage calls")
+      elif (percentage_lims_genes_above >= percentage_limit):
+        self.logger.debug("LIMS:The sequencing method is WGS AND the percentage of LIMS genes is GREATER than {}% ({}); now checking the TBProfiler lineage calls".format(percentage_limit * 100, percentage_lims_genes_above))
+
+        sublineages = detected_sublineage.split(";")
+              
         if "lineage" in detected_lineage:
           lineage.add("DNA of Mycobacterium tuberculosis species detected")
           
@@ -61,38 +81,15 @@ class LIMS:
                   
           elif ("La1" in detected_lineage or "La1" in sublineage) or ("bovis" in detected_lineage or "bovis" in sublineage):
             lineage.add("DNA of Mycobacterium bovis (not BCG) detected")     
-          
-      if len(lineage) == 0:
-        self.logger.debug("No recognizable lineage detected by TBProfiler")
-        # if the percentage of genes above the coverage threshold is greater than 70%, then we can call the lineage if TBProfiler did not designate it
-        percentage_limit = 0.7
-
-        # calculate percentage of genes in the LIMS report above the coverage threshold
-        self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
-        try:
-          if self.tngs:
-            number_of_lims_genes_above_coverage_threshold = sum(float(globals_.COVERAGE_DICTIONARY[gene]) >= 90 for gene in globals_.COVERAGE_DICTIONARY.keys())
-            percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals_.COVERAGE_DICTIONARY.keys())
-
-          else:
-            number_of_lims_genes_above_coverage_threshold = sum(float(globals_.COVERAGE_DICTIONARY[gene]) >= globals_.COVERAGE_THRESHOLD for gene in globals_.GENES_FOR_LIMS)
-            percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals_.GENES_FOR_LIMS)
-          
-          self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
-            
-          if (percentage_lims_genes_above >= percentage_limit):
-            self.logger.debug("LIMS:Percentage of LIMS genes above the coverage threshold is GREATER than 90% AND no lineage has been detected; assuming M.tb")
-          
-            if detected_lineage == "" or detected_lineage == "NA" or len(lineage) == 0:
-                lineage.add("DNA of Mycobacterium tuberculosis complex detected")
+      
+        if detected_lineage == "" or detected_lineage == "NA" or len(lineage) == 0:
+          self.logger.debug("LIMS:No lineage has been detected by TBProfiler; assuming M.tb")
+          lineage.add("DNA of Mycobacterium tuberculosis complex detected")
               
-          else:
-            self.logger.debug("LIMS:Percentage of LIMS genes above the coverage threshold is LESS than 90% AND no lineage has been detectedl; assuming NOT M.tb")
-            lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
-            
-        except:
-          self.logger.error("LIMS:This shouldn't happen unless a test is running!")
-          lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
+      else:
+        self.logger.debug("LIMS:The sequencing method is WGS AND the percentage of LIMS genes is LESS than {}% ({}); assuming NOT M.tb".format(percentage_limit * 100, percentage_lims_genes_above))
+        lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
+        
        
       lineage = "; ".join(sorted(lineage))
         

@@ -64,6 +64,8 @@ class Laboratorian:
         # if in --debug mode, print the annotation row.
         annotation_row.print()
         
+        row_list.append(annotation_row)
+        
         # if mutation in mmpS5, mmpL5, or Rv0678, we want to perform further examination but only if the mutation is NOT R based on rule 1.1;
         # otherwise, we want to examine the "aternate_consequences" section and apply rule 1.2 and keep only the highest severity mutation
         # change 2023-12-15: all mmpS/mmpL/mmpR mutations are reported regardless of WHO classification
@@ -71,8 +73,6 @@ class Laboratorian:
         # OLD CONDITIONAL included `and !(annotation_row.mdl_interpretation == "R" and annotation_row.rationale == "WHO classification"):`
           row_list = variant.extract_alternate_consequences(annotation_row, row_list)
 
-        row_list.append(annotation_row)
-        
     self.logger.info("LAB:Finished iterating through the variant section, now exiting function")    
     return row_list
       

@@ -329,10 +329,11 @@ class Row() :
     if any(rule in self.mdl_interpretation for rule in globals_.RULE_TO_RATIONALE.keys()):
       interpretation = self.mdl_interpretation[0]
       rule = self.mdl_interpretation[1:]
-      self.logger.debug("rule={}".format(rule))
       self.mdl_interpretation = interpretation
-      self.logger.debug(globals_.RULE_TO_RATIONALE[rule])
-      globals_.RULE_TO_RATIONALE[rule]
       self.rationale = globals_.RULE_TO_RATIONALE[rule]
+      
+      self.logger.debug("ROW:The applied rule is {}".format(rule))
+      self.logger.debug("ROW:The rationale for this row is: {}".format(globals_.RULE_TO_RATIONALE[rule]))
+      #globals_.RULE_TO_RATIONALE[rule]
       self.confidence = "No WHO annotation"
       

@@ -55,15 +55,24 @@ class Variant:
         if var.gene_name != parent_row.tbprofiler_gene_name:
           globals_.GENES_REPORTED.add(var.gene_name)
           self.logger.debug("VAR:This alternate consequence is not from the same gene; creating a new row")
-        
-          row = Row(self.logger, var, parent_row.who_confidence, parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency)
-          row.source = parent_row.source
-          row.tbdb_comment = parent_row.tbdb_comment
-          row.complete_row()
-      
-          row_list.append(row)
+          
+          # there can be multiple annotations for the same alternate consequence or none
+          if len(var.annotation) == 0:
+            self.logger.debug("VAR:There are no annotations for this alternate consequence; creating a row with the gene associated drugs")
+            row = Row(self.logger, var, "No WHO annotation", parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency, parent_row.source, parent_row.tbdb_comment)
+            row.complete_row()
+            row.print()
+            row_list.append(row)
+            
+          else:
+            self.logger.debug("VAR:There are {} annotation(s) for this alternate consequence; creating a row for each annotation".format(len(var.annotation)))
+            for item in var.annotation:
+              row = Row(self.logger, var, item["confidence"], item["drug"], var.gene_name, parent_row.depth, parent_row.frequency, item["source"], item["comment"])
+              row.complete_row()
+              row.print()        
+              row_list.append(row)
         else:
-          self.logger.debug("VAR:This alternate consequence is from the same gene; we do not want to create a new row")
+          self.logger.debug("VAR:This alternate consequence is from the same gene; we DO NOT want to create a new row")
           continue
            
     return row_list
