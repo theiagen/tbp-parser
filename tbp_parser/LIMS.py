@@ -38,7 +38,6 @@ class LIMS:
       detected_sublineage = input_json["sub_lineage"]
       self.logger.debug("LIMS:The detected lineage is: '{}', and the detected sublineage is: '{}'".format(detected_lineage, detected_sublineage))
       
-      
       self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
       percentage_limit = 0.7
       
@@ -90,6 +89,7 @@ class LIMS:
       else:
         self.logger.debug("LIMS:The sequencing method is WGS AND the percentage of LIMS genes is LESS than {}% ({}); assuming NOT M.tb".format(percentage_limit * 100, percentage_lims_genes_above))
         lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
+        
        
       lineage = "; ".join(sorted(lineage))
         
