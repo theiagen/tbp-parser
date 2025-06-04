@@ -59,7 +59,8 @@ class Variant:
           # there can be multiple annotations for the same alternate consequence or none
           if len(var.annotation) == 0:
             self.logger.debug("VAR:There are no annotations for this alternate consequence; creating a row with the gene associated drugs")
-            row = Row(self.logger, var, "No WHO annotation", parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency, parent_row.source, parent_row.tbdb_comment)
+            # do not inherit parent row comment or source
+            row = Row(self.logger, var, "No WHO annotation", parent_row.antimicrobial, var.gene_name, parent_row.depth, parent_row.frequency)
             row.complete_row()
             row.print()
             row_list.append(row)

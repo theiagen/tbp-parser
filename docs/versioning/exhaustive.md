@@ -76,6 +76,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.4.4 - fixes default file paths for --coverage_regions and --tngs-expert-regions.
 - v2.4.5 - fixes the data type of the --min_percent_coverage (COVERAGE_THRESHOLD) variable to be a float rather than an int
 - v2.5.0 - alters changes made in v2.3.0 so that the 70% coverage threshold is used for WGS lineage detection regardless if TBProfiler detects a lineage or not; reworks the extract alternative consequences function so that the parent interpretation is not inherited and is regenerated for that specific mutation
+- v2.5.1 - prevents inheritance of parent comment when parsing alternative consequences
 
 ---
 

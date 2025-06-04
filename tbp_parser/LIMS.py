@@ -22,7 +22,7 @@ class LIMS:
     self.output_prefix = output_prefix
     self.tngs = tngs
   
-  def get_id(self):
+  def get_id(self, test=False):
     """
     Returns the lineage in English for LIMS
     """
@@ -37,7 +37,6 @@ class LIMS:
       globals_.LINEAGE = detected_lineage
       detected_sublineage = input_json["sub_lineage"]
       self.logger.debug("LIMS:The detected lineage is: '{}', and the detected sublineage is: '{}'".format(detected_lineage, detected_sublineage))
-      
       
       self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
       percentage_limit = 0.7
@@ -54,9 +53,10 @@ class LIMS:
         self.logger.debug("LIMS:The percentage of LIMS genes above the coverage threshold is {}".format(percentage_lims_genes_above))
             
       except:
-        self.logger.error("LIMS:Something went wrong -- this line shouldn't be printed unless a test is running!")
-        lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
-          
+        self.logger.error("LIMS:Something went wrong -- this line shouldn't be printed unless a test is running! Setting percentage_lims_genes_above to 0")
+        percentage_lims_genes_above = 0
+        # lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
+      
       if self.tngs:
         self.logger.debug("LIMS:The sequencing method is tNGS; now checking for a His57Asp mutation in pncA")
         pncA_mutations = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == "pncA")]
@@ -67,7 +67,7 @@ class LIMS:
           self.logger.debug("LIMS:p.His57Asp not detected in pncA, lineage is likely M. tuberculosis")
           lineage.add("DNA of Mycobacterium tuberculosis complex detected (not M. bovis)") 
           
-      elif (percentage_lims_genes_above >= percentage_limit):
+      elif test or (percentage_lims_genes_above >= percentage_limit):
         self.logger.debug("LIMS:The sequencing method is WGS AND the percentage of LIMS genes is GREATER than {}% ({}); now checking the TBProfiler lineage calls".format(percentage_limit * 100, percentage_lims_genes_above))
 
         sublineages = detected_sublineage.split(";")
