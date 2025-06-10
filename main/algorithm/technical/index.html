@@ -1103,10 +1103,6 @@
   
 
 
-<div class="admonition tip inline end">
-<p class="admonition-title">Examples from TBProfiler v4.4.2</p>
-<p>The examples in this document are based on the output of TBProfiler v4.4.2. However, the general principles apply to all versions of TBProfiler and tbp-parser.</p>
-</div>
 <h1 id="technical-code-breakdown">Technical Code Breakdown<a class="headerlink" href="#technical-code-breakdown" title="Permanent link">&para;</a></h1>
 <p><code>tbp-parser</code> is object-oriented, with each class representing either <em>an output file</em>, <em>a part of an output file</em>, or <em>a part of the input JSON file</em> produced by TBProfiler.</p>
 <p>The first class that is invoked by the <code>tbp-parser.py</code> script is <code>Parser</code> which is a control class that orchestrates the creation of the different output reports.</p>
@@ -1115,31 +1111,52 @@
 <h2 id="creating-the-laboratorian-report">Creating the Laboratorian report<a class="headerlink" href="#creating-the-laboratorian-report" title="Permanent link">&para;</a></h2>
 <p>Then, <code>Parser</code> creates the Laboratorian report using the <code>Laboratorian</code> class and its associated <code>.create_laboratorian_report()</code> method.</p>
 <p>The <code>Laboratorian</code> class uses the input JSON file to collect the necessary information. The structure of the input JSON file is a good place to start the breakdown:</p>
-<div class="language-json highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">example_input.json</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
-<span class="normal"><a href="#__codelineno-0-2">2</a></span>
-<span class="normal"><a href="#__codelineno-0-3">3</a></span>
-<span class="normal"><a href="#__codelineno-0-4">4</a></span>
-<span class="normal"><a href="#__codelineno-0-5">5</a></span>
-<span class="normal"><a href="#__codelineno-0-6">6</a></span>
-<span class="normal"><a href="#__codelineno-0-7">7</a></span>
-<span class="normal"><a href="#__codelineno-0-8">8</a></span>
-<span class="normal"><a href="#__codelineno-0-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="p">{</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sample01&quot;</span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="w">  </span><span class="err">...</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;main_lin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lineage1&quot;</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="w">  </span><span class="nt">&quot;sublin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lineage1.2.1.2.1&quot;</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">  </span><span class="nt">&quot;dr_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="w">  </span><span class="nt">&quot;other_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="p">],</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">  </span><span class="err">...</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="p">}</span>
+<div style="float: left; width: 50%; padding: 20px;">
+<div class="language-json highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">example_input.json: top level fields</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-0-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-0-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-0-10">10</a></span>
+<span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#__codelineno-0-13">13</a></span>
+<span class="normal"><a href="#__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="w">    </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sample01&quot;</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="w">    </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-04-25T22:12:11.677658&quot;</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="w">    </span><span class="nt">&quot;pipeline&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="w">    </span><span class="nt">&quot;notes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="w">    </span><span class="nt">&quot;lineage&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="nt">&quot;main_lineage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lineage4&quot;</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">    </span><span class="nt">&quot;sub_lineage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lineage4.3.4.1&quot;</span><span class="p">,</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">    </span><span class="nt">&quot;spoligotype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="w">    </span><span class="nt">&quot;drtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;XDR-TB&quot;</span><span class="p">,</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="w">    </span><span class="nt">&quot;dr_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="w">    </span><span class="nt">&quot;other_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="p">],</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="w">    </span><span class="nt">&quot;qc_fail_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="w">    </span><span class="nt">&quot;qc&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="w">    </span><span class="nt">&quot;linked_samples&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="p">}</span>
 </span></code></pre></div></td></tr></table></div>
-<p>In this example, we can see only the relevant top-level JSON fields that are used in <code>tbp-parser</code>.</p>
+</div>
+<div style="float: right; width: 50%; padding: 20px;">
+<p>In the example to the left, we see only the top-level JSON fields, only some of which are used in <code>tbp-parser</code>.</p>
 <p>Of interest, the <code>"id"</code> column is used to set the global <code>SAMPLE_NAME</code> variable.</p>
-<p>The lineage information, found in <code>"main_lin"</code> and <code>"sublin"</code> are used in the LIMS and Looker reports, so we won’t go into detail about them here.</p>
+<p>The lineage information, found in <code>"main_lineage"</code> and <code>"sub_lineage"</code> are used in the LIMS and Looker reports, so we won’t go into detail about them here.</p>
 <p>The variant information is what makes up the bulk of the Laboratorian report and can be found in the <code>"dr_variants"</code> and <code>"other_variants"</code> fields. We’ll talk more about these fields later.</p>
-<p>There are many other fields that are omitted from this example since they are not used in <code>tbp-parser</code>, such as version information and overall sample drug resistance type (like RR-TB, etc.). These fields are found in the other TBProfiler output files in more human-readable formats.</p>
-<p>Within the input JSON file, there are two fields that are examined the most: <code>"dr_variants"</code> and <code>"other_variants"</code>. These fields are treated the same, and have the same format, although different mutations are found in both regions. The difference between the two fields is unclear to me at this time. In the example below, only the fields used in <code>tbp-parser</code> are shown.</p>
-<div class="language-json highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">example_input.json</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1"> 1</a></span>
+<p>There are many other fields available that have useful information but are not used in <code>tbp-parser</code>, such as versioning (found in <code>"pipeline"</code>), quality control metrics (found in <code>"qc"</code>) and overall sample drug resistance type (found in <code>"drtype"</code>, like RR-TB, etc.). These fields can also be found in the other TBProfiler output files in more human-readable formats.</p>
+</div>
+<div style="clear: both;"></div>
+<div style="float: right; width: 50%; padding: 20px;">
+<div class="language-json highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">example_input.json: dr_variants and other_variants</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-1-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-1-3"> 3</a></span>
 <span class="normal"><a href="#__codelineno-1-4"> 4</a></span>
@@ -1202,87 +1219,309 @@
 <span class="normal"><a href="#__codelineno-1-61">61</a></span>
 <span class="normal"><a href="#__codelineno-1-62">62</a></span>
 <span class="normal"><a href="#__codelineno-1-63">63</a></span>
-<span class="normal"><a href="#__codelineno-1-64">64</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="p">{</span>
+<span class="normal"><a href="#__codelineno-1-64">64</a></span>
+<span class="normal"><a href="#__codelineno-1-65">65</a></span>
+<span class="normal"><a href="#__codelineno-1-66">66</a></span>
+<span class="normal"><a href="#__codelineno-1-67">67</a></span>
+<span class="normal"><a href="#__codelineno-1-68">68</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="w">  </span><span class="err">...</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="w">  </span><span class="nt">&quot;dr_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="w">    </span><span class="p">{</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="w">      </span><span class="nt">&quot;chrom&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Chromosome&quot;</span><span class="p">,</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><span class="w">      </span><span class="nt">&quot;genome_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">761109</span><span class="p">,</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><span class="w">      </span><span class="err">...</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="w">      </span><span class="nt">&quot;depth&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">130</span><span class="p">,</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="w">      </span><span class="nt">&quot;freq&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;missense_variant&quot;</span><span class="p">,</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><span class="w">      </span><span class="nt">&quot;nucleotide_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;c.1303G&gt;T&quot;</span><span class="p">,</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><span class="w">      </span><span class="nt">&quot;protein_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;p.Asp435Tyr&quot;</span><span class="p">,</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><span class="w">      </span><span class="nt">&quot;annotation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><span class="w">        </span><span class="p">{</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a><span class="w">          </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;who_confidence&quot;</span><span class="p">,</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a><span class="w">          </span><span class="nt">&quot;drug&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rifampicin&quot;</span><span class="p">,</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><span class="w">          </span><span class="nt">&quot;who_confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Assoc w R&quot;</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a><span class="w">        </span><span class="p">}</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a><span class="w">      </span><span class="p">],</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a><span class="w">      </span><span class="nt">&quot;alternate_consequences&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21"></a><span class="w">      </span><span class="err">...</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22"></a><span class="w">      </span><span class="nt">&quot;locus_tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv0667&quot;</span><span class="p">,</span>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23"></a><span class="w">      </span><span class="nt">&quot;gene&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rpoB&quot;</span><span class="p">,</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24"></a><span class="w">      </span><span class="nt">&quot;gene_associated_drugs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25"></a><span class="w">        </span><span class="s2">&quot;rifampicin&quot;</span>
-</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26"></a><span class="w">      </span><span class="p">]</span>
-</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28"></a><span class="w">  </span><span class="p">],</span>
-</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29"></a><span class="w">  </span><span class="nt">&quot;other_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30"></a><span class="w">    </span><span class="p">{</span>
-</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31"></a><span class="w">      </span><span class="nt">&quot;chrom&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Chromosome&quot;</span><span class="p">,</span>
-</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32"></a><span class="w">      </span><span class="nt">&quot;genome_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6112</span><span class="p">,</span>
-</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33"></a><span class="w">      </span><span class="err">...</span>
-</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34"></a><span class="w">      </span><span class="nt">&quot;depth&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span>
-</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35"></a><span class="w">      </span><span class="nt">&quot;freq&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;missense_variant&quot;</span><span class="p">,</span>
-</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37"></a><span class="w">      </span><span class="nt">&quot;nucleotide_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;c.873G&gt;C&quot;</span><span class="p">,</span>
-</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38"></a><span class="w">      </span><span class="nt">&quot;protein_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;p.Met291Ile&quot;</span><span class="p">,</span>
-</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39"></a><span class="w">      </span><span class="nt">&quot;annotation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40"></a><span class="w">        </span><span class="p">{</span>
-</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41"></a><span class="w">          </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;who_confidence&quot;</span><span class="p">,</span>
-</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42"></a><span class="w">          </span><span class="nt">&quot;drug&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;moxifloxacin&quot;</span><span class="p">,</span>
-</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43"></a><span class="w">          </span><span class="nt">&quot;who_confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Not assoc w R&quot;</span>
-</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44"></a><span class="w">        </span><span class="p">},</span>
-</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45"></a><span class="w">        </span><span class="p">{</span>
-</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46"></a><span class="w">          </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;who_confidence&quot;</span><span class="p">,</span>
-</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47"></a><span class="w">          </span><span class="nt">&quot;drug&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;levofloxacin&quot;</span><span class="p">,</span>
-</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48"></a><span class="w">          </span><span class="nt">&quot;who_confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Not assoc w R&quot;</span>
-</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49"></a><span class="w">        </span><span class="p">}</span>
-</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50"></a><span class="w">      </span><span class="p">],</span>
-</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51"></a><span class="w">      </span><span class="nt">&quot;alternate_consequences&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
-</span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52"></a><span class="w">      </span><span class="err">...</span>
-</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53"></a><span class="w">      </span><span class="nt">&quot;locus_tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv0005&quot;</span><span class="p">,</span>
-</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54"></a><span class="w">      </span><span class="nt">&quot;gene&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gyrB&quot;</span><span class="p">,</span>
-</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55"></a><span class="w">      </span><span class="nt">&quot;gene_associated_drugs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-1-56"><a id="__codelineno-1-56" name="__codelineno-1-56"></a><span class="w">        </span><span class="s2">&quot;levofloxacin&quot;</span><span class="p">,</span>
-</span><span id="__span-1-57"><a id="__codelineno-1-57" name="__codelineno-1-57"></a><span class="w">        </span><span class="s2">&quot;ofloxacin&quot;</span><span class="p">,</span>
-</span><span id="__span-1-58"><a id="__codelineno-1-58" name="__codelineno-1-58"></a><span class="w">        </span><span class="s2">&quot;moxifloxacin&quot;</span><span class="p">,</span>
-</span><span id="__span-1-59"><a id="__codelineno-1-59" name="__codelineno-1-59"></a><span class="w">        </span><span class="s2">&quot;fluoroquinolones&quot;</span><span class="p">,</span>
-</span><span id="__span-1-60"><a id="__codelineno-1-60" name="__codelineno-1-60"></a><span class="w">        </span><span class="s2">&quot;ciprofloxacin&quot;</span>
-</span><span id="__span-1-61"><a id="__codelineno-1-61" name="__codelineno-1-61"></a><span class="w">      </span><span class="p">]</span>
-</span><span id="__span-1-62"><a id="__codelineno-1-62" name="__codelineno-1-62"></a><span class="w">    </span><span class="p">},</span>
-</span><span id="__span-1-63"><a id="__codelineno-1-63" name="__codelineno-1-63"></a><span class="err">...</span>
-</span><span id="__span-1-64"><a id="__codelineno-1-64" name="__codelineno-1-64"></a><span class="p">}</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="w">          </span><span class="nt">&quot;chrom&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Chromosome&quot;</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><span class="w">          </span><span class="nt">&quot;pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">779127</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><span class="w">          </span><span class="nt">&quot;ref&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;T&quot;</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="w">          </span><span class="nt">&quot;alt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TG&quot;</span><span class="p">,</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="w">          </span><span class="nt">&quot;depth&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">109</span><span class="p">,</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><span class="w">          </span><span class="nt">&quot;freq&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5137614678899083</span><span class="p">,</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><span class="w">          </span><span class="nt">&quot;sv&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><span class="w">          </span><span class="nt">&quot;filter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pass&quot;</span><span class="p">,</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><span class="w">          </span><span class="nt">&quot;forward_reads&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><span class="w">          </span><span class="nt">&quot;reverse_reads&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a><span class="w">          </span><span class="nt">&quot;sv_len&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a><span class="w">          </span><span class="nt">&quot;gene_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv0678&quot;</span><span class="p">,</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><span class="w">          </span><span class="nt">&quot;gene_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mmpR5&quot;</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a><span class="w">          </span><span class="nt">&quot;feature_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CCP43421&quot;</span><span class="p">,</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a><span class="w">          </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;frameshift_variant&quot;</span><span class="p">,</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a><span class="w">          </span><span class="nt">&quot;change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;c.139dupG&quot;</span><span class="p">,</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21"></a><span class="w">          </span><span class="nt">&quot;nucleotide_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;c.139dupG&quot;</span><span class="p">,</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22"></a><span class="w">          </span><span class="nt">&quot;protein_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;p.Asp47fs&quot;</span><span class="p">,</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23"></a><span class="w">          </span><span class="nt">&quot;annotation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24"></a><span class="w">          </span><span class="nt">&quot;consequences&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25"></a><span class="w">          </span><span class="nt">&quot;drugs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26"></a><span class="w">          </span><span class="nt">&quot;locus_tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv0678&quot;</span><span class="p">,</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27"></a><span class="w">          </span><span class="nt">&quot;gene_associated_drugs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28"></a><span class="w">              </span><span class="s2">&quot;bedaquiline&quot;</span><span class="p">,</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29"></a><span class="w">              </span><span class="s2">&quot;clofazimine&quot;</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30"></a><span class="w">          </span><span class="p">]</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31"></a><span class="w">      </span><span class="p">},</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32"></a><span class="w">      </span><span class="err">...</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33"></a><span class="w">  </span><span class="p">],</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34"></a><span class="w">  </span><span class="nt">&quot;other_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36"></a><span class="w">          </span><span class="nt">&quot;chrom&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Chromosome&quot;</span><span class="p">,</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37"></a><span class="w">          </span><span class="nt">&quot;pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3065027</span><span class="p">,</span>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38"></a><span class="w">          </span><span class="nt">&quot;ref&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;G&quot;</span><span class="p">,</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39"></a><span class="w">          </span><span class="nt">&quot;alt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A&quot;</span><span class="p">,</span>
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40"></a><span class="w">          </span><span class="nt">&quot;depth&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">94</span><span class="p">,</span>
+</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41"></a><span class="w">          </span><span class="nt">&quot;freq&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42"></a><span class="w">          </span><span class="nt">&quot;sv&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43"></a><span class="w">          </span><span class="nt">&quot;filter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pass&quot;</span><span class="p">,</span>
+</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44"></a><span class="w">          </span><span class="nt">&quot;forward_reads&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">41</span><span class="p">,</span>
+</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45"></a><span class="w">          </span><span class="nt">&quot;reverse_reads&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">53</span><span class="p">,</span>
+</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46"></a><span class="w">          </span><span class="nt">&quot;sv_len&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47"></a><span class="w">          </span><span class="nt">&quot;gene_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv2752c&quot;</span><span class="p">,</span>
+</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48"></a><span class="w">          </span><span class="nt">&quot;gene_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv2752c&quot;</span><span class="p">,</span>
+</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49"></a><span class="w">          </span><span class="nt">&quot;feature_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CCP45551&quot;</span><span class="p">,</span>
+</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50"></a><span class="w">          </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;missense_variant&quot;</span><span class="p">,</span>
+</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51"></a><span class="w">          </span><span class="nt">&quot;change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;p.Arg389Trp&quot;</span><span class="p">,</span>
+</span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52"></a><span class="w">          </span><span class="nt">&quot;nucleotide_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;c.1165C&gt;T&quot;</span><span class="p">,</span>
+</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53"></a><span class="w">          </span><span class="nt">&quot;protein_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;p.Arg389Trp&quot;</span><span class="p">,</span>
+</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54"></a><span class="w">          </span><span class="nt">&quot;annotation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
+</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55"></a><span class="w">          </span><span class="nt">&quot;consequences&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span>
+</span><span id="__span-1-56"><a id="__codelineno-1-56" name="__codelineno-1-56"></a><span class="w">          </span><span class="nt">&quot;locus_tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv2752c&quot;</span><span class="p">,</span>
+</span><span id="__span-1-57"><a id="__codelineno-1-57" name="__codelineno-1-57"></a><span class="w">          </span><span class="nt">&quot;gene_associated_drugs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-1-58"><a id="__codelineno-1-58" name="__codelineno-1-58"></a><span class="w">                </span><span class="s2">&quot;ethambutol&quot;</span><span class="p">,</span>
+</span><span id="__span-1-59"><a id="__codelineno-1-59" name="__codelineno-1-59"></a><span class="w">                </span><span class="s2">&quot;isoniazid&quot;</span><span class="p">,</span>
+</span><span id="__span-1-60"><a id="__codelineno-1-60" name="__codelineno-1-60"></a><span class="w">                </span><span class="s2">&quot;levofloxacin&quot;</span><span class="p">,</span>
+</span><span id="__span-1-61"><a id="__codelineno-1-61" name="__codelineno-1-61"></a><span class="w">                </span><span class="s2">&quot;moxifloxacin&quot;</span><span class="p">,</span>
+</span><span id="__span-1-62"><a id="__codelineno-1-62" name="__codelineno-1-62"></a><span class="w">                </span><span class="s2">&quot;rifampicin&quot;</span>
+</span><span id="__span-1-63"><a id="__codelineno-1-63" name="__codelineno-1-63"></a><span class="w">          </span><span class="p">]</span>
+</span><span id="__span-1-64"><a id="__codelineno-1-64" name="__codelineno-1-64"></a><span class="w">      </span><span class="p">},</span>
+</span><span id="__span-1-65"><a id="__codelineno-1-65" name="__codelineno-1-65"></a><span class="w">      </span><span class="err">...</span>
+</span><span id="__span-1-66"><a id="__codelineno-1-66" name="__codelineno-1-66"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-1-67"><a id="__codelineno-1-67" name="__codelineno-1-67"></a><span class="err">...</span>
+</span><span id="__span-1-68"><a id="__codelineno-1-68" name="__codelineno-1-68"></a><span class="p">}</span>
 </span></code></pre></div></td></tr></table></div>
-<p>After the global <code>SAMPLENAME</code> variable is set, the <code>Laboratorian</code> class calls the <code>.iterate_section()</code> method, starting with the <code>"dr_variants"</code> field.</p>
-<p>Since the contents of each variant section in the JSON dictionary are considered a list, we start to iterate through each list item, which consists of each section within curly brackets <code>{...}</code>. In the example to the left, I’ve only included 1 item in each list. </p>
-<p>Immediately, each item in the list is converted into a <code>Variant</code> class object, and every item in each list item (the <code>"chrom"</code>, <code>"genome_pos"</code>, <code>"locus_tag"</code>, etc.) is converted to a class attribute. This is because each item in the list represents a single mutation or a single variant. I’ll now refer to each variant section item as a <code>Variant</code>.</p>
+</div>
+<div style="float: left; width: 50%; padding: 20px;">
+<p>Within the input JSON file, there are two fields that are examined the most: <code>"dr_variants"</code> and <code>"other_variants"</code>. These fields are treated the same, and have the same format, although different mutations are found in both regions.</p>
+<p>After the global <code>SAMPLENAME</code> variable is set from the top-level <code>"id"</code> field, the <code>Laboratorian</code> class calls the <code>.iterate_section()</code> method, which starts by iterating through the <code>"dr_variants"</code> field.</p>
+<p>The contents of each variant section in the JSON dictionary are considered a list. Each list item, which consists of the contents within the curly brackets <code>{...}</code>. In the example to the right, I’ve only included 1 item in the <code>"dr_variants"</code> and <code>"other_variants"</code> list for simplicity, with all of the internal list items collapsed for simplicity.</p>
+<p>Each item in each of the two lists is converted into a <code>Variant</code> class object, and every item in each list item (the <code>"chrom"</code>, <code>"pos"</code>, <code>"locus_tag"</code>, etc.) is converted to a class attribute. This is because each item in the list represents a single mutation or a single variant. I’ll now refer to each variant section item as a <code>Variant</code>.</p>
 <p>Each new <code>Variant</code> object has the <code>.extract_annotations()</code> method called. This method starts by iterating through the <code>"annotation"</code> field in the input JSON. The annotation field can contain multiple different annotations, so we look at each one individually.</p>
-<p>Each annotation is turned into a <code>Row</code> object, which represents a row in the Laboratorian report. During the initiation of the <code>Row</code> object, each column in the Laboratorian report is created based on both the annotation field and the originating <code>Variant</code> object. Additionally, a warning field is created based on both the global dictionary created with the <code>Coverage</code> class and the mutation’s <code>"depth"</code> and <code>"freq"</code> fields.</p>
+</div>
+<div style="clear: both;"></div>
+<div style="float: left; width: 50%; padding: 20px;">
+<div class="language-json highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">example_input.json: annotation field</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-2-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-2-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-2-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-2-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-2-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-2-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-2-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-2-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-2-10">10</a></span>
+<span class="normal"><a href="#__codelineno-2-11">11</a></span>
+<span class="normal"><a href="#__codelineno-2-12">12</a></span>
+<span class="normal"><a href="#__codelineno-2-13">13</a></span>
+<span class="normal"><a href="#__codelineno-2-14">14</a></span>
+<span class="normal"><a href="#__codelineno-2-15">15</a></span>
+<span class="normal"><a href="#__codelineno-2-16">16</a></span>
+<span class="normal"><a href="#__codelineno-2-17">17</a></span>
+<span class="normal"><a href="#__codelineno-2-18">18</a></span>
+<span class="normal"><a href="#__codelineno-2-19">19</a></span>
+<span class="normal"><a href="#__codelineno-2-20">20</a></span>
+<span class="normal"><a href="#__codelineno-2-21">21</a></span>
+<span class="normal"><a href="#__codelineno-2-22">22</a></span>
+<span class="normal"><a href="#__codelineno-2-23">23</a></span>
+<span class="normal"><a href="#__codelineno-2-24">24</a></span>
+<span class="normal"><a href="#__codelineno-2-25">25</a></span>
+<span class="normal"><a href="#__codelineno-2-26">26</a></span>
+<span class="normal"><a href="#__codelineno-2-27">27</a></span>
+<span class="normal"><a href="#__codelineno-2-28">28</a></span>
+<span class="normal"><a href="#__codelineno-2-29">29</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="w">    </span><span class="err">...</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><span class="w">    </span><span class="nt">&quot;dr_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="w">            </span><span class="err">...</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><span class="w">            </span><span class="nt">&quot;annotation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="w">                </span><span class="p">{</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><span class="w">                    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;drug_resistance&quot;</span><span class="p">,</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><span class="w">                    </span><span class="nt">&quot;drug&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bedaquiline&quot;</span><span class="p">,</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><span class="w">                    </span><span class="nt">&quot;original_mutation&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LoF&quot;</span><span class="p">,</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><span class="w">                    </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Assoc w R&quot;</span><span class="p">,</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a><span class="w">                    </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;WHO catalogue v2&quot;</span><span class="p">,</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13"></a><span class="w">                    </span><span class="nt">&quot;comment&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Can only confer resistance if genetically linked to a functional MmpL5&quot;</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15"></a><span class="w">                </span><span class="p">{</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16"></a><span class="w">                    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;drug_resistance&quot;</span><span class="p">,</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17"></a><span class="w">                    </span><span class="nt">&quot;drug&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;clofazimine&quot;</span><span class="p">,</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18"></a><span class="w">                    </span><span class="nt">&quot;original_mutation&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LoF&quot;</span><span class="p">,</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19"></a><span class="w">                    </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Assoc w R&quot;</span><span class="p">,</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20"></a><span class="w">                    </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;WHO catalogue v2&quot;</span><span class="p">,</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21"></a><span class="w">                    </span><span class="nt">&quot;comment&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Can only confer resistance if genetically linked to a functional MmpL5&quot;</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22"></a><span class="w">                </span><span class="p">}</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23"></a><span class="w">            </span><span class="p">],</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24"></a><span class="w">            </span><span class="err">...</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26"></a><span class="w">        </span><span class="err">...</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27"></a><span class="w">    </span><span class="p">]</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28"></a><span class="w">    </span><span class="err">...</span>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+</div>
+<div style="float: right; width: 50%; padding: 20px;">
+<p>Each item in the <code>"annotation"</code> is turned into a <code>Row</code> object, which represents a row in the Laboratorian report. During the initiation of the <code>Row</code> object, each column in the Laboratorian report is created based on both the annotation field and the originating <code>Variant</code> object. Additionally, a warning field is created based on both the global dictionary created with the <code>Coverage</code> class and the originating <code>Variant</code> object's <code>"depth"</code> and <code>"freq"</code> fields.</p>
 <p>Sometimes multiple annotations for the same drug can appear for a single <code>Variant</code>. If this is the case, only the most severe annotation is saved (that is, an annotation that indicates resistance is kept instead of one that indicates susceptibility).</p>
-<p>After the annotation field has been iterated through, we then check the <code>"gene_associated_drugs"</code> field to make sure that we create a <code>Row</code> for each antimicrobial drug that is associated with the gene. As you can see in the <code>"other_variants"</code> section, the annotation field for the variant only lists annotations for moxifloxacin and levofloxacin, but the gene is associated with three other antimicrobial drugs. This iteration creates additional <code>Row</code> objects for those antimicrobial drugs.</p>
+<p>After the annotation field has been iterated through, we then check the <code>"gene_associated_drugs"</code> field to make sure that we create a <code>Row</code> for each antimicrobial drug that is associated with the gene. For example, if the annotation field is missing some of the drugs that are present in the <code>"gene_associated_drugs"</code> field, this iteration creates additional <code>Row</code> objects for those missing antimicrobial drugs.</p>
 <p>This means that each mutation will potentially appear several times in the final report, once for every antimicrobial associated with the drug. This is because sometimes a mutation confers a different resistance level to one drug, but not another.</p>
+</div>
+<div style="clear: both;"></div>
 <p>After <code>Row</code> objects are created for each <code>Variant</code> in the variant section, every <code>Row</code> has the <code>.complete_row()</code> method called, which adds the interpretation columns to the object. Two interpretation columns are created, <code>mdl_interpretation</code> and <code>looker_interpretation</code>.</p>
 <p>Please note that these interpretation columns are typically identical, but in several cases, the <code>mdl_interpretation</code> column will call a variant-drug combination as “susceptible” (S), while the <code>looker_interpretation</code> column will call the same combination “uncertain” (U).</p>
-<p>In the case where a WHO annotation was not identified, the <code>Variant</code> class’ <code>.apply_expert_rules()</code> method is called. This function applies expert rules that are listed in detail on the <code>tbp-parser</code> GitHub repository, <a href="https://github.com/theiagen/tbp-parser/blob/49407cea8088886d76d772353f647776f9280d7c/2024-01-30-interpretation_logic.pdf">available here</a>.</p>
+<p>In the case where a WHO annotation was not identified, the <code>Variant</code> class’ <code>.apply_expert_rules()</code> method is called. This function applies expert rules that are listed in detail on the <code>tbp-parser</code> GitHub repository in the interpretation document.</p>
 <p>The expert rules assign a drug resistance call to the variant-drug combination only when there is no WHO annotation and will fill the <code>mdl_interpretation</code> and <code>looker_interpretation</code> fields.</p>
-<p>If the mutation is in either mmpS5, mmpL5, or mmpR5/Rv0678, then the <code>"alternate_consequences"</code> field is iterated through. This field typically lists the same mutation but in reference to a different gene; for instance, if a mutation is in the upstream non-coding region of one gene, it may be in the coding region of a different gene.</p>
-<p>Then, any genes that do not have any variants are added to the laboratorian report with various “NA” or “WT” values filling the appropriate fields.</p>
+<div style="float: right; width: 50%; padding: 20px;">
+<div class="language-json highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">example_input.json: consequences field</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-3-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-3-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-3-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-3-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-3-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-3-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-3-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-3-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-3-10">10</a></span>
+<span class="normal"><a href="#__codelineno-3-11">11</a></span>
+<span class="normal"><a href="#__codelineno-3-12">12</a></span>
+<span class="normal"><a href="#__codelineno-3-13">13</a></span>
+<span class="normal"><a href="#__codelineno-3-14">14</a></span>
+<span class="normal"><a href="#__codelineno-3-15">15</a></span>
+<span class="normal"><a href="#__codelineno-3-16">16</a></span>
+<span class="normal"><a href="#__codelineno-3-17">17</a></span>
+<span class="normal"><a href="#__codelineno-3-18">18</a></span>
+<span class="normal"><a href="#__codelineno-3-19">19</a></span>
+<span class="normal"><a href="#__codelineno-3-20">20</a></span>
+<span class="normal"><a href="#__codelineno-3-21">21</a></span>
+<span class="normal"><a href="#__codelineno-3-22">22</a></span>
+<span class="normal"><a href="#__codelineno-3-23">23</a></span>
+<span class="normal"><a href="#__codelineno-3-24">24</a></span>
+<span class="normal"><a href="#__codelineno-3-25">25</a></span>
+<span class="normal"><a href="#__codelineno-3-26">26</a></span>
+<span class="normal"><a href="#__codelineno-3-27">27</a></span>
+<span class="normal"><a href="#__codelineno-3-28">28</a></span>
+<span class="normal"><a href="#__codelineno-3-29">29</a></span>
+<span class="normal"><a href="#__codelineno-3-30">30</a></span>
+<span class="normal"><a href="#__codelineno-3-31">31</a></span>
+<span class="normal"><a href="#__codelineno-3-32">32</a></span>
+<span class="normal"><a href="#__codelineno-3-33">33</a></span>
+<span class="normal"><a href="#__codelineno-3-34">34</a></span>
+<span class="normal"><a href="#__codelineno-3-35">35</a></span>
+<span class="normal"><a href="#__codelineno-3-36">36</a></span>
+<span class="normal"><a href="#__codelineno-3-37">37</a></span>
+<span class="normal"><a href="#__codelineno-3-38">38</a></span>
+<span class="normal"><a href="#__codelineno-3-39">39</a></span>
+<span class="normal"><a href="#__codelineno-3-40">40</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="w">    </span><span class="err">...</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="w">    </span><span class="nt">&quot;dr_variants&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="w">            </span><span class="err">...</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><span class="w">            </span><span class="nt">&quot;consequences&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><span class="w">                </span><span class="p">{</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><span class="w">                    </span><span class="nt">&quot;gene_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv0678&quot;</span><span class="p">,</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><span class="w">                    </span><span class="nt">&quot;gene_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mmpR5&quot;</span><span class="p">,</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><span class="w">                    </span><span class="nt">&quot;feature_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CCP43421&quot;</span><span class="p">,</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11"></a><span class="w">                    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;frameshift_variant&quot;</span><span class="p">,</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12"></a><span class="w">                    </span><span class="nt">&quot;nucleotide_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;c.139dupG&quot;</span><span class="p">,</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13"></a><span class="w">                    </span><span class="nt">&quot;protein_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;p.Asp47fs&quot;</span><span class="p">,</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14"></a><span class="w">                    </span><span class="nt">&quot;annotation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="c1">// ignored because this is the same gene as the originating Variant</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16"></a><span class="w">                </span><span class="p">{</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17"></a><span class="w">                    </span><span class="nt">&quot;gene_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv0676c&quot;</span><span class="p">,</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18"></a><span class="w">                    </span><span class="nt">&quot;gene_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mmpL5&quot;</span><span class="p">,</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19"></a><span class="w">                    </span><span class="nt">&quot;feature_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CCP43419&quot;</span><span class="p">,</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20"></a><span class="w">                    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;upstream_gene_variant&quot;</span><span class="p">,</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21"></a><span class="w">                    </span><span class="nt">&quot;nucleotide_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;c.-648dupC&quot;</span><span class="p">,</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22"></a><span class="w">                    </span><span class="nt">&quot;protein_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23"></a><span class="w">                    </span><span class="nt">&quot;annotation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24"></a><span class="w">                </span><span class="p">},</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25"></a><span class="w">                </span><span class="p">{</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26"></a><span class="w">                    </span><span class="nt">&quot;gene_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rv0677c&quot;</span><span class="p">,</span>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27"></a><span class="w">                    </span><span class="nt">&quot;gene_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mmpS5&quot;</span><span class="p">,</span>
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28"></a><span class="w">                    </span><span class="nt">&quot;feature_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CCP43420&quot;</span><span class="p">,</span>
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29"></a><span class="w">                    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;upstream_gene_variant&quot;</span><span class="p">,</span>
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30"></a><span class="w">                    </span><span class="nt">&quot;nucleotide_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;c.-223dupC&quot;</span><span class="p">,</span>
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31"></a><span class="w">                    </span><span class="nt">&quot;protein_change&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32"></a><span class="w">                    </span><span class="nt">&quot;annotation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33"></a><span class="w">                </span><span class="p">}</span>
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34"></a><span class="w">            </span><span class="p">],</span>
+</span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35"></a><span class="w">            </span><span class="err">...</span>
+</span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-3-37"><a id="__codelineno-3-37" name="__codelineno-3-37"></a><span class="w">        </span><span class="err">...</span>
+</span><span id="__span-3-38"><a id="__codelineno-3-38" name="__codelineno-3-38"></a><span class="w">    </span><span class="p">]</span>
+</span><span id="__span-3-39"><a id="__codelineno-3-39" name="__codelineno-3-39"></a><span class="w">    </span><span class="err">...</span>
+</span><span id="__span-3-40"><a id="__codelineno-3-40" name="__codelineno-3-40"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+</div>
+<div style="float: left; width: 50%; padding: 20px;">
+<p>If the mutation is in either mmpS5, mmpL5, or mmpR5/Rv0678, then the <code>"consequences"</code> field is iterated through. This field typically lists the same mutation with relation to the same gene, but can occasionally list that mutation in reference to a different gene; for instance, if a mutation is in the upstream non-coding region of one gene, it may be in the coding region of a different gene.</p>
+<p>Each consequence that is <em>not</em> in the same gene as the originating <code>Variant</code> is added to a new <code>Row</code> object. The only items inherited from the originating <code>Variant</code> are the <code>"chrom"</code>, <code>"pos"</code>, <code>"depth"</code>, and <code>"freq"</code> fields. The rest of the fields are filled in with the information from the consequence.</p>
+<p>The annotation fields of each consequence are treated as original annotations, and the same process is followed as described above. This means that each consequence can have its own set of annotations, which may or may not be the same as the originating <code>Variant</code>.</p>
+</div>
+<div style="clear: both;"></div>
+<p>Any genes that do not have any variants are added to the laboratorian report with various "NA" or "WT" values filling the appropriate fields.</p>
 <p>This means that every gene in the TBDB appears in the Laboratorian report regardless if any mutations were identified in that gene.</p>
 <p>Finally, a few more quality control measures are taken and then all of the individual <code>Row</code> objects are written to a CSV file, which concludes the creation of the laboratorian report.</p>
+<p>Here's a breakdown of where every column in the Laboratorian report that is directly extracted from the TBProfiler output JSON. Please note that when a <code>Variant</code> object is mentioned, it corresponds to either an entry in the <code>"dr_variants"</code> or <code>"other_variants"</code> field, or a <code>"consequence"</code> of one of those entries.</p>
+<table>
+<thead>
+<tr>
+<th>Column Name</th>
+<th>Source in JSON file</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sample_id</td>
+<td>the top-level <code>id</code> field</td>
+</tr>
+<tr>
+<td>tbprofiler_gene_name</td>
+<td>the <code>gene_name</code> field in a <code>Variant</code> object</td>
+</tr>
+<tr>
+<td>tbprofiler_locus_tag</td>
+<td>the <code>locus_tag</code> field in a <code>Variant</code> object</td>
+</tr>
+<tr>
+<td>tbprofiler_variant_substitution_type</td>
+<td>the <code>type</code> field in a <code>Variant</code> object</td>
+</tr>
+<tr>
+<td>tbprofiler_variant_substitution_nt</td>
+<td>the <code>nucleotide_change</code> field in a <code>Variant</code> object</td>
+</tr>
+<tr>
+<td>tbprofiler_variant_substitution_aa</td>
+<td>the <code>protein_change</code> field in a <code>Variant</code> object</td>
+</tr>
+<tr>
+<td>confidence</td>
+<td>the <code>confidence</code> field from the <code>annotation</code> field in a <code>Variant</code> object (or manually written "No WHO annotation" if <code>annotation</code> has no content)</td>
+</tr>
+<tr>
+<td>antimicrobial</td>
+<td>the <code>drug</code> field from the <code>annotation</code> field in a <code>Variant</code> object (or a drug in the <code>gene_associated_drugs</code> list if <code>annotation</code> has no content)</td>
+</tr>
+<tr>
+<td>depth</td>
+<td>the <code>depth</code> field in a <code>Variant</code> object</td>
+</tr>
+<tr>
+<td>frequency</td>
+<td>the <code>freq</code> field in a <code>Variant</code> object</td>
+</tr>
+<tr>
+<td>source</td>
+<td>the <code>source</code> field from the <code>annotation</code> field in a <code>Variant</code> object (or left blank if <code>annotation</code> has no content)</td>
+</tr>
+<tr>
+<td>comment</td>
+<td>the <code>comment</code> field from the <code>annotation</code> field in a <code>Variant</code> object (or left blank if <code>annotation</code> has no content)</td>
+</tr>
+</tbody>
+</table>
 <h2 id="creating-the-looker-report">Creating the Looker report<a class="headerlink" href="#creating-the-looker-report" title="Permanent link">&para;</a></h2>
 <p>The <code>Parser</code> class then creates a <code>Looker</code> object which uses the <code>.create_looker_report()</code> method. The Looker report uses the Laboratorian report to generate most of the included information.</p>
 <p>It starts by iterating through a list of antimicrobial drugs and extracting all of the <code>looker_interpretation</code> values for each row in the report with that antimicrobial drug. It then identifies the highest resistance rating (R &gt; R-Interim &gt; U &gt; S-Interim &gt; S) for all resistance annotations for a drug.</p>
@@ -1320,7 +1559,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="November 21, 2024 16:27:41 UTC">2024-11-21</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="June 10, 2025 19:20:32 UTC">2025-06-10</span>
   </span>
 
     
