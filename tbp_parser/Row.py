@@ -91,15 +91,13 @@ class Row() :
               else:
                 self.warning.append("Insufficient coverage in locus")
         else:
-          self.logger.debug("ROW:This gene does not appear in the coverage dictionary. An additional warning will be given.")
-          if self.tbprofiler_gene_name in globals_.TNGS_REGIONS.keys():
+          self.logger.debug("ROW:This gene does not appear in the coverage dictionary. An additional warning will be given if tNGS.")
+          if len(globals_.TNGS_REGIONS) > 0:
             self.logger.debug("ROW:[tNGS only] This mutation's genomic position is outside the expected region")
             self.warning.append("This mutation is outside the expected region")
             self.logger.debug("ROW:[tNGS only] Rewriting this variant's interpretation to NA since it shouldn't exist")
             self.looker_interpretation = "NA"
             self.mdl_interpretation = "NA"
-          else:
-            self.warning.append("This mutation is outside the expected region")
         
         protein_position = globals_.get_position(self.tbprofiler_variant_substitution_aa)
           
