@@ -3,7 +3,7 @@
 # Shelby Bennett, Erin Young, Curtis Kapsak, & Kutluhan Incekara
 
 ARG SAMTOOLS_VER="1.18"
-ARG TBP_PARSER_VER="2.5.1"
+ARG TBP_PARSER_VER="2.6.0"
 
 FROM ubuntu:jammy AS builder
 
