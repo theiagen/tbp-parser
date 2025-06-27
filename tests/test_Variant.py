@@ -26,7 +26,7 @@ class TestVariant:
         results["mdl"].append(rrl_variant.apply_expert_rules("mdl"))
         results["looker"].append(rrl_variant.apply_expert_rules("looker"))
         
-    assert (results["looker"], results["mdl"]) == (["Urule1.2", "Urule1.2"], ["Urule1.2", "Srule1.2"])
+    assert (results["looker"], results["mdl"]) == (["Urule1.2", "Srule1.2"], ["Urule1.2", "Srule1.2"])
   
   def test_expert_rule_rv0678(self):
     with open(os.path.join(self.data_dir + "/rule1", "Rv0678.json"), "r") as rv0678:
@@ -39,7 +39,7 @@ class TestVariant:
         results["mdl"].append(rv0678_variant.apply_expert_rules("mdl"))
         results["looker"].append(rv0678_variant.apply_expert_rules("looker"))
     
-    assert (results["looker"], results["mdl"]) == (["Urule1.2", "Urule1.2", "Urule1.2"], ["Urule1.2", "Srule1.2", "Urule1.2"])
+    assert (results["looker"], results["mdl"]) == (["Urule1.2", "Srule1.2", "Urule1.2"], ["Urule1.2", "Srule1.2", "Urule1.2"])
   
   def test_expert_rule_katg(self):
     with open(os.path.join(self.data_dir + "/rule2", "katg.json"), "r") as katg:
@@ -91,4 +91,4 @@ class TestVariant:
         results["mdl"].append(rrs_variant.apply_expert_rules("mdl"))
         results["looker"].append(rrs_variant.apply_expert_rules("looker"))
     
-    assert (results["looker"], results["mdl"]) == (["Urule3.2.1", "Urule3.2.1"], ["Urule3.2.1", "Srule3.2.1"])
+    assert (results["looker"], results["mdl"]) == (["Urule3.2.1", "Srule3.2.1"], ["Urule3.2.1", "Srule3.2.1"])
