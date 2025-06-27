@@ -255,7 +255,7 @@ class Variant:
         return "Uwhov2"
         
       elif ("upstream_gene_variant" in self.type):
-        self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynomyous but is an upstream gene variant; interpretation is 'S/U'")
+        self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynomyous but is an upstream gene variant; interpretation is 'S'")
         
         if self.gene_name == "rpoB":
           return "Srule2.2.2.2"
