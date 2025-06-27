@@ -169,8 +169,8 @@ class Variant:
       
       # otherwise, check if it is an upstream gene variant
       if "upstream_gene_variant" in self.type: 
-        self.logger.debug("VAR:The position is an upstream gene variant and NOT in the proximal promoter regions; interpretation is 'S/U'")
-        return "Srule1.2" if interpretation_destination == "mdl" else "Urule1.2"
+        self.logger.debug("VAR:The position is an upstream gene variant and NOT in the proximal promoter regions; interpretation is 'S'")
+        return "Srule1.2"
       
       # otherwise, check if it is not in the ORF
       if ((not any(non_ORF in self.nucleotide_change for non_ORF in ["+", "-", "*"]) or self.nucleotide_change.endswith("*")) 
@@ -195,8 +195,8 @@ class Variant:
         return "Uwhov2"
       
       else:
-        self.logger.debug("VAR:The position is not within the special positions or the proximal promoter region; interpretation is 'S/U'")   
-        return "Srule1.2" if interpretation_destination == "mdl" else "Urule1.2"
+        self.logger.debug("VAR:The position is not within the special positions or the proximal promoter region; interpretation is 'S'")   
+        return "Srule1.2"
 
     elif self.gene_name in ["katG", "pncA", "ethA", "gid"]: 
       self.logger.debug("VAR:The gene is {}, now checking if the mutation type requires special consideration under rule 2.2".format(self.gene_name))
@@ -219,8 +219,8 @@ class Variant:
         return "Uwhov2"
         
       elif ("upstream_gene_variant" in self.type):
-        self.logger.debug("VAR:The mutation type is a NONsynonymous variant, not in the proximal promoter region, and is an upstream gene variant; interpretation is 'S/U'")     
-        return "Srule2.2.1" if interpretation_destination == "mdl" else "Urule2.2.1"
+        self.logger.debug("VAR:The mutation type is a NONsynonymous variant, not in the proximal promoter region, and is an upstream gene variant; interpretation is 'S'")     
+        return "Srule2.2.1"
       else:
         self.logger.debug("VAR:The mutation type IS a NONsynonymous variant, not in the proximal promoter region, and is NOT an upstream gene variant; interpretation is 'U'")
         return "Urule2.2.1"
@@ -255,12 +255,12 @@ class Variant:
         return "Uwhov2"
         
       elif ("upstream_gene_variant" in self.type):
-        self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynomyous but is an upstream gene variant; interpretation is 'S/U'")
+        self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynomyous but is an upstream gene variant; interpretation is 'S'")
         
         if self.gene_name == "rpoB":
-          return "Srule2.2.2.2" if interpretation_destination == "mdl" else "Urule2.2.2.2"
+          return "Srule2.2.2.2"
         else:
-          return "Srule3.2.4" if interpretation_destination == "mdl" else "Urule3.2.4"
+          return "Srule3.2.4"
       else:
         self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynonymous and is NOT an upstream gene variant; interpretation is 'U'")
         return "Urule2.2.2.2" if self.gene_name == "rpoB" else "Urule3.2.4"
@@ -280,8 +280,8 @@ class Variant:
           return "Uwhov2"
         
         else:
-          self.logger.debug("VAR:The position is not within the special positions, and not in the proximal promoter region,; interpretation is 'S/U'")
-          return "Srule3.2.1" if interpretation_destination == "mdl" else "Urule3.2.1"
+          self.logger.debug("VAR:The position is not within the special positions, and not in the proximal promoter region,; interpretation is 'S'")
+          return "Srule3.2.1"
       
       # rule 3.2.4: all remaining scenarios not covered above
       elif (self.type == "synonymous_variant"):
@@ -291,10 +291,11 @@ class Variant:
           self.logger.debug("VAR:The position is within the proximal promoter region; interpretation is 'U'")
           return "Uwhov2"
       elif ("upstream_gene_variant" in self.type):
-        self.logger.debug("VAR:The mutation is a nonsynonymous variant and not in the proximal promoter region, but is an upstream gene variant; interpretation is 'S/U'")
-        return "Srule3.2.4" if interpretation_destination == "mdl" else "Urule3.2.4"
+        self.logger.debug("VAR:The mutation is a nonsynonymous variant and not in the proximal promoter region, but is an upstream gene variant; interpretation is 'S'")
+        return "Srule3.2.4"
       else:
         self.logger.debug("VAR:The mutation is a nonsynonymous variant, not in the proximal promoter region, and is NOT an upstream gene variant; interpretation is 'U'")
         return "Urule3.2.4"
       
     return ""
+  
