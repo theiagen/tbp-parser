@@ -80,13 +80,18 @@ class Row() :
         # if self.tbprofiler_gene_name in globals_.TNGS_REGIONS.keys():
         #   self.logger.debug("ROW:[tNGS only] This mutation's genomic position is outside the expected region.")
         #   self.warning.append("This mutation is outside the expected region")
-        if self.tbprofiler_gene_name in globals_.COVERAGE_DICTIONARY:
-          if (self.depth < globals_.MIN_DEPTH) or (float(globals_.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals_.COVERAGE_THRESHOLD):
-            self.logger.debug("ROW:The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a locus warning".format(self.depth, globals_.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]))
-            if (float(globals_.COVERAGE_DICTIONARY[self.tbprofiler_gene_name]) < globals_.COVERAGE_THRESHOLD):
-              globals_.LOW_DEPTH_OF_COVERAGE_LIST.append(self.tbprofiler_gene_name)
+        if hasattr(self.variant, "gene_name_segment"):
+          gene_name = self.variant.gene_name_segment
+        else:
+          gene_name = self.tbprofiler_gene_name
+          
+        if gene_name in globals_.COVERAGE_DICTIONARY:
+          if (self.depth < globals_.MIN_DEPTH) or (float(globals_.COVERAGE_DICTIONARY[gene_name]) < globals_.COVERAGE_THRESHOLD):
+            self.logger.debug("ROW:The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a locus warning".format(self.depth, globals_.COVERAGE_DICTIONARY[gene_name]))
+            if (float(globals_.COVERAGE_DICTIONARY[gene_name]) < globals_.COVERAGE_THRESHOLD):
+              globals_.LOW_DEPTH_OF_COVERAGE_LIST.append(gene_name)
               
-              if "del" in self.tbprofiler_variant_substitution_nt or self.tbprofiler_gene_name in globals_.GENES_WITH_DELETIONS:
+              if "del" in self.tbprofiler_variant_substitution_nt or gene_name in globals_.GENES_WITH_DELETIONS:
                 self.logger.debug("ROW:This is a deletion, no warning added for the locus unless it fails positional qc (checked next)")
               else:
                 self.warning.append("Insufficient coverage in locus")
@@ -218,12 +223,12 @@ class Row() :
         try:
           # iterate through the tNGS regions to see if we have a match
           parent_genes = globals_.TNGS_REGIONS.keys()
-          parent_gene = [gene for gene in parent_genes if self.tbprofiler_gene_name in globals_.TNGS_REGIONS[gene].keys()][0]
-          self.logger.debug("ROW:[tNGS only]: The parent gene ({}) of this segment ({}) was identified; now adding tier".format(parent_gene, self.tbprofiler_gene_name))
+          parent_gene = [gene for gene in parent_genes if self.variant.gene_name_segment in globals_.TNGS_REGIONS[gene].keys()][0]
+          self.logger.debug("ROW:[tNGS only]: The parent gene ({}) of this segment ({}) was identified; now adding tier".format(parent_gene, self.variant.gene_name_segment))
           self.gene_tier = globals_.GENE_TO_TIER[parent_gene]
-          # now that coverage has been calculated, we can now rename the gene to be the parent gene name
-          self.logger.debug("ROW:[tNGS only]: Renaming the gene segment ({}) to be the parent gene name ({})".format(self.tbprofiler_gene_name, parent_gene))
-          self.tbprofiler_gene_name = parent_gene
+          # # now that coverage has been calculated, we can now rename the gene to be the parent gene name
+          # self.logger.debug("ROW:[tNGS only]: Renaming the gene segment ({}) to be the parent gene name ({})".format(self.tbprofiler_gene_name, parent_gene))
+          # self.tbprofiler_gene_name = parent_gene
     
         except:
           self.gene_tier = "NA"
