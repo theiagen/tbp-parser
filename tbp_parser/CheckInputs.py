@@ -40,9 +40,9 @@ def is_bed_valid(filename):
     String: The name of the file if valid and accessible
   """
   # these two lines are needed when I run this locally
-  scripts_dir = os.path.dirname(os.path.realpath(__file__))
-  bed_file = os.path.join(scripts_dir, filename)
-  if not os.path.exists(bed_file) and filename != "-":
+  # scripts_dir = os.path.dirname(os.path.realpath(__file__))
+  # bed_file = os.path.join(scripts_dir, filename)
+  if not os.path.exists(filename) and filename != "-":
     raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
   return filename
 
