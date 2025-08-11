@@ -41,8 +41,9 @@ class Laboratorian:
         for segment in globals_.TNGS_REGIONS[variant.gene_name]:
           self.logger.debug("LAB:[tNGS only]: checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
           if (globals_.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals_.TNGS_REGIONS[variant.gene_name][segment][1]):
-            self.logger.debug("LAB:[tNGS only]: variant from {} is found in segment {}; renaming gene to segment name".format(variant.gene_name, segment))
-            variant.gene_name = segment
+            variant.gene_name_segment = segment
+            self.logger.debug("LAB:[tNGS only]: variant from {} is found in segment {}; setting gene_name_segment to segment name".format(variant.gene_name, variant.gene_name_segment))
+            
             break
           else:
             self.logger.debug("LAB:[tNGS only]: variant from {} is NOT found in segment {}".format(variant.gene_name, segment))
