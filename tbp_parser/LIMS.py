@@ -267,7 +267,7 @@ class LIMS:
           # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
           elif ((mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") 
                 or (gene == "rpoB" and globals_.is_within_range(position_aa, globals_.SPECIAL_POSITIONS[gene]))):
-              if aa_mutation != "": # report only amino acid mutations unless not applicable/blank, in which case report nucleotide mutation
+              if aa_mutation != "" and aa_mutation != "p.0?": # report only amino acid mutations unless not applicable/blank/p.0?, in which case report nucleotide mutation
                 substitution = "{}".format(aa_mutation)
               else:
                 substitution = "{}".format(mutation)

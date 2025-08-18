@@ -80,6 +80,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.6.0 - only applies the "mutation outside the expected region" warning when --tngs is true, and the LIMS report now only shows the amino acid change unless amino acid chnages did not occur, in which case the nuclotide change is shown
 - v2.7.0 - Looker interpretations now match MDL interpretations, except "WT" MDL interpretations are still "S".
 - v2.8.0 - tNGS lineage designation now requires 70% of all genes in the coverage dictionary to pass the coverage threshold; fixes a bug in tNGS analysis where frequency was not being considered properly for quality control when amplicons were split
+- v2.8.1 - changes the LIMS report so that p.0? amino acid mutations are reported as the nucleotide change instead
 
 ---
 
