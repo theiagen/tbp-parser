@@ -82,7 +82,6 @@ class Parser:
       self.logger.debug("PARSER:Setting the tNGS regions dictionary")
       self.convert_bed_into_dictionary()
 
-
   def convert_bed_into_dictionary(self):
     """This function converts the bed file into a dictionary to confirm that the mutations are within the expected regions [tNGS only]
     

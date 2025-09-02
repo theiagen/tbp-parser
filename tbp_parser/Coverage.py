@@ -1,5 +1,5 @@
 import subprocess
-import globals
+import globals as globals_
 import pandas as pd
 
 class Coverage:
@@ -50,7 +50,7 @@ class Coverage:
     
     # samtools outputs 3 columns; column 3 is the depth of coverage per nucleotide position, piped to awk to count the positions
     #  above min_depth, then wc -l counts them all
-    command = "samtools depth -r \"" + self.chromosome + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(globals.MIN_DEPTH) + ") print;}' | wc -l"
+    command = "samtools depth -r \"" + self.chromosome + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{if ($3 >= " + str(globals_.MIN_DEPTH) + ") print;}' | wc -l"
     self.logger.debug("COV:Now running " + command)
     depth = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
     
@@ -81,13 +81,13 @@ class Coverage:
         line = line.split("\t")
         gene, coverage = self.calculate_depth(line)
         
-        globals.COVERAGE_DICTIONARY[gene] = coverage
+        globals_.COVERAGE_DICTIONARY[gene] = coverage
     
     # rename some genes to match CDPH nomenclature
-    if "mmpR5" in globals.COVERAGE_DICTIONARY.keys():
-      globals.COVERAGE_DICTIONARY["Rv0678"] = globals.COVERAGE_DICTIONARY["mmpR5"]
-    if "fbiD" in globals.COVERAGE_DICTIONARY.keys():
-      globals.COVERAGE_DICTIONARY["Rv2983"] = globals.COVERAGE_DICTIONARY["fbiD"]
+    if "mmpR5" in globals_.COVERAGE_DICTIONARY.keys():
+      globals_.COVERAGE_DICTIONARY["Rv0678"] = globals_.COVERAGE_DICTIONARY["mmpR5"]
+    if "fbiD" in globals_.COVERAGE_DICTIONARY.keys():
+      globals_.COVERAGE_DICTIONARY["Rv2983"] = globals_.COVERAGE_DICTIONARY["fbiD"]
     
     self.logger.info("COV:Initial coverage report created, now exiting function\n")
    
@@ -110,7 +110,7 @@ class Coverage:
         self.tngs_expert_regions_coverage[gene] = coverage
           
     # rename some genes to match CDPH nomenclature
-    if "mmpR5" in globals.COVERAGE_DICTIONARY.keys():
+    if "mmpR5" in globals_.COVERAGE_DICTIONARY.keys():
        self.tngs_expert_regions_coverage["Rv0678"] =  self.tngs_expert_regions_coverage["mmpR5"]
         
     self.logger.info("COV:Expert regions coverage dictionary created, now exiting function\n")
@@ -124,12 +124,12 @@ class Coverage:
     DF_COVERAGE = pd.DataFrame(columns=["Gene", "Percent_Coverage", "Warning"])
 
     self.logger.debug("COV:Now iterating through each gene in the inital coverage report")
-    for gene, percent_coverage in globals.COVERAGE_DICTIONARY.items():
+    for gene, percent_coverage in globals_.COVERAGE_DICTIONARY.items():
       warning = ""
       
       try:
-        for mutation_type_nucleotide in globals.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"][globals.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]:
-          if "del" in mutation_type_nucleotide and mutation_type_nucleotide not in globals.MUTATION_FAIL_LIST:
+        for mutation_type_nucleotide in globals_.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"][globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]:
+          if "del" in mutation_type_nucleotide and mutation_type_nucleotide not in globals_.MUTATION_FAIL_LIST:
             warning = "Deletion identified"
             if float(percent_coverage) == 100:
               warning = "Deletion identified (upstream)"
@@ -142,7 +142,7 @@ class Coverage:
       else:
         DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])], ignore_index=True)
 
-    if globals.TNGS:
+    if globals_.TNGS:
       self.logger.debug("COV:Merging the tNGS expert rule regions coverage with the initial coverage report and renaming columns")
       df_tngs_expert_regions_coverage = pd.DataFrame(self.tngs_expert_regions_coverage, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Coverage_Breadth_R_expert-rule_region"})
       DF_COVERAGE = pd.merge(DF_COVERAGE, df_tngs_expert_regions_coverage, on="Gene", how="outer")
