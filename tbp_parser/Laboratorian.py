@@ -179,8 +179,8 @@ class Laboratorian:
       # make a temporary dataframe out of the Row object using vars(row) which converts the object into a dictionary
       row_dictionary = pd.DataFrame(vars(row), index=[0])
       row_dictionary.drop(["logger", "variant", "who_confidence"], axis=1, inplace=True)
-      if len(row_dictionary) > 0:
-        globals_.DF_LABORATORIAN = pd.concat([globals_.DF_LABORATORIAN, row_dictionary], ignore_index=True)
+      
+      globals_.DF_LABORATORIAN = pd.concat([globals_.DF_LABORATORIAN, row_dictionary], ignore_index=True)
               
     globals_.DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
     self.logger.info("LAB:Laboratorian report created, now exiting function\n")
