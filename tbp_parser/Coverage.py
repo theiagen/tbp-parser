@@ -11,7 +11,7 @@ class Coverage:
       within the gene.
   """
   
-  def __init__(self, logger, input_bam, output_prefix, coverage_regions, tngs, tngs_expert_regions):
+  def __init__(self, logger, input_bam, output_prefix, coverage_regions, tngs_expert_regions):
     """ Initalizes the Coverage class
 
     Args:
@@ -19,7 +19,6 @@ class Coverage:
       input_bam (File): BAM file of sample to be analyzed (aligned to H37Rv)
       output_prefix (String): Prefix for all output
       coverage_regions (File): Bed file of regions to be examined for coverage
-      tngs (Boolean): true/false indication if analysis is of tNGS data
       tngs_expert_regions (File): Bed file of the expert rule regions to be examined for coverage in tNGS data
     """
     
@@ -27,7 +26,6 @@ class Coverage:
     self.input_bam = input_bam
     self.output_prefix = output_prefix
     self.coverage_regions = coverage_regions
-    self.tngs = tngs
     self.tngs_expert_regions = tngs_expert_regions
     self.tngs_expert_regions_coverage = {}
     
@@ -144,7 +142,7 @@ class Coverage:
       else:
         DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, "Warning": warning}, index=[0])], ignore_index=True)
 
-    if self.tngs:
+    if globals.TNGS:
       self.logger.debug("COV:Merging the tNGS expert rule regions coverage with the initial coverage report and renaming columns")
       df_tngs_expert_regions_coverage = pd.DataFrame(self.tngs_expert_regions_coverage, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Coverage_Breadth_R_expert-rule_region"})
       DF_COVERAGE = pd.merge(DF_COVERAGE, df_tngs_expert_regions_coverage, on="Gene", how="outer")

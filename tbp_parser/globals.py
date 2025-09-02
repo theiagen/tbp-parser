@@ -780,19 +780,14 @@ SPECIAL_POSITIONS = {
 }
 
 """
-The specific primer regions for the gene(s) that is(are) split into multiple sections [tNGS only]
+The specific primer regions for the gene(s) [tNGS only]
 Left blank to not affect WGS sequencing
 """
 global TNGS_REGIONS
 TNGS_REGIONS = {}
 
 """
-The specific primer regions for the gene(s) that is(are) split into multiple sections [tNGS only]
+A flag to indicate if --tngs is activated
 """
-global TNGS_REGIONS_ACTIVATED
-TNGS_REGIONS_ACTIVATED = {
-  "rpoB": {
-    "rpoB_1": [760957, 761355],
-    "rpoB_2": [760280, 760812]
-  }
-}
+global TNGS
+TNGS = False

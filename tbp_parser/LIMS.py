@@ -16,12 +16,11 @@ class LIMS:
     - create_lims_report: creates the LIMS report CSV file
   """
 
-  def __init__(self, logger, input_json, output_prefix, tngs):
+  def __init__(self, logger, input_json, output_prefix):
     self.logger = logger
     self.input_json = input_json
     self.output_prefix = output_prefix
-    self.tngs = tngs
-  
+
   def get_id(self, test=False):
     """
     Returns the lineage in English for LIMS
@@ -42,7 +41,7 @@ class LIMS:
       percentage_limit = 0.7
       
       try:
-        if self.tngs:
+        if globals_.TNGS:
           number_of_lims_genes_above_coverage_threshold = sum(float(globals_.COVERAGE_DICTIONARY[gene]) >= 90 for gene in globals_.COVERAGE_DICTIONARY.keys())
           percentage_lims_genes_above = number_of_lims_genes_above_coverage_threshold / len(globals_.COVERAGE_DICTIONARY.keys())
           self.logger.debug("LIMS:[tNGS only] The percentage of genes in the coverage dictionary above the coverage threshold is {};".format(percentage_lims_genes_above))
@@ -58,7 +57,7 @@ class LIMS:
         # lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
     
       if test or (percentage_lims_genes_above >= percentage_limit):
-        if self.tngs:
+        if globals_.TNGS:
           self.logger.debug("LIMS:[tNGS only] The sequencing method is tNGS; now checking for a His57Asp mutation in pncA")
           pncA_mutations = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == "pncA")]
           if "p.His57Asp" in pncA_mutations["tbprofiler_variant_substitution_aa"].tolist():

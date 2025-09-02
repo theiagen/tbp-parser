@@ -13,11 +13,10 @@ class Laboratorian:
     - create_laboratorian_report: creates the laboratorian report CSV file
   """
   
-  def __init__(self, logger, input_json, output_prefix, tngs):
+  def __init__(self, logger, input_json, output_prefix):
     self.logger = logger
     self.input_json = input_json
     self.output_prefix = output_prefix
-    self.tngs = tngs
    
   def iterate_section(self, variant_section, row_list):
     """
@@ -36,23 +35,23 @@ class Laboratorian:
       globals_.GENES_REPORTED.add(variant.gene_name)
       
       # this currently only applies to rpoB -- renaming the gene to the segment name to get the coverage for QC
-      if self.tngs and variant.gene_name in globals_.TNGS_REGIONS.keys():
-        self.logger.debug("LAB:[tNGS only]: checking to see which segment this gene is found in")
-        for segment in globals_.TNGS_REGIONS[variant.gene_name]:
-          self.logger.debug("LAB:[tNGS only]: checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
-          if (globals_.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals_.TNGS_REGIONS[variant.gene_name][segment][1]):
-            variant.gene_name_segment = segment
-            self.logger.debug("LAB:[tNGS only]: variant from {} is found in segment {}; setting gene_name_segment to segment name".format(variant.gene_name, variant.gene_name_segment))
+      if globals_.TNGS and variant.gene_name in globals_.TNGS_REGIONS.keys():
+        self.logger.debug("LAB:[tNGS only] checking to see if this is a split primer")
+        if len(globals_.TNGS_REGIONS[variant.gene_name]) > 1:
+          if isinstance(globals_.TNGS_REGIONS[variant.gene_name], dict):
+            for segment in globals_.TNGS_REGIONS[variant.gene_name]:
+              self.logger.debug("LAB:[tNGS only] checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
+              if (globals_.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals_.TNGS_REGIONS[variant.gene_name][segment][1]):
+                variant.gene_name_segment = segment
+                self.logger.debug("LAB:[tNGS only] variant from {} is found in segment {}; setting gene_name_segment to segment name".format(variant.gene_name, variant.gene_name_segment))
+                
+                break
+              else:
+                self.logger.debug("LAB:[tNGS only] variant from {} is NOT found in segment {}".format(variant.gene_name, segment))
             
-            break
-          else:
-            self.logger.debug("LAB:[tNGS only]: variant from {} is NOT found in segment {}".format(variant.gene_name, segment))
-        
-        ##### FUTURE NOTICE: IF WE HAVE MORE SEGMENTS ADDED THEN WE'LL NEED TO ADJUST THIS
-        # if the gene name is still rpoB, then it means that the variant was outside of the expected region
-        # if variant.gene_name == "rpoB":
-        #   self.logger.debug("LAB:[tNGS only]: since this was outside of the expected region, we're setting the coverage for rpoB to 0")
-        #   globals_.COVERAGE_DICTIONARY[variant.gene_name] = 0
+            if hasattr(variant, "gene_name_segment") is False:
+              self.logger.debug("LAB:[tNGS only] This mutation is not in the expected region! This is not within any segments")
+              variant.gene_name_segment = "Outside of expected region"
         
       # extract all of the annotations for the variant
       variant.extract_annotations()
@@ -180,7 +179,8 @@ class Laboratorian:
       # make a temporary dataframe out of the Row object using vars(row) which converts the object into a dictionary
       row_dictionary = pd.DataFrame(vars(row), index=[0])
       row_dictionary.drop(["logger", "variant", "who_confidence"], axis=1, inplace=True)
-      globals_.DF_LABORATORIAN = pd.concat([globals_.DF_LABORATORIAN, row_dictionary], ignore_index=True)
+      if len(row_dictionary) > 0:
+        globals_.DF_LABORATORIAN = pd.concat([globals_.DF_LABORATORIAN, row_dictionary], ignore_index=True)
               
     globals_.DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
     self.logger.info("LAB:Laboratorian report created, now exiting function\n")
