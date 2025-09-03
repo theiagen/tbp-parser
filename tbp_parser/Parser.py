@@ -60,6 +60,9 @@ class Parser:
       
       self.logger.debug("PARSER:Altering the GENES_FOR_LIMS list to include only tNGS genes")
       globals_.GENES_FOR_LIMS = globals_.GENES_FOR_LIMS_tNGS
+      
+      self.logger.debug("PARSER:Setting the tNGS regions dictionary")
+      self.convert_bed_into_dictionary()
          
     else:
       self.logger.debug("PARSER:Setting the ANTIMICROBIAL_CODE_TO_GENES dictionary to include all WGS entries")
@@ -77,10 +80,6 @@ class Parser:
     if self.config != "":
       self.logger.info("PARSER:Overwriting variables with the provided config file")
       self.overwrite_variables()
-      
-    if globals_.TNGS:
-      self.logger.debug("PARSER:Setting the tNGS regions dictionary")
-      self.convert_bed_into_dictionary()
 
   def convert_bed_into_dictionary(self):
     """This function converts the bed file into a dictionary to confirm that the mutations are within the expected regions [tNGS only]
