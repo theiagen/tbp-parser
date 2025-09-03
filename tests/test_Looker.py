@@ -10,7 +10,7 @@ class TestLIMS:
 
   BAM = os.path.join(data_dir, "mtb.bam")
   COVERAGE_BED = os.path.join(data_dir, "tbdb-modified-regions-for-tests.bed")
-  COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, coverage_regions=COVERAGE_BED, output_prefix="test", tngs=False, tngs_expert_regions=None)
+  COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, coverage_regions=COVERAGE_BED, output_prefix="test", tngs_expert_regions=None)
   COVERAGE1.calculate_coverage()
     
   def test_create_looker_report(self):

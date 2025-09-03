@@ -2,6 +2,7 @@ import logging
 import subprocess
 import globals as globals_
 import sys
+import re
 import yaml
 from Coverage import Coverage
 from Laboratorian import Laboratorian
@@ -18,13 +19,13 @@ class Parser:
     self.input_json = options.input_json
     self.input_bam = options.input_bam
     self.config = options.config
-    self.tngs = options.tngs
     self.verbose = options.verbose
     self.debug = options.debug
     self.output_prefix = options.output_prefix
     self.coverage_regions = options.coverage_regions
     self.tngs_expert_regions = options.tngs_expert_regions
     self.add_cs_lims = options.add_cs_lims
+    globals_.TNGS = options.tngs
     globals_.MIN_DEPTH = options.min_depth
     globals_.COVERAGE_THRESHOLD = options.min_percent_coverage
     globals_.SEQUENCING_METHOD = options.sequencing_method
@@ -48,7 +49,7 @@ class Parser:
       self.logger.setLevel(logging.DEBUG)
       self.logger.debug("PARSER:Debug mode enabled")
 
-    if self.tngs:
+    if globals_.TNGS:
       self.logger.info("PARSER:tNGS flag detected; adjusting outputs to reflect this")
       if (self.coverage_regions == "../data/tbdb-modified-regions.bed"):
         self.logger.debug("PARSER:Changing default coverage regions to ../data/tngs-reportable-regions.bed")
@@ -61,8 +62,8 @@ class Parser:
       globals_.GENES_FOR_LIMS = globals_.GENES_FOR_LIMS_tNGS
       
       self.logger.debug("PARSER:Setting the tNGS regions dictionary")
-      globals_.TNGS_REGIONS = globals_.TNGS_REGIONS_ACTIVATED
-      
+      self.convert_bed_into_dictionary()
+         
     else:
       self.logger.debug("PARSER:Setting the ANTIMICROBIAL_CODE_TO_GENES dictionary to include all WGS entries")
       globals_.ANTIMICROBIAL_CODE_TO_GENES = globals_.ANTIMICROBIAL_CODE_TO_GENES_WGS
@@ -79,6 +80,33 @@ class Parser:
     if self.config != "":
       self.logger.info("PARSER:Overwriting variables with the provided config file")
       self.overwrite_variables()
+
+  def convert_bed_into_dictionary(self):
+    """This function converts the bed file into a dictionary to confirm that the mutations are within the expected regions [tNGS only]
+    
+    For genes with suffixes like gene_1, gene_2, they are consolidated under the common gene name,
+    with each entry stored as a sub-item in a nested dictionary.
+    """ 
+    with open(self.coverage_regions, 'r') as bed_file:
+      for line in bed_file:
+        cols = line.strip().split('\t')
+        
+        start_pos = int(cols[1])
+        end_pos = int(cols[2])
+        gene_name = cols[4]
+        
+        # check if primer is split
+        match = re.match(r'(.+)_(\d+)$', gene_name)
+        if match:
+          base_gene_name = match.group(1)
+          if base_gene_name not in globals_.TNGS_REGIONS:
+            globals_.TNGS_REGIONS[base_gene_name] = {}
+          globals_.TNGS_REGIONS[base_gene_name][gene_name] = [start_pos, end_pos]
+
+        else:
+          globals_.TNGS_REGIONS[gene_name] = [start_pos, end_pos]
+
+      self.logger.debug("PARSER:Finished processing coverage regions; {}".format(globals_.TNGS_REGIONS))
 
   def overwrite_variables(self):
     """This function overwrites the input variables provided at runtime with those from the config file"""
@@ -115,19 +143,19 @@ class Parser:
     self.check_dependency_exists
     
     self.logger.info("PARSER:Creating initial coverage report")
-    coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions, self.tngs, self.tngs_expert_regions)
+    coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions, self.tngs_expert_regions)
     coverage.calculate_coverage()
     
-    if self.tngs and self.tngs_expert_regions != "":
+    if globals_.TNGS and self.tngs_expert_regions != "":
       self.logger.info("PARSER:Calculating the coverage for the expert rule regions")
       coverage.calculate_r_expert_rule_regions_coverage()
   
     self.logger.info("PARSER:Creating laboratorian report")
-    laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, self.tngs)
+    laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix)
     laboratorian.create_laboratorian_report()
     
     self.logger.info("PARSER:Creating LIMS report")
-    lims = LIMS(self.logger, self.input_json, self.output_prefix, self.tngs)
+    lims = LIMS(self.logger, self.input_json, self.output_prefix)
     lims.create_lims_report()
     
     self.logger.info("PARSER:Creating Looker report")

@@ -76,10 +76,6 @@ class Row() :
         self.rationale = ""
         self.warning = []
         
-        # the following if statement only applies to rpoB
-        # if self.tbprofiler_gene_name in globals_.TNGS_REGIONS.keys():
-        #   self.logger.debug("ROW:[tNGS only] This mutation's genomic position is outside the expected region.")
-        #   self.warning.append("This mutation is outside the expected region")
         if hasattr(self.variant, "gene_name_segment"):
           gene_name = self.variant.gene_name_segment
         else:
@@ -97,13 +93,16 @@ class Row() :
                 self.warning.append("Insufficient coverage in locus")
         else:
           self.logger.debug("ROW:This gene does not appear in the coverage dictionary. If tNGS, an additional warning will be given.")
-          if len(globals_.TNGS_REGIONS) > 0:
+          
+        if globals_.TNGS:
+          self.logger.debug("ROW:[tNGS only] Checking to see if the mutation falls within the primer regions; if not, an additional warning will be given.")            
+          if self.is_mutation_outside_region(): # true if outside region
             self.logger.debug("ROW:[tNGS only] This mutation's genomic position is outside the expected region")
             self.warning.append("This mutation is outside the expected region")
             self.logger.debug("ROW:[tNGS only] Rewriting this variant's interpretation to NA since it shouldn't exist")
             self.looker_interpretation = "NA"
             self.mdl_interpretation = "NA"
-        
+
         protein_position = globals_.get_position(self.tbprofiler_variant_substitution_aa)
           
         # check to see if we need to apply a mutation warning 
@@ -316,6 +315,39 @@ class Row() :
     # "Not assoc w R" and "Not assoc w R - Interim" and anything else
     else: 
       return "No mutations associated with resistance to {} detected".format(self.antimicrobial)
+
+  def is_mutation_outside_region(self):
+    """
+    This function checks if a mutation falls within the primer regions.
+    Returns a boolean flag indicating if the mutation is outside the expected region.
+    """
+    # default to failure (mutation outside expected region)
+    for primer, positions in globals_.TNGS_REGIONS.items():
+      if primer != self.tbprofiler_gene_name:
+        continue
+      
+      # split primers (positions is a dictionary)
+      if isinstance(positions, dict):
+        for segment, seg_positions in positions.items():
+          if segment != self.variant.gene_name_segment:
+            continue
+
+          if seg_positions[0] <= self.variant.pos <= seg_positions[1]:
+            self.logger.debug("ROW:[tNGS only] Mutation falls within split primer region {}: {} is within {}".format(segment, self.variant.pos, seg_positions))
+            return False  # position found, mutation is within region
+
+          self.logger.debug("ROW:[tNGS only] Mutation falls outside split primer region {}; {} is NOT within {}".format(segment, self.variant.pos, seg_positions))
+
+      # regular primers (positions is a list)
+      else:
+        if positions[0] <= self.variant.pos <= positions[1]:
+          self.logger.debug("ROW:[tNGS only] Mutation falls within primer region {}: {} is within {}".format(primer, self.variant.pos, positions))
+          return False  # position found, mutation is within region
+
+        self.logger.debug("ROW:[tNGS only] Mutation does not fall within any primer regions for {}; {} is NOT within {}".format(primer, self.variant.pos, positions))
+        return True
+
+    return True  # no matching position found, mutation is outside region
 
   def describe_rationale(self):
     """
