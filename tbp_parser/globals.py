@@ -689,7 +689,7 @@ RESISTANCE_RANKING = {
   "S": 2,
   "WT": 1,
   "Insufficient Coverage": 0,
-  "NA": 0
+  "NA": -1 # outside the expected region
 }
 
 """

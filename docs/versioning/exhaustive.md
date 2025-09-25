@@ -82,6 +82,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.8.0 - tNGS lineage designation now requires 70% of all genes in the coverage dictionary to pass the coverage threshold; fixes a bug in tNGS analysis where frequency was not being considered properly for quality control when amplicons were split
 - v2.8.1 - changes the LIMS report so that p.0? amino acid mutations are reported as the nucleotide change instead
 - v2.9.0 - fixes a bug in tNGS analysis where mutations outside the expected region were not identified correctly, leading to missing warnings; deprecates the TNGS_REGIONS_ACTIVATED global variable and now creates the TNGS_REGIONS dictionary directly from the input BED file
+- v2.9.1 - fixes a bug where mutations outside the expected region can lead to an erroneous "Pending Retest" in the LIMS report
 
 ---
 
