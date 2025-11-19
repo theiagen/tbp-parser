@@ -155,7 +155,7 @@ class LIMS:
         # check if there are any matching amino acid positions;
         # if so, we want to keep the row with the higher read support
         self.logger.debug("LIMS:Considering if any mutations have identical amino acid positions and keeping only the one with higher read support")
-        removal_list = set()
+        removal_list = []
         for mutation in aa_mutations_per_gene:
           current_index = aa_mutations_per_gene.index(mutation)
           
@@ -179,13 +179,13 @@ class LIMS:
                 self.logger.debug("LIMS:The current mutation has a matching amino acid position to an additional mutation, now testing read support")
                 if read_supports[current_index] > read_supports[matching_index]:
                   self.logger.debug("LIMS:The current mutation ({}) has higher read support ({}) than the other mutation ({}; {})".format(mutation, read_supports[current_index], aa_mutations_per_gene[matching_index], read_supports[matching_index]))
-                  removal_list.add(aa_mutations_per_gene[matching_index]) # avoid removing items while iterating through object
+                  removal_list.append(aa_mutations_per_gene[matching_index]) # avoid removing items while iterating through object
                 else:
                   self.logger.debug("LIMS:The other mutation ({}) has higher read support ({}) than the current mutation ({}; {})".format(aa_mutations_per_gene[matching_index], read_supports[matching_index], mutation, read_supports[current_index]))
-                  removal_list.add(mutation)
+                  removal_list.append(mutation)
           
           if ("This mutation is outside the expected region" in warnings[current_index]):
-            removal_list.add(mutation)
+            removal_list.append(mutation)
             
         # remove all mutations that have lower read support
         if len(removal_list) > 0:
