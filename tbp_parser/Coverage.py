@@ -181,8 +181,9 @@ class Coverage:
           line = line.split("\t")
           gene, average_depth = self.calculate_depth(line)
           average_depths[gene] = average_depth
-          df_average_depths = pd.DataFrame(average_depths, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Average_Locus_Coverage"})
-          DF_COVERAGE = pd.merge(DF_COVERAGE, df_average_depths, on="Gene", how="outer")      
+        
+        df_average_depths = pd.DataFrame(average_depths, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Average_Locus_Coverage"})
+        DF_COVERAGE = pd.merge(DF_COVERAGE, df_average_depths, on="Gene", how="outer")      
 
     DF_COVERAGE.to_csv(self.output_prefix + ".percent_gene_coverage.csv", index=False)
     self.logger.info("COV:Coverage report reformatted and saved to {}\n".format(self.output_prefix + ".percent_gene_coverage.csv"))

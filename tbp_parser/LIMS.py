@@ -151,13 +151,14 @@ class LIMS:
         self.logger.debug("LIMS:Amino acid mutations: {}".format(aa_mutations_per_gene))
         self.logger.debug("LIMS:Nucleotide mutations: {}".format(nt_mutations_per_gene))
         self.logger.debug("LIMS:Their corresponding MDL interpretations: {}".format(mdl_interpretations))
-        
+        self.logger.debug("LIMS:Their corresponding warnings: {}".format(warnings))
         # check if there are any matching amino acid positions;
         # if so, we want to keep the row with the higher read support
         self.logger.debug("LIMS:Considering if any mutations have identical amino acid positions and keeping only the one with higher read support")
         removal_list = []
-        for mutation in aa_mutations_per_gene:
-          current_index = aa_mutations_per_gene.index(mutation)
+        for nt_mutation in nt_mutations_per_gene:
+          current_index = nt_mutations_per_gene.index(nt_mutation)
+          mutation = aa_mutations_per_gene[current_index]
           
           # get a list of all other mutations for this gene except the current index for comparison          
           aa_positions_original = {aa_mutation:globals_.get_position(aa_mutation) for i, aa_mutation in enumerate(aa_mutations_per_gene) if i != current_index}
@@ -182,22 +183,22 @@ class LIMS:
                   removal_list.append(aa_mutations_per_gene[matching_index]) # avoid removing items while iterating through object
                 else:
                   self.logger.debug("LIMS:The other mutation ({}) has higher read support ({}) than the current mutation ({}; {})".format(aa_mutations_per_gene[matching_index], read_supports[matching_index], mutation, read_supports[current_index]))
-                  removal_list.append(mutation)
+                  removal_list.append(nt_mutation)
           
           if ("This mutation is outside the expected region" in warnings[current_index]):
-            removal_list.append(mutation)
+            removal_list.append(nt_mutation)
             
         # remove all mutations that have lower read support
         if len(removal_list) > 0:
           for mutation in removal_list:
-            if mutation in aa_mutations_per_gene:
-              removal_index = aa_mutations_per_gene.index(mutation)
+            if mutation in nt_mutations_per_gene:
+              removal_index = nt_mutations_per_gene.index(mutation)
               aa_mutations_per_gene.pop(removal_index)
               nt_mutations_per_gene.pop(removal_index)
               mutation_types_per_gene.pop(removal_index)
               mdl_interpretations.pop(removal_index)
               warnings.pop(removal_index)
-              read_supports.pop(removal_index)  
+              read_supports.pop(removal_index)
         
         # format all mutations that are associated with the drug appropriately
         for mutation in nt_mutations_per_gene:
