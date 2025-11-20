@@ -57,8 +57,33 @@ class Coverage:
     # get coverage for region in bed file based on depth
     #  add one to gene length to compensate for subtraction
     coverage = (int(depth) / (int(end) - int(start) + 1)) * 100
-    self.logger.debug("COV:The coverage for this gene ({}) is {}".format(gene, coverage))
+    self.logger.debug("COV:The average breadth of coverage for this gene ({}) is {}".format(gene, coverage))
     return gene, coverage
+  
+  def calculate_average_depth(self, line):
+    """ Uses samtools to calculate average coverage of a locus
+
+    Args:
+      line (String): A line from a bed file listing regions of interest
+
+    Returns:
+      String gene: name of the region
+      Float coverage: average coverage of the region over minimum depth
+    """
+    
+    # parse out the coordinates and gene from each line in the bed file
+    start = line[1]
+    end = line[2]
+    gene = line[4]
+    
+    # samtools outputs 3 columns; column 3 is the depth of coverage per nucleotide position, piped to awk to count the positions
+    #  above min_depth, then wc -l counts them all
+    command = "samtools depth -a -J -r \"" + self.chromosome + ":" + start + "-" + end + "\" " + self.input_bam + " | awk -F '\t' '{sum+=$3} END { if (NR > 0) print sum/NR; else print 0 }'"
+    self.logger.debug("COV:Now running " + command)
+    average_depth = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
+    
+    self.logger.debug("COV:The average_depth for this locus ({}) is {}".format(gene, float(average_depth)))
+    return gene, float(average_depth)
   
   def calculate_coverage(self):
     """ Iterates through a bedfile and adds average breadth of coverage to global variable "COVERAGE_DICTIONARY"
@@ -92,7 +117,6 @@ class Coverage:
     self.logger.info("COV:Initial coverage report created, now exiting function\n")
    
   def calculate_r_expert_rule_regions_coverage(self):
-    
     """
     This function calculates the breadth of coverage over the ranges that encompass
     R mutations and expert rule regions; intended for supervisory review in the case
@@ -147,6 +171,18 @@ class Coverage:
       df_tngs_expert_regions_coverage = pd.DataFrame(self.tngs_expert_regions_coverage, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Coverage_Breadth_R_expert-rule_region"})
       DF_COVERAGE = pd.merge(DF_COVERAGE, df_tngs_expert_regions_coverage, on="Gene", how="outer")
       DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning"}, inplace=True)
+      
+      # add average_locus_coverage
+      with open(self.coverage_regions, "r") as bedfile_fh:
+        self.logger.debug("COV:Now calculating locus coverage for each gene in the {} file".format(self.coverage_regions))
+        average_depths = {}
+        for line in bedfile_fh:
+          line = line.split("\t")
+          gene, average_depth = self.calculate_average_depth(line)
+          average_depths[gene] = average_depth
+        
+        df_average_depths = pd.DataFrame(average_depths, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Average_Locus_Coverage"})
+        DF_COVERAGE = pd.merge(DF_COVERAGE, df_average_depths, on="Gene", how="outer")      
 
     DF_COVERAGE.to_csv(self.output_prefix + ".percent_gene_coverage.csv", index=False)
     self.logger.info("COV:Coverage report reformatted and saved to {}\n".format(self.output_prefix + ".percent_gene_coverage.csv"))
