@@ -57,7 +57,7 @@ class Coverage:
     # get coverage for region in bed file based on depth
     #  add one to gene length to compensate for subtraction
     coverage = (int(depth) / (int(end) - int(start) + 1)) * 100
-    self.logger.debug("COV:The coverage for this gene ({}) is {}".format(gene, coverage))
+    self.logger.debug("COV:The average breadth of coverage for this gene ({}) is {}".format(gene, coverage))
     return gene, coverage
   
   def calculate_average_depth(self, line):
@@ -82,8 +82,8 @@ class Coverage:
     self.logger.debug("COV:Now running " + command)
     average_depth = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
     
-    self.logger.debug("COV:The average_depth for this locus ({}) is {}".format(gene, average_depth))
-    return gene, average_depth
+    self.logger.debug("COV:The average_depth for this locus ({}) is {}".format(gene, float(average_depth)))
+    return gene, float(average_depth)
   
   def calculate_coverage(self):
     """ Iterates through a bedfile and adds average breadth of coverage to global variable "COVERAGE_DICTIONARY"
@@ -117,7 +117,6 @@ class Coverage:
     self.logger.info("COV:Initial coverage report created, now exiting function\n")
    
   def calculate_r_expert_rule_regions_coverage(self):
-    
     """
     This function calculates the breadth of coverage over the ranges that encompass
     R mutations and expert rule regions; intended for supervisory review in the case
