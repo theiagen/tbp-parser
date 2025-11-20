@@ -179,7 +179,7 @@ class Coverage:
         average_depths = {}
         for line in bedfile_fh:
           line = line.split("\t")
-          gene, average_depth = self.calculate_depth(line)
+          gene, average_depth = self.calculate_average_depth(line)
           average_depths[gene] = average_depth
         
         df_average_depths = pd.DataFrame(average_depths, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Average_Locus_Coverage"})
