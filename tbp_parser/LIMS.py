@@ -37,8 +37,7 @@ class LIMS:
       detected_sublineage = input_json["sub_lineage"]
       self.logger.debug("LIMS:The detected lineage is: '{}', and the detected sublineage is: '{}'".format(detected_lineage, detected_sublineage))
       
-      self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
-      percentage_limit = 0.7
+      self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold; the min locus percentage is set to {}".format(globals_.MIN_LOCUS_PERCENTAGE))
       
       try:
         if globals_.TNGS:
@@ -56,7 +55,7 @@ class LIMS:
         percentage_lims_genes_above = 0
         # lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
     
-      if test or (percentage_lims_genes_above >= percentage_limit):
+      if test or (percentage_lims_genes_above >= globals_.MIN_LOCUS_PERCENTAGE):
         if globals_.TNGS:
           self.logger.debug("LIMS:[tNGS only] The sequencing method is tNGS; now checking for a His57Asp mutation in pncA")
           pncA_mutations = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == "pncA")]
@@ -68,7 +67,7 @@ class LIMS:
             lineage.add("DNA of Mycobacterium tuberculosis complex detected (not M. bovis)") 
           
         else:  
-          self.logger.debug("LIMS:The sequencing method is WGS AND the percentage of LIMS genes is GREATER than {}% ({}); now checking the TBProfiler lineage calls".format(percentage_limit * 100, percentage_lims_genes_above))
+          self.logger.debug("LIMS:The sequencing method is WGS AND the percentage of LIMS genes is GREATER than {}% ({}); now checking the TBProfiler lineage calls".format(globals_.MIN_LOCUS_PERCENTAGE * 100, percentage_lims_genes_above))
 
           sublineages = detected_sublineage.split(";")
                 
@@ -87,7 +86,7 @@ class LIMS:
             lineage.add("DNA of Mycobacterium tuberculosis complex detected")
               
       else:
-        self.logger.debug("LIMS:The percentage of LIMS genes is LESS than {}% ({}); assuming NOT M.tb".format(percentage_limit * 100, percentage_lims_genes_above))
+        self.logger.debug("LIMS:The percentage of LIMS genes is LESS than {}% ({}); assuming NOT M.tb".format(globals_.MIN_LOCUS_PERCENTAGE * 100, percentage_lims_genes_above))
         lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
        
       lineage = "; ".join(sorted(lineage))
