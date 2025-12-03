@@ -131,21 +131,49 @@ class Row() :
                   ("del" in self.tbprofiler_variant_substitution_nt or self.tbprofiler_gene_name in globals_.GENES_WITH_DELETIONS)):
                 self.logger.debug("ROW:This deletion failed in the mutation position and there was insufficient coverage locus, adding insufficient coverage warning")
                 self.warning.append("Insufficient coverage in locus")
-                  
+
+            globals_.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
+            self.warning.append("Failed quality in the mutation position")
+          
+        elif globals_.TNGS:
+          self.logger.debug("ROW:[tNGS only] Checking boundaries for QC")
+          lower_rs = globals_.TNGS_READ_SUPPORT_BOUNDARIES[0]
+          upper_rs = globals_.TNGS_READ_SUPPORT_BOUNDARIES[1]
+          lower_f = globals_.TNGS_FREQUENCY_BOUNDARIES[0]
+          upper_f = globals_.TNGS_FREQUENCY_BOUNDARIES[1]
+          
+          tngs_fail = False
+          if (lower_rs <= self.read_support and self.read_support < upper_rs):
+            if (self.frequency >= upper_f):
+              self.logger.debug("ROW:[tNGS only] this mutation's read support ({}) is between {} and {} and the frequency is above {}, so it passed the tNGS QC boundaries, no warning added for the mutation position".format(self.read_support, lower_rs, upper_rs, upper_f))
+            else:
+              self.logger.debug("ROW:[tNGS only] this mutation's read support ({}) is between {} and {} but the frequency is below {}, so it failed the tNGS QC boundaries".format(self.read_support, lower_rs, upper_rs, upper_f))
+              tngs_fail = True
+          elif (self.read_support >= upper_rs):
+            if (self.frequency >= lower_f):
+              self.logger.debug("ROW:[tNGS only] this mutation's read support ({}) is above {} and the frequency is above {}, so it passed the tNGS QC boundaries, no warning added for the mutation position".format(self.read_support, upper_rs, lower_f))
+            else:
+              self.logger.debug("ROW:[tNGS only] this mutation's read support ({}) is above {} but the frequency is below {}, so it failed the tNGS QC boundaries".format(self.read_support, upper_rs, lower_f))
+              tngs_fail = True
+          elif (self.read_support < lower_rs):
+            self.logger.debug("ROW:[tNGS only] this mutation's read support ({}) is below {}, so it failed the tNGS QC boundaries".format(self.read_support, lower_rs))
+            tngs_fail = True
+        
+          if tngs_fail:
             globals_.MUTATION_FAIL_LIST.append(self.tbprofiler_variant_substitution_nt)
             self.warning.append("Failed quality in the mutation position")
           
         else:
           self.logger.debug("ROW:The depth of coverage for this variant is {}, the frequency is {}, and the read support is {}; no additional warning added for the mutation position".format(self.depth, self.frequency, self.read_support))
           if len(self.warning) == 0:
-            self.warning = [""]        
+            self.warning = [""]
           
         self.logger.debug("ROW:This variant has the following warnings: {}".format(self.warning))
       
         if "Failed quality in the mutation position" not in self.warning and "del" in self.tbprofiler_variant_substitution_nt:
           globals_.GENES_WITH_DELETIONS.add(self.tbprofiler_gene_name)
           self.logger.debug("ROW:This is a deletion that passed positional qc, adding to set")
-
+        
       # otherwise, the variant does not appear in the JSON file (or was not sequenced [tNGS]) and default NA/WT values need to be supplied
       else:
         self.logger.debug("ROW:Initializing the Row object, the variant has no information supplied. Defaulting to NA or WT values.")

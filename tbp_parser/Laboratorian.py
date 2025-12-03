@@ -149,22 +149,25 @@ class Laboratorian:
               reorder_list.append(row)
             
             # whole locus fail point D (non-R mutations with no deletions)
-            elif (row.mdl_interpretation != "R" and 
-                  "del" not in row.tbprofiler_variant_substitution_nt and
+            # add a boolean here to skip R mutations that failed locus coverage if turned on
+            elif (row.mdl_interpretation != "R" or globals_.TREAT_R_AS_S):
+              if ("del" not in row.tbprofiler_variant_substitution_nt and
                   "Insufficient coverage in locus" in row.warning):
-              self.logger.debug("LAB:This mutation is not an 'R' mutation and has bad locus coverage so we are rewriting the interpretation to Insufficient Coverage")
+                self.logger.debug("LAB:This mutation is not an 'R' mutation (or is being treated as such) and has bad locus coverage so we are rewriting the interpretation to Insufficient Coverage")
 
-              # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
-              row.mdl_interpretation = "Insufficient Coverage"
-              row.looker_interpretation = "Insufficient Coverage"
-              
-              if "Insufficient coverage in locus" not in row.warning:
-                row.warning.append("Insufficient coverage in locus")
+                # overwrite all interpretation values with Insufficient coverage, etc. as per rule 4.2.1.3.2 in the interpretation document
+                row.mdl_interpretation = "Insufficient Coverage"
+                row.looker_interpretation = "Insufficient Coverage"
+                
+                if "Insufficient coverage in locus" not in row.warning:
+                  row.warning.append("Insufficient coverage in locus")
 
-              reorder_list.append(row)
+                reorder_list.append(row)
+              else:
+                self.logger.debug("LAB:This mutation is not an 'R' mutation (or is being treated as such) but it has decent locus coverage; keeping interpretation as is.")
             else:
-              self.logger.debug("LAB:This mutation is an 'R' mutation with decent position quality (or is a deletion); keeping interpretation as is.")
-
+              self.logger.debug("LAB:This mutation is an 'R' mutation with decent position quality (or is a deletion) and TREAT_R_AS_S is set to False; keeping interpretation as is.")
+          
         # remove rows in reorder_list from row_list and add them to the end of row_list
         for row in reorder_list:
           row_list.remove(row)

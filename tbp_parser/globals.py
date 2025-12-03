@@ -577,6 +577,13 @@ global MIN_FREQUENCY
 MIN_FREQUENCY = 0.1
 
 """
+The minimum percentage of LIMS genes to pass QC 
+for MTBC identification to occur
+"""
+global MIN_LOCUS_PERCENTAGE
+MIN_LOCUS_PERCENTAGE = 0.7
+
+"""
 The minimum read support for a mutation to pass QC
 (calculated as DEPTH * FREQUENCY)
 """
@@ -787,7 +794,27 @@ global TNGS_REGIONS
 TNGS_REGIONS = {}
 
 """
+read support boundaries for tNGS QC; [lower_rs, upper_rs]
+"""
+global TNGS_READ_SUPPORT_BOUNDARIES
+TNGS_READ_SUPPORT_BOUNDARIES = []
+
+"""
+frequency boundaries for tNGS QC; [lower_f, upper_f]
+"""
+global TNGS_FREQUENCY_BOUNDARIES
+TNGS_FREQUENCY_BOUNDARIES = []
+
+"""
 A flag to indicate if --tngs is activated
 """
 global TNGS
 TNGS = False
+
+"""
+A flag to indicate if --treat-r-as-s is activated; indicates that r mutations in loci 
+that are below the coverage threshold will be treated like S or U mutations and will 
+not be reported regardless of mutation quality
+"""
+global TREAT_R_AS_S
+TREAT_R_AS_S = False

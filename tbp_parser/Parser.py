@@ -26,11 +26,13 @@ class Parser:
     self.tngs_expert_regions = options.tngs_expert_regions
     self.add_cs_lims = options.add_cs_lims
     globals_.TNGS = options.tngs
+    globals_.TREAT_R_AS_S = options.treat_r_mutations_as_s
     globals_.MIN_DEPTH = options.min_depth
     globals_.COVERAGE_THRESHOLD = options.min_percent_coverage
     globals_.SEQUENCING_METHOD = options.sequencing_method
     globals_.MIN_READ_SUPPORT = options.min_read_support
     globals_.MIN_FREQUENCY = options.min_frequency
+    globals_.MIN_LOCUS_PERCENTAGE = options.min_percent_locus_covered
     globals_.RRS_FREQUENCY = options.rrs_frequency
     globals_.RRS_READ_SUPPORT = options.rrs_read_support
     globals_.RRL_FREQUENCY = options.rrl_frequency
@@ -38,6 +40,10 @@ class Parser:
     globals_.RPOB449_FREQUENCY = options.rpob449_frequency
     globals_.ETHA237_FREQUENCY = options.etha237_frequency
     globals_.OPERATOR = options.operator
+
+    # this could cause issues if someone does more than one comma, but in that case, they deserve the error
+    globals_.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
+    globals_.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
 
     if self.verbose:
       self.logger.setLevel(logging.INFO)
