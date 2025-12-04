@@ -8,9 +8,9 @@ class Laboratorian:
     """
     This class creates the CDPH Laboratorian report.
     It has two functions:
-      - iterate_section: iterates through each variant in a section and creates
-        a Variant in the Variant class for each variant
-      - create_laboratorian_report: creates the laboratorian report CSV file
+        - iterate_section: iterates through each variant in a section and creates
+            a Variant in the Variant class for each variant
+        - create_laboratorian_report: creates the laboratorian report CSV file
     """
 
     def __init__(self, logger, input_json, output_prefix):
@@ -81,23 +81,23 @@ class Laboratorian:
         """
         This function creates the laboratorian report, which is a CSV file
         containing the following information for each mutation in the input JSON:
-          - sample_id: the sample name
-          - tbprofiler_gene_name: the gene name
-          - tbprofiler_locus_tag: the locus tag
-          - tbprofiler_variant_substitution_type: the variant substitution type (missense_variant, upstream_gene_variant...)
-          - tbprofiler_variant_substitution_nt: the nucleotide substitution (c.1349C>G)
-          - tbprofiler_variant_substitution_aa: the amino acid substitution (p.Ser450Trp)
-          - confidence: the tbprofiler annotation regarding resistance (Not assoc w R, Uncertain significance...)
-          - antimicrobial: the antimicrobial drug the mutation confers resistance to (streptomycin, rifampin...)
-          - looker_interpretation: the interpretation of resistance for the CDPH Looker report (R, R-interim, U, S, S-interim)
-          - mdl_interpretation: the MDL interpretation of resistance (R, S, U)
-          - depth: the depth of coverage at the mutation site (100)
-          - frequency: the frequency of mutation at the site (1)
-          - read_support: the number of reads supporting the mutation (10, depth*frequency)
-          - rationale: the rationale for resistance calling (WHO classification, Expert rule)
-          - warning: a column reserved for warnings such as low depth of coverage 
-          - source: a column used to indicate the resistance source as specified by TBDB
-          - tbdb_comment: a column used to include any additional comments as specified by TBDB
+            - sample_id: the sample name
+            - tbprofiler_gene_name: the gene name
+            - tbprofiler_locus_tag: the locus tag
+            - tbprofiler_variant_substitution_type: the variant substitution type (missense_variant, upstream_gene_variant...)
+            - tbprofiler_variant_substitution_nt: the nucleotide substitution (c.1349C>G)
+            - tbprofiler_variant_substitution_aa: the amino acid substitution (p.Ser450Trp)
+            - confidence: the tbprofiler annotation regarding resistance (Not assoc w R, Uncertain significance...)
+            - antimicrobial: the antimicrobial drug the mutation confers resistance to (streptomycin, rifampin...)
+            - looker_interpretation: the interpretation of resistance for the CDPH Looker report (R, R-interim, U, S, S-interim)
+            - mdl_interpretation: the MDL interpretation of resistance (R, S, U)
+            - depth: the depth of coverage at the mutation site (100)
+            - frequency: the frequency of mutation at the site (1)
+            - read_support: the number of reads supporting the mutation (10, depth*frequency)
+            - rationale: the rationale for resistance calling (WHO classification, Expert rule)
+            - warning: a column reserved for warnings such as low depth of coverage 
+            - source: a column used to indicate the resistance source as specified by TBDB
+            - tbdb_comment: a column used to include any additional comments as specified by TBDB
         """
         self.logger.info("LAB:Within the Laboratorian class create_laboratorian_report function")   
 

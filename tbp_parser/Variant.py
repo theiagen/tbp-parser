@@ -15,10 +15,10 @@ class Variant:
     within the same annotation for a single variant.
 
     This class has three functions:
-      - extract_annotations: splits up the annotation field into individual
-        annotations and creates a Row object for each annotation.
-      - apply_expert_rules: applies the expert rules from the CDPH interpretation
-        logic document to the variant.
+        - extract_annotations: splits up the annotation field into individual
+            annotations and creates a Row object for each annotation.
+        - apply_expert_rules: applies the expert rules from the CDPH interpretation
+            logic document to the variant.
     """
     def __init__(self, logger, variant=None):
         self.logger = logger

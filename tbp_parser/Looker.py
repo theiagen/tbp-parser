@@ -8,7 +8,7 @@ class Looker:
     This class creates the CDPH Looker report.
 
     It has one function:
-      - create_looker_report: creates the Looker report CSV file 
+        - create_looker_report: creates the Looker report CSV file 
     """
     def __init__(self, logger, output_prefix):
         self.logger = logger
@@ -18,8 +18,8 @@ class Looker:
         """
         This function recieves the input json and laboratorian report to
         write the Looker report that includes the following information: 
-          - sample_id: the sample name
-          - for each antimicrobial, indication if resistant (R) or susceptible (S)
+            - sample_id: the sample name
+            - for each antimicrobial, indication if resistant (R) or susceptible (S)
         """
         self.logger.info("LOOKER:Within Looker class create_looker_report function")
 

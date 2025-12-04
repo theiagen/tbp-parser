@@ -6,21 +6,21 @@ class Coverage:
     """
     This class creates the CDPH coverage report.
     It has THREE functions: 
-      - calcualte_depth: uses samtools to calculate the breadth of coverage and average depth for a given region
-      - get_coverage: creates the initial coverage report.
-      - reformat_coverage: adds a warning column if a deletion was identified
-        within the gene.
+        - calcualte_depth: uses samtools to calculate the breadth of coverage and average depth for a given region
+        - get_coverage: creates the initial coverage report.
+        - reformat_coverage: adds a warning column if a deletion was identified
+            within the gene.
     """
 
     def __init__(self, logger, input_bam, output_prefix, coverage_regions, tngs_expert_regions):
         """ Initalizes the Coverage class
 
         Args:
-          logger (logging.getlogger() object): Object that handles logging
-          input_bam (File): BAM file of sample to be analyzed (aligned to H37Rv)
-          output_prefix (String): Prefix for all output
-          coverage_regions (File): Bed file of regions to be examined for coverage
-          tngs_expert_regions (File): Bed file of the expert rule regions to be examined for coverage in tNGS data
+            logger (logging.getlogger() object): Object that handles logging
+            input_bam (File): BAM file of sample to be analyzed (aligned to H37Rv)
+            output_prefix (String): Prefix for all output
+            coverage_regions (File): Bed file of regions to be examined for coverage
+            tngs_expert_regions (File): Bed file of the expert rule regions to be examined for coverage in tNGS data
         """
 
         self.logger = logger
@@ -38,12 +38,12 @@ class Coverage:
         """ Uses samtools to calculate average breadth of coverage
 
         Args:
-          line (String): A line from a bed file listing regions of interest
+            line (String): A line from a bed file listing regions of interest
 
         Returns:
-          String gene: name of the region
-          Float coverage: average coverage of the region over minimum depth
-          Float average_depth: average depth of the region
+            String gene: name of the region
+            Float coverage: average coverage of the region over minimum depth
+            Float average_depth: average depth of the region
         """
         # parse out the coordinates and gene from each line in the bed file -- **assuming 1-based indexing**
         start = line[1]
@@ -83,10 +83,10 @@ class Coverage:
         """ Iterates through a bedfile and adds the breadth of coverage to the global variable "COVERAGE_DICTIONARY" and the average depth to "AVERAGE_LOCI_COVERAGE"
 
         Args: 
-          None
+            None
 
         Returns:
-          None
+            None
         """    
 
         self.logger.info("COV:Within the Coverage class calculate_coverage function")

@@ -8,13 +8,13 @@ class Row() :
     warnings if necessary.
 
     This class has five additional functions:
-      - print: prints the row in a readable format
-      - complete_row: finishes each row with the rest of the values needed
-      - rank_annotation: ranks the WHO annotation based on resistance
-      - annotation_to_LIMS: converts the WHO annotation and the target drug
-        into returns the LIMS' report file appropriate annotation
-      - describe_rationale: removes the 'noexpert' suffix in the case where
-        the interpretation logic applied is not considered an expert rule
+        - print: prints the row in a readable format
+        - complete_row: finishes each row with the rest of the values needed
+        - rank_annotation: ranks the WHO annotation based on resistance
+        - annotation_to_LIMS: converts the WHO annotation and the target drug
+            into returns the LIMS' report file appropriate annotation
+        - describe_rationale: removes the 'noexpert' suffix in the case where
+            the interpretation logic applied is not considered an expert rule
     """
 
     def __init__(self, logger, variant, who_confidence, drug, gene_name=None, depth=0, frequency=None, source="", tbdb_comment=""):

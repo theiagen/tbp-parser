@@ -1,27 +1,27 @@
 import os
 import argparse
 
-def is_json_valid(filename):
+def is_json_valid(filename) -> str:
     """Checks if the input JSON is accessible
 
     Args:
-      filename (String): The name of file to check
+        filename (String): The name of file to check
 
     Returns:
-      String: The name of the file if valid and accessible
+        String: The name of the file if valid and accessible
     """
     if not os.path.exists(filename) and filename != "-":
         raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
     return filename
 
-def is_bam_valid(filename):
+def is_bam_valid(filename) -> str:
     """Checks if the input BAM is valid and accessible and if there is an associated BAI
 
     Args:
-      filename (String): The name of file to check
+        filename (String): The name of file to check
 
     Returns:
-      String: The name of the file if valid and accessible
+        String: The name of the file if valid and accessible
     """
     if not os.path.exists(filename) and (filename != "-" and not filename.endswith(".bam")):
         raise argparse.ArgumentTypeError("{0} cannot be accessed or is missing the BAM extension".format(filename))
@@ -30,14 +30,14 @@ def is_bam_valid(filename):
         raise argparse.ArgumentTypeError("Cannot find the BAI file for this BAM")
     return filename
 
-def is_bed_valid(filename):
+def is_bed_valid(filename) -> str:
     """Checks if the coverage regions BED file is accessible
 
     Args:
-      filename (String): The name of file to check
+        filename (String): The name of file to check
 
     Returns:
-      String: The name of the file if valid and accessible
+        String: The name of the file if valid and accessible
     """
     # these two lines are needed when I run this locally
     scripts_dir = os.path.dirname(os.path.realpath(__file__))
@@ -46,7 +46,7 @@ def is_bed_valid(filename):
         raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
     return filename
 
-def is_config_valid(filename):
+def is_config_valid(filename) -> str:
     """Checks if the configuration file is accessible
 
     Args:

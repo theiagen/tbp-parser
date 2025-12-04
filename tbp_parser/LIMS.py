@@ -8,12 +8,12 @@ class LIMS:
     This class creates the CDPH LIMS report.
 
     It has four functions:
-      - get_id: returns the lineage in English for LIMS
-      - convert_annotation: converts the resistance annotation and the target drug
-        into the LIMS language
-      - get_mutation_position: returns the position where a mutation occurs
-      - apply_lims_rules: implements several parsing rules for the LIMS report
-      - create_lims_report: creates the LIMS report CSV file
+        - get_id: returns the lineage in English for LIMS
+        - convert_annotation: converts the resistance annotation and the target drug
+            into the LIMS language
+        - get_mutation_position: returns the position where a mutation occurs
+        - apply_lims_rules: implements several parsing rules for the LIMS report
+        - create_lims_report: creates the LIMS report CSV file
     """
 
     def __init__(self, logger, input_json, output_prefix):
@@ -116,9 +116,9 @@ class LIMS:
         """
         This function implements several parsing rules for the LIMS report.
         Explanation of input variables:
-        - gene_dictionary = the genes matched to their associated LIMS codes
-        - DF_LIMS = the LIMS dataframe
-        - antimicrobial_code = the LIMS code for the drug
+            - gene_dictionary = the genes matched to their associated LIMS codes
+            - DF_LIMS = the LIMS dataframe
+            - antimicrobial_code = the LIMS code for the drug
         """ 
         self.logger.info("LIMS:Within LIMS class apply_lims_rules function; applying rules to mutations associated with {}".format(globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
 
@@ -350,13 +350,13 @@ class LIMS:
         """
         This function recieves the input json file and laboratorian report to
         write the LIMS report that includes the following information:
-          - MDL sample accession numbers:  sample name
-          - M_DST_A01_ID - lineage
-          - The set of information in ANTIMICROBIAL_CODE_TO_GENES dictionary with 
-            target drug resistance information in layman's terms, and the 
-            mutations responsible for the predicted phenotype
-          - Date of analysis in YYYY-MM-DD HH:SS format
-          - Operator information
+            - MDL sample accession numbers:  sample name
+            - M_DST_A01_ID - lineage
+            - The set of information in ANTIMICROBIAL_CODE_TO_GENES dictionary with 
+                target drug resistance information in layman's terms, and the 
+                mutations responsible for the predicted phenotype
+            - Date of analysis in YYYY-MM-DD HH:SS format
+            - Operator information
         """
         self.logger.info("LIMS:Within LIMS class create_lims_report function")
         DF_LIMS = pd.DataFrame({
