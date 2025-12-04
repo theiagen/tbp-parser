@@ -27,25 +27,25 @@ class Coverage:
         self.input_bam = input_bam
         self.output_prefix = output_prefix
         self.coverage_regions = coverage_regions
+        
+        # TO-DO: remove these fields if not needed
         self.tngs_expert_regions = tngs_expert_regions
-
         self.tngs_expert_regions_coverage = {}
 
+        # extract chromosome name from BAM file -- sometimes this can be different depending on reference used
         command = "samtools idxstats {} | cut -f 1 | head -1".format(self.input_bam)
         self.chromosome = subprocess.check_output(command, shell=True).decode("utf-8").strip()
 
     def calculate_depth(self, line) -> tuple[str, float, float]:
-        """ Uses samtools to calculate average breadth of coverage
+        """Uses samtools to calculate the breadth of coverage and average depth for a given region
 
         Args:
-            line (String): A line from a bed file listing regions of interest
+            line (str): A line from a bed file listing regions of interest
 
         Returns:
-            String gene: name of the region
-            Float coverage: average coverage of the region over minimum depth
-            Float average_depth: average depth of the region
-        """
-        # parse out the coordinates and gene from each line in the bed file -- **assuming 1-based indexing**
+            tuple[str, float, float]: the name of the region, the percentage of the region over the minimum depth, and the average depth of the region
+        """        
+        # parse out the coordinates and gene from each line in the bed file -- **assuming 1-based indexing and formatting based on TBDB.bed from TBProfiler**
         start = line[1]
         end = line[2]
         gene = line[4]

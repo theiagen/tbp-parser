@@ -23,8 +23,10 @@ class Parser:
         self.debug = options.debug
         self.output_prefix = options.output_prefix
         self.coverage_regions = options.coverage_regions
+        # TO-DO: consider dropping these two parameters?
         self.tngs_expert_regions = options.tngs_expert_regions
         self.add_cs_lims = options.add_cs_lims
+        ###
         globals_.TNGS = options.tngs
         globals_.TREAT_R_AS_S = options.treat_r_mutations_as_s
         globals_.MIN_DEPTH = options.min_depth
@@ -33,12 +35,14 @@ class Parser:
         globals_.MIN_READ_SUPPORT = options.min_read_support
         globals_.MIN_FREQUENCY = options.min_frequency
         globals_.MIN_LOCUS_PERCENTAGE = options.min_percent_locus_covered
+        # TO-DO: consider dropping these parameters?
         globals_.RRS_FREQUENCY = options.rrs_frequency
         globals_.RRS_READ_SUPPORT = options.rrs_read_support
         globals_.RRL_FREQUENCY = options.rrl_frequency
         globals_.RRL_READ_SUPPORT = options.rrl_read_support
         globals_.RPOB449_FREQUENCY = options.rpob449_frequency
         globals_.ETHA237_FREQUENCY = options.etha237_frequency
+        ###
         globals_.OPERATOR = options.operator
 
         # this could cause issues if someone does more than one comma, but in that case, they deserve the error
@@ -77,6 +81,7 @@ class Parser:
             self.logger.debug("PARSER:Setting the GENES_FOR_LIMS list to include all WGS genes")
             globals_.GENES_FOR_LIMS = globals_.GENES_FOR_LIMS_WGS
 
+        # TO-DO: consider dropping this feature?
         if self.add_cs_lims:
             self.logger.info("PARSER:Adding cycloserine (CS) fields to the LIMS report")
             globals_.GENES_FOR_LIMS.extend(globals_.GENES_FOR_LIMS_CS)
@@ -92,6 +97,16 @@ class Parser:
 
         For genes with suffixes like gene_1, gene_2, they are consolidated under the common gene name,
         with each entry stored as a sub-item in a nested dictionary.
+        
+        That is, for a gene named "gene" with split regions "gene_1" and "gene_2", and a gene named "gene3" without splits, the structure will be:
+        globals_.TNGS_REGIONS = {
+            "gene": {
+                "gene_1": [start_pos_1, end_pos_1],
+                "gene_2": [start_pos_2, end_pos_2]
+            },
+            "gene3": [start_pos_3, end_pos_3]
+            ...
+        }
         """ 
         with open(self.coverage_regions, 'r') as bed_file:
             for line in bed_file:
@@ -156,7 +171,6 @@ class Parser:
         if globals_.TNGS and self.tngs_expert_regions != "":
             self.logger.info("PARSER:Calculating the coverage for the expert rule regions")
             coverage.calculate_r_expert_rule_regions_coverage()
-
 
         self.logger.info("PARSER:Creating Laboratorian report")
         laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix)

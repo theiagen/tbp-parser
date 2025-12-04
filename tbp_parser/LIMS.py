@@ -21,9 +21,14 @@ class LIMS:
         self.input_json = input_json
         self.output_prefix = output_prefix
 
-    def get_id(self, test=False):
-        """
-        Returns the lineage in English for LIMS
+    def get_id(self, test=False) -> str:
+        """Returns the lineage in English for LIMS
+
+        Args:
+            test (bool, optional): set to True if this is for a pytest. Defaults to False.
+
+        Returns:
+            str: the lineage in English
         """
         self.logger.info("LIMS:Within LIMS class get_id function")
 
@@ -97,10 +102,15 @@ class LIMS:
         self.logger.info("LIMS:Finished getting lineage and ID, now exiting function")
         return lineage
 
-    def convert_annotation(self, annotation, drug):
-        """
-        This function takes the resistance annotation and the target drug
-        and converts it into the LIMS language
+    def convert_annotation(self, annotation, drug) -> str:
+        """This function takes the resistance annotation and the target drug and converts it into the appropriate LIMS text
+
+        Args:
+            annotation (str): the highest resistance annotation associated with the drug
+            drug (str): the drug for which the annotation is being converted
+
+        Returns:
+            str: the converted LIMS text for the drug
         """
         message = "No mutations associated with resistance to {} detected".format(drug)
         if annotation == "R":
@@ -112,13 +122,18 @@ class LIMS:
 
         return message
 
-    def apply_lims_rules(self, gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code, responsible_gene):
-        """
-        This function implements several parsing rules for the LIMS report.
-        Explanation of input variables:
-            - gene_dictionary = the genes matched to their associated LIMS codes
-            - DF_LIMS = the LIMS dataframe
-            - antimicrobial_code = the LIMS code for the drug
+    def apply_lims_rules(self, gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code, responsible_gene) -> pd.DataFrame:
+        """This function implements several parsing rules for the LIMS report. 
+
+        Args:
+            gene_dictionary (dict): the genes matched to their associated LIMS codes
+            DF_LIMS (pd.DataFrame): the LIMS dataframe
+            max_mdl_resistance (str): the maximum MDL resistance associated with this antimicrobial code
+            antimicrobial_code (str): the antimicrobial code or header for the LIMS report
+            responsible_gene (list[str]): a list of potential genes that may be responsible for the max_mdl_resistance
+
+        Returns:
+            pd.DataFrame: the LIMS dataframe with the rules applied
         """ 
         self.logger.info("LIMS:Within LIMS class apply_lims_rules function; applying rules to mutations associated with {}".format(globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
 
@@ -346,7 +361,7 @@ class LIMS:
         self.logger.info("LIMS:Finished applying rules to mutations associated with {}, exiting function".format(globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
         return DF_LIMS
 
-    def create_lims_report(self):
+    def create_lims_report(self) -> None:
         """
         This function recieves the input json file and laboratorian report to
         write the LIMS report that includes the following information:

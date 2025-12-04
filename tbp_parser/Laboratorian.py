@@ -26,7 +26,7 @@ class Laboratorian:
         into an individual Variant object. Then, each annotation within that variant 
         is extracted and converted into a Row object.
         """
-        self.logger.info("LAB:Within the Laboratorian class iterate_section function")
+        self.logger.debug("LAB:Within the Laboratorian class iterate_section function")
 
         self.logger.debug("LAB:Iterating through the variant section to turn each one into a Variant object")
         for variant in variant_section:
@@ -37,22 +37,17 @@ class Laboratorian:
             # this currently only applies to rpoB -- renaming the gene to the segment name to get the coverage for QC
             if globals_.TNGS and variant.gene_name in globals_.TNGS_REGIONS.keys():
                 self.logger.debug("LAB:[tNGS only] checking to see if this is a split primer")
-                if len(globals_.TNGS_REGIONS[variant.gene_name]) > 1:
-                    if isinstance(globals_.TNGS_REGIONS[variant.gene_name], dict):
+                if isinstance(globals_.TNGS_REGIONS[variant.gene_name], dict):
+                    for segment in globals_.TNGS_REGIONS[variant.gene_name]:
+                        self.logger.debug("LAB:[tNGS only] checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
+                        if (globals_.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals_.TNGS_REGIONS[variant.gene_name][segment][1]):
+                            variant.gene_name_segment = segment
+                            self.logger.debug("LAB:[tNGS only] variant from {} is found in segment {}; setting gene_name_segment to segment name".format(variant.gene_name, variant.gene_name_segment))
+                            break
 
-                        for segment in globals_.TNGS_REGIONS[variant.gene_name]:
-                            self.logger.debug("LAB:[tNGS only] checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
-                            if (globals_.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals_.TNGS_REGIONS[variant.gene_name][segment][1]):
-                                variant.gene_name_segment = segment
-                                self.logger.debug("LAB:[tNGS only] variant from {} is found in segment {}; setting gene_name_segment to segment name".format(variant.gene_name, variant.gene_name_segment))
-                                break
-
-                            else:
-                                self.logger.debug("LAB:[tNGS only] variant from {} is NOT found in segment {}".format(variant.gene_name, segment))
-
-                        if hasattr(variant, "gene_name_segment") is False:
-                            self.logger.debug("LAB:[tNGS only] This mutation is not in the expected region! This is not within any segments")
-                            variant.gene_name_segment = "Outside of expected region"
+                    if hasattr(variant, "gene_name_segment") is False:
+                        self.logger.debug("LAB:[tNGS only] This mutation is not in the expected region! This is not within any segments")
+                        variant.gene_name_segment = "Outside of expected region"
 
             # extract all of the annotations for the variant
             variant.extract_annotations()
