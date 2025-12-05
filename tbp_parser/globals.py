@@ -69,6 +69,7 @@ ANNOTATION_TO_INTERPRETATION = {
     }                              
 }
 
+# TO DELETE
 """
 A dictionary that matches CDPH LIMS antimicrobial codes to the 
 corresponding drug name; used to create the LIMS report
@@ -90,6 +91,7 @@ ANTIMICROBIAL_CODE_TO_DRUG_NAME = {
     "M_DST_N01_LZD": "linezolid" 
 }
 
+# TO DELETE
 """
 A dictionary that matches the LIMS antimicrobial code to the relevant
 antimicrobial drug name for cycloserine; activated by the
@@ -100,6 +102,7 @@ ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS = {
     "M_DST_P01_CS": "cycloserine"
 }
 
+# TO MOVE
 """
 The dictionary that matches CDPH LIMS antimicrobial codes to the
 corresponding genes and their corresponding CDPH LIMS codes;
@@ -108,6 +111,7 @@ used to create the LIMS report
 global ANTIMICROBIAL_CODE_TO_GENES
 ANTIMICROBIAL_CODE_TO_GENES = {}
 
+# TO CONSOLIDATE
 """
 A dictionary that matches CDPH LIMS antimicrobial codes to the
 corresponding genes and their corresponding CDPH LIMS codes for tNGS data;
@@ -115,10 +119,12 @@ used to create the LIMS report
 """
 global ANTIMICROBIAL_CODE_TO_GENES_tNGS
 ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
-    "M_DST_B01_INH": {
-        "katG": "M_DST_B02_katG", 
-        "fabG1": "M_DST_B03_fabG1",
-        "inhA": "M_DST_B04_inhA"
+    "isoniazid": {
+        "INH": { 
+            "katG": "INH_katG", 
+            "fabG1": "INH_fabG1",
+            "inhA": "INH_inhA"
+        },
     },
     "M_DST_C01_ETO": {
         "ethA": "M_DST_C02_ethA", 
@@ -166,6 +172,7 @@ ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
     }
 }
 
+# TO CONSOLIDATE
 """
 A dictionary that matches CDPH LIMS antimicrobial codes to the
 corresponding genes and their corresponding CDPH LIMS codes for WGS data;
@@ -232,6 +239,7 @@ ANTIMICROBIAL_CODE_TO_GENES_WGS = {
     }
 }
 
+# TO REMOVE
 """
 Additional optional entries for the LIMS report for cycloserine
 Activated by the --add_cs_lims flag
@@ -244,6 +252,7 @@ ANTIMICROBIAL_CODE_TO_GENES_CS = {
     }
 }
 
+# TO DELETE - KEYS FOR ANTIMICROBIAL CODE TO GENES
 """
 A dictionary that contains a list of the antimicrobial drug names;
 used to create the Looker report
@@ -256,6 +265,8 @@ ANTIMICROBIAL_DRUG_NAME_LIST = [
     "rifampin", "streptomycin"
 ]
 
+
+# TO DELETE - VALUES.VALUES FOR ANTIMICROBIAL CODE TO GENES
 """
 A dictionary that matches the antimicrobial drugs to the
 genes that may confer resistance to them; 
@@ -315,6 +326,7 @@ The minimum frequency for a mutation to be considered for ethA at protein positi
 global ETHA237_FREQUENCY
 ETHA237_FREQUENCY = 0.1
 
+# TO DELETE take out of here
 """
 A list of genes that correspond to a certain set of expert rules
 Rv0678 is equivalent to mmpR5
@@ -322,6 +334,7 @@ Rv0678 is equivalent to mmpR5
 global GENE_LIST 
 GENE_LIST = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678", "ethA", "gid", "katG", "pncA", "rpoB"]
 
+# TO DELETE
 """
 A list of genes that correspond to rule 1.1
 Rv0678 is equivalent to mmpR5
@@ -329,6 +342,7 @@ Rv0678 is equivalent to mmpR5
 global GENE_LIST_MDL_1_1
 GENE_LIST_MDL_1_1 = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678"]
 
+# TO DELETE
 """
 A list of genes that correspond to rule 2.1
 Rv0678 is equivalent to mmpR5
@@ -336,6 +350,7 @@ Rv0678 is equivalent to mmpR5
 global GENE_LIST_MDL_2_1
 GENE_LIST_MDL_2_1 = ["ethA", "gid", "katG", "pncA", "rpoB"]
 
+# to keep - MAYBE CONVERT TO A FILE THOUGH
 """
 A dictionary corresponding each gene to the drug they may confer
 resistance to, including the genes in the TBDB watchlist.
@@ -405,6 +420,7 @@ GENE_TO_ANTIMICROBIAL_DRUG_NAME = {
     "whiB7": ["amikacin", "kanamycin", "streptomycin"]
 }
 
+# to keep - MAYBE CONVERT TO A FILE THOUGH
 """
 A dictionary that matches each gene to its corresponding locus tag;
 see also: https://github.com/jodyphelan/TBProfiler/blob/master/db/tbdb.bed;
@@ -472,6 +488,7 @@ GENE_TO_LOCUS_TAG = {
     "whiB7": "Rv3197A"
 }
 
+# to keep - MAYBE CONVERT TO A FILE THOUGH
 """
 A dictionary that matches each gene to it's corresponding tier;
 tier information provided by CDPH; used to create the Laboratorian report
@@ -493,6 +510,8 @@ GENE_TO_TIER = {
     "tlyA": "Tier 1", "ubiA": "Tier 2", "whiB6": "Tier 2", "whiB7": "Tier 1"
 }
 
+
+# TO DELETE
 """
 The list of genes used to generate the CDPH LIMS report;
 used to create the LIMS report
@@ -500,6 +519,7 @@ used to create the LIMS report
 global GENES_FOR_LIMS
 GENES_FOR_LIMS = []
 
+# TO REMOVE
 """
 A list of genes that will be included in the LIMS report
 if --add_cs_lims is true (cycloserine)
@@ -509,6 +529,7 @@ GENES_FOR_LIMS_CS = [
     "ald", "alr"
 ]
 
+# TO DELETE
 """
 A  list of genes that are to be included in the 
 CDPH LIMS report for tNGS data; used to create the LIMS report
@@ -528,6 +549,7 @@ GENES_FOR_LIMS_tNGS = [
 #]
 
 
+# TO DELETE
 """
 A list of genes that are to be included in the 
 CDPH LIMS report for WGS data; used to create the LIMS report
@@ -609,6 +631,7 @@ This variable holds the operator's name
 global OPERATOR
 OPERATOR = ""
 
+# REMOVE THIS IS DEPRECATED
 """
 A dictionary that matches certain genes to their promoter regions.
 If a mutation is within these promoter regions, it needs special consideration; these are nucleotide positions
@@ -622,6 +645,7 @@ PROMOTER_REGIONS = {
     "Rv0678": [-84, -1], # CDPH range
 }
 
+# to keep - MAYBE CONVERT TO A FILE THOUGH
 """
 A dictionary that matches the promoter regions from the WHO v2 catalogue.
 If a mutation is within these regions, it needs special consideration; these are nucleotide positions
@@ -690,6 +714,7 @@ WHOV2_PROMOTER_REGIONS = {
     "whiB7": [-404, -1]
 }
 
+# maybe move to LIMS file
 """
 A dictionary that ranks the resistances on severity
 """
@@ -705,6 +730,7 @@ RESISTANCE_RANKING = {
     "NA": -1 # outside the expected region
 }
 
+# move to lims class
 """
 A list of rpoB mutations that require unique LIMS output wording
 """
@@ -750,6 +776,7 @@ The minimum read support for a mutation to be considered for rrs
 global RRS_READ_SUPPORT
 RRS_READ_SUPPORT = 10
 
+# to move to the laboratorian class
 """
 This dictionary converts the rule to the rationale language
 """
@@ -778,6 +805,7 @@ This variable holds the sequencing method
 global SEQUENCING_METHOD
 SEQUENCING_METHOD = ""
 
+# move to expert rule section
 """
 This is a dictionary of positions for genes requiring different consideration.
 Note: the rpoB, gyrA, and gyrB special positions are in codons, rrl & rrs are nucleotide positions

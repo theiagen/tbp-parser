@@ -265,6 +265,7 @@ class Variant:
                 self.logger.debug("VAR:The position is not within the special positions, not in the proximal promoter region, is nonsynonymous and is NOT an upstream gene variant; interpretation is 'U'")
                 return "Urule2.2.2.2" if self.gene_name == "rpoB" else "Urule3.2.4"
 
+            # MAKE GENE LIST HERE
         elif self.gene_name not in globals_.GENE_LIST:
             self.logger.debug("VAR:The gene is not in the gene list that requires an expert rule.")
 
