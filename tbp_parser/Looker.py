@@ -28,6 +28,18 @@ class Looker:
           "output_seq_method_type": globals_.SEQUENCING_METHOD
             }, index=[0])
 
+        # A dictionary that ranks the resistances on severity
+        RESISTANCE_RANKING = {
+            "R": 6,
+            "R-Interim": 5,
+            "U": 4,
+            "S-Interim": 3,
+            "S": 2,
+            "WT": 1,
+            "Insufficient Coverage": 0,
+            "NA": -1 # outside the expected region
+        }
+        
         # iterate through laboratorian dataframe to extract highest mutation
         for antimicrobial in globals_.ANTIMICROBIAL_DRUG_NAME_LIST:
             self.logger.debug("LOOKER:Now extracting the highest mutation ranking for this antimicrobial: {}".format(antimicrobial))
@@ -36,7 +48,7 @@ class Looker:
             # this is a crazy one liner:
             # basically, it gets the max resistance ranking (R > R-Interim > U > S-Interim > S) for all resistance annotations for a drug
             try:
-                max_looker_resistance = [annotation for annotation, rank in globals_.RESISTANCE_RANKING.items() if rank == max([globals_.RESISTANCE_RANKING[interpretation] for interpretation in potential_looker_resistances])]
+                max_looker_resistance = [annotation for annotation, rank in RESISTANCE_RANKING.items() if rank == max([RESISTANCE_RANKING[interpretation] for interpretation in potential_looker_resistances])]
             except:
                 max_looker_resistance = ["NA"]
             DF_LOOKER[antimicrobial] = max_looker_resistance[0]

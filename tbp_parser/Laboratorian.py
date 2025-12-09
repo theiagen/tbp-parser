@@ -19,40 +19,43 @@ class Laboratorian:
         self.output_prefix = output_prefix
 
     def iterate_section(self, variant_section, row_list) -> list[Row]:
-        """
-        This function iterate through each variant in a section of the TBProfiler 
-        JSON file; for example, it goes through each subsection in the "dr_variants" 
-        and "other_variants" sections. It takes each subsection and converts it 
-        into an individual Variant object. Then, each annotation within that variant 
-        is extracted and converted into a Row object.
-        """
-        self.logger.debug("LAB:Within the Laboratorian class iterate_section function")
+        """This function iterates through each subsection in the "dr_variants" and "other_variants" sections
+        in the TBProfiler JSON file. Each item in the subsection is converted into an individual Variant object, 
+        and each annotation within that Variant is extracted and converted into a Row object, where each Row is
+        a row in the Laboratorian report.
 
-        self.logger.debug("LAB:Iterating through the variant section to turn each one into a Variant object")
+        Args:
+            variant_section (json.load() object): The subsection of the TBProfiler JSON file to iterate through
+            row_list (List): A list of rows that have been extracted so far
+
+        Returns:
+            list[Row]: The list of rows, including the newly extracted rows
+        """        
+        self.logger.debug("LAB:iterate_section:Iterating through the variant section to turn each one into a Variant object")
         for variant in variant_section:
             # create a Variant object and add the origin gene to the global GENES_REPORTED set variable
             variant = Variant(self.logger, variant)
             globals_.GENES_REPORTED.add(variant.gene_name)
 
-            # this currently only applies to rpoB -- renaming the gene to the segment name to get the coverage for QC
+            # tNGS only: renaming the gene to the segment name to get the coverage for QC
             if globals_.TNGS and variant.gene_name in globals_.TNGS_REGIONS.keys():
-                self.logger.debug("LAB:[tNGS only] checking to see if this is a split primer")
+                self.logger.debug("LAB:iterate_section:[tNGS only] checking to see if this is a split primer")
                 if isinstance(globals_.TNGS_REGIONS[variant.gene_name], dict):
                     for segment in globals_.TNGS_REGIONS[variant.gene_name]:
-                        self.logger.debug("LAB:[tNGS only] checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
+                        self.logger.debug("LAB:iterate_section:[tNGS only] checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
                         if (globals_.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals_.TNGS_REGIONS[variant.gene_name][segment][1]):
                             variant.gene_name_segment = segment
-                            self.logger.debug("LAB:[tNGS only] variant from {} is found in segment {}; setting gene_name_segment to segment name".format(variant.gene_name, variant.gene_name_segment))
+                            self.logger.debug("LAB:iterate_section:[tNGS only] variant from {} is found in segment {}; setting gene_name_segment to segment name".format(variant.gene_name, variant.gene_name_segment))
                             break
 
                     if hasattr(variant, "gene_name_segment") is False:
-                        self.logger.debug("LAB:[tNGS only] This mutation is not in the expected region! This is not within any segments")
+                        self.logger.debug("LAB:iterate_section:[tNGS only] This mutation is not in the expected region! This is not within any segments")
                         variant.gene_name_segment = "Outside of expected region"
 
             # extract all of the annotations for the variant
             variant.extract_annotations()
 
-            self.logger.debug("LAB:The current variant (gene: {}) has {} annotation(s); now iterating through them".format(variant.gene_name, len(variant.annotation_dictionary)))
+            self.logger.debug("LAB:iterate_section:The current variant (gene: {}) has {} annotation(s); now iterating through them".format(variant.gene_name, len(variant.annotation_dictionary)))
             for annotation_row in variant.annotation_dictionary.values():
                 # complete the row objects
                 annotation_row.complete_row()
@@ -69,7 +72,6 @@ class Laboratorian:
                     # OLD CONDITIONAL included `and !(annotation_row.mdl_interpretation == "R" and annotation_row.rationale == "WHO classification"):`
                     row_list = variant.extract_alternate_consequences(annotation_row, row_list)
 
-        self.logger.info("LAB:Finished iterating through the variant section, now exiting function")    
         return row_list
 
     def create_laboratorian_report(self):
@@ -94,17 +96,13 @@ class Laboratorian:
             - source: a column used to indicate the resistance source as specified by TBDB
             - tbdb_comment: a column used to include any additional comments as specified by TBDB
         """
-        self.logger.info("LAB:Within the Laboratorian class create_laboratorian_report function")   
-
         row_list = []
-        self.logger.debug("LAB:Initializing the row_list; contains {} rows".format(len(row_list)))
+        self.logger.debug("LAB:create_laboratorian_report:Initializing the row_list; contains {} rows".format(len(row_list)))
 
         with open(self.input_json) as json_fh:
             input_json = json.load(json_fh)
 
-            globals_.SAMPLE_NAME = input_json["id"]
-
-            self.logger.debug("LAB:About to parse through the variant sections for the sample with name {}".format(globals_.SAMPLE_NAME))
+            sample_name = input_json["id"]
 
             row_list = self.iterate_section(input_json["dr_variants"], row_list)
             row_list = self.iterate_section(input_json["other_variants"], row_list)

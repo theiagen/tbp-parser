@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 
+# run at the start and then use as a class feature
 def get_position(mutation):
     """  
     This function recieves a mutation (e.g. 'p.Met291Ile') and
@@ -37,10 +38,6 @@ def is_within_range(position, range_positions):
 
     return False
 
-"""
-A dictionary to turn TBProfiler WHO annotations into
-their corresponding CDPH Looker or MDL interpretations
-"""
 global ANNOTATION_TO_INTERPRETATION 
 ANNOTATION_TO_INTERPRETATION = {
     "Assoc w R": {
@@ -68,296 +65,275 @@ ANNOTATION_TO_INTERPRETATION = {
         "mdl": "S"
     }                              
 }
+"""
+A dictionary to turn TBProfiler WHO annotations into their corresponding Looker or MDL
+interpretations; MDL interpretations are the same as Looker but drop the "- Interim" 
+designations.
+"""
 
-# TO DELETE
-"""
-A dictionary that matches CDPH LIMS antimicrobial codes to the 
-corresponding drug name; used to create the LIMS report
-"""
-global ANTIMICROBIAL_CODE_TO_DRUG_NAME
-ANTIMICROBIAL_CODE_TO_DRUG_NAME = {
-    "M_DST_B01_INH": "isoniazid", 
-    "M_DST_C01_ETO": "ethionamide",
-    "M_DST_D01_RIF": "rifampin", 
-    "M_DST_E01_PZA": "pyrazinamide",
-    "M_DST_F01_EMB": "ethambutol",
-    "M_DST_G01_AMK": "amikacin", 
-    "M_DST_H01_KAN": "kanamycin",
-    "M_DST_I01_CAP": "capreomycin", 
-    "M_DST_J01_MFX": "moxifloxacin",
-    "M_DST_K01_LFX": "levofloxacin", 
-    "M_DST_L01_BDQ": "bedaquiline",
-    "M_DST_M01_CFZ": "clofazimine", 
-    "M_DST_N01_LZD": "linezolid" 
-}
-
-# TO DELETE
-"""
-A dictionary that matches the LIMS antimicrobial code to the relevant
-antimicrobial drug name for cycloserine; activated by the
---add_cs_lims flag
-"""
-global ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS
-ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS = {
-    "M_DST_P01_CS": "cycloserine"
-}
-
-# TO MOVE
-"""
-The dictionary that matches CDPH LIMS antimicrobial codes to the
-corresponding genes and their corresponding CDPH LIMS codes;
-used to create the LIMS report
-"""
 global ANTIMICROBIAL_CODE_TO_GENES
-ANTIMICROBIAL_CODE_TO_GENES = {}
-
-# TO CONSOLIDATE
-"""
-A dictionary that matches CDPH LIMS antimicrobial codes to the
-corresponding genes and their corresponding CDPH LIMS codes for tNGS data;
-used to create the LIMS report
-"""
-global ANTIMICROBIAL_CODE_TO_GENES_tNGS
-ANTIMICROBIAL_CODE_TO_GENES_tNGS = {
+ANTIMICROBIAL_CODE_TO_GENES = {
+    "amikacin": {
+        "AMK": {
+            "bacA": "AMK_bacA",
+            "ccsA": "AMK_ccsA",
+            "eis": "AMK_eis",
+            "rrs": "AMK_rrs",
+            "Rv2477C": "AMK_Rv2477C",
+            "whiB6": "AMK_whiB6",
+            "whiB7": "AMK_whiB7",
+        }
+    },
+    "bedaquiline": {
+        "BDQ": {
+            "atpE": "BDQ_atpE",
+            "lpqB": "BDQ_lpqB",
+            "mmpL5": "BDQ_mmpL5",
+            "mmpR5": "BDQ_mmpR5",
+            "mmpS5": "BDQ_mmpS5",
+            "mtrA": "BDQ_mtrA",
+            "mtrB": "BDQ_mtrB",
+            "pepQ": "BDQ_pepQ",
+            "Rv1979c": "BDQ_Rv1979c",
+        }
+    },
+    "capreomycin": {
+        "CAP": {
+            "bacA": "CAP_bacA",
+            "ccsA": "CAP_ccsA",
+            "rrl": "CAP_rrl",
+            "rrs": "CAP_rrs",
+            "Rv2680": "CAP_Rv2680",
+            "Rv2681": "CAP_Rv2681",
+            "tlyA": "CAP_tlyA",
+            "whiB6": "CAP_whiB6",
+        }
+    },
+    "clofazimine": {
+      "CFZ": {
+            "fbiA": "CFZ_fbiA",
+            "fbiB": "CFZ_fbiB",
+            "fbiC": "CFZ_fbiC",
+            "fbiD": "CFZ_fbiD",
+            "fgd1": "CFZ_fgd1",
+            "mmpL5": "CFZ_mmpL5",
+            "mmpR5": "CFZ_mmpR5",
+            "mmpS5": "CFZ_mmpS5",
+            "pepQ": "CFZ_pepQ",
+            "Rv1979c": "CFZ_Rv1979c",
+        }
+    },
+    "cycloserine": {
+        "CS": {
+            "ald": "CS_ald",
+            "alr": "CS_alr"
+        }
+    },
+    "delamanid": {
+        "DLM": {
+            "ddn": "DLM_ddn",
+            "fbiA": "DLM_fbiA",
+            "fbiB": "DLM_fbiB",
+            "fbiC": "DLM_fbiC",
+            "fbiD": "DLM_fbiD",
+            "fgd1": "DLM_fgd1",
+            "ndh": "DLM_ndh",
+        }
+    },
+    "ethambutol": {
+        "EMB": {
+            "aftB": "EMB_aftB",
+            "embA": "EMB_embA",
+            "embB": "EMB_embB",
+            "embC": "EMB_embC",
+            "embR": "EMB_embR",
+            "glpK": "EMB_glpK",
+            "Rv2477c": "EMB_Rv2477c",
+            "Rv2752c": "EMB_Rv2752c",
+            "ubiA": "EMB_ubiA",
+        }
+    },
+    "ethionamide": {
+        "ETO": {
+            "ethA": "ETO_ethA",
+            "ethR": "ETO_ethR",
+            "inhA": "ETO_inhA",
+            "mshA": "ETO_mshA",
+            "ndh": "ETO_ndh",
+            "Rv0565c": "ETO_Rv0565c",
+            "Rv3083": "ETO_Rv3083",
+        }
+    },
     "isoniazid": {
         "INH": { 
-            "katG": "INH_katG", 
-            "fabG1": "INH_fabG1",
-            "inhA": "INH_inhA"
-        },
+            "ahpC": "INH_ahpC",
+            "dnaA": "INH_dnaA",
+            "glpK": "INH_glpK",
+            "hadA": "INH_hadA",
+            "inhA": "INH_inhA",
+            "kasA": "INH_kasA",
+            "katG": "INH_katG",
+            "mmaA3": "INH_mmaA3",
+            "mshA": "INH_mshA",
+            "ndh": "INH_ndh",
+            "Rv0010c": "INH_Rv0010c",
+            "Rv1129c": "INH_Rv1129c",
+            "Rv1258c": "INH_Rv1258c",
+            "Rv2752c": "INH_Rv2752c",
+        }
     },
-    "M_DST_C01_ETO": {
-        "ethA": "M_DST_C02_ethA", 
-        "fabG1": "M_DST_C03_fabG1",
-        "inhA": "M_DST_C04_inhA"
+    "kanamycin": {
+        "KAN": {
+            "bacA": "KAN_bacA",
+            "ccsA": "KAN_ccsA",
+            "eis": "KAN_eis",
+            "rrs": "KAN_rrs",
+            "Rv2477c": "KAN_Rv2477c",
+            "whiB6": "KAN_whiB6",
+            "whiB7": "KAN_whiB7",
+        }
     },
-    "M_DST_D01_RIF": {
-        "rpoB": "M_DST_D02_rpoB"
+    "levofloxacin": {
+        "LFX": {
+            "glpK": "LFX_glpK",
+            "gyrA": "LFX_gyrA",
+            "gyrB": "LFX_gyrB",
+            "Rv1129c": "LFX_Rv1129c",
+            "Rv2477c": "LFX_Rv2477c",
+            "Rv2752c": "LFX_Rv2752c",
+        }
     },
-    "M_DST_E01_PZA": {
-        "pncA": "M_DST_E02_pncA"
+    "linezolid": {
+        "LZD": {
+            "rplC": "LZD_rplC",
+            "rrl": "LZD_rrl",
+            "tsnR": "LZD_tsnR",
+        }
     },
-    "M_DST_F01_EMB": {
-        "embB": "M_DST_F03_embB"
+    "moxifloxacin": {
+        "MFX": {
+            "glpK": "MFX_glpK",
+            "gyrA": "MFX_gyrA",
+            "gyrB": "MFX_gyrB",
+            "Rv1129c": "MFX_Rv1129c",
+            "Rv2477c": "MFX_Rv2477c",
+            "Rv2752c": "MFX_Rv2752c",
+        }
     },
-    "M_DST_G01_AMK": {
-        "rrs": "M_DST_G02_rrs", 
-        "eis": "M_DST_G03_eis"
+    "para-aminosalicylic_acid": {
+        "PAS": {
+            "folC": "PAS_folC",
+            "ribD": "PAS_ribD",
+            "thyA": "PAS_thyA",
+            "thyX": "PAS_thyX",
+        }
     },
-    "M_DST_H01_KAN": {
-        "rrs": "M_DST_H02_rrs", 
-        "eis": "M_DST_H03_eis"
+    "pretomanid": {
+        "PMD": {
+            "ddn": "PMD_ddn",
+            "fbiA": "PMD_fbiA",
+            "fbiB": "PMD_fbiB",
+            "fbiC": "PMD_fbiC",
+            "fbiD": "PMD_fbiD",
+            "fgd1": "PMD_fgd1",
+        }
     },
-    "M_DST_I01_CAP": {
-        "rrs": "M_DST_I02_rrs", 
-        "tlyA": "M_DST_I03_tlyA"
+    "pyrazinamide": {
+        "PZA": {
+            "clpC1": "PZA_clpC1",
+            "panD": "PZA_panD",
+            "pncA": "PZA_pncA",
+            "PPE35": "PZA_PPE35",
+            "rpsA": "PZA_rpsA",
+            "Rv1258c": "PZA_Rv1258c",
+            "Rv3236c": "PZA_Rv3236c",
+            "sigE": "PZA_sigE",
+        }
     },
-    "M_DST_J01_MFX": {
-        "gyrA": "M_DST_J02_gyrA", 
-        "gyrB": "M_DST_J03_gyrB"
+    "rifampicin": {
+        "RIF": {
+            "glpK": "RIF_glpK",
+            "lpqB": "RIF_lpqB",
+            "mtrA": "RIF_mtrA",
+            "mtrB": "RIF_mtrB",
+            "nusG": "RIF_nusG",
+            "rpoA": "RIF_rpoA",
+            "rpoB": "RIF_rpoB",
+            "rpoC": "RIF_rpoC",
+            "Rv1129c": "RIF_Rv1129c",
+            "Rv2477c": "RIF_Rv2477c",
+            "Rv2752c": "RIF_Rv2752c",
+        }
     },
-    "M_DST_K01_LFX": {
-        "gyrA": "M_DST_K02_gyrA", 
-        "gyrB": "M_DST_K03_gyrB"
-    },
-    "M_DST_L01_BDQ": {
-        "Rv0678": "M_DST_L02_Rv0678", 
-    },
-    "M_DST_M01_CFZ": {
-        "Rv0678":"M_DST_M02_Rv0678", 
-    },
-    "M_DST_N01_LZD": {
-        "rrl": "M_DST_N02_rrl", 
-        "rplC": "M_DST_N03_rplC"
+    "streptomycin": {
+        "STR": {
+            "bacA": "STR_bacA",
+            "gid": "STR_gid",
+            "glpK": "STR_glpK",
+            "rpsL": "STR_rpsL",
+            "rrs": "STR_rrs",
+            "Rv1258c": "STR_Rv1258c",
+            "Rv2477c": "STR_Rv2477c",
+            "whiB7": "STR_whiB7",
+        }
     }
 }
+"""
+This relatively complex dictionary that takes the following format:
 
-# TO CONSOLIDATE
-"""
-A dictionary that matches CDPH LIMS antimicrobial codes to the
-corresponding genes and their corresponding CDPH LIMS codes for WGS data;
-used to create the LIMS report
-"""
-global ANTIMICROBIAL_CODE_TO_GENES_WGS
-ANTIMICROBIAL_CODE_TO_GENES_WGS = {
-    "M_DST_B01_INH": {
-        "katG": "M_DST_B02_katG", 
-        "fabG1": "M_DST_B03_fabG1",
-        "inhA": "M_DST_B04_inhA"
+{
+    "antimicrobial_drug_name": {
+        "antimicrobial_column_name_in_lims_report": {
+            "gene_name": "antimicrobial_gene_combo_column_name_in_lims_report",
+            ...
+        }
     },
-    "M_DST_C01_ETO": {
-        "ethA": "M_DST_C02_ethA", 
-        "fabG1": "M_DST_C03_fabG1",
-        "inhA": "M_DST_C04_inhA"
-    },
-    "M_DST_D01_RIF": {
-        "rpoB": "M_DST_D02_rpoB"
-    },
-    "M_DST_E01_PZA": {
-        "pncA": "M_DST_E02_pncA"
-    },
-    "M_DST_F01_EMB": {
-        "embA": "M_DST_F02_embA", 
-        "embB": "M_DST_F03_embB"
-    },
-    "M_DST_G01_AMK": {
-        "rrs": "M_DST_G02_rrs", 
-        "eis": "M_DST_G03_eis"
-    },
-    "M_DST_H01_KAN": {
-        "rrs": "M_DST_H02_rrs", 
-        "eis": "M_DST_H03_eis"
-    },
-    "M_DST_I01_CAP": {
-        "rrs": "M_DST_I02_rrs", 
-        "tlyA": "M_DST_I03_tlyA"
-    },
-    "M_DST_J01_MFX": {
-        "gyrA": "M_DST_J02_gyrA", 
-        "gyrB": "M_DST_J03_gyrB"
-    },
-    "M_DST_K01_LFX": {
-        "gyrA": "M_DST_K02_gyrA", 
-        "gyrB": "M_DST_K03_gyrB"
-    },
-    "M_DST_L01_BDQ": {
-        "Rv0678": "M_DST_L02_Rv0678", 
-        "atpE": "M_DST_L03_atpE",
-        "pepQ": "M_DST_L04_pepQ", 
-        "mmpL5": "M_DST_L05_mmpL5",
-        "mmpS5": "M_DST_L06_mmpS5"
-    },
-    "M_DST_M01_CFZ": {
-        "Rv0678":"M_DST_M02_Rv0678", 
-        "pepQ": "M_DST_M03_pepQ",
-        "mmpL5":"M_DST_M04_mmpL5", 
-        "mmpS5": "M_DST_M05_mmpS5"
-    },
-    "M_DST_N01_LZD": {
-        "rrl": "M_DST_N02_rrl", 
-        "rplC": "M_DST_N03_rplC"
-    }
+    ...
 }
 
-# TO REMOVE
-"""
-Additional optional entries for the LIMS report for cycloserine
-Activated by the --add_cs_lims flag
-"""
-global ANTIMICROBIAL_CODE_TO_GENES_CS
-ANTIMICROBIAL_CODE_TO_GENES_CS = {
-    "M_DST_P01_CS": {
-        "ald": "M_DST_P02_ald",
-        "alr": "M_DST_PO3_alr"
-    }
-}
+Used to create the LIMS report, this dictionary can be easily extended to include
+new drugs/genes or reduced to only the drugs/genes needed in the configuration file.
 
-# TO DELETE - KEYS FOR ANTIMICROBIAL CODE TO GENES
+This is derived from the TBProfiler `genes.bed` file, which can be accessed here: 
+https://github.com/jodyphelan/TBProfiler/blob/master/db/tbdb/genes.bed.
 """
-A dictionary that contains a list of the antimicrobial drug names;
-used to create the Looker report
-"""
-global ANTIMICROBIAL_DRUG_NAME_LIST
-ANTIMICROBIAL_DRUG_NAME_LIST = [
-    "amikacin", "bedaquiline", "capreomycin", "clofazimine", 
-    "ethambutol", "ethionamide", "isoniazid", "kanamycin", 
-    "levofloxacin", "linezolid", "moxifloxacin", "pyrazinamide", 
-    "rifampin", "streptomycin"
-]
 
-
-# TO DELETE - VALUES.VALUES FOR ANTIMICROBIAL CODE TO GENES
-"""
-A dictionary that matches the antimicrobial drugs to the
-genes that may confer resistance to them; 
-see also https://github.com/jodyphelan/tbdb/blob/master/tbdb.csv;
-used to create the Looker report
-"""
-global ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME
-ANTIMICROBIAL_DRUG_NAME_TO_GENE_NAME = { 
-    "amikacin": ["eis", "rrs"], 
-    "bedaquiline": ["Rv0678"], 
-    "capreomycin": ["rrs", "tlyA"], 
-    "clofazimine": ["Rv0678"], 
-    "ethambutol": ["embA", "embB", "embC", "embR"], 
-    "ethionamide": ["ethA", "ethR", "fabG1", "inhA"], 
-    "isoniazid": ["ahpC", "fabG1", "inhA", "kasA", "katG"], 
-    "kanamycin": ["eis", "rrs"], 
-    "levofloxacin": ["gyrA", "gyrB"], 
-    "linezolid": ["rplC", "rrl"],
-    "moxifloxacin": ["gyrA", "gyrB"],
-    "pyrazinamide": ["panD", "pncA", "rpsA"], 
-    "rifampin": ["rpoA", "rpoB", "rpoC"], 
-    "streptomycin": ["gid", "rpsL", "rrs"] 
-}
-
+global AVERAGE_LOCI_COVERAGE
+AVERAGE_LOCI_COVERAGE = {}
 """
 A dictionary that will contain the average depth of coverage for each gene
 """
-global AVERAGE_LOCI_COVERAGE
-AVERAGE_LOCI_COVERAGE = {}
 
+global COVERAGE_DICTIONARY
+COVERAGE_DICTIONARY = {}
 """
 A dictionary that will contain the percent coverage for each gene
 """
-global COVERAGE_DICTIONARY
-COVERAGE_DICTIONARY = {}
 
+global COVERAGE_THRESHOLD
+COVERAGE_THRESHOLD = 100
 """
 The coverage threshold (the minimum percent coverage of a gene/locus over the minimum depth)
 See also MIN_DEPTH
 """
-global COVERAGE_THRESHOLD
-COVERAGE_THRESHOLD = 100
 
-"""
-This dataframe is made to host the laboratorian report
-"""
 global DF_LABORATORIAN
 DF_LABORATORIAN = pd.DataFrame(columns = [
     "sample_id", "tbprofiler_gene_name", "tbprofiler_locus_tag", "tbprofiler_variant_substitution_type", 
     "tbprofiler_variant_substitution_nt", "tbprofiler_variant_substitution_aa", "confidence", "antimicrobial",
     "looker_interpretation", "mdl_interpretation", "depth", "frequency", "read_support", "rationale", "warning"
 ])
+"""
+This dataframe is made to host the laboratorian report
+"""
 
+global ETHA237_FREQUENCY
+ETHA237_FREQUENCY = 0.1
 """
 The minimum frequency for a mutation to be considered for ethA at protein position 237
 """
-global ETHA237_FREQUENCY
-ETHA237_FREQUENCY = 0.1
-
-# TO DELETE take out of here
-"""
-A list of genes that correspond to a certain set of expert rules
-Rv0678 is equivalent to mmpR5
-"""
-global GENE_LIST 
-GENE_LIST = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678", "ethA", "gid", "katG", "pncA", "rpoB"]
-
-# TO DELETE
-"""
-A list of genes that correspond to rule 1.1
-Rv0678 is equivalent to mmpR5
-"""
-global GENE_LIST_MDL_1_1
-GENE_LIST_MDL_1_1 = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678"]
-
-# TO DELETE
-"""
-A list of genes that correspond to rule 2.1
-Rv0678 is equivalent to mmpR5
-"""
-global GENE_LIST_MDL_2_1
-GENE_LIST_MDL_2_1 = ["ethA", "gid", "katG", "pncA", "rpoB"]
 
 # to keep - MAYBE CONVERT TO A FILE THOUGH
-"""
-A dictionary corresponding each gene to the drug they may confer
-resistance to, including the genes in the TBDB watchlist.
-See also: https://github.com/jodyphelan/tbdb/blob/master/tbdb.csv, and
-https://github.com/jodyphelan/tbdb/blob/master/tbdb.watchlist.csv;
-used to create the Laboratorian report
-"""
 global GENE_TO_ANTIMICROBIAL_DRUG_NAME
 GENE_TO_ANTIMICROBIAL_DRUG_NAME = {
     "aftB": ["amikacin", "capreomycin"],
@@ -419,13 +395,15 @@ GENE_TO_ANTIMICROBIAL_DRUG_NAME = {
     "whiB6": ["amikacin", "capreomycin", "streptomycin"],
     "whiB7": ["amikacin", "kanamycin", "streptomycin"]
 }
+"""
+A dictionary corresponding each gene to the drug they may confer
+resistance to, including the genes in the TBDB watchlist.
+See also: https://github.com/jodyphelan/tbdb/blob/master/tbdb.csv, and
+https://github.com/jodyphelan/tbdb/blob/master/tbdb.watchlist.csv;
+used to create the Laboratorian report
+"""
 
 # to keep - MAYBE CONVERT TO A FILE THOUGH
-"""
-A dictionary that matches each gene to its corresponding locus tag;
-see also: https://github.com/jodyphelan/TBProfiler/blob/master/db/tbdb.bed;
-used to create the Laboratorian report
-"""  
 global GENE_TO_LOCUS_TAG
 GENE_TO_LOCUS_TAG = {
     "aftB": "Rv3805c",
@@ -487,12 +465,13 @@ GENE_TO_LOCUS_TAG = {
     "whiB6": "Rv3862c",
     "whiB7": "Rv3197A"
 }
+"""
+A dictionary that matches each gene to its corresponding locus tag;
+see also: https://github.com/jodyphelan/TBProfiler/blob/master/db/tbdb.bed;
+used to create the Laboratorian report
+"""  
 
 # to keep - MAYBE CONVERT TO A FILE THOUGH
-"""
-A dictionary that matches each gene to it's corresponding tier;
-tier information provided by CDPH; used to create the Laboratorian report
-"""   
 global GENE_TO_TIER
 GENE_TO_TIER = {
     "aftB": "Tier 2", "ahpC": "Tier 1", "atpE": "Tier 1", "ccsA": "Tier 2",
@@ -509,147 +488,83 @@ GENE_TO_TIER = {
     "Rv2983": "Tier 1", "Rv3083": "Tier 2", "Rv3236c": "Tier 2",
     "tlyA": "Tier 1", "ubiA": "Tier 2", "whiB6": "Tier 2", "whiB7": "Tier 1"
 }
+"""
+A dictionary that matches each gene to it's corresponding tier;
+tier information provided by CDPH; used to create the Laboratorian report
+"""   
 
 
-# TO DELETE
-"""
-The list of genes used to generate the CDPH LIMS report;
-used to create the LIMS report
-"""
-global GENES_FOR_LIMS
-GENES_FOR_LIMS = []
-
-# TO REMOVE
-"""
-A list of genes that will be included in the LIMS report
-if --add_cs_lims is true (cycloserine)
-"""
-global GENES_FOR_LIMS_CS
-GENES_FOR_LIMS_CS = [
-    "ald", "alr"
-]
-
-# TO DELETE
-"""
-A  list of genes that are to be included in the 
-CDPH LIMS report for tNGS data; used to create the LIMS report
-"""
-global GENES_FOR_LIMS_tNGS
-GENES_FOR_LIMS_tNGS = [
-    "eis", "embB", "ethA", "fabG1", "gyrA", 
-    "gyrB", "inhA", "katG", "pncA", "rplC", 
-    "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
-]
-# this is for NY primers
-# global GENES_FOR_LIMS_tNGS
-# GENES_FOR_LIMS_tNGS = [
-#   "ahpC", "eis", "embA", "embB", "embC", 
-#   "ethA", "fabG1", "gyrA", "gyrB", "inhA", 
-#   "katG", "oxyR", "pncA", "rpoB", "rpsL", "rrs"
-#]
-
-
-# TO DELETE
-"""
-A list of genes that are to be included in the 
-CDPH LIMS report for WGS data; used to create the LIMS report
-"""
-global GENES_FOR_LIMS_WGS
-GENES_FOR_LIMS_WGS = [
-    "atpE", "eis", "embA", "embB", "ethA", "fabG1", "gyrA", 
-    "gyrB", "inhA", "katG", "mmpL5", "mmpS5", "pepQ", 
-    "pncA", "rplC", "rpoB", "rrl", "rrs", "Rv0678", "tlyA"
-]
-
+global GENES_REPORTED
+GENES_REPORTED = set()
 """
 A set of genes that have been reported so far
 """
-global GENES_REPORTED
-GENES_REPORTED = set()
 
+global GENES_WITH_DELETIONS
+GENES_WITH_DELETIONS = set()
 """
 A set that contains genes that have deletions
 """
-global GENES_WITH_DELETIONS
-GENES_WITH_DELETIONS = set()
 
+global LINEAGE
+LINEAGE = ""
 """
 A string that contains the lineage of the sample from the "main_lineage" field
 """
-global LINEAGE
-LINEAGE = ""
 
+global LINEAGE_ENGLISH
+LINEAGE_ENGLISH = ""
 """
 A string that contains the lineage of the sample in English
 """
-global LINEAGE_ENGLISH
-LINEAGE_ENGLISH = ""
 
+global LOW_DEPTH_OF_COVERAGE_LIST
+LOW_DEPTH_OF_COVERAGE_LIST = []
 """
 A list that will contain the names of genes that have coverages
 below the coverage threshold (see also COVERAGE_THRESHOLD)
 """  
-global LOW_DEPTH_OF_COVERAGE_LIST
-LOW_DEPTH_OF_COVERAGE_LIST = []
 
+global MIN_DEPTH
+MIN_DEPTH = 10
 """
 The minimum depth threshold
 """
-global MIN_DEPTH
-MIN_DEPTH = 10
 
+global MIN_FREQUENCY
+MIN_FREQUENCY = 0.1
 """
 The minimum frequency for a mutation to pass QC
 """
-global MIN_FREQUENCY
-MIN_FREQUENCY = 0.1
 
+global MIN_LOCUS_PERCENTAGE
+MIN_LOCUS_PERCENTAGE = 0.7
 """
 The minimum percentage of LIMS genes to pass QC 
 for MTBC identification to occur
 """
-global MIN_LOCUS_PERCENTAGE
-MIN_LOCUS_PERCENTAGE = 0.7
 
+global MIN_READ_SUPPORT
+MIN_READ_SUPPORT = 10
 """
 The minimum read support for a mutation to pass QC
 (calculated as DEPTH * FREQUENCY)
 """
-global MIN_READ_SUPPORT
-MIN_READ_SUPPORT = 10
 
+global MUTATION_FAIL_LIST
+MUTATION_FAIL_LIST = []
 """ 
 A list that will contain the nucleotide mutations that have failed
 QC: min coverage < 10x, min freq < 10%, min read support < 10x (or whatever minimums the user specifies)
 """
-global MUTATION_FAIL_LIST
-MUTATION_FAIL_LIST = []
 
+global OPERATOR
+OPERATOR = ""
 """ 
 This variable holds the operator's name
 """
-global OPERATOR
-OPERATOR = ""
-
-# REMOVE THIS IS DEPRECATED
-"""
-A dictionary that matches certain genes to their promoter regions.
-If a mutation is within these promoter regions, it needs special consideration; these are nucleotide positions
-DEPRECATED as of v2.1.0
-"""
-global PROMOTER_REGIONS
-PROMOTER_REGIONS = {
-    "atpE": [-48, -1], # CDPH range
-    "pepQ": [-33, -1], # CDPH range
-    "rplC": [-18, -1], # CDPH range
-    "Rv0678": [-84, -1], # CDPH range
-}
 
 # to keep - MAYBE CONVERT TO A FILE THOUGH
-"""
-A dictionary that matches the promoter regions from the WHO v2 catalogue.
-If a mutation is within these regions, it needs special consideration; these are nucleotide positions
-"""
 global WHOV2_PROMOTER_REGIONS
 WHOV2_PROMOTER_REGIONS = {
     "aftB": [-129, -1],
@@ -713,142 +628,76 @@ WHOV2_PROMOTER_REGIONS = {
     "whiB6": [-126, -1],
     "whiB7": [-404, -1]
 }
+"""
+A dictionary that matches the promoter regions from the WHO v2 catalogue.
+If a mutation is within these regions, it needs special consideration; these are nucleotide positions
+"""
 
-# maybe move to LIMS file
-"""
-A dictionary that ranks the resistances on severity
-"""
-global RESISTANCE_RANKING
-RESISTANCE_RANKING = {
-    "R": 6,
-    "R-Interim": 5,
-    "U": 4,
-    "S-Interim": 3,
-    "S": 2,
-    "WT": 1,
-    "Insufficient Coverage": 0,
-    "NA": -1 # outside the expected region
-}
-
-# move to lims class
-"""
-A list of rpoB mutations that require unique LIMS output wording
-"""
-global RPOB_MUTATIONS
-RPOB_MUTATIONS = [
-    "Leu430Pro",
-    "Asp435Tyr",
-    "His445Asn",
-    "His445Cys",
-    "His445Leu",
-    "His445Ser",
-    "Leu452Pro",
-    "Ile491Phe"
-]
-
+global RPOB449_FREQUENCY
+RPOB449_FREQUENCY = 0.1
 """
 The minimum frequency for a mutation to be considered for rpoB at protein position 449
 """
-global RPOB449_FREQUENCY
-RPOB449_FREQUENCY = 0.1
 
+global RRL_FREQUENCY
+RRL_FREQUENCY = 0.1
 """
 The minimum frequency for a mutation to be considered for rrl
 """
-global RRL_FREQUENCY
-RRL_FREQUENCY = 0.1
 
+global RRL_READ_SUPPORT
+RRL_READ_SUPPORT = 10
 """
 The minimum read support for a mutation to be considered for rrl
 """
-global RRL_READ_SUPPORT
-RRL_READ_SUPPORT = 10
 
+global RRS_FREQUENCY
+RRS_FREQUENCY = 0.1
 """
 The minimum frequency for a mutation to be considered for rrs
 """            
-global RRS_FREQUENCY
-RRS_FREQUENCY = 0.1
 
+global RRS_READ_SUPPORT
+RRS_READ_SUPPORT = 10
 """
 The minimum read support for a mutation to be considered for rrs
 """
-global RRS_READ_SUPPORT
-RRS_READ_SUPPORT = 10
 
-# to move to the laboratorian class
-"""
-This dictionary converts the rule to the rationale language
-"""
-global RULE_TO_RATIONALE
-RULE_TO_RATIONALE = {
-    "rule1.2": "Expert rule 1.2. Novel drug targets",
-    "rule2.2.1": "Expert rule 2.2.1. Loss-of-function",
-    "rule2.2.2.1": "Expert rule 2.2.2.1. rpoB RRDR",
-    "rule2.2.2.2": "Expert rule 2.2.2.2 rpoB non-RRDR",
-    "rule3.2.1": "Expert rule 3.2.1. rrs",
-    "rule3.2.2": "Expert rule 3.2.3. gyrA QRDR",
-    "rule3.2.3": "Expert rule 3.2.3. gyrB QRDR",
-    "rule3.2.4": "No WHO annotation or expert rule",
-    "whov2": "Mutation in proximal promoter region"
-}
-
-"""
-This variable holds the sample name
-"""
-global SAMPLE_NAME
-SAMPLE_NAME = ""
-
+global SEQUENCING_METHOD
+SEQUENCING_METHOD = ""
 """
 This variable holds the sequencing method
 """
-global SEQUENCING_METHOD
-SEQUENCING_METHOD = ""
 
-# move to expert rule section
-"""
-This is a dictionary of positions for genes requiring different consideration.
-Note: the rpoB, gyrA, and gyrB special positions are in codons, rrl & rrs are nucleotide positions
-rpoB and rrl indicate ranges; rrs indicates specific positions
-"""
-global SPECIAL_POSITIONS
-SPECIAL_POSITIONS = {
-    "rpoB": [426, 452], # codon; the RRDR range
-    "gyrA": [88, 94], # codon; the QRDR range
-    "gyrB": [446, 507], # codon; the QRDR range
-    "rrl": [[2003, 2367], [2449, 3056]], # nucleotide; range
-    "rrs": [1401, 1402, 1484] # nucleotide; specific positions
-}
-
+global TNGS_REGIONS
+TNGS_REGIONS = {}
 """
 The specific primer regions for the gene(s) [tNGS only]
 Left blank to not affect WGS sequencing
 """
-global TNGS_REGIONS
-TNGS_REGIONS = {}
 
+global TNGS_READ_SUPPORT_BOUNDARIES
+TNGS_READ_SUPPORT_BOUNDARIES = []
 """
 read support boundaries for tNGS QC; [lower_rs, upper_rs]
 """
-global TNGS_READ_SUPPORT_BOUNDARIES
-TNGS_READ_SUPPORT_BOUNDARIES = []
 
+global TNGS_FREQUENCY_BOUNDARIES
+TNGS_FREQUENCY_BOUNDARIES = []
 """
 frequency boundaries for tNGS QC; [lower_f, upper_f]
 """
-global TNGS_FREQUENCY_BOUNDARIES
-TNGS_FREQUENCY_BOUNDARIES = []
 
+global TNGS
+TNGS = False
 """
 A flag to indicate if --tngs is activated
 """
-global TNGS
-TNGS = False
 
+global TREAT_R_AS_S
+TREAT_R_AS_S = False
 """
 A flag to indicate if --treat-r-as-s is activated; indicates that r mutations in loci 
 that are below the coverage threshold will be treated like S or U mutations and will 
 not be reported regardless of mutation quality
 """
-global TREAT_R_AS_S
-TREAT_R_AS_S = False

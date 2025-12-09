@@ -137,6 +137,42 @@ class LIMS:
         """ 
         self.logger.info("LIMS:Within LIMS class apply_lims_rules function; applying rules to mutations associated with {}".format(globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
 
+        # This is a dictionary of positions for genes requiring different consideration.
+        # Note: the rpoB, gyrA, and gyrB special positions are in codons, 
+        # rrl & rrs are nucleotide positions
+        # all are ranges except rrs indicates specific positions
+        SPECIAL_POSITIONS = {
+            "rpoB": [426, 452], # codon; the RRDR range
+            "gyrA": [88, 94], # codon; the QRDR range
+            "gyrB": [446, 507], # codon; the QRDR range
+            "rrl": [[2003, 2367], [2449, 3056]], # nucleotide; range
+            "rrs": [1401, 1402, 1484] # nucleotide; specific positions
+        }
+        
+        # A list of rpoB mutations that require unique LIMS output wording
+        RPOB_MUTATIONS = [
+            "Leu430Pro",
+            "Asp435Tyr",
+            "His445Asn",
+            "His445Cys",
+            "His445Leu",
+            "His445Ser",
+            "Leu452Pro",
+            "Ile491Phe"
+        ]
+        
+        # A dictionary that ranks the resistances on severity
+        RESISTANCE_RANKING = {
+            "R": 6,
+            "R-Interim": 5,
+            "U": 4,
+            "S-Interim": 3,
+            "S": 2,
+            "WT": 1,
+            "Insufficient Coverage": 0,
+            "NA": -1 # outside the expected region
+        }
+        
         antimicrobial_name = globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
         mutations_per_gene = {}
 
@@ -244,7 +280,7 @@ class LIMS:
 
                         # overwrite the MDL interpretation to be "WT" if the mutation is non-S
                         # see also rule 4.2.2.1
-                        if globals_.RESISTANCE_RANKING[mdl_interpretations[index]] >= 2: 
+                        if RESISTANCE_RANKING[mdl_interpretations[index]] >= 2: 
                             self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is having its MDL interpretation rewritten to act as if WT".format(mutation, gene))
                             mdl_interpretations[index] = "WT"
                             if gene in responsible_gene:
@@ -267,8 +303,8 @@ class LIMS:
                                 self.logger.debug("LIMS:There are no more potential MDL interpretations; exiting loop")
                                 break
 
-                            if (max([globals_.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set]) != globals_.RESISTANCE_RANKING[max_mdl_resistance[0]]) and gene in responsible_gene:
-                                max_mdl_resistance = [annotation for annotation, rank in globals_.RESISTANCE_RANKING.items() if rank == max([globals_.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set])]
+                            if (max([RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set]) != RESISTANCE_RANKING[max_mdl_resistance[0]]) and gene in responsible_gene:
+                                max_mdl_resistance = [annotation for annotation, rank in RESISTANCE_RANKING.items() if rank == max([RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set])]
                                 self.logger.debug("LIMS:The maximum needed to be reevaluated; the potential new max_mdl_resistance is now {}".format(max_mdl_resistance[0]))
 
                                 if DF_LIMS[antimicrobial_code][0] != "Pending Retest":
@@ -280,7 +316,7 @@ class LIMS:
                                 self.logger.debug("LIMS:The maximum did not need to be reevaluated; the max_mdl_resistance is still {}".format(max_mdl_resistance[0]))
                     # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
                     elif ((mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") 
-                          or (gene == "rpoB" and globals_.is_within_range(position_aa, globals_.SPECIAL_POSITIONS[gene]))):
+                          or (gene == "rpoB" and globals_.is_within_range(position_aa, SPECIAL_POSITIONS[gene]))):
                         if aa_mutation != "" and aa_mutation != "p.0?": # report only amino acid mutations unless not applicable/blank/p.0?, in which case report nucleotide mutation
                             substitution = "{}".format(aa_mutation)
                         else:
@@ -311,7 +347,7 @@ class LIMS:
                             rpob_specific_mutations_counter = 0
 
                             for mutation in mutations_per_gene[gene]:
-                                if any(rpob_mutation in mutation for rpob_mutation in globals_.RPOB_MUTATIONS):
+                                if any(rpob_mutation in mutation for rpob_mutation in RPOB_MUTATIONS):
                                     rpob_specific_mutations_counter += 1
 
                             if rpob_specific_mutations_counter > 0:
@@ -336,8 +372,8 @@ class LIMS:
                 # make sure that there is a mutation associated with this gene-drug combo
                 if len(nt_mutations_per_gene) > 0:
                     self.logger.debug("mdl_interpretations: {}".format(mdl_interpretations))
-                    maximum_ranking = max([globals_.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])
-                    # see the globals_.RESISTANCE_RANKING dictionary for the ranking of each MDL interpretation
+                    maximum_ranking = max([RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])
+                    # see the RESISTANCE_RANKING dictionary for the ranking of each MDL interpretation
                     # count up the number of non-S mutations; non-S mutations have a ranking > 2
                     if maximum_ranking > 2:
                         non_s_mutations += 1
@@ -394,7 +430,7 @@ class LIMS:
 
             # get the maximum resistance for the drug
             try:
-                max_mdl_resistance = [annotation for annotation, rank in globals_.RESISTANCE_RANKING.items() if rank == max([globals_.RESISTANCE_RANKING[interpretation] for interpretation in potential_mdl_resistances])]
+                max_mdl_resistance = [annotation for annotation, rank in RESISTANCE_RANKING.items() if rank == max([RESISTANCE_RANKING[interpretation] for interpretation in potential_mdl_resistances])]
                 responsible_gene = set(globals_.DF_LABORATORIAN[globals_.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals_.DF_LABORATORIAN["mdl_interpretation"] == max_mdl_resistance[0]]["tbprofiler_gene_name"].tolist())
 
                 # keep only LIMS genes

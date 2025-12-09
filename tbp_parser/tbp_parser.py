@@ -7,9 +7,8 @@ from Parser import Parser
 
 def main():
     home_dir = importlib_resources.files("tbp_parser")
-    default_coverage_regions = home_dir.joinpath("..", "data", "tbdb-modified-regions.bed")
-    default_tngs_expert_regions = home_dir.joinpath("..", "data", "tngs-expert-rule-regions.bed")
-
+    default_coverage_regions = home_dir.joinpath("..", "data", "tbdb.bed")
+    
     parser = argparse.ArgumentParser(
         prog = "tbp-parser",
         description = "Parses Jody Phelon's TBProfiler JSON output into four files:\n- a Laboratorian report,\n- a LIMS report\n- a Looker report, and\n- a coverage report",
@@ -35,8 +34,11 @@ def main():
                         help="the minimum read support for a mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
     qc_arguments.add_argument("-f", "--min_frequency",
                         help="the minimum frequency for a mutation to pass QC (0.1 -> 10%%)\ndefault=0.1", default=0.1, metavar="\b", type=float)
+    
+    ### TO-DO: consider renaming the following argument to something more intuitive
     qc_arguments.add_argument("-r", "--coverage_regions",
-                        help="the BED file containing the regions to calculate percent coverage for\ndefault=data/tbdb-modified-regions.bed", default=default_coverage_regions, metavar="\b", type=CheckInputs.is_bed_valid)
+                        help="the BED file containing the regions to calculate percent breadth of coverage for\ndefault=data/tbdb.bed", default=default_coverage_regions, metavar="\b", type=CheckInputs.is_bed_valid)
+    
     qc_arguments.add_argument("-l", "--min_percent_locus_covered", default=0.7, metavar="\b", type=float,
                         help="the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%%)\ndefault=0.7")
     qc_arguments.add_argument("--treat_r_mutations_as_s", default=False, action="store_true",
@@ -51,21 +53,11 @@ def main():
     general_arguments.add_argument("-o", "--output_prefix", 
                         help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b")
 
-    # TO-DO: reevaluate this argument -- is it still needed? with the configuration file, I think we can remove it.
-    lims_arguments = parser.add_argument_group("LIMS arguments", "options that are used to customize the LIMS report")
-    lims_arguments.add_argument("--add_cs_lims",
-                                help="adds cycloserine (CS) fields to the LIMS report", action="store_true", default=False)
-
-
     tngs_arguments = parser.add_argument_group("tNGS-specific arguments", 
                                                 "options that are primarily used for tNGS data\n(all frequency arguments are compatible with WGS data)")
     # TO-DO: reevaluate this argument's help message as it is incorrect
     tngs_arguments.add_argument("--tngs",
                         help="\nindicates that the input data was generated using Deeplex + CDPH modified protocol\nTurns on tNGS-specific global parameters", action="store_true", default=False)
-
-    # TO-DO: reevaluate this argument -- is it still needed?
-    tngs_arguments.add_argument("--tngs_expert_regions",
-                        help="the BED file containing the regions to calculate coverage for expert rule regions\n  (used to determine coverage quality in the regions where resistance-conferring\n  mutations are found, or where a CDC expert rule is applied; not for QC)\ndefault=data/tngs-expert-rule-regions.bed", default=default_tngs_expert_regions, metavar="\b", type=CheckInputs.is_bed_valid)
 
     # TO-DO: reevaluate these arguments -- are they still needed?
     tngs_arguments.add_argument("--rrs_frequency",

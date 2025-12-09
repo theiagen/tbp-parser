@@ -14,6 +14,11 @@ class Parser:
     """This class orchestrates the different modules within the tbp_parser tool."""
 
     def __init__(self, options):
+        """Initialize the Parser class
+
+        Args:
+            options (argparse.NameSpace): an object with the input arguments provided at runtime
+        """        
         logging.basicConfig(encoding='utf-8', level=logging.ERROR, stream=sys.stderr)
         self.logger = logging.getLogger(__name__)
         self.input_json = options.input_json
@@ -23,10 +28,8 @@ class Parser:
         self.debug = options.debug
         self.output_prefix = options.output_prefix
         self.coverage_regions = options.coverage_regions
-        # TO-DO: consider dropping these two parameters?
-        self.tngs_expert_regions = options.tngs_expert_regions
-        self.add_cs_lims = options.add_cs_lims
-        ###
+        
+        # reevaluate the following global variables
         globals_.TNGS = options.tngs
         globals_.TREAT_R_AS_S = options.treat_r_mutations_as_s
         globals_.MIN_DEPTH = options.min_depth
@@ -35,6 +38,7 @@ class Parser:
         globals_.MIN_READ_SUPPORT = options.min_read_support
         globals_.MIN_FREQUENCY = options.min_frequency
         globals_.MIN_LOCUS_PERCENTAGE = options.min_percent_locus_covered
+        
         # TO-DO: consider dropping these parameters?
         globals_.RRS_FREQUENCY = options.rrs_frequency
         globals_.RRS_READ_SUPPORT = options.rrs_read_support
@@ -51,54 +55,32 @@ class Parser:
 
         if self.verbose:
             self.logger.setLevel(logging.INFO)
-            self.logger.info("PARSER:Verbose mode enabled")
+            self.logger.info("PARSER:__init__:Verbose mode enabled")
         else:
             self.logger.setLevel(logging.ERROR)
 
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
-            self.logger.debug("PARSER:Debug mode enabled")
+            self.logger.debug("PARSER:__init__:Debug mode enabled")
 
         if globals_.TNGS:
-            self.logger.info("PARSER:tNGS flag detected; adjusting outputs to reflect this")
-            if (self.coverage_regions == "../data/tbdb-modified-regions.bed"):
-                self.logger.debug("PARSER:Changing default coverage regions to ../data/tngs-reportable-regions.bed")
-                self.coverage_regions = "../data/tngs-reportable-regions.bed"
-
-            self.logger.debug("PARSER:Altering the ANTIMICROBIAL_CODE_TO_GENES dictionary to include only tNGS entries")
-            globals_.ANTIMICROBIAL_CODE_TO_GENES = globals_.ANTIMICROBIAL_CODE_TO_GENES_tNGS
-
-            self.logger.debug("PARSER:Altering the GENES_FOR_LIMS list to include only tNGS genes")
-            globals_.GENES_FOR_LIMS = globals_.GENES_FOR_LIMS_tNGS
-
-            self.logger.debug("PARSER:Setting the tNGS regions dictionary")
+            self.logger.debug("PARSER:__init__:Setting the tNGS regions dictionary")
             self.convert_bed_into_dictionary()
 
-        else:
-            self.logger.debug("PARSER:Setting the ANTIMICROBIAL_CODE_TO_GENES dictionary to include all WGS entries")
-            globals_.ANTIMICROBIAL_CODE_TO_GENES = globals_.ANTIMICROBIAL_CODE_TO_GENES_WGS
-
-            self.logger.debug("PARSER:Setting the GENES_FOR_LIMS list to include all WGS genes")
-            globals_.GENES_FOR_LIMS = globals_.GENES_FOR_LIMS_WGS
-
-        # TO-DO: consider dropping this feature?
-        if self.add_cs_lims:
-            self.logger.info("PARSER:Adding cycloserine (CS) fields to the LIMS report")
-            globals_.GENES_FOR_LIMS.extend(globals_.GENES_FOR_LIMS_CS)
-            globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME.update(globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS) 
-            globals_.ANTIMICROBIAL_CODE_TO_GENES.update(globals_.ANTIMICROBIAL_CODE_TO_GENES_CS)
-
         if self.config != "":
-            self.logger.info("PARSER:Overwriting variables with the provided config file")
+            self.logger.info("PARSER:__init__:Overwriting variables with the provided config file")
             self.overwrite_variables()
 
     def convert_bed_into_dictionary(self) -> None:
-        """This function converts the bed file into a dictionary to confirm that the mutations are within the expected regions [tNGS only]
+        """This function converts the `coverage_regions` bed file into a dictionary to
+        confirm that the mutations are within the expected regions [tNGS only]
 
-        For genes with suffixes like gene_1, gene_2, they are consolidated under the common gene name,
-        with each entry stored as a sub-item in a nested dictionary.
+        For genes with suffixes like gene_1, gene_2, they are consolidated under the
+        common gene name, with each entry stored as a sub-item in a nested dictionary.
         
-        That is, for a gene named "gene" with split regions "gene_1" and "gene_2", and a gene named "gene3" without splits, the structure will be:
+        That is, for a gene named "gene" with split regions "gene_1" and "gene_2", and
+        a gene named "gene3" without splits, the structure will be:
+        
         globals_.TNGS_REGIONS = {
             "gene": {
                 "gene_1": [start_pos_1, end_pos_1],
@@ -127,7 +109,7 @@ class Parser:
                 else:
                     globals_.TNGS_REGIONS[gene_name] = [start_pos, end_pos]
 
-            self.logger.debug("PARSER:Finished processing coverage regions; {}".format(globals_.TNGS_REGIONS))
+            self.logger.debug("PARSER:convert_bed_into_dictionary:Finished processing coverage regions; {}".format(globals_.TNGS_REGIONS))
 
     def overwrite_variables(self) -> None:
         """This function overwrites the input variables provided at runtime with those from the config file"""
@@ -137,10 +119,10 @@ class Parser:
             for key, value in settings.items():
                 if key.replace("self.", "") in vars(self):
                     setattr(self, key.replace("self.", ""), value)
-                    self.logger.info("PARSER:self.{} has been overwritten with a config-specified value".format(key))
+                    self.logger.info("PARSER:overwrite_variables:self.{} has been overwritten with a config-specified value".format(key))
                 if key.replace("globals.", "") in dir(globals_):
                     setattr(globals_, key.replace("globals.", ""), value) 
-                    self.logger.info("PARSER:globals.{} has been overwritten with a config-specified value".format(key))
+                    self.logger.info("PARSER:overwrite_variables:globals.{} has been overwritten with a config-specified value".format(key))
 
     def check_dependency_exists(self) -> None:
         """This function confirms that samtools is installed and available"""
@@ -154,37 +136,31 @@ class Parser:
         if result.returncode != 0:
             self.logger.critical("PARSER:Error: samtools not found. Please install samtools and try again.")
             sys.exit(1)
-        self.logger.info("PARSER:samtools was found! Proceeding with parsing")
 
     def run(self):
         """
         This function runs the parsing module for the tb_parser tool.
         """    
-        self.logger.info("PARSER:Checking for samtools...")
+        self.logger.info("PARSER:run:Checking for dependencies")
         self.check_dependency_exists
 
-        self.logger.info("PARSER:Creating initial coverage report")
-        coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions, self.tngs_expert_regions)
+        self.logger.info("PARSER:run:Calculating coverage statistics")
+        coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions)
         coverage.get_coverage()
 
-        # TO-DO: cdph doesn't use this anymore -- consider dropping entirely?
-        if globals_.TNGS and self.tngs_expert_regions != "":
-            self.logger.info("PARSER:Calculating the coverage for the expert rule regions")
-            coverage.calculate_r_expert_rule_regions_coverage()
-
-        self.logger.info("PARSER:Creating Laboratorian report")
+        self.logger.info("PARSER:run:Creating Laboratorian report")
         laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix)
         laboratorian.create_laboratorian_report()
 
-        self.logger.info("PARSER:Creating LIMS report")
+        self.logger.info("PARSER:run:Creating LIMS report")
         lims = LIMS(self.logger, self.input_json, self.output_prefix)
         lims.create_lims_report()
 
-        self.logger.info("PARSER:Creating Looker report")
+        self.logger.info("PARSER:run:Creating Looker report")
         looker = Looker(self.logger, self.output_prefix)
         looker.create_looker_report()
 
-        self.logger.info("PARSER:Finalizing coverage report")
-        coverage.reformat_coverage()
+        self.logger.info("PARSER:run:Finalizing coverage report")
+        coverage.create_coverage_report()
 
-        self.logger.info("PARSER:Parsing completed")
+        self.logger.info("PARSER:run:Parsing completed")
