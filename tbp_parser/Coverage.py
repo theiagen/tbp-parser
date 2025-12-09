@@ -56,7 +56,6 @@ class Coverage:
         depth = subprocess.Popen(breadth_coverage_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
         
         # get the percentage of the region that is above the minimum depth; add one to gene length to compensate for subtraction (1-based indexing)
-        
         breadth_of_coverage = (int(depth) / (int(end) - int(start) + 1)) * 100
         
         # add together the depth of all the sites, then divide by the number of sites to get the average depth
@@ -72,7 +71,8 @@ class Coverage:
         return gene, breadth_of_coverage, float(average_depth)
 
     def get_coverage(self) -> None:
-        """ Iterates through a bedfile and adds the breadth of coverage to the global variable "COVERAGE_DICTIONARY" and the average depth to "AVERAGE_LOCI_COVERAGE"
+        """ Iterates through a bedfile and adds the breadth of coverage to the global variable "COVERAGE_DICTIONARY" 
+        and the average depth to "AVERAGE_LOCI_COVERAGE"
 
         Args: 
             None
