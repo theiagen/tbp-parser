@@ -37,8 +37,7 @@ class LIMS:
       detected_sublineage = input_json["sub_lineage"]
       self.logger.debug("LIMS:The detected lineage is: '{}', and the detected sublineage is: '{}'".format(detected_lineage, detected_sublineage))
       
-      self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold")
-      percentage_limit = 0.7
+      self.logger.debug("LIMS:Calculating the percentage of LIMS genes above the coverage threshold; the min locus percentage is set to {}".format(globals_.MIN_LOCUS_PERCENTAGE))
       
       try:
         if globals_.TNGS:
@@ -56,7 +55,7 @@ class LIMS:
         percentage_lims_genes_above = 0
         # lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
     
-      if test or (percentage_lims_genes_above >= percentage_limit):
+      if test or (percentage_lims_genes_above >= globals_.MIN_LOCUS_PERCENTAGE):
         if globals_.TNGS:
           self.logger.debug("LIMS:[tNGS only] The sequencing method is tNGS; now checking for a His57Asp mutation in pncA")
           pncA_mutations = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == "pncA")]
@@ -68,7 +67,7 @@ class LIMS:
             lineage.add("DNA of Mycobacterium tuberculosis complex detected (not M. bovis)") 
           
         else:  
-          self.logger.debug("LIMS:The sequencing method is WGS AND the percentage of LIMS genes is GREATER than {}% ({}); now checking the TBProfiler lineage calls".format(percentage_limit * 100, percentage_lims_genes_above))
+          self.logger.debug("LIMS:The sequencing method is WGS AND the percentage of LIMS genes is GREATER than {}% ({}); now checking the TBProfiler lineage calls".format(globals_.MIN_LOCUS_PERCENTAGE * 100, percentage_lims_genes_above))
 
           sublineages = detected_sublineage.split(";")
                 
@@ -87,7 +86,7 @@ class LIMS:
             lineage.add("DNA of Mycobacterium tuberculosis complex detected")
               
       else:
-        self.logger.debug("LIMS:The percentage of LIMS genes is LESS than {}% ({}); assuming NOT M.tb".format(percentage_limit * 100, percentage_lims_genes_above))
+        self.logger.debug("LIMS:The percentage of LIMS genes is LESS than {}% ({}); assuming NOT M.tb".format(globals_.MIN_LOCUS_PERCENTAGE * 100, percentage_lims_genes_above))
         lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
        
       lineage = "; ".join(sorted(lineage))
@@ -151,13 +150,14 @@ class LIMS:
         self.logger.debug("LIMS:Amino acid mutations: {}".format(aa_mutations_per_gene))
         self.logger.debug("LIMS:Nucleotide mutations: {}".format(nt_mutations_per_gene))
         self.logger.debug("LIMS:Their corresponding MDL interpretations: {}".format(mdl_interpretations))
-        
+        self.logger.debug("LIMS:Their corresponding warnings: {}".format(warnings))
         # check if there are any matching amino acid positions;
         # if so, we want to keep the row with the higher read support
         self.logger.debug("LIMS:Considering if any mutations have identical amino acid positions and keeping only the one with higher read support")
-        removal_list = set()
-        for mutation in aa_mutations_per_gene:
-          current_index = aa_mutations_per_gene.index(mutation)
+        removal_list = []
+        for nt_mutation in nt_mutations_per_gene:
+          current_index = nt_mutations_per_gene.index(nt_mutation)
+          mutation = aa_mutations_per_gene[current_index]
           
           # get a list of all other mutations for this gene except the current index for comparison          
           aa_positions_original = {aa_mutation:globals_.get_position(aa_mutation) for i, aa_mutation in enumerate(aa_mutations_per_gene) if i != current_index}
@@ -179,25 +179,25 @@ class LIMS:
                 self.logger.debug("LIMS:The current mutation has a matching amino acid position to an additional mutation, now testing read support")
                 if read_supports[current_index] > read_supports[matching_index]:
                   self.logger.debug("LIMS:The current mutation ({}) has higher read support ({}) than the other mutation ({}; {})".format(mutation, read_supports[current_index], aa_mutations_per_gene[matching_index], read_supports[matching_index]))
-                  removal_list.add(aa_mutations_per_gene[matching_index]) # avoid removing items while iterating through object
+                  removal_list.append(aa_mutations_per_gene[matching_index]) # avoid removing items while iterating through object
                 else:
                   self.logger.debug("LIMS:The other mutation ({}) has higher read support ({}) than the current mutation ({}; {})".format(aa_mutations_per_gene[matching_index], read_supports[matching_index], mutation, read_supports[current_index]))
-                  removal_list.add(mutation)
+                  removal_list.append(nt_mutation)
           
           if ("This mutation is outside the expected region" in warnings[current_index]):
-            removal_list.add(mutation)
+            removal_list.append(nt_mutation)
             
         # remove all mutations that have lower read support
         if len(removal_list) > 0:
           for mutation in removal_list:
-            if mutation in aa_mutations_per_gene:
-              removal_index = aa_mutations_per_gene.index(mutation)
+            if mutation in nt_mutations_per_gene:
+              removal_index = nt_mutations_per_gene.index(mutation)
               aa_mutations_per_gene.pop(removal_index)
               nt_mutations_per_gene.pop(removal_index)
               mutation_types_per_gene.pop(removal_index)
               mdl_interpretations.pop(removal_index)
               warnings.pop(removal_index)
-              read_supports.pop(removal_index)  
+              read_supports.pop(removal_index)
         
         # format all mutations that are associated with the drug appropriately
         for mutation in nt_mutations_per_gene:
