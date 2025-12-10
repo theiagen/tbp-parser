@@ -13,10 +13,21 @@ class Laboratorian:
         - create_laboratorian_report: creates the laboratorian report CSV file
     """
 
-    def __init__(self, logger, input_json, output_prefix):
+    def __init__(self, logger, input_json, output_prefix, coverage_dictionary, low_depth_of_coverage_list, gene_to_antimicrobial_drug_name, gene_to_locus_tag, tngs_regions, gene_to_tier, promoter_regions):
         self.logger = logger
         self.input_json = input_json
         self.output_prefix = output_prefix
+        
+        # look-up dictionaries and lists 
+        self.COVERAGE_DICTIONARY = coverage_dictionary
+        self.LOW_DEPTH_OF_COVERAGE_LIST = low_depth_of_coverage_list
+        self.GENE_TO_ANTIMICROBIAL_DRUG_NAME = gene_to_antimicrobial_drug_name
+        self.GENE_TO_LOCUS_TAG = gene_to_locus_tag
+        self.TNGS_REGIONS = tngs_regions
+        self.GENE_TO_TIER = gene_to_tier
+        self.PROMOTER_REGIONS = promoter_regions
+
+        self.genes_reported = set()
 
     def iterate_section(self, variant_section, row_list) -> list[Row]:
         """This function iterates through each subsection in the "dr_variants" and "other_variants" sections
@@ -33,17 +44,17 @@ class Laboratorian:
         """        
         self.logger.debug("LAB:iterate_section:Iterating through the variant section to turn each one into a Variant object")
         for variant in variant_section:
-            # create a Variant object and add the origin gene to the global GENES_REPORTED set variable
+            # create a Variant object and add the origin gene to the class genes_reported set variable
             variant = Variant(self.logger, variant)
-            globals_.GENES_REPORTED.add(variant.gene_name)
+            self.genes_reported.add(variant.gene_name)
 
             # tNGS only: renaming the gene to the segment name to get the coverage for QC
-            if globals_.TNGS and variant.gene_name in globals_.TNGS_REGIONS.keys():
+            if globals_.TNGS and variant.gene_name in self.TNGS_REGIONS.keys():
                 self.logger.debug("LAB:iterate_section:[tNGS only] checking to see if this is a split primer")
-                if isinstance(globals_.TNGS_REGIONS[variant.gene_name], dict):
-                    for segment in globals_.TNGS_REGIONS[variant.gene_name]:
+                if isinstance(self.TNGS_REGIONS[variant.gene_name], dict):
+                    for segment in self.TNGS_REGIONS[variant.gene_name]:
                         self.logger.debug("LAB:iterate_section:[tNGS only] checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
-                        if (globals_.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= globals_.TNGS_REGIONS[variant.gene_name][segment][1]):
+                        if (self.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= self.TNGS_REGIONS[variant.gene_name][segment][1]):
                             variant.gene_name_segment = segment
                             self.logger.debug("LAB:iterate_section:[tNGS only] variant from {} is found in segment {}; setting gene_name_segment to segment name".format(variant.gene_name, variant.gene_name_segment))
                             break
@@ -70,8 +81,10 @@ class Laboratorian:
                 # change 2023-12-15: all mmpS/mmpL/mmpR mutations are reported regardless of WHO classification
                 if annotation_row.tbprofiler_gene_name in ["mmpS5", "mmpL5", "Rv0678"]:
                     # OLD CONDITIONAL included `and !(annotation_row.mdl_interpretation == "R" and annotation_row.rationale == "WHO classification"):`
-                    row_list = variant.extract_alternate_consequences(annotation_row, row_list)
+                    row_list, genes_reported = variant.extract_alternate_consequences(annotation_row, row_list, self.genes_reported)
 
+                    self.genes_reported = genes_reported
+                    
         return row_list
 
     def create_laboratorian_report(self):
@@ -110,9 +123,9 @@ class Laboratorian:
             self.logger.debug("LAB:Iteration complete, there are now {} rows".format(len(row_list)))
 
         self.logger.debug("LAB:Now adding any genes that are missing from the report and editing any rows that need to be edited")
-        for gene, antimicrobial_drug_names in globals_.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
+        for gene, antimicrobial_drug_names in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
             for drug_name in antimicrobial_drug_names:
-                if gene not in globals_.GENES_REPORTED:
+                if gene not in self.genes_reported:
                     self.logger.debug("LAB:Gene {} with antimicrobial {} not in report, now adding it to the report".format(gene, drug_name))
                     row_list.append(Row(self.logger, None, "NA", drug_name, gene))
                 else:
@@ -121,7 +134,7 @@ class Laboratorian:
             # make a list to add QC fail rows to end of laboratorian report
             reorder_list = [] 
 
-            if gene in globals_.LOW_DEPTH_OF_COVERAGE_LIST:
+            if gene in self.LOW_DEPTH_OF_COVERAGE_LIST:
                 self.logger.debug("LAB:Checking if the gene ({}) has poor coverage, if so the row will be overwritten".format(gene))
 
                 for row in row_list:       

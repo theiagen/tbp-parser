@@ -8,6 +8,10 @@ from Parser import Parser
 def main():
     home_dir = importlib_resources.files("tbp_parser")
     default_coverage_regions = home_dir.joinpath("..", "data", "tbdb.bed")
+    default_gene_tier_file = home_dir.joinpath("..", "data", "gene-to-tier_2025-12-10.tsv")
+    default_promoter_regions = home_dir.joinpath("..", "data", "who-v2-promoters_2025-12-10.tsv")
+    
+    
     
     parser = argparse.ArgumentParser(
         prog = "tbp-parser",
@@ -16,13 +20,22 @@ def main():
         epilog = "Please contact support@theiagen.com with any questions",
         formatter_class = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=10))
     parser.add_argument("input_json", 
-                        help="the JSON file produced by TBProfiler", type=CheckInputs.is_json_valid)
+                        help="the JSON file produced by TBProfiler", type=CheckInputs.is_file_valid)
     parser.add_argument("input_bam", 
                         help="the BAM file produced by TBProfiler", type=CheckInputs.is_bam_valid)
     parser.add_argument("-v", "--version", 
                         action='version', version=str(__VERSION__))
     parser.add_argument("--config",
-                        help="the configuration file to use, in YAML format\n(overrides all other arguments except input_json and input_bam)", default="", metavar="\b", type=CheckInputs.is_config_valid)
+                        help="the configuration file to use, in YAML format\n(overrides all other arguments EXCEPT for any file-type inputs)", default="", metavar="\b", type=CheckInputs.is_file_valid)
+
+    file_arguments = parser.add_argument_group("file arguments",
+                                                "arguments that specify input files used to create standard dictionaries")
+    file_arguments.add_argument("-b", "--tbdb_bed",
+                        help="the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_coverage_regions, metavar="\b", type=CheckInputs.is_bed_valid)
+    file_arguments.add_argument("-g", "--gene_tier_tsv", 
+                        help="the TSV file mapping genes to their tier\ndefault=data/gene-to-tier_2025-12-10.tsv", default=default_gene_tier_file, metavar="\b", type=CheckInputs.is_file_valid)
+    file_arguments.add_argument("-p", "--promoter_regions_tsv",
+                        help="the TSV file containing the promoter regions to include in interpretation designations\ndefault=data/who-v2-promoters_2025-12-10.tsv", default=default_promoter_regions, metavar="\b", type=CheckInputs.is_file_valid)
 
     qc_arguments = parser.add_argument_group("quality control arguments", 
                                               "options that determine what passes QC")
@@ -34,10 +47,6 @@ def main():
                         help="the minimum read support for a mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
     qc_arguments.add_argument("-f", "--min_frequency",
                         help="the minimum frequency for a mutation to pass QC (0.1 -> 10%%)\ndefault=0.1", default=0.1, metavar="\b", type=float)
-    
-    ### TO-DO: consider renaming the following argument to something more intuitive
-    qc_arguments.add_argument("-r", "--coverage_regions",
-                        help="the BED file containing the regions to calculate percent breadth of coverage for\ndefault=data/tbdb.bed", default=default_coverage_regions, metavar="\b", type=CheckInputs.is_bed_valid)
     
     qc_arguments.add_argument("-l", "--min_percent_locus_covered", default=0.7, metavar="\b", type=float,
                         help="the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%%)\ndefault=0.7")

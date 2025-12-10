@@ -1,8 +1,8 @@
 import os
 import argparse
 
-def is_json_valid(filename) -> str:
-    """Checks if the input JSON is accessible
+def is_file_valid(filename) -> str:
+    """Checks if an input file is accessible
 
     Args:
         filename (String): The name of file to check
@@ -31,7 +31,7 @@ def is_bam_valid(filename) -> str:
     return filename
 
 def is_bed_valid(filename) -> str:
-    """Checks if the coverage regions BED file is accessible
+    """Checks if the TBDB BED file is accessible
 
     Args:
         filename (String): The name of file to check
@@ -39,24 +39,16 @@ def is_bed_valid(filename) -> str:
     Returns:
         String: The name of the file if valid and accessible
     """
-    # these two lines are needed when I run this locally
-    scripts_dir = os.path.dirname(os.path.realpath(__file__))
-    bed_file = os.path.join(scripts_dir, filename)
-    if not os.path.exists(bed_file) and filename != "-":
-        raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
-    return filename
 
-def is_config_valid(filename) -> str:
-    """Checks if the configuration file is accessible
-
-    Args:
-      filename (String): The name of the file to check
-
-    Returns:
-      String: the name of the file if accessible
-    """
+    # check if the necessary columns are present in the BED file -- just count them because we can't really parse it here
+    # does this file have at least 6 columns
     if filename != "" and not os.path.exists(filename) and filename != "-":
         raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
+    else:
+        with open(filename, 'r') as bed_file:
+            for line in bed_file:
+                cols = line.strip().split('\t')
+                if len(cols) < 6:
+                    raise argparse.ArgumentTypeError("{0} does not have at least 6 columns as required".format(filename))
+                break  # only need to check the first line
     return filename
-
-  

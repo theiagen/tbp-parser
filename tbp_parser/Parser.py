@@ -27,13 +27,18 @@ class Parser:
         self.verbose = options.verbose
         self.debug = options.debug
         self.output_prefix = options.output_prefix
-        self.coverage_regions = options.coverage_regions
         
-        # reevaluate the following global variables
+        self.MIN_PERCENT_COVERAGE = options.min_percent_coverage
+        self.MIN_DEPTH = options.min_depth
+        
+        # files used to create the standard dictionaries
+        self.tbdb_bed = options.tbdb_bed
+        self.gene_tier_file = options.gene_tier_file
+        self.promoter_regions_file = options.promoter_regions_file
+        
+        # reevaluate the following global variables -- they don't need to be globals
         globals_.TNGS = options.tngs
         globals_.TREAT_R_AS_S = options.treat_r_mutations_as_s
-        globals_.MIN_DEPTH = options.min_depth
-        globals_.COVERAGE_THRESHOLD = options.min_percent_coverage
         globals_.SEQUENCING_METHOD = options.sequencing_method
         globals_.MIN_READ_SUPPORT = options.min_read_support
         globals_.MIN_FREQUENCY = options.min_frequency
@@ -63,16 +68,15 @@ class Parser:
             self.logger.setLevel(logging.DEBUG)
             self.logger.debug("PARSER:__init__:Debug mode enabled")
 
-        if globals_.TNGS:
-            self.logger.debug("PARSER:__init__:Setting the tNGS regions dictionary")
-            self.convert_bed_into_dictionary()
-
         if self.config != "":
             self.logger.info("PARSER:__init__:Overwriting variables with the provided config file")
             self.overwrite_variables()
 
-    def convert_bed_into_dictionary(self) -> None:
-        """This function converts the `coverage_regions` bed file into a dictionary to
+    def create_standard_dictionaries(self) -> tuple[dict, dict, dict, dict, dict]:
+        """Parses the provided coverage regions bed file to create the standard
+        look-up dictionaries used throughout tbp-parser
+        
+        Also, if tNGS is enabled, creates the tNGS regions dictionary to
         confirm that the mutations are within the expected regions [tNGS only]
 
         For genes with suffixes like gene_1, gene_2, they are consolidated under the
@@ -89,27 +93,73 @@ class Parser:
             "gene3": [start_pos_3, end_pos_3]
             ...
         }
-        """ 
-        with open(self.coverage_regions, 'r') as bed_file:
+
+        Returns:
+            tuple[dict, dict, dict, dict, dict]: gene to antimicrobial drug name dictionary,
+            gene to locus tag dictionary, tNGS regions dictionary, gene to tier dictionary,
+            and promoter regions dictionary
+        """        
+        GENE_TO_ANTIMICROBIAL_DRUG_NAME = {}
+        GENE_TO_LOCUS_TAG = {}
+        TNGS_REGIONS = {}
+        with open(self.tbdb_bed, 'r') as bed_file:
             for line in bed_file:
                 cols = line.strip().split('\t')
-
-                start_pos = int(cols[1])
-                end_pos = int(cols[2])
                 gene_name = cols[4]
+                drugs = cols[5]
+                locus_tag = cols[3]
+                                
+                GENE_TO_ANTIMICROBIAL_DRUG_NAME[gene_name] = drugs
+                GENE_TO_LOCUS_TAG[gene_name] = locus_tag
 
-                # check if primer is split
-                match = re.match(r'(.+)_(\d+)$', gene_name)
-                if match:
-                    base_gene_name = match.group(1)
-                    if base_gene_name not in globals_.TNGS_REGIONS:
-                        globals_.TNGS_REGIONS[base_gene_name] = {}
-                    globals_.TNGS_REGIONS[base_gene_name][gene_name] = [start_pos, end_pos]
+                if self.tngs:
+                    start_pos = cols[1]
+                    end_pos = cols[2]
+                    
+                    # check if primer is split
+                    match = re.match(r'(.+)_(\d+)$', gene_name)
+                    if match:
+                        base_gene_name = match.group(1)
+                        if base_gene_name not in TNGS_REGIONS:
+                            TNGS_REGIONS[base_gene_name] = {}
+                        TNGS_REGIONS[base_gene_name][gene_name] = [start_pos, end_pos]
 
-                else:
-                    globals_.TNGS_REGIONS[gene_name] = [start_pos, end_pos]
+                    else:
+                        TNGS_REGIONS[gene_name] = [start_pos, end_pos]
 
-            self.logger.debug("PARSER:convert_bed_into_dictionary:Finished processing coverage regions; {}".format(globals_.TNGS_REGIONS))
+        GENE_TO_TIER = {}
+        with open(self.gene_tier_file, 'r') as tier_file:
+            for line in tier_file:
+                cols = line.strip().split('\t')
+                gene_name = cols[0]
+                tier = cols[1]
+                
+                GENE_TO_TIER[gene_name] = tier
+       
+        PROMOTER_REGIONS = {}
+        with open(self.promoter_regions_file, 'r') as promoter_file:
+            for line in promoter_file:
+                cols = line.strip().split('\t')
+                gene_name = cols[0]
+                start_pos = cols[1]
+                end_pos = cols[2]
+                
+                # check if gene has a second promoter in cols[3] and cols[4]
+                try:
+                    if cols[3] != "" and cols[4] != "":
+                        start_pos_2 = cols[3]
+                        end_pos_2 = cols[4]
+                        PROMOTER_REGIONS[gene_name] = [[start_pos, end_pos], [start_pos_2, end_pos_2]]
+                        continue
+                except IndexError:
+                    # no second promoter
+                    pass
+                
+                # avoid overwriting if already exists (if a gene has multiple promoters)
+                if gene_name not in PROMOTER_REGIONS:
+                    PROMOTER_REGIONS[gene_name] = [start_pos, end_pos]
+                                
+        return GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS
 
     def overwrite_variables(self) -> None:
         """This function overwrites the input variables provided at runtime with those from the config file"""
@@ -142,14 +192,18 @@ class Parser:
         This function runs the parsing module for the tb_parser tool.
         """    
         self.logger.info("PARSER:run:Checking for dependencies")
-        self.check_dependency_exists
+        self.check_dependency_exists()
 
+        GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS = self.create_standard_dictionaries()
+        
         self.logger.info("PARSER:run:Calculating coverage statistics")
         coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions)
-        coverage.get_coverage()
+        COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH)
+
+        # theoretically code should work up until here
 
         self.logger.info("PARSER:run:Creating Laboratorian report")
-        laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix)
+        laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS)
         laboratorian.create_laboratorian_report()
 
         self.logger.info("PARSER:run:Creating LIMS report")
@@ -161,6 +215,9 @@ class Parser:
         looker.create_looker_report()
 
         self.logger.info("PARSER:run:Finalizing coverage report")
-        coverage.create_coverage_report()
+        coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, globals_.MUTATION_FAIL_LIST)
+
+
+        # rename genes
 
         self.logger.info("PARSER:run:Parsing completed")

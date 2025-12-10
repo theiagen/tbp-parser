@@ -35,7 +35,7 @@ class Variant:
             self.logger.debug("VAR:__init__:The gene is mmpR5, renaming to Rv0678")
             self.gene_name = "Rv0678"
 
-    def extract_alternate_consequences(self, parent_row, row_list):
+    def extract_alternate_consequences(self, parent_row, row_list, genes_reported):
         """
         This function takes apart the alternate_consequences field for variants
         in the mmpS5, mmpL5, and Rv0678 genes. It creates a Row object for each, 
@@ -52,7 +52,7 @@ class Variant:
                     var.gene_name = "Rv0678"
 
                 if var.gene_name != parent_row.tbprofiler_gene_name:
-                    globals_.GENES_REPORTED.add(var.gene_name)
+                    genes_reported.add(var.gene_name)
                     self.logger.debug("VAR:extract_alternate_consequences:This alternate consequence is not from the same gene; creating a new row")
 
                     # there can be multiple annotations for the same alternate consequence or none
@@ -75,7 +75,7 @@ class Variant:
                     self.logger.debug("VAR:extract_alternate_consequences:This alternate consequence is from the same gene; we DO NOT want to create a new row")
                     continue
 
-        return row_list
+        return row_list, genes_reported
 
     def extract_annotations(self):
         """
