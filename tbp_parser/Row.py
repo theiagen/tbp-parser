@@ -2,22 +2,128 @@ import globals as globals_
 
 class Row() :
     """
-    This class represents a row in the CDPH Laboratorian report.
+    This class represents a row in the Laboratorian report.
+    
     The __init__ function assigns each variant attribute to the appropriate
-    column in the CDPH Laboratorian report; it also applies any coverage
-    warnings if necessary.
+    column in the Laboratorian report.
 
-    This class has five additional functions:
+    This class has seven additional functions:
+        - wildtype_row: creates a WT row for genes with no mutations
+        - do_not_use: DEPRECATED - old init function that is no longer used
+        - add_qc_warnings: adds QC warnings based on depth, frequency, and read 
+           support
         - print: prints the row in a readable format
-        - complete_row: finishes each row with the rest of the values needed
+        - determine_interpretations: determines the Looker and MDL interpretations
         - rank_annotation: ranks the WHO annotation based on resistance
-        - annotation_to_LIMS: converts the WHO annotation and the target drug
-            into returns the LIMS' report file appropriate annotation
-        - describe_rationale: removes the 'noexpert' suffix in the case where
-            the interpretation logic applied is not considered an expert rule
+        - is_mutation_outside_region: checks if a mutation falls within the primer 
+           regions
+        - describe_rationale: describes the rationale for the interpretation if it
+           originated from an expert rule
     """
+    
+    def __init__(self, logger, variant, annotation):
+        """
+        This function initializes the Row object with the appropriate
+        values for each column in the CDPH Laboratorian report.
+        No QC is performed.
 
-    def __init__(self, logger, variant, who_confidence, drug, gene_name=None, depth=0, frequency=None, source="", tbdb_comment=""):
+        Args:
+            logger: The logger object for logging messages.
+            variant: A Variant object containing information about the mutation.
+            annotation: The annotation dictionary containing WHO confidence and drug information.
+        """
+        self.logger = logger
+
+        self.variant = variant
+        self.sample_id = variant.sample_name
+        
+        # extract fields from the variant object
+        self.tbprofiler_gene_name = variant.__dict__.get("gene_name")
+
+        self.depth = int(variant.__dict__.get("depth"))
+        self.frequency = float(variant.__dict__.get("freq"))
+        try:
+            self.read_support = int(self.depth * self.freq)
+        except:
+            ### MATH FAILS
+            raise Exception("MATH BAD")
+        
+        self.pos = variant.__dict__.get("pos")
+
+        # should i use the .get() method here too?
+        self.tbprofiler_variant_substitution_type = variant.type
+        self.tbprofiler_variant_substitution_nt = variant.nucleotide_change
+        self.tbprofiler_variant_substitution_aa = variant.protein_change if variant.protein_change is not "" else "NA"
+
+        # grab the locus_tag from the variant if it exists; otherwise, get it from the provided dictionary
+        self.tbprofiler_locus_tag = variant.__dict__.get("locus_tag", variant.GENE_TO_LOCUS_TAG.get(self.tbprofiler_gene_name))
+
+        self.gene_name = self.variant.__dict__.get("gene_name_segment", self.tbprofiler_gene_name)
+        self.gene_tier = self.variant.GENE_TO_TIER.get(self.tbprofiler_gene_name, "NA")
+
+        # extract fields from the annotation dictionary        
+        self.who_confidence = annotation.get("confidence")
+        if self.who_confidence == "" or annotation.get("comment") == "Not found in WHO catalogue":
+            self.who_confidence = "No WHO annotation"
+        self.confidence = self.who_confidence
+        
+        self.antimicrobial = annotation.get("drug")
+        self.source = annotation.get("source", "")
+        self.tbdb_comment = annotation.get("comment", "")
+
+        # initialize empty values for the rest of the columns
+        self.rationale = ""
+        self.mdl_interpretation = ""
+        self.looker_interpretation = ""
+        self.warning = []
+
+    @classmethod
+    def wildtype_row(cls, logger, sample_name, gene_name, drug_name, GENE_TO_LOCUS_TAG, GENE_TO_TIER, LOW_DEPTH_OF_COVERAGE_LIST) -> 'Row':
+        """This class method creates an wildtype Row object for genes that
+        were not found in the TBProfiler JSON output (i.e., no mutations
+        were found in that gene). This is used to create WT rows for
+        genes that were sequenced but had no mutations.
+
+        Args:
+            logger: The logger object for logging messages.
+            gene_name (str): The name of the gene.
+            drug_name (str): The name of the associated drug.
+
+        Returns:
+            Row: An empty Row object with the appropriate NA or WT values.
+        """        
+        row = cls.__new1__(cls)
+        row.logger = logger # is this necessary? keeping it just in case
+        row.sample_name = sample_name
+        row.tbprofiler_gene_name = gene_name
+        row.antimicrobial = drug_name
+        row.confidence = "NA"
+        row.depth = "NA"
+        row.frequency = "NA"
+        row.read_support = "NA"
+        row.rationale = "NA"
+        row.warning = [""]
+        row.source = ""
+        row.tbdb_comment = ""
+        row.tbprofiler_variant_substitution_type = "WT"
+        row.tbprofiler_variant_substitution_nt = "WT"
+        row.tbprofiler_variant_substitution_aa = "WT"
+        row.locus_tag = GENE_TO_LOCUS_TAG.get(gene_name, "NA")
+        row.gene_tier = GENE_TO_TIER.get(gene_name, "NA")
+        
+        if gene_name in LOW_DEPTH_OF_COVERAGE_LIST: 
+            # 4.2.2.3.1 - WT with insufficient coverage
+            row.looker_interpretation = "Insufficient Coverage"
+            row.mdl_interpretation = "Insufficient Coverage"
+            row.warning.append("Insufficient coverage in locus")
+        else:
+            # 4.1 - WT with sufficient coverage
+            row.looker_interpretation = "S"
+            row.mdl_interpretation = "WT"
+        
+        return row
+
+    def do_not_use(self, logger, variant, who_confidence, drug, gene_name=None, depth=0, frequency=None, source="", tbdb_comment=""):
         self.logger = logger
 
         self.variant = variant
@@ -81,6 +187,8 @@ class Row() :
                 else:
                     gene_name = self.tbprofiler_gene_name
 
+
+                ### QC WILL BE SKIPPED FOR NOW ###
                 if gene_name in globals_.COVERAGE_DICTIONARY:
                     if (self.depth < globals_.MIN_DEPTH) or (float(globals_.COVERAGE_DICTIONARY[gene_name]) < globals_.COVERAGE_THRESHOLD):
                         self.logger.debug("ROW:__init__:The depth of coverage for this variant is {} and the coverage for the gene is {}; applying a locus warning".format(self.depth, globals_.COVERAGE_DICTIONARY[gene_name]))
@@ -263,58 +371,141 @@ class Row() :
             self.source = source
             self.tbdb_comment = tbdb_comment
 
-    def print(self):
+    def add_qc_warnings(self, MIN_DEPTH, MIN_FREQUENCY, MIN_READ_SUPPORT, LOW_DEPTH_OF_COVERAGE_LIST, genes_with_valid_deletions):
+        positional_qc_fails = []
+        
+        # checking positional qc now
+        if (self.depth < MIN_DEPTH or self.frequency < MIN_FREQUENCY or self.read_support < MIN_READ_SUPPORT):
+            if "del" not in self.tbprofiler_variant_substitution_nt: 
+                # 4.2.1.1 - postiional qc fail; not a deletion
+                positional_qc_fails.append(self.tbprofiler_variant_substitution_nt) 
+                self.warning.append("Failed quality in the mutation position") 
+                
+            elif "del" in self.tbprofiler_variant_substitution_nt:
+                if  (0 < self.depth and self.depth < MIN_DEPTH):
+                    # 4.2.1.2 - postiional qc fail, deletion with some depth but not enough
+                    positional_qc_fails.append(self.tbprofiler_variant_substitution_nt)
+                    self.warning.append("Failed quality in the mutation position") 
+                    
+                elif (self.depth == 0 and self.frequency >= MIN_FREQUENCY): 
+                    # 4.2.1.3 - deletion with zero depth but good frequency
+                    pass
+            
+                elif (self.frequency < MIN_FREQUENCY):
+                    # frequency is poor -- positional qc fail 
+                    #### TO-DO: DO I NEED TO KEEP THIS? IT WAS DESCRIBED IN AN EMAIL BUT NOT IN THE INTERPRETATION DOCUMENT
+                    positional_qc_fails.append(self.tbprofiler_variant_substitution_nt)
+                    self.warning.append("Failed quality in the mutation position") 
+
+        # checking locus qc now
+        if self.gene_name in LOW_DEPTH_OF_COVERAGE_LIST:
+            if "del" in self.tbprofiler_variant_substitution_nt: # 4.2.2.2 - locus qc fail and a deletion
+                if self.tbprofiler_variant_substitution_nt in positional_qc_fails:
+                    # this mutation also failed positional qc, so we need to add the locus warning
+                    self.warning.append("Insufficient coverage in locus")
+                    
+            else: # 4.2.2.3 - locus qc fail but not a deletion -- if we maintain the "treat_r_as_s" option, we will implement that here
+                if self.mdl_interpretation == "R" and "Failed quality in the mutation position" not in self.warning:
+                    self.warning.append("Insufficient coverage in locus") # 4.2.2.3.3 - R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
+                
+                elif self.mdl_interpretation == "R" and "Failed quality in the mutation position" in self.warning:
+                    self.warning.append("Insufficient coverage in locus") # 4.2.2.3.4 - R mutation with BOTH positional and locus qc fail; add warning and overwrite interpretation
+                    self.looker_interpretation = "Insufficient Coverage"
+                    self.mdl_interpretation = "Insufficient Coverage"
+                
+                elif self.mdl_interpretation == "U" or self.mdl_interpretation == "S":
+                    self.warning.append("Insufficient coverage in locus") # 4.2.2.3.2 - non-R mutation with locus qc fail; add warning and overwrite interpretation
+                    self.looker_interpretation = "Insufficient Coverage"
+                    self.mdl_interpretation = "Insufficient Coverage"
+
+                
+        if "Failed quality in the mutation position" not in self.warning and "del" in self.tbprofiler_variant_substitution_nt:
+            genes_with_valid_deletions.add(self.gene_name)
+            
+        return genes_with_valid_deletions, positional_qc_fails
+
+    def print(self) -> None:
         """
         This function prints the row in a readable format.
         """
-        self.logger.debug("ROW:Now printing the row in a readable format:")
-        self.logger.debug("ROW:\tsample_id: {}".format(self.sample_id))
-        self.logger.debug("ROW:\ttbprofiler_gene_name: {}".format(self.tbprofiler_gene_name))
-        self.logger.debug("ROW:\ttbprofiler_locus_tag: {}".format(self.tbprofiler_locus_tag))
-        self.logger.debug("ROW:\ttbprofiler_variant_substitution_type: {}".format(self.tbprofiler_variant_substitution_type))
-        self.logger.debug("ROW:\ttbprofiler_variant_substitution_nt: {}".format(self.tbprofiler_variant_substitution_nt))
-        self.logger.debug("ROW:\ttbprofiler_variant_substitution_aa: {}".format(self.tbprofiler_variant_substitution_aa))
-        self.logger.debug("ROW:\tconfidence: {}".format(self.confidence))
-        self.logger.debug("ROW:\tantimicrobial: {}".format(self.antimicrobial))
-        self.logger.debug("ROW:\tlooker_interpretation: {}".format(self.looker_interpretation))
-        self.logger.debug("ROW:\tmdl_interpretation: {}".format(self.mdl_interpretation))
-        self.logger.debug("ROW:\tdepth: {}".format(self.depth))
-        self.logger.debug("ROW:\tfrequency: {}".format(self.frequency))
-        self.logger.debug("ROW:\tread_support: {}".format(self.read_support))
-        self.logger.debug("ROW:\trationale: {}".format(self.rationale))
-        self.logger.debug("ROW:\twarning: {}".format(self.warning))
-        self.logger.debug("ROW:\ttier: {}".format(self.gene_tier))
-        self.logger.debug("ROW:\tsource: {}".format(self.source))
-        self.logger.debug("ROW:\ttbdb_comment: {}".format(self.tbdb_comment))
+        self.logger.debug("ROW:print:Now printing the row in a readable format:")
+        self.logger.debug("ROW:print:\tsample_id: {}".format(self.sample_id))
+        self.logger.debug("ROW:print:\ttbprofiler_gene_name: {}".format(self.tbprofiler_gene_name))
+        self.logger.debug("ROW:print:\ttbprofiler_locus_tag: {}".format(self.tbprofiler_locus_tag))
+        self.logger.debug("ROW:print:\ttbprofiler_variant_substitution_type: {}".format(self.tbprofiler_variant_substitution_type))
+        self.logger.debug("ROW:print:\ttbprofiler_variant_substitution_nt: {}".format(self.tbprofiler_variant_substitution_nt))
+        self.logger.debug("ROW:print:\ttbprofiler_variant_substitution_aa: {}".format(self.tbprofiler_variant_substitution_aa))
+        self.logger.debug("ROW:print:\tconfidence: {}".format(self.confidence))
+        self.logger.debug("ROW:print:\tantimicrobial: {}".format(self.antimicrobial))
+        self.logger.debug("ROW:print:\tlooker_interpretation: {}".format(self.looker_interpretation))
+        self.logger.debug("ROW:print:\tmdl_interpretation: {}".format(self.mdl_interpretation))
+        self.logger.debug("ROW:print:\tdepth: {}".format(self.depth))
+        self.logger.debug("ROW:print:\tfrequency: {}".format(self.frequency))
+        self.logger.debug("ROW:print:\tread_support: {}".format(self.read_support))
+        self.logger.debug("ROW:print:\trationale: {}".format(self.rationale))
+        self.logger.debug("ROW:print:\twarning: {}".format(self.warning))
+        self.logger.debug("ROW:print:\ttier: {}".format(self.gene_tier))
+        self.logger.debug("ROW:print:\tsource: {}".format(self.source))
+        self.logger.debug("ROW:print:\ttbdb_comment: {}".format(self.tbdb_comment))
 
-    def complete_row(self):
+    def determine_interpretation(self) -> None:
         """
-        This function finishes each row with the rest of the values needed.
+        This function finishes each row with the rest of the values needed. It depends
+        on the ANNOTATION_TO_INTERPRETATION dictionary which is a dictionary to turn
+        TBProfiler WHO annotations into their corresponding Looker or MDL
+        interpretations; MDL interpretations are the same as Looker but drop the 
+        "- Interim" designations.
         """    
+        ANNOTATION_TO_INTERPRETATION = {
+            "Assoc w R": {
+                "looker": "R", 
+                "mdl": "R"
+            },
+            "Assoc w R - interim": {
+                "looker": "R-Interim",
+                "mdl": "R"
+            },
+            "Assoc w R - Interim": {
+                "looker": "R-Interim",
+                "mdl": "R"
+            },
+            "Uncertain significance": {
+                "looker": "U", 
+                "mdl": "U" 
+            },
+            "Not assoc w R": {
+                "looker": "S",
+                "mdl": "S"
+            }, 
+            "Not assoc w R - Interim": {
+                "looker": "S-Interim", 
+                "mdl": "S"
+            }                              
+        }
+        
         if "This mutation is outside the expected region" in self.warning:
-            self.logger.debug("ROW:complete_row:This mutation shouldn't exist! Setting Looker & MDL interpretations of 'NA'")
+            self.logger.debug("ROW:determine_interpretation:This mutation shouldn't exist! Setting Looker & MDL interpretations of 'NA'")
             self.rationale = "NA"
             self.confidence = "NA"
             self.looker_interpretation = "NA"
             self.mdl_interpretation = "NA"
 
         elif self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
-            self.logger.debug("ROW:complete_row:WHO annotation identified: converting to the appropriate interpretation")
-            self.looker_interpretation = globals_.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
-            self.mdl_interpretation = globals_.ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
+            self.logger.debug("ROW:determine_interpretation:WHO annotation identified: converting to the appropriate interpretation")
+            self.looker_interpretation = ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
+            self.mdl_interpretation = ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
             self.rationale = "WHO classification"
 
         elif self.who_confidence != "NA":
-            self.logger.debug("ROW:complete_row:No WHO annotation identified: convert with expert rules")
-            self.looker_interpretation = self.variant.apply_expert_rules("looker")
-            self.mdl_interpretation = self.variant.apply_expert_rules("mdl")
-            self.rationale = "Expert rule applied"
+            self.logger.debug("ROW:determine_interpretation:No WHO annotation identified: convert with expert rules")
+            
+            interpretation, rule = self.variant.apply_expert_rules()
+            self.looker_interpretation = interpretation
+            self.mdl_interpretation = interpretation
+            self.rationale = self.describe_rationale(rule)
             self.confidence = "No WHO annotation"
 
-        self.logger.debug("ROW:complete_row:Interpretation logic applied or skipped; now removing any 'noexpert' suffixes")
-        self.describe_rationale()
-
-    def rank_annotation(self): 
+    def rank_annotation(self) -> int: 
         """
         This function ranks the WHO annotation based on resistance,
         with 4 being the most resistant category and 1 the least.
@@ -328,20 +519,7 @@ class Row() :
         else:
             return 1  
 
-    def annotation_to_LIMS(self):
-        """
-        This function converts the WHO annotation and the target drug
-        into returns the LIMS' report file appropriate annotation.
-        """
-        if self.who_confidence == "Assoc w R":
-            return "Mutation(s) associated with resistance to {} detected".format(self.antimicrobial)
-        elif (self.who_confidence == "Assoc w R - interim") or (self.who_confidence == "Uncertain significance"):
-            return "The detected mutation(s) have uncertain significance. Resistance to {} cannot be ruled out".format(self.antimicrobial)
-        # "Not assoc w R" and "Not assoc w R - Interim" and anything else
-        else: 
-            return "No mutations associated with resistance to {} detected".format(self.antimicrobial)
-
-    def is_mutation_outside_region(self):
+    def is_mutation_outside_region(self) -> bool:
         """
         This function checks if a mutation falls within the primer regions.
         Returns a boolean flag indicating if the mutation is outside the expected region.
@@ -354,32 +532,36 @@ class Row() :
             # split primers (positions is a dictionary)
             if isinstance(positions, dict):
                 for segment, seg_positions in positions.items():
-                    if segment != self.variant.gene_name_segment:
+                    if segment != self.gene_name:
                         continue
 
-                    if seg_positions[0] <= self.variant.pos <= seg_positions[1]:
-                        self.logger.debug("ROW:[tNGS only] Mutation falls within split primer region {}: {} is within {}".format(segment, self.variant.pos, seg_positions))
+                    if seg_positions[0] <= self.pos <= seg_positions[1]:
+                        self.logger.debug("ROW:[tNGS only] Mutation falls within split primer region {}: {} is within {}".format(segment, self.pos, seg_positions))
                         return False  # position found, mutation is within region
 
-                    self.logger.debug("ROW:[tNGS only] Mutation falls outside split primer region {}; {} is NOT within {}".format(segment, self.variant.pos, seg_positions))
+                    self.logger.debug("ROW:[tNGS only] Mutation falls outside split primer region {}; {} is NOT within {}".format(segment, self.pos, seg_positions))
 
             # regular primers (positions is a list)
             else:
-                if positions[0] <= self.variant.pos <= positions[1]:
-                    self.logger.debug("ROW:[tNGS only] Mutation falls within primer region {}: {} is within {}".format(primer, self.variant.pos, positions))
+                if positions[0] <= self.pos <= positions[1]:
+                    self.logger.debug("ROW:[tNGS only] Mutation falls within primer region {}: {} is within {}".format(primer, self.pos, positions))
                     return False  # position found, mutation is within region
 
-                self.logger.debug("ROW:[tNGS only] Mutation does not fall within any primer regions for {}; {} is NOT within {}".format(primer, self.variant.pos, positions))
+                self.logger.debug("ROW:[tNGS only] Mutation does not fall within any primer regions for {}; {} is NOT within {}".format(primer, self.pos, positions))
                 return True
 
         return True  # no matching position found, mutation is outside region
 
-    def describe_rationale(self):
-        """
-        This function removes the 'noexpert' suffix in the case where 
-        the interpretation logic applied is not considered an expert rule.
-        """
-        
+    def describe_rationale(self, rule) -> str:
+        """This function turns the rule number into a more descriptive string for the rationale
+        column in the Laboratorian report
+
+        Args:
+            rule (str): the rule as determined by Variant.apply_expert_rules()
+
+        Returns:
+            str: the rule with more description
+        """        
         RULE_TO_RATIONALE = {
             "rule1.2": "Expert rule 1.2. Novel drug targets",
             "rule2.2.1": "Expert rule 2.2.1. Loss-of-function",
@@ -392,21 +574,5 @@ class Row() :
             "whov2": "Mutation in proximal promoter region"
         }
 
-        if any(rule in self.looker_interpretation for rule in RULE_TO_RATIONALE.keys()):
-            interpretation = self.looker_interpretation[0]
-            rule = self.looker_interpretation[1:]
-            self.looker_interpretation = interpretation
-            self.rationale = RULE_TO_RATIONALE[rule]
-            self.confidence = "No WHO annotation"
-
-        if any(rule in self.mdl_interpretation for rule in RULE_TO_RATIONALE.keys()):
-            interpretation = self.mdl_interpretation[0]
-            rule = self.mdl_interpretation[1:]
-            self.mdl_interpretation = interpretation
-            self.rationale = RULE_TO_RATIONALE[rule]
-
-            self.logger.debug("ROW:describe_rationale:The applied rule is {}".format(rule))
-            self.logger.debug("ROW:describe_rationale:The rationale for this row is: {}".format(RULE_TO_RATIONALE[rule]))
-            
-            self.confidence = "No WHO annotation"
+        return RULE_TO_RATIONALE.get(rule, "No WHO annotation or expert rule")
       

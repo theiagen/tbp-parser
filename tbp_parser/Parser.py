@@ -11,7 +11,12 @@ from LIMS import LIMS
 
 
 class Parser:
-    """This class orchestrates the different modules within the tbp_parser tool."""
+    """This class orchestrates the different modules within the tbp_parser tool.
+    
+    It initializes with the input arguments provided at runtime, creates the standard
+    look-up dictionaries, checks for dependencies, and runs the main logic to generate
+    the desired reports.
+    """
 
     def __init__(self, options):
         """Initialize the Parser class
@@ -37,21 +42,13 @@ class Parser:
         self.promoter_regions_file = options.promoter_regions_file
         
         # reevaluate the following global variables -- they don't need to be globals
-        globals_.TNGS = options.tngs
+        self.TNGS = options.tngs
         globals_.TREAT_R_AS_S = options.treat_r_mutations_as_s
         globals_.SEQUENCING_METHOD = options.sequencing_method
-        globals_.MIN_READ_SUPPORT = options.min_read_support
-        globals_.MIN_FREQUENCY = options.min_frequency
+        self.MIN_READ_SUPPORT = options.min_read_support
+        self.MIN_FREQUENCY = options.min_frequency
         globals_.MIN_LOCUS_PERCENTAGE = options.min_percent_locus_covered
         
-        # TO-DO: consider dropping these parameters?
-        globals_.RRS_FREQUENCY = options.rrs_frequency
-        globals_.RRS_READ_SUPPORT = options.rrs_read_support
-        globals_.RRL_FREQUENCY = options.rrl_frequency
-        globals_.RRL_READ_SUPPORT = options.rrl_read_support
-        globals_.RPOB449_FREQUENCY = options.rpob449_frequency
-        globals_.ETHA237_FREQUENCY = options.etha237_frequency
-        ###
         globals_.OPERATOR = options.operator
 
         # this could cause issues if someone does more than one comma, but in that case, they deserve the error
@@ -162,7 +159,9 @@ class Parser:
         return GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS
 
     def overwrite_variables(self) -> None:
-        """This function overwrites the input variables provided at runtime with those from the config file"""
+        """This function overwrites the input variables provided at runtime with those 
+        from the config file
+        """
         with open(self.config, "r") as config:
             settings = yaml.safe_load(config)
 
@@ -175,7 +174,9 @@ class Parser:
                     self.logger.info("PARSER:overwrite_variables:globals.{} has been overwritten with a config-specified value".format(key))
 
     def check_dependency_exists(self) -> None:
-        """This function confirms that samtools is installed and available"""
+        """This function confirms that samtools is installed and available; if it is
+        not, the program exits with an error message.
+        """
         result = subprocess.run(
             ["samtools", "--version"],
           stdout=subprocess.PIPE,
@@ -187,9 +188,9 @@ class Parser:
             self.logger.critical("PARSER:Error: samtools not found. Please install samtools and try again.")
             sys.exit(1)
 
-    def run(self):
-        """
-        This function runs the parsing module for the tb_parser tool.
+    def run(self) -> None:
+        """This function runs the main logic of the Parser class, orchestrating the
+        different modules to generate the desired reports.
         """    
         self.logger.info("PARSER:run:Checking for dependencies")
         self.check_dependency_exists()
@@ -203,19 +204,21 @@ class Parser:
         # theoretically code should work up until here
 
         self.logger.info("PARSER:run:Creating Laboratorian report")
-        laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS)
-        laboratorian.create_laboratorian_report()
+        laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, 
+                                    self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, 
+                                    COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS)
+        DF_LABORATORIAN = laboratorian.create_laboratorian_report()
 
         self.logger.info("PARSER:run:Creating LIMS report")
-        lims = LIMS(self.logger, self.input_json, self.output_prefix)
+        lims = LIMS(self.logger, self.input_json, self.output_prefix, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.SAMPLE_NAME, DF_LABORATORIAN, laboratorian.positional_qc_fails, laboratorian.genes_with_valid_deletions)
         lims.create_lims_report()
 
         self.logger.info("PARSER:run:Creating Looker report")
         looker = Looker(self.logger, self.output_prefix)
         looker.create_looker_report()
 
-        self.logger.info("PARSER:run:Finalizing coverage report")
-        coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, globals_.MUTATION_FAIL_LIST)
+        self.logger.info("PARSER:run:Creating coverage report")
+        coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.positional_qc_fails)
 
 
         # rename genes

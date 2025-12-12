@@ -30,6 +30,8 @@ def main():
 
     file_arguments = parser.add_argument_group("file arguments",
                                                 "arguments that specify input files used to create standard dictionaries")
+    
+    ### TO-DO: brainstorm better name for this argument -- regions_bed, targets_bed, genes_bed, etc.
     file_arguments.add_argument("-b", "--tbdb_bed",
                         help="the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_coverage_regions, metavar="\b", type=CheckInputs.is_bed_valid)
     file_arguments.add_argument("-g", "--gene_tier_tsv", 
@@ -47,9 +49,9 @@ def main():
                         help="the minimum read support for a mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
     qc_arguments.add_argument("-f", "--min_frequency",
                         help="the minimum frequency for a mutation to pass QC (0.1 -> 10%%)\ndefault=0.1", default=0.1, metavar="\b", type=float)
-    
     qc_arguments.add_argument("-l", "--min_percent_locus_covered", default=0.7, metavar="\b", type=float,
                         help="the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%%)\ndefault=0.7")
+    
     qc_arguments.add_argument("--treat_r_mutations_as_s", default=False, action="store_true",
                         help="treat R mutations the same as S or U mutations in that if locus coverage is poor, they will not be reported regardless of mutation quality\ndefault=False")
 

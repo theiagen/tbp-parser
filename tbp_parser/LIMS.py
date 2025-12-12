@@ -15,11 +15,52 @@ class LIMS:
         - apply_lims_rules: implements several parsing rules for the LIMS report
         - create_lims_report: creates the LIMS report CSV file
     """
+    RESISTANCE_RANKING = {
+        "R": 6,
+        "R-Interim": 5,
+        "U": 4,
+        "S-Interim": 3,
+        "S": 2,
+        "WT": 1,
+        "Insufficient Coverage": 0,
+        "NA": -1 # outside the expected region
+    }
+    """A dictionary ranking the resistance annotations from highest to lowest priority."""
+    
+    SPECIAL_POSITIONS = {
+        "rpoB": [426, 452], # codon; the RRDR range
+        "gyrA": [88, 94], # codon; the QRDR range
+        "gyrB": [446, 507], # codon; the QRDR range
+        "rrl": [[2003, 2367], [2449, 3056]], # nucleotide; range
+        "rrs": [1401, 1402, 1484] # nucleotide; specific positions
+    }
+    """This is a dictionary of positions for genes requiring different consideration.
+    Note: the rpoB, gyrA, and gyrB special positions are in codons, rrl & rrs are 
+    nucleotide positions, and all are ranges except rrs (indicates specific positions)
+    """
+    
+    RPOB_MUTATIONS = [
+        "Leu430Pro",
+        "Asp435Tyr",
+        "His445Asn",
+        "His445Cys",
+        "His445Leu",
+        "His445Ser",
+        "Leu452Pro",
+        "Ile491Phe"
+    ]
+    """A list of rpoB mutations that require unique LIMS output wording."""
 
-    def __init__(self, logger, input_json, output_prefix):
+    def __init__(self, logger, input_json, output_prefix, LOW_DEPTH_OF_COVERAGE_LIST, SAMPLE_NAME, DF_LABORATORIAN, POSITIONAL_QC_FAILS, GENES_WITH_VALID_DELETIONS):
         self.logger = logger
         self.input_json = input_json
         self.output_prefix = output_prefix
+                
+        self.LOW_DEPTH_OF_COVERAGE_LIST = LOW_DEPTH_OF_COVERAGE_LIST
+        self.SAMPLE_NAME = SAMPLE_NAME
+        self.DF_LABORATORIAN = DF_LABORATORIAN
+        self.POSITIONAL_QC_FAILS = POSITIONAL_QC_FAILS
+        self.GENES_WITH_VALID_DELETIONS = GENES_WITH_VALID_DELETIONS
 
     def get_id(self, test=False) -> str:
         """Returns the lineage in English for LIMS
@@ -122,7 +163,7 @@ class LIMS:
 
         return message
 
-    def apply_lims_rules(self, gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code, responsible_gene) -> pd.DataFrame:
+    def apply_lims_rules(self, gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code, responsible_gene, genes_associated_with_drug, drug, qc_pass_gene_drug_associated_rows) -> pd.DataFrame:
         """This function implements several parsing rules for the LIMS report. 
 
         Args:
@@ -131,55 +172,24 @@ class LIMS:
             max_mdl_resistance (str): the maximum MDL resistance associated with this antimicrobial code
             antimicrobial_code (str): the antimicrobial code or header for the LIMS report
             responsible_gene (list[str]): a list of potential genes that may be responsible for the max_mdl_resistance
+            genes_associated_with_drug (list[str]): a list of genes associated with the antimicrobial drug
+            drug (str): the antimicrobial under question
+            qc_pass_gene_drug_associated_rows (pd.DataFrame): the gene-drug associated rows that passed positional QC
 
         Returns:
             pd.DataFrame: the LIMS dataframe with the rules applied
         """ 
-        self.logger.info("LIMS:Within LIMS class apply_lims_rules function; applying rules to mutations associated with {}".format(globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
+        self.logger.info("LIMS:Within LIMS class apply_lims_rules function; applying rules to mutations associated with {}".format(genes_associated_with_drug))
 
-        # This is a dictionary of positions for genes requiring different consideration.
-        # Note: the rpoB, gyrA, and gyrB special positions are in codons, 
-        # rrl & rrs are nucleotide positions
-        # all are ranges except rrs indicates specific positions
-        SPECIAL_POSITIONS = {
-            "rpoB": [426, 452], # codon; the RRDR range
-            "gyrA": [88, 94], # codon; the QRDR range
-            "gyrB": [446, 507], # codon; the QRDR range
-            "rrl": [[2003, 2367], [2449, 3056]], # nucleotide; range
-            "rrs": [1401, 1402, 1484] # nucleotide; specific positions
-        }
-        
-        # A list of rpoB mutations that require unique LIMS output wording
-        RPOB_MUTATIONS = [
-            "Leu430Pro",
-            "Asp435Tyr",
-            "His445Asn",
-            "His445Cys",
-            "His445Leu",
-            "His445Ser",
-            "Leu452Pro",
-            "Ile491Phe"
-        ]
-        
-        # A dictionary that ranks the resistances on severity
-        RESISTANCE_RANKING = {
-            "R": 6,
-            "R-Interim": 5,
-            "U": 4,
-            "S-Interim": 3,
-            "S": 2,
-            "WT": 1,
-            "Insufficient Coverage": 0,
-            "NA": -1 # outside the expected region
-        }
-        
-        antimicrobial_name = globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
         mutations_per_gene = {}
 
+
+        # i legitimately have no idea what's going on for the next 300 lines of code lol
+         
         # get all MDL interpretations for the responsible gene(s) for the max mdl interpretations in case of recalculation
         all_responsible_mdl_interpretations = {}
         for responsible_gene_name in responsible_gene:
-            all_responsible_mdl_interpretations[responsible_gene_name] = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == responsible_gene_name) & (globals_.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["mdl_interpretation"].tolist()
+            all_responsible_mdl_interpretations[responsible_gene_name] = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == responsible_gene_name) & (globals_.DF_LABORATORIAN["antimicrobial"] == drug)]["mdl_interpretation"].tolist()
 
         self.logger.debug("LIMS:The MDL interpretations for the responsible gene(s) are: {}".format(all_responsible_mdl_interpretations))  
 
@@ -188,211 +198,197 @@ class LIMS:
             non_s_mutations = 0
 
             # check to see if we are reporting on this gene for the LIMS report
-            if gene in globals_.GENES_FOR_LIMS:
-                # get all mutations, their types, interpretations, and warnings associated with a particular gene and it's associated antimicrobial
-                nt_mutations_per_gene = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals_.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["tbprofiler_variant_substitution_nt"].tolist()
-                aa_mutations_per_gene = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals_.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["tbprofiler_variant_substitution_aa"].tolist()
-                mutation_types_per_gene = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals_.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["tbprofiler_variant_substitution_type"].tolist()
-                mdl_interpretations = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals_.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["mdl_interpretation"].tolist()
-                warnings = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals_.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["warning"].tolist()
-                read_supports = globals_.DF_LABORATORIAN[(globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == gene) & (globals_.DF_LABORATORIAN["antimicrobial"] == antimicrobial_name)]["read_support"].tolist()  
+            gene_subset = qc_pass_gene_drug_associated_rows[qc_pass_gene_drug_associated_rows["tbprofiler_gene_name"] == gene]
 
-                self.logger.debug("LIMS:The following mutations belong to this gene ({}) and are associated with this drug ({})".format(gene, antimicrobial_name))
-                self.logger.debug("LIMS:Amino acid mutations: {}".format(aa_mutations_per_gene))
-                self.logger.debug("LIMS:Nucleotide mutations: {}".format(nt_mutations_per_gene))
-                self.logger.debug("LIMS:Their corresponding MDL interpretations: {}".format(mdl_interpretations))
-                self.logger.debug("LIMS:Their corresponding warnings: {}".format(warnings))
-                # check if there are any matching amino acid positions;
-                # if so, we want to keep the row with the higher read support
-                self.logger.debug("LIMS:Considering if any mutations have identical amino acid positions and keeping only the one with higher read support")
-                removal_list = []
-                for nt_mutation in nt_mutations_per_gene:
-                    current_index = nt_mutations_per_gene.index(nt_mutation)
-                    mutation = aa_mutations_per_gene[current_index]
+            gene_subset = gene_subset[~gene_subset["warning"].str.contains("This mutation is outside the expected region")]
 
-                    # get a list of all other mutations for this gene except the current index for comparison          
-                    aa_positions_original = {aa_mutation:globals_.get_position(aa_mutation) for i, aa_mutation in enumerate(aa_mutations_per_gene) if i != current_index}
-                    aa_positions_flattened = {aa_mutation:subposition for aa_mutation, position in aa_positions_original.items() for subposition in position}
+            # # get all mutations, their types, interpretations, and warnings associated with a particular gene and it's associated antimicrobial            
+            # nt_mutations_per_gene = gene_subset["tbprofiler_variant_substitution_nt"].tolist()
+            # aa_mutations_per_gene = gene_subset["tbprofiler_variant_substitution_aa"].tolist()
+            # mutation_types_per_gene = gene_subset["tbprofiler_variant_substitution_type"].tolist()
+            # mdl_interpretations = gene_subset["mdl_interpretation"].tolist()
+            # warnings = gene_subset["warning"].tolist()
+            # read_supports = gene_subset["read_support"].tolist()
+            
+            # Implementation of rule 5.3.3 - if there are any matching amino acid positions, keep the row with the higher read support
+            self.logger.debug("LIMS:Considering if any mutations have identical amino acid positions and keeping only the one with higher read support")
+            
+            # make a subset so we don't have to deal with aggregating an entire dataframe after exploding
+            duplicate_aa_check = gene_subset[["tbprofiler_variant_substitution_aa", "read_support"]].copy()
+    
+            # make a new column of the positions associated with each amino acid mutation and separate numeric and non-numeric positions
+            duplicate_aa_check["aa_position"] = duplicate_aa_check["tbprofiler_variant_substitution_aa"].apply(lambda x: globals_.get_position(x))
+            duplicate_aa_check_numeric = duplicate_aa_check[duplicate_aa_check["aa_position"].map(len) > 0].copy()
+            duplicate_aa_check_non_numeric = duplicate_aa_check[duplicate_aa_check["aa_position"].map(len) == 0].copy()
+            
+            # explode the numeric positions so that each position has its own row
+            duplicate_aa_check_exploded = duplicate_aa_check_numeric.explode("aa_position")
+            
+            # for each amino acid position, keep the row with the highest read support
+            indices_to_keep = duplicate_aa_check_exploded.groupby("aa_position")["read_support"].idxmax()
+            duplicate_aa_check_filtered = duplicate_aa_check_exploded.loc[indices_to_keep]
+            
+            # regroup by amino acid substitution to get back to original format
+            duplicate_aa_check_filtered = duplicate_aa_check_filtered.groupby("tbprofiler_variant_substitution_aa", as_index=False).agg({"read_support": "first", "aa_positions": list})
 
-                    if mutation not in ["Insufficient Coverage", "NA", "WT"]:
-                        other_positions = set(aa_positions_flattened.values())
-                        current_positions = set(globals_.get_position(mutation))
-                        same_positions = list(current_positions & other_positions)
+            # add back in the non-numeric positions that were excluded earlier
+            duplicate_aa_check_filtered = pd.concat([duplicate_aa_check_filtered, duplicate_aa_check_non_numeric], ignore_index=True)
 
-                        if len(same_positions) > 0:
-                            matching_index = aa_mutations_per_gene.index(list(aa_positions_flattened.keys())[list(aa_positions_flattened.values()).index(same_positions[0])])
-                            if matching_index == current_index:
-                                self.logger.debug("LIMS:We found the same mutation, checking for the second one instead")
-                                matching_index = aa_mutations_per_gene.index(list(aa_positions_flattened.keys())[list(aa_positions_flattened.values()).index(same_positions[0])], current_index + 1)
+            # keep only the rows in gene_subset that are in duplicate_aa_check_filtered -- we want to drop any that were filtered out
+            rows_to_keep = gene_subset["tbprofiler_variant_substitution_aa"].isin(duplicate_aa_check_filtered["tbprofiler_variant_substitution_aa"])
+            gene_subset_filtered = gene_subset[rows_to_keep].reset_index(drop=True)
+            
+            self.logger.debug("LIMS:After applying rule 5.3.3, the following amino acid mutations remain for this gene ({}) and drug ({}): {}".format(gene, drug, gene_subset_filtered["tbprofiler_variant_substitution_aa"].tolist()))
+            
+            for mutation in gene_subset_filtered["tbprofiler_variant_substitution_nt"].tolist():
+                pass
+            # ?>??
+            
+            
+            ##### refactored up to here
+            # format all mutations that are associated with the drug appropriately
+            for mutation in nt_mutations_per_gene:
 
-                            # confirm the mutation is actually the same before carrying on
-                            if aa_mutations_per_gene[matching_index] == aa_mutations_per_gene[current_index]:
-                                self.logger.debug("LIMS:The current mutation has a matching amino acid position to an additional mutation, now testing read support")
-                                if read_supports[current_index] > read_supports[matching_index]:
-                                    self.logger.debug("LIMS:The current mutation ({}) has higher read support ({}) than the other mutation ({}; {})".format(mutation, read_supports[current_index], aa_mutations_per_gene[matching_index], read_supports[matching_index]))
-                                    removal_list.append(aa_mutations_per_gene[matching_index]) # avoid removing items while iterating through object
-                                else:
-                                    self.logger.debug("LIMS:The other mutation ({}) has higher read support ({}) than the current mutation ({}; {})".format(aa_mutations_per_gene[matching_index], read_supports[matching_index], mutation, read_supports[current_index]))
-                                    removal_list.append(nt_mutation)
+                # grab the index so we can also grab the other information associated with this mutation
+                index = nt_mutations_per_gene.index(mutation)
+                aa_mutation = aa_mutations_per_gene[index]
+                mutation_type = mutation_types_per_gene[index]
 
-                    if ("This mutation is outside the expected region" in warnings[current_index]):
-                        removal_list.append(nt_mutation)
+                # if it is rpoB, we want to get the position of the mutation to check if it is in RRDR
+                if gene == "rpoB":           
+                    position_aa = globals_.get_position(aa_mutation)
 
-                # remove all mutations that have lower read support
-                if len(removal_list) > 0:
-                    for mutation in removal_list:
-                        if mutation in nt_mutations_per_gene:
-                            removal_index = nt_mutations_per_gene.index(mutation)
-                            aa_mutations_per_gene.pop(removal_index)
-                            nt_mutations_per_gene.pop(removal_index)
-                            mutation_types_per_gene.pop(removal_index)
-                            mdl_interpretations.pop(removal_index)
-                            warnings.pop(removal_index)
-                            read_supports.pop(removal_index)
+                # convert WT and Insufficient Coverage to empty strings
+                if mutation == "WT" or mutation == "Insufficient Coverage" or mutation == "NA":
+                    mutation = ""
 
-                # format all mutations that are associated with the drug appropriately
-                for mutation in nt_mutations_per_gene:
+                # convert NA,  WT, and Insufficient Coverage to empty strings
+                if aa_mutation == "NA" or aa_mutation == "WT" or aa_mutation == "Insufficient Coverage":
+                    aa_mutation = ""
 
-                    # grab the index so we can also grab the other information associated with this mutation
-                    index = nt_mutations_per_gene.index(mutation)
-                    aa_mutation = aa_mutations_per_gene[index]
-                    mutation_type = mutation_types_per_gene[index]
-
-                    # if it is rpoB, we want to get the position of the mutation to check if it is in RRDR
-                    if gene == "rpoB":           
-                        position_aa = globals_.get_position(aa_mutation)
-
-                    # convert WT and Insufficient Coverage to empty strings
-                    if mutation == "WT" or mutation == "Insufficient Coverage" or mutation == "NA":
-                        mutation = ""
-
-                    # convert NA,  WT, and Insufficient Coverage to empty strings
-                    if aa_mutation == "NA" or aa_mutation == "WT" or aa_mutation == "Insufficient Coverage":
-                        aa_mutation = ""
-
-                    # do not add the mutation if the particular mutation has low quality or is blank
-                    if ("Failed quality in the mutation position" in warnings[index]) or ("Insufficient Coverage" in mdl_interpretations[index]) or (mutation == ""):
-                        self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
-                        if "del" in mutation and "Failed quality in the mutation position" in warnings[index] and "Insufficient coverage in locus" in warnings[index]:
-                            DF_LIMS[gene_code] = "No sequence"
-                        else:
-                            DF_LIMS[gene_code] = "No mutations detected"
-
-                        # overwrite the MDL interpretation to be "WT" if the mutation is non-S
-                        # see also rule 4.2.2.1
-                        if RESISTANCE_RANKING[mdl_interpretations[index]] >= 2: 
-                            self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is having its MDL interpretation rewritten to act as if WT".format(mutation, gene))
-                            mdl_interpretations[index] = "WT"
-                            if gene in responsible_gene:
-                                all_responsible_mdl_interpretations[gene][index] = "WT"
-
-                            if "del" in mutation and "Failed quality in the mutation position" in warnings[index]:
-                                try:
-                                    if float(globals_.COVERAGE_DICTIONARY[gene]) < globals_.COVERAGE_THRESHOLD:
-                                        mdl_interpretations[index] = "Insufficient Coverage"
-                                        if gene in responsible_gene:
-                                            all_responsible_mdl_interpretations[gene][index] = "Insufficient Coverage"
-                                    else:
-                                        self.logger.debug("LIMS:This gene ({}) has sufficient coverage a deletion being present".format(gene))
-                                except:
-                                    self.logger.debug("LIMS:This gene ({}) is not in the coverage dictionary".format(gene))
-
-                            self.logger.debug("LIMS:Since this MDL interpretation changed, we are now potentially recalculating max_mdl_resistance (currently {})".format(max_mdl_resistance[0]))
-
-                            if (len(all_responsible_mdl_interpretations) == 0):
-                                self.logger.debug("LIMS:There are no more potential MDL interpretations; exiting loop")
-                                break
-
-                            if (max([RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set]) != RESISTANCE_RANKING[max_mdl_resistance[0]]) and gene in responsible_gene:
-                                max_mdl_resistance = [annotation for annotation, rank in RESISTANCE_RANKING.items() if rank == max([RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set])]
-                                self.logger.debug("LIMS:The maximum needed to be reevaluated; the potential new max_mdl_resistance is now {}".format(max_mdl_resistance[0]))
-
-                                if DF_LIMS[antimicrobial_code][0] != "Pending Retest":
-                                    self.logger.debug("LIMS:Now changing the antimicrobial code value for this gene since max_mdl_resistance changed")
-                                    DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], antimicrobial_name)   
-                                else:
-                                    self.logger.debug("LIMS:The antimicrobial code value is currently 'Pending Retest'; this shouldn't be overwritten.")
-                            else:
-                                self.logger.debug("LIMS:The maximum did not need to be reevaluated; the max_mdl_resistance is still {}".format(max_mdl_resistance[0]))
-                    # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
-                    elif ((mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") 
-                          or (gene == "rpoB" and globals_.is_within_range(position_aa, SPECIAL_POSITIONS[gene]))):
-                        if aa_mutation != "" and aa_mutation != "p.0?": # report only amino acid mutations unless not applicable/blank/p.0?, in which case report nucleotide mutation
-                            substitution = "{}".format(aa_mutation)
-                        else:
-                            substitution = "{}".format(mutation)
-
-                        # the following if only captures synonymous mutations if rpoB RRDR mutations
-                        if mutation_type == "synonymous_variant":
-                            substitution = "{} [synonymous]".format(substitution)
-
-                        # add the formatted mutation to mutations_per_gene dictionary (formatted as a list)
-                        if gene not in mutations_per_gene.keys():
-                            mutations_per_gene[gene] = [substitution]
-                        elif substitution not in mutations_per_gene[gene]:
-                            mutations_per_gene[gene] = "{}; {}".format("".join(mutations_per_gene[gene]), substitution)
-                    else:
-                        self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it is not an rpoB RRDR \"S\" mutation".format(mutation, gene))
-
-                # Mutations for a particular gene have been added to the mutations_per_gene dictionary.
-                # if that gene has mutations associated with it, we want to perform some additional filtration,
-                # especially if it is RRDR rpoB
-                if gene in mutations_per_gene.keys():
-                    self.logger.debug("LIMS:Adding the mutations ({}) associated with this gene ({}) to the DF_LIMS dataframe".format(mutations_per_gene[gene], gene))
-                    DF_LIMS[gene_code] = mutations_per_gene[gene]
-
-                    if gene == "rpoB":
-                        if max_mdl_resistance[0] == "R":
-                            self.logger.debug("LIMS:This gene is rpoB, now checking to see if any of the mutations belong to the special position list")
-                            rpob_specific_mutations_counter = 0
-
-                            for mutation in mutations_per_gene[gene]:
-                                if any(rpob_mutation in mutation for rpob_mutation in RPOB_MUTATIONS):
-                                    rpob_specific_mutations_counter += 1
-
-                            if rpob_specific_mutations_counter > 0:
-                                self.logger.debug("LIMS:Some rpoB mutations are in the special rpoB mutation list, changing the output message")
-                                DF_LIMS[antimicrobial_code] = "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods."
-                            else:
-                                self.logger.debug("LIMS:None of the mutations are in the special rpoB mutation list, changing the output message")
-                                DF_LIMS[antimicrobial_code] = "Predicted resistance to rifampin"
-
-                        # if the *maximum* MDL resistance is S in this case and it is RRDR synonymous
-                        elif max_mdl_resistance[0] == "S" and "synonymous" in mutations_per_gene[gene][0]:
-                            self.logger.debug("LIMS:Only synonymous mutations were identified in RRDR; changing output message")
-                            DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampin. The detected synonymous mutation(s) do not confer resistance"
-
-                elif gene == "rpoB":
-                    self.logger.debug("LIMS:No mutations were identified in rpoB; changing output message")
-                    DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampin"
-
-                else:
-                    self.logger.debug("LIMS:No mutations were identified for this gene-drug combination")
-
-                # make sure that there is a mutation associated with this gene-drug combo
-                if len(nt_mutations_per_gene) > 0:
-                    self.logger.debug("mdl_interpretations: {}".format(mdl_interpretations))
-                    maximum_ranking = max([RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])
-                    # see the RESISTANCE_RANKING dictionary for the ranking of each MDL interpretation
-                    # count up the number of non-S mutations; non-S mutations have a ranking > 2
-                    if maximum_ranking > 2:
-                        non_s_mutations += 1
-
-                    # change the gene_code to be something different depending on the MDL interpretations and/or number of non-s mutations
-                    if maximum_ranking == 2 and non_s_mutations == 0 and ~ DF_LIMS[gene_code].str.contains("synonymous")[0]: # non-RRDR region S
-                        DF_LIMS[gene_code] = "No high confidence mutations detected"
-                    elif maximum_ranking == 1: # WT
-                        DF_LIMS[gene_code] = "No mutations detected"
-                    elif maximum_ranking == 0 and "del" not in DF_LIMS[gene_code]: # Insufficient Coverage
+                # do not add the mutation if the particular mutation has low quality or is blank
+                if ("Failed quality in the mutation position" in warnings[index]) or ("Insufficient Coverage" in mdl_interpretations[index]) or (mutation == ""):
+                    self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it failed quality in the mutation position, was WT, or had insufficient locus coverage".format(mutation, gene))
+                    if "del" in mutation and "Failed quality in the mutation position" in warnings[index] and "Insufficient coverage in locus" in warnings[index]:
                         DF_LIMS[gene_code] = "No sequence"
+                    else:
+                        DF_LIMS[gene_code] = "No mutations detected"
 
+                    # overwrite the MDL interpretation to be "WT" if the mutation is non-S
+                    # see also rule 4.2.2.1
+                    if self.RESISTANCE_RANKING[mdl_interpretations[index]] >= 2: 
+                        self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is having its MDL interpretation rewritten to act as if WT".format(mutation, gene))
+                        mdl_interpretations[index] = "WT"
+                        if gene in responsible_gene:
+                            all_responsible_mdl_interpretations[gene][index] = "WT"
+
+                        if "del" in mutation and "Failed quality in the mutation position" in warnings[index]:
+                            try:
+                                if float(globals_.COVERAGE_DICTIONARY[gene]) < globals_.COVERAGE_THRESHOLD:
+                                    mdl_interpretations[index] = "Insufficient Coverage"
+                                    if gene in responsible_gene:
+                                        all_responsible_mdl_interpretations[gene][index] = "Insufficient Coverage"
+                                else:
+                                    self.logger.debug("LIMS:This gene ({}) has sufficient coverage a deletion being present".format(gene))
+                            except:
+                                self.logger.debug("LIMS:This gene ({}) is not in the coverage dictionary".format(gene))
+
+                        self.logger.debug("LIMS:Since this MDL interpretation changed, we are now potentially recalculating max_mdl_resistance (currently {})".format(max_mdl_resistance[0]))
+
+                        if (len(all_responsible_mdl_interpretations) == 0):
+                            self.logger.debug("LIMS:There are no more potential MDL interpretations; exiting loop")
+                            break
+
+                        if (max([self.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set]) != self.RESISTANCE_RANKING[max_mdl_resistance[0]]) and gene in responsible_gene:
+                            max_mdl_resistance = [annotation for annotation, rank in self.RESISTANCE_RANKING.items() if rank == max([self.RESISTANCE_RANKING[interpretation] for gene_set in all_responsible_mdl_interpretations.values() for interpretation in gene_set])]
+                            self.logger.debug("LIMS:The maximum needed to be reevaluated; the potential new max_mdl_resistance is now {}".format(max_mdl_resistance[0]))
+
+                            if DF_LIMS[antimicrobial_code][0] != "Pending Retest":
+                                self.logger.debug("LIMS:Now changing the antimicrobial code value for this gene since max_mdl_resistance changed")
+                                DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], drug)   
+                            else:
+                                self.logger.debug("LIMS:The antimicrobial code value is currently 'Pending Retest'; this shouldn't be overwritten.")
+                        else:
+                            self.logger.debug("LIMS:The maximum did not need to be reevaluated; the max_mdl_resistance is still {}".format(max_mdl_resistance[0]))
+                # the mutation is of decent quality and non-S, we want to report all non-synonymous mutations UNLESS rpoB RRDR (see Variant l.145 for explanation)
+                elif ((mutation_type != "synonymous_variant" and mdl_interpretations[index] != "S") 
+                        or (gene == "rpoB" and globals_.is_within_range(position_aa, self.SPECIAL_POSITIONS[gene]))):
+                    if aa_mutation != "" and aa_mutation != "p.0?": # report only amino acid mutations unless not applicable/blank/p.0?, in which case report nucleotide mutation
+                        substitution = "{}".format(aa_mutation)
+                    else:
+                        substitution = "{}".format(mutation)
+
+                    # the following if only captures synonymous mutations if rpoB RRDR mutations
+                    if mutation_type == "synonymous_variant":
+                        substitution = "{} [synonymous]".format(substitution)
+
+                    # add the formatted mutation to mutations_per_gene dictionary (formatted as a list)
+                    if gene not in mutations_per_gene.keys():
+                        mutations_per_gene[gene] = [substitution]
+                    elif substitution not in mutations_per_gene[gene]:
+                        mutations_per_gene[gene] = "{}; {}".format("".join(mutations_per_gene[gene]), substitution)
                 else:
-                    self.logger.debug("LIMS:There are no mutations for this gene ({}) associated with this drug ({})".format(gene, antimicrobial_name))
-                    DF_LIMS[gene_code] = "No mutations detected"
+                    self.logger.debug("LIMS:This mutation (\"{}\", origin gene: {}) is not being added to the LIMS report because it is not an rpoB RRDR \"S\" mutation".format(mutation, gene))
 
-                if (DF_LIMS[gene_code][0] == "No sequence" or "Insufficient Coverage" in mdl_interpretations) and max_mdl_resistance[0] != "R" and gene not in globals_.GENES_WITH_DELETIONS:
-                    self.logger.debug("LIMS:This gene ({}) has insufficient coverage without a valid deletion and no other mutations associated with this antimicrobial ({}) are 'R'; changing antimicrobial output to 'Pending Retest'".format(gene, antimicrobial_name))
-                    DF_LIMS[antimicrobial_code] = "Pending Retest"    
+            # Mutations for a particular gene have been added to the mutations_per_gene dictionary.
+            # if that gene has mutations associated with it, we want to perform some additional filtration,
+            # especially if it is RRDR rpoB
+            if gene in mutations_per_gene.keys():
+                self.logger.debug("LIMS:Adding the mutations ({}) associated with this gene ({}) to the DF_LIMS dataframe".format(mutations_per_gene[gene], gene))
+                DF_LIMS[gene_code] = mutations_per_gene[gene]
+
+                if gene == "rpoB":
+                    if max_mdl_resistance[0] == "R":
+                        self.logger.debug("LIMS:This gene is rpoB, now checking to see if any of the mutations belong to the special position list")
+                        rpob_specific_mutations_counter = 0
+
+                        for mutation in mutations_per_gene[gene]:
+                            if any(rpob_mutation in mutation for rpob_mutation in self.RPOB_MUTATIONS):
+                                rpob_specific_mutations_counter += 1
+
+                        if rpob_specific_mutations_counter > 0:
+                            self.logger.debug("LIMS:Some rpoB mutations are in the special rpoB mutation list, changing the output message")
+                            DF_LIMS[antimicrobial_code] = "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods."
+                        else:
+                            self.logger.debug("LIMS:None of the mutations are in the special rpoB mutation list, changing the output message")
+                            DF_LIMS[antimicrobial_code] = "Predicted resistance to rifampin"
+
+                    # if the *maximum* MDL resistance is S in this case and it is RRDR synonymous
+                    elif max_mdl_resistance[0] == "S" and "synonymous" in mutations_per_gene[gene][0]:
+                        self.logger.debug("LIMS:Only synonymous mutations were identified in RRDR; changing output message")
+                        DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampin. The detected synonymous mutation(s) do not confer resistance"
+
+            elif gene == "rpoB":
+                self.logger.debug("LIMS:No mutations were identified in rpoB; changing output message")
+                DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampin"
+
+            else:
+                self.logger.debug("LIMS:No mutations were identified for this gene-drug combination")
+
+            # make sure that there is a mutation associated with this gene-drug combo
+            if len(nt_mutations_per_gene) > 0:
+                self.logger.debug("mdl_interpretations: {}".format(mdl_interpretations))
+                maximum_ranking = max([self.RESISTANCE_RANKING[interpretation] for interpretation in mdl_interpretations])
+                # see the RESISTANCE_RANKING dictionary for the ranking of each MDL interpretation
+                # count up the number of non-S mutations; non-S mutations have a ranking > 2
+                if maximum_ranking > 2:
+                    non_s_mutations += 1
+
+                # change the gene_code to be something different depending on the MDL interpretations and/or number of non-s mutations
+                if maximum_ranking == 2 and non_s_mutations == 0 and ~ DF_LIMS[gene_code].str.contains("synonymous")[0]: # non-RRDR region S
+                    DF_LIMS[gene_code] = "No high confidence mutations detected"
+                elif maximum_ranking == 1: # WT
+                    DF_LIMS[gene_code] = "No mutations detected"
+                elif maximum_ranking == 0 and "del" not in DF_LIMS[gene_code]: # Insufficient Coverage
+                    DF_LIMS[gene_code] = "No sequence"
+
+            else:
+                self.logger.debug("LIMS:There are no mutations for this gene ({}) associated with this drug ({})".format(gene, drug))
+                DF_LIMS[gene_code] = "No mutations detected"
+
+            if (DF_LIMS[gene_code][0] == "No sequence" or "Insufficient Coverage" in mdl_interpretations) and max_mdl_resistance[0] != "R" and gene not in globals_.GENES_WITH_DELETIONS:
+                self.logger.debug("LIMS:This gene ({}) has insufficient coverage without a valid deletion and no other mutations associated with this antimicrobial ({}) are 'R'; changing antimicrobial output to 'Pending Retest'".format(gene, drug))
+                DF_LIMS[antimicrobial_code] = "Pending Retest"    
 
         self.logger.info("LIMS:Finished applying rules to mutations associated with {}, exiting function".format(globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]))
         return DF_LIMS
@@ -410,39 +406,50 @@ class LIMS:
             - Operator information
         """
         self.logger.info("LIMS:Within LIMS class create_lims_report function")
+        
+        # TO-DO: make these column names configurable
         DF_LIMS = pd.DataFrame({
-            "MDL sample accession numbers": globals_.SAMPLE_NAME, 
+            "MDL sample accession numbers": self.SAMPLE_NAME, 
           "M_DST_A01_ID": self.get_id()
             }, index=[0])
 
         self.logger.debug("LIMS:Now iterating through each LIMS antimicrobial code")
-        for antimicrobial_code, gene_dictionary in globals_.ANTIMICROBIAL_CODE_TO_GENES.items():
-            drug_name = globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME[antimicrobial_code]
-            # get the MDL interpretations for all genes **FOR THE LIMS REPORT** associated with this drug             
-            potential_mdl_resistances = globals_.DF_LABORATORIAN[globals_.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals_.DF_LABORATORIAN["tbprofiler_gene_name"].isin(gene_dictionary.keys())]
-
-            # remove any interpretations with failed quality warnings
-            potential_mdl_resistances = potential_mdl_resistances.loc[~potential_mdl_resistances["warning"].str.contains("Failed quality in the mutation position")]
-            potential_mdl_resistances = potential_mdl_resistances["mdl_interpretation"].tolist()
+        for drug, drug_gene_dictionary in globals_.ANTIMICROBIAL_CODE_TO_GENES.items():
+            
+            # get the MDL interpretations for all genes **FOR THE LIMS REPORT** associated with this drug       
+            antimicrobial_code, gene_codes = drug_gene_dictionary.items()
+            genes_associated_with_drug = gene_codes.keys()
+            
+            # capture all rows in DF_LABORATORIAN associated with this drug and then 
+            #  capture only gene-drug associated rows that are reported on in the LIMS report
+            drug_associated_rows = self.DF_LABORATORIAN[self.DF_LABORATORIAN["antimicrobial"] == drug]
+            gene_drug_associated_rows = drug_associated_rows.loc[self.drug_associated_rows["tbprofiler_gene_name"].isin(genes_associated_with_drug)]          
+                  
+            # remove any interpretations that have failed positional QC from consideration
+            # this is when the tbprofiler_variant_substitution_nt variable is in the POSITIONAL_QC_FAILS list
+            qc_pass_gene_drug_associated_rows = gene_drug_associated_rows.loc[~gene_drug_associated_rows["tbprofiler_variant_substitution_nt"].isin(self.POSITIONAL_QC_FAILS)]
+            
+            potential_mdl_resistances = qc_pass_gene_drug_associated_rows["mdl_interpretation"].tolist()
+            max_mdl_resistance = max(potential_mdl_resistances, key=lambda x: self.RESISTANCE_RANKING[x])
+            
+            self.logger.debug("LIMS:The max MDL resistance for this antimicrobial ({}) is {}".format(drug, max_mdl_resistance))
 
             # initalize list of genes responsible for the max resistance
-            responsible_gene = set()
+            responsible_genes = set()
 
-            # get the maximum resistance for the drug
             try:
-                max_mdl_resistance = [annotation for annotation, rank in RESISTANCE_RANKING.items() if rank == max([RESISTANCE_RANKING[interpretation] for interpretation in potential_mdl_resistances])]
-                responsible_gene = set(globals_.DF_LABORATORIAN[globals_.DF_LABORATORIAN["antimicrobial"] == drug_name].loc[globals_.DF_LABORATORIAN["mdl_interpretation"] == max_mdl_resistance[0]]["tbprofiler_gene_name"].tolist())
-
-                # keep only LIMS genes
-                responsible_gene = responsible_gene.intersection(set(gene_dictionary.keys()))
-                self.logger.debug("LIMS:The gene(s) responsible for the max MDL resistance for this antimicrobial ({}) is/are {}".format(drug_name, responsible_gene))
+                # this will generate a list of annotations that match the value in maximum_resistance_identified
+                rows_that_match_max = [self.gene_drug_associated_rows["mdl_interpretation"] == max_mdl_resistance]
+                # get all gene names responsible for this max resistance
+                responsible_genes = set(gene_drug_associated_rows.loc[rows_that_match_max]["tbprofiler_gene_name"].tolist())
+                self.logger.debug("LIMS:The gene(s) responsible for the max MDL resistance for this antimicrobial ({}) is/are {}".format(drug, responsible_genes))
+                
             except:
                 max_mdl_resistance = ["NA"]
-            self.logger.debug("LIMS:The max MDL resistance for this antimicrobial ({}) is {}".format(drug_name, max_mdl_resistance[0]))
+                
+            DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance, drug) 
 
-            DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance[0], drug_name) 
-
-            DF_LIMS = self.apply_lims_rules(gene_dictionary, DF_LIMS, max_mdl_resistance, antimicrobial_code, responsible_gene)
+            DF_LIMS = self.apply_lims_rules(gene_codes, DF_LIMS, max_mdl_resistance, antimicrobial_code, responsible_genes, genes_associated_with_drug, drug, qc_pass_gene_drug_associated_rows)
 
         DF_LIMS["Analysis date"] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
         DF_LIMS["Operator"] = globals_.OPERATOR

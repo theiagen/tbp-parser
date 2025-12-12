@@ -10,17 +10,6 @@ class TestRow:
 
         assert (r, r_interim, u, s_interim) == (4, 3, 2, 1)
 
-    def test_annotation_to_LIMS(self):
-        r = Row(logging.getLogger(__name__), None, "Assoc w R", "test", "test").annotation_to_LIMS()
-        r_interim = Row(logging.getLogger(__name__), None, "Assoc w R - interim", "test", "test").annotation_to_LIMS()
-        u = Row(logging.getLogger(__name__), None, "Uncertain significance", "test", "test").annotation_to_LIMS()
-        s_interim = Row(logging.getLogger(__name__), None, "Not assoc w R - Interim", "test", "test").annotation_to_LIMS()
-
-        assert(r, r_interim, u, s_interim) == ("Mutation(s) associated with resistance to test detected", 
-                                              "The detected mutation(s) have uncertain significance. Resistance to test cannot be ruled out", 
-                                              "The detected mutation(s) have uncertain significance. Resistance to test cannot be ruled out", 
-                                              "No mutations associated with resistance to test detected")
-
     def test_describe_rationale_rule324(self):
         a = Row(logging.getLogger(__name__), None, "Assoc w R", "test", "test")
         a.looker_interpretation = "Urule3.2.4"
@@ -34,7 +23,7 @@ class TestRow:
 
     def test_describe_rationale_whov2(self):
         a = Row(logging.getLogger(__name__), None, "", "test", "test")
-        a.looker_interpretation = "Rwhov2"
+        a.looker_interpretation = "R", "whov2"
         a.mdl_interpretation = "Uwhov2"
         a.rationale = ""
         a.confidence = ""

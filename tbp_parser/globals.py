@@ -8,11 +8,10 @@ def get_position(mutation):
     returns the position (numerical part) as an Int
     """    
     pattern = r"-?\d+"
-
     match = re.findall(pattern, mutation)
     if len(match) > 0:
         return [int(x) for x in match]
-    return [0]
+    return [None]
 
 def is_within_range(position, range_positions):
     """
@@ -37,39 +36,6 @@ def is_within_range(position, range_positions):
         return True
 
     return False
-
-global ANNOTATION_TO_INTERPRETATION 
-ANNOTATION_TO_INTERPRETATION = {
-    "Assoc w R": {
-        "looker": "R", 
-        "mdl": "R"
-    },
-    "Assoc w R - interim": {
-        "looker": "R-Interim",
-        "mdl": "R"
-    },
-    "Assoc w R - Interim": {
-        "looker": "R-Interim",
-        "mdl": "R"
-    },
-    "Uncertain significance": {
-        "looker": "U", 
-        "mdl": "U" 
-    },
-    "Not assoc w R": {
-        "looker": "S",
-        "mdl": "S"
-    }, 
-    "Not assoc w R - Interim": {
-        "looker": "S-Interim", 
-        "mdl": "S"
-    }                              
-}
-"""
-A dictionary to turn TBProfiler WHO annotations into their corresponding Looker or MDL
-interpretations; MDL interpretations are the same as Looker but drop the "- Interim" 
-designations.
-"""
 
 global ANTIMICROBIAL_CODE_TO_GENES
 ANTIMICROBIAL_CODE_TO_GENES = {
