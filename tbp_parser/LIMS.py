@@ -16,10 +16,8 @@ class LIMS:
         - create_lims_report: creates the LIMS report CSV file
     """
     RESISTANCE_RANKING = {
-        "R": 6,
-        "R-Interim": 5,
-        "U": 4,
-        "S-Interim": 3,
+        "R": 4,
+        "U": 3,
         "S": 2,
         "WT": 1,
         "Insufficient Coverage": 0,
@@ -241,13 +239,7 @@ class LIMS:
             self.logger.debug("LIMS:After applying rule 5.3.3, the following amino acid mutations remain for this gene ({}) and drug ({}): {}".format(gene, drug, gene_subset_filtered["tbprofiler_variant_substitution_aa"].tolist()))
             
             for mutation in gene_subset_filtered["tbprofiler_variant_substitution_nt"].tolist():
-                pass
-            # ?>??
-            
-            
-            ##### refactored up to here
-            # format all mutations that are associated with the drug appropriately
-            for mutation in nt_mutations_per_gene:
+
 
                 # grab the index so we can also grab the other information associated with this mutation
                 index = nt_mutations_per_gene.index(mutation)
@@ -445,10 +437,109 @@ class LIMS:
                 self.logger.debug("LIMS:The gene(s) responsible for the max MDL resistance for this antimicrobial ({}) is/are {}".format(drug, responsible_genes))
                 
             except:
-                max_mdl_resistance = ["NA"]
+                max_mdl_resistance = "NA"
                 
             DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance, drug) 
 
+
+
+            #### trying to remake apply_lim_rules here ####
+
+            # don't apply any LIMS rules if the max MDL resistance is WT, Insufficient Coverage, or NA
+            if max_mdl_resistance in ["WT", "Insufficient Coverage", "NA"]:
+                # set all gene codes to "No mutations detected" or "No sequence" if Insufficient Coverage
+                for gene, gene_code in gene_codes.items():
+                    # if the gene has insufficient coverage without a valid deletion (NOT in GENES_WITH_VALID_DELETIONS but in LOW_DEPTH_OF_COVERAGE_LIST), set to "No sequence"
+                    if gene in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS:
+                        DF_LIMS[gene_code] = "No sequence"
+                    else:
+                        DF_LIMS[gene_code] = "No mutations detected"
+                    
+            if max_mdl_resistance == ["S"]:
+                for gene, gene_code in gene_codes.items():
+                    mutation_list = []
+                    if gene == "rpoB" and drug == "rifampicin":
+                        # check if there is a mutation appears in the RRDR (codons 426-452) (in the special-positions dictionary)
+                        gene_subset = qc_pass_gene_drug_associated_rows[qc_pass_gene_drug_associated_rows["tbprofiler_gene_name"] == gene]
+                        # reduce gene_subset to only those that are synonymous type
+                        gene_subset = gene_subset[gene_subset["tbprofiler_variant_substitution_type"] == "synonymous_variant"]
+                        if len(gene_subset) > 0:                    
+                            for aa_mutation in gene_subset["tbprofiler_variant_substitution_aa"].tolist():
+                                position_aa = globals_.get_position(aa_mutation)
+                                
+                                if globals_.is_within_range(position_aa, self.SPECIAL_POSITIONS[gene]):
+                                    # synonymous RRDR mutation
+                                    DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance"
+                                    mutation_list.append("{} [synonymous]".format(aa_mutation))
+                                else:
+                                    # synonymous non-RRDR mutation -- ignore
+                                    pass
+                        else:
+                            # no synonymous RRDR mutation but max MDL resistance is S and drug is rimpaciin
+                            DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampicin"
+                        
+                        DF_LIMS[gene_code] = "; ".join(mutation_list) if len(mutation_list) > 0 else "No high confidence mutations detected"
+                    
+                    else:
+                        DF_LIMS[gene_code] = "No high confidence mutations detected"
+            
+            elif max_mdl_resistance in ["R", "U"]:
+                # only report R or U mutations or RRDR synonymous mutations that are S
+                for gene, gene_code in gene_codes.items():
+                    mutation_list = []
+                    gene_subset = qc_pass_gene_drug_associated_rows[qc_pass_gene_drug_associated_rows["tbprofiler_gene_name"] == gene]
+                    
+                    for index, row in gene_subset.iterrows():
+                        mutation = row["tbprofiler_variant_substitution_nt"]
+                        aa_mutation = row["tbprofiler_variant_substitution_aa"]
+                        mutation_type = row["tbprofiler_variant_substitution_type"]
+                        mdl_interpretation = row["mdl_interpretation"]
+                        
+                        if ((mdl_interpretation in ["R", "U"]) 
+                            or (gene == "rpoB" and globals_.is_within_range(globals_.get_position(aa_mutation), self.SPECIAL_POSITIONS[gene]) and mutation_type == "synonymous_variant" and mdl_interpretation == "S")):
+                            if aa_mutation != "" and aa_mutation != "p.0?": # report only amino acid mutations unless not applicable/blank/p.0?, in which case report nucleotide mutation
+                                substitution = "{}".format(aa_mutation)
+                            else:
+                                substitution = "{}".format(mutation)
+
+                            # the following if only captures synonymous mutations if rpoB RRDR mutations
+                            if mutation_type == "synonymous_variant":
+                                substitution = "{} [synonymous]".format(substitution)
+
+                        mutation_list.append(substitution)
+                        
+                    if gene == "rpoB": # check special rpob positions to determine if we need to change teh antimicrobial code message
+                        if max_mdl_resistance == "R":
+                            rpob_specific_mutations_counter = 0
+
+                            for mutation in mutation_list:
+                                if any(rpob_mutation in mutation for rpob_mutation in self.RPOB_MUTATIONS):
+                                    rpob_specific_mutations_counter += 1
+
+                            if rpob_specific_mutations_counter > 0:
+                                DF_LIMS[antimicrobial_code] = "Predicted low-level resistance to rifampicin. May test susceptible by phenotypic methods."
+                            else:
+                                DF_LIMS[antimicrobial_code] = "Predicted resistance to rifampicin"
+
+                    if len(mutation_list) > 0:
+                        DF_LIMS[gene_code] = "; ".join(mutation_list)
+                    else:
+                        DF_LIMS[gene_code] = "No mutations detected"
+                            
+                            
+                        
+                            
+                                
+                            
+            
+            # only apply LIMS rules if max MDL resistance is S for rpoB
+            # apply LIMS rules if max MDL resistance is R or U
+            
+            
+
+            # this function feels WAY too complicated and convoluted and i want to see if i can just remake it entirely
+            #  especially the qc stuff and the rpob stuff -- i feel like we already capture a lot of the QC stuff elsewhere 
+            #  and we're just repeating it needlessly here
             DF_LIMS = self.apply_lims_rules(gene_codes, DF_LIMS, max_mdl_resistance, antimicrobial_code, responsible_genes, genes_associated_with_drug, drug, qc_pass_gene_drug_associated_rows)
 
         DF_LIMS["Analysis date"] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')

@@ -221,6 +221,10 @@ class Parser:
         coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.positional_qc_fails)
 
 
+        # DO MASSIVE RENAMING HERE!!!!!
+
+
+
         # rename genes
 
         self.logger.info("PARSER:run:Parsing completed")
