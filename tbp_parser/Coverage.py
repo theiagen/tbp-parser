@@ -37,6 +37,7 @@ class Coverage:
 
         Args:
             line (str): A line from a bed file listing regions of interest
+            MIN_DEPTH (int): The minimum depth threshold for a gene/locus
 
         Returns:
             tuple[str, float, float]: the name of the region, the percentage of the region over the minimum depth, and the average depth of the region
@@ -76,6 +77,7 @@ class Coverage:
 
         Args: 
             MIN_PERCENT_COVERAGE (float): The minimum percent breadth of coverage threshold for a gene/locus
+            MIN_DEPTH (int): The minimum depth threshold for a gene/locus
 
         Returns:
             tuple[dict, dict, list]: A tuple containing the coverage dictionary, average loci coverage dictionary, and a list of genes below the MIN_PERCENT_COVERAGE
