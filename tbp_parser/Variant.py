@@ -101,8 +101,6 @@ class Variant:
         
         if hasattr(self, "annotation") and len(self.annotation) > 0:
             # if possibility 1a (variant has an annotation field with content (len > 0))
-            self.logger.debug("VAR:extract_annotations:The annotation field has content, turning each annotation entry into a Row")
-
             # create a list of the drugs associated with the gene to check if all drugs are reported
             gene_associated_drug_list = []
             if hasattr(self, "gene_associated_drugs"):
@@ -129,9 +127,7 @@ class Variant:
                 elif new_row.rank_annotation() == self.annotation_dictionary[drug].rank_annotation():
                     if "WHO" in new_row.source and "WHO" not in self.annotation_dictionary[drug].source:
                         self.annotation_dictionary[drug] = new_row
-                        
-            self.logger.debug("VAR:extract_annotations:The annotation dictionary has all annotated drugs included; it now has a length of {}".format(len(self.annotation_dictionary)))
-
+         
             # add any missing drugs from the annotation list that are found on the gene associated drug list to the annotation dictionary 
             for drug in gene_associated_drug_list:  
                 # see also rule 4.3.3
@@ -149,12 +145,8 @@ class Variant:
                                                 
                         self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
 
-            self.logger.debug("VAR:extract_annotations:The annotation dictionary has all gene-drug combinations included; it now has a length of {}".format(len(self.annotation_dictionary)))
-
         else:
             # possibilities 1b and 2: the annotation field has no content or the field does not exist
-            self.logger.debug("VAR:extract_annotations:The annotation field has no content or does not exist. Now iterating through gene associated drugs and the gene-drug combination dictionary.")
-
             for drug in self.gene_associated_drugs:
                 mock_annotation["drug"] = drug
                 
@@ -166,8 +158,6 @@ class Variant:
                         mock_annotation["drug"] = drug
                         
                         self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
-
-            self.logger.debug("VAR:extract_annotations:The annotation dictionary has all gene-drug combinations included; it now has a length of {}".format(len(self.annotation_dictionary)))
 
     def extract_consequences(self) -> set:
         """This section iterates through the "consequences" section of a variant in 
@@ -183,7 +173,7 @@ class Variant:
         if hasattr(self, "consequences") and len(self.consequences) > 0:
             # if there is a consequences section that has content, iterate
             for entry in self.consequences:
-                if entry.gene_name != self.gene_name:
+                if entry.get("gene_name") != self.gene_name:
                     # make a copy of the variant object 
                     copied_variant = copy.deepcopy(self) 
                     

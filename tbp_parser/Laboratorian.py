@@ -93,7 +93,6 @@ class Laboratorian:
                 reported_genes = variant.extract_consequences()            
                 self.genes_reported.update(reported_genes)
             
-            self.logger.debug("LAB:iterate_section:The current variant (gene: {}) has {} annotation(s); now iterating through them".format(variant.gene_name, len(variant.annotation_dictionary)))
             for annotation_row in variant.annotation_dictionary.values():
                 # determine interpretations without QC overwrites    
                 annotation_row.determine_interpretation()
@@ -104,7 +103,7 @@ class Laboratorian:
                 self.positional_qc_fails.update(positional_qc_fails)                
             
                 # if in --debug mode, print the annotation row.
-                annotation_row.print()
+                #annotation_row.print()
 
                 row_list.append(annotation_row)
 
@@ -151,18 +150,14 @@ class Laboratorian:
             row_list = self.iterate_section(input_json["dr_variants"], row_list)
             row_list = self.iterate_section(input_json["other_variants"], row_list)
 
-            self.logger.debug("LAB:create_laboratorian_report:Iteration complete, there are now {} rows".format(len(row_list)))
+            self.logger.info("LAB:create_laboratorian_report:Iteration complete, there are now {} rows".format(len(row_list)))
 
-        self.logger.debug("LAB:create_laboratorian_report:Now adding any genes that are missing from the report and editing any rows that need to be edited")
+        self.logger.debug("LAB:create_laboratorian_report:Now adding any genes that are missing from the report and editing/reordering any rows that need to be edited")
         for gene, antimicrobial_drug_names in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
             for drug_name in antimicrobial_drug_names:
                 if gene not in self.genes_reported:
-                    self.logger.debug("LAB:Gene {} with antimicrobial {} not in report, now adding it to the report".format(gene, drug_name))
-                    
                     temporary_row = Row.wildtype_row(self.logger, self.SAMPLE_NAME, gene, drug_name, self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, self.LOW_DEPTH_OF_COVERAGE_LIST)
                     row_list.append(temporary_row)
-                else:
-                    self.logger.debug("LAB:create_laboratorian_report:Gene {} with antimicrobial {} already in report".format(gene, drug_name))
 
             # make a list to add QC fail rows to end of laboratorian report
             reorder_list = [] 
@@ -183,6 +178,7 @@ class Laboratorian:
                     row_list.remove(row)
                     row_list.append(row)
 
+        self.logger.info("LAB:create_laboratorian_report:There are now {} rows after adding missing gene-drug combos and editing/reordering necessary rows\n".format(len(row_list)))
         # add row list to DF_LABORATORIAN
         for row in row_list:
             row.warning = list(filter(None, row.warning))
@@ -197,6 +193,5 @@ class Laboratorian:
                 DF_LABORATORIAN = pd.concat([DF_LABORATORIAN, row_dictionary], ignore_index=True)
 
         DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
-        self.logger.info("LAB:create_laboratorian_report:Laboratorian report created, now exiting function\n")
         
         return DF_LABORATORIAN

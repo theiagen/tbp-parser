@@ -49,24 +49,28 @@ class Coverage:
         gene = line[4]
 
         depth_command = "samtools depth -a -J -r \"{}:{}-{}\" {} > {}-depths.txt".format(self.chromosome, start, end, self.input_bam, gene)
-        subprocess.Popen(depth_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        subprocess.run(depth_command, shell=True, check=True)
 
-        # samtools outputs 3 columns; column 3 is the depth of coverage per nucleotide position, piped to awk to count the positions
-        #  above MIN_DEPTH, then wc -l counts them all
-        breadth_coverage_command = "awk -F '\t' '{if ($3 >= " + str(MIN_DEPTH) + ") print;}' " + gene + "-depths.txt | wc -l"
-        depth = subprocess.Popen(breadth_coverage_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
-        
-        # get the percentage of the region that is above the minimum depth; add one to gene length to compensate for subtraction (1-based indexing)
-        breadth_of_coverage = (int(depth) / (int(end) - int(start) + 1)) * 100
-        
-        # add together the depth of all the sites, then divide by the number of sites to get the average depth
-        average_depth_command = "awk -F '\t' '{sum+=$3} END { if (NR > 0) print sum/NR; else print 0 }' " + gene + "-depths.txt"
-        average_depth = subprocess.Popen(average_depth_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True).communicate()[0]
-        
-        self.logger.debug("COV:calculate_depth:The average breadth of coverage for this gene ({}) is {}".format(gene, breadth_of_coverage))
-        self.logger.debug("COV:calculate_depth:The average depth for this gene ({}) is {}".format(gene, float(average_depth)))
+        # use python to calculate the statistics instead of using awk to prevent subprocess confusion
+        total_positions = 0
+        positions_above_min = 0
+        depth_sum = 0
 
-        # remove gene + "-depths.txt file to save space
+        with open(gene + "-depths.txt", "r") as depths_fh:
+            for line in depths_fh:
+                cols = line.strip().split()
+                depth = int(cols[2])
+                total_positions += 1
+                depth_sum += depth
+                if depth >= MIN_DEPTH:
+                    positions_above_min += 1
+        
+        region_length = int(end) - int(start) + 1  #1-based indexing
+        breadth_of_coverage = (positions_above_min / region_length) * 100
+        average_depth = (depth_sum / region_length) if region_length > 0 else 0
+        
+        self.logger.debug("COV:calculate_depth:The average breadth of coverage for this gene ({}) is {} and the average depth is {}".format(gene, breadth_of_coverage, average_depth))
+        
         os.remove(gene + "-depths.txt")
 
         return gene, float(breadth_of_coverage), float(average_depth)
@@ -93,21 +97,13 @@ class Coverage:
                 line = line.split("\t")
                 gene, breadth_of_coverage, average_depth = self.calculate_depth(line, MIN_DEPTH)
 
-                # rename genes to match CDPH nomenclature -- 
-                # TO-DO: make sure that this is acceptable for everyone -- maybe make this configurable????  
-                # a global rename dictionary? 
-                if gene == "mmpR5":
-                    gene = "Rv0678"
-                elif gene == "fbiD":
-                    gene = "Rv2983"
-
                 COVERAGE_DICTIONARY[gene] = breadth_of_coverage
                 AVERAGE_LOCI_COVERAGE[gene] = average_depth
                 
         # add to low depth of coverage list if below the breadth of coverage threshold (MIN_PERCENT_COVERAGE * 100)
         LOW_DEPTH_OF_COVERAGE_LIST = [gene for gene, coverage in COVERAGE_DICTIONARY.items() if coverage < (MIN_PERCENT_COVERAGE * 100)]
 
-        self.logger.info("COV:get_coverage:Coverage dictionaries of length {} and {} have been created\n".format(len(COVERAGE_DICTIONARY), len(AVERAGE_LOCI_COVERAGE)))
+        self.logger.info("COV:get_coverage:Coverage dictionaries of length {} and {} have been created".format(len(COVERAGE_DICTIONARY), len(AVERAGE_LOCI_COVERAGE)))
         self.logger.info("COV:get_coverage:The following genes (total: {}) have coverage below the {}% breadth of coverage threshold: {}\n".format(len(LOW_DEPTH_OF_COVERAGE_LIST), (MIN_PERCENT_COVERAGE * 100), LOW_DEPTH_OF_COVERAGE_LIST))
 
         return COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST
@@ -145,4 +141,4 @@ class Coverage:
             # TO-DO: MAKE CONFIGURABLE
             DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning"}, inplace=True)
 
-        DF_COVERAGE.to_csv(self.output_prefix + ".coverage_report.csv", index=False)
+        DF_COVERAGE.to_csv(self.output_prefix + ".coverage_report.csv", float_format="%.2f", index=False)

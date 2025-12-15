@@ -237,21 +237,17 @@ class Row() :
         }
         
         if "This mutation is outside the expected region" in self.warning:
-            self.logger.debug("ROW:determine_interpretation:This mutation shouldn't exist! Setting Looker & MDL interpretations of 'NA'")
             self.rationale = "NA"
             self.confidence = "NA"
             self.looker_interpretation = "NA"
             self.mdl_interpretation = "NA"
 
         elif self.who_confidence != "No WHO annotation" and self.who_confidence != "" and self.who_confidence != "NA":
-            self.logger.debug("ROW:determine_interpretation:WHO annotation identified: converting to the appropriate interpretation")
             self.looker_interpretation = ANNOTATION_TO_INTERPRETATION[self.who_confidence]["looker"]
             self.mdl_interpretation = ANNOTATION_TO_INTERPRETATION[self.who_confidence]["mdl"]
             self.rationale = "WHO classification"
 
         elif self.who_confidence != "NA":
-            self.logger.debug("ROW:determine_interpretation:No WHO annotation identified: convert with expert rules")
-            
             interpretation, rule = self.variant.apply_expert_rules()
             self.looker_interpretation = interpretation
             self.mdl_interpretation = interpretation
