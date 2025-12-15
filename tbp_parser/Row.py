@@ -125,19 +125,19 @@ class Row() :
         return row
 
     def add_qc_warnings(self, MIN_DEPTH, MIN_FREQUENCY, MIN_READ_SUPPORT, LOW_DEPTH_OF_COVERAGE_LIST, genes_with_valid_deletions):
-        positional_qc_fails = []
+        positional_qc_fails = set()
         
         # checking positional qc now
         if (self.depth < MIN_DEPTH or self.frequency < MIN_FREQUENCY or self.read_support < MIN_READ_SUPPORT):
             if "del" not in self.tbprofiler_variant_substitution_nt: 
                 # 4.2.1.1 - postiional qc fail; not a deletion
-                positional_qc_fails.append(self.tbprofiler_variant_substitution_nt) 
+                positional_qc_fails.add(self.tbprofiler_variant_substitution_nt) 
                 self.warning.add("Failed quality in the mutation position") 
                 
             elif "del" in self.tbprofiler_variant_substitution_nt:
                 if  (0 < self.depth and self.depth < MIN_DEPTH):
                     # 4.2.1.2 - postiional qc fail, deletion with some depth but not enough
-                    positional_qc_fails.append(self.tbprofiler_variant_substitution_nt)
+                    positional_qc_fails.add(self.tbprofiler_variant_substitution_nt)
                     self.warning.add("Failed quality in the mutation position") 
                     
                 elif (self.depth == 0 and self.frequency >= MIN_FREQUENCY): 
@@ -147,7 +147,7 @@ class Row() :
                 elif (self.frequency < MIN_FREQUENCY):
                     # frequency is poor -- positional qc fail 
                     #### TO-DO: DO I NEED TO KEEP THIS? IT WAS DESCRIBED IN AN EMAIL BUT NOT IN THE INTERPRETATION DOCUMENT
-                    positional_qc_fails.append(self.tbprofiler_variant_substitution_nt)
+                    positional_qc_fails.add(self.tbprofiler_variant_substitution_nt)
                     self.warning.add("Failed quality in the mutation position") 
 
         # checking locus qc now
@@ -170,7 +170,6 @@ class Row() :
                     self.warning.add("Insufficient coverage in locus") # 4.2.2.3.2 - non-R mutation with locus qc fail; add warning and overwrite interpretation
                     self.looker_interpretation = "Insufficient Coverage"
                     self.mdl_interpretation = "Insufficient Coverage"
-
                 
         if "Failed quality in the mutation position" not in self.warning and "del" in self.tbprofiler_variant_substitution_nt:
             genes_with_valid_deletions.add(self.gene_name)

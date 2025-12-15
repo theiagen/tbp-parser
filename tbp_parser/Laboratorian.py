@@ -48,7 +48,7 @@ class Laboratorian:
         """A set of genes that have already been reported in the laboratorian report."""
         self.genes_with_valid_deletions = set()
         """A set of genes that have valid deletions reported in the laboratorian report."""
-        self.positional_qc_fails = set()
+        self.positional_qc_fails = {}
         """A set of mutations that have failed POSITIONAL QC checks."""
 
     def iterate_section(self, variant_section, row_list) -> list[Row]:
@@ -97,16 +97,23 @@ class Laboratorian:
                 # determine interpretations without QC overwrites    
                 annotation_row.determine_interpretation()
             
+                # make version of report without this -- if block this
                 # perform QC on the row
                 genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions)
                 self.genes_with_valid_deletions.update(genes_with_valid_deletions)
-                self.positional_qc_fails.update(positional_qc_fails)                
-            
-                # if in --debug mode, print the annotation row -- caution, this adds a ton of extra lines to the log.
+                
+                if len(positional_qc_fails) > 0:
+                    if variant.gene_name not in self.positional_qc_fails.keys():
+                        self.positional_qc_fails[variant.gene_name] = positional_qc_fails
+                    else:
+                        self.positional_qc_fails[variant.gene_name].update(positional_qc_fails)
+                    
+                
+                # if in --debug mode, print the annotation row -- caution, t           breakpoint()his adds a ton of extra lines to the log.
                 annotation_row.print()
 
                 row_list.append(annotation_row)
-
+        breakpoint()
         return row_list
 
     def create_laboratorian_report(self) -> pd.DataFrame:
@@ -170,7 +177,7 @@ class Laboratorian:
                                 row.warning.remove("Insufficient coverage in locus")
 
                         # if the mutation fails quality control, move it to the end of the report
-                        if ("Insufficient coverage in locus" in row.warning or row.tbprofiler_variant_substitution_nt in self.positional_qc_fails):
+                        if ("Insufficient coverage in locus" in row.warning or row.tbprofiler_variant_substitution_nt in self.positional_qc_fails.get(row.tbprofiler_gene_name, set())):
                             reorder_list.append(row)
 
                 # remove rows in reorder_list from row_list and add them to the end of row_list

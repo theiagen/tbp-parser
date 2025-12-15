@@ -201,8 +201,6 @@ class Parser:
         coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.tbdb_bed)
         COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH)
 
-        # theoretically code should work up until here
-
         self.logger.info("PARSER:run:Creating Laboratorian report")
         laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, 
                                     self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, 
@@ -221,5 +219,7 @@ class Parser:
         coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.genes_with_valid_deletions, self.TNGS)
 
         # DO MASSIVE RENAMING HERE!!!!!
+        # rifampicin -> rifampin 
+        # mmpR5 -> Rv0678 
 
         self.logger.info("PARSER:run:Parsing completed")

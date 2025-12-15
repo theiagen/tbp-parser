@@ -160,7 +160,7 @@ class LIMS:
         """
         DF_LIMS = pd.DataFrame({
             "Sample_Name": self.SAMPLE_NAME, 
-            "M_DST_A01_ID": self.get_id(TNGS, MIN_LOCUS_PERCENTAGE)
+            "ID": self.get_id(TNGS, MIN_LOCUS_PERCENTAGE)
         }, index=[0])
 
         self.logger.debug("LIMS:create_lims_report:Now iterating through each LIMS antimicrobial code")
@@ -181,8 +181,17 @@ class LIMS:
                     
                 # remove any interpretations that have failed positional QC from consideration
                 # this is when the tbprofiler_variant_substitution_nt variable is in the POSITIONAL_QC_FAILS list
-                qc_pass_gene_drug_associated_rows = gene_drug_associated_rows.loc[~gene_drug_associated_rows["tbprofiler_variant_substitution_nt"].isin(self.POSITIONAL_QC_FAILS)]
                 
+                ####### adjust for the dictionary change in Row.py
+                # remove rows with positional QC fails
+                # POSITIONAL_QC_FAILS is a dictinoary with gene as keys and sets of mutations as values
+                print(drug_associated_rows)
+                print(self.POSITIONAL_QC_FAILS)
+                qc_pass_gene_drug_associated_rows = gene_drug_associated_rows.loc[~gene_drug_associated_rows.apply(
+                    lambda row: row["tbprofiler_variant_substitution_nt"] in self.POSITIONAL_QC_FAILS.get(row["tbprofiler_gene_name"], set()), axis=1)]
+                print(qc_pass_gene_drug_associated_rows)
+                # qc_pass_gene_drug_associated_rows = gene_drug_associated_rows.loc[~gene_drug_associated_rows["tbprofiler_variant_substitution_nt"].isin(self.POSITIONAL_QC_FAILS)]
+                breakpoint()
                 potential_mdl_resistances = qc_pass_gene_drug_associated_rows["mdl_interpretation"].tolist()
                 try:
                     max_mdl_resistance = max(potential_mdl_resistances, key=lambda x: self.RESISTANCE_RANKING[x])
