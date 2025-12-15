@@ -112,7 +112,7 @@ class Coverage:
 
         return COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST
 
-    def create_coverage_report(self, COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, GENES_WITH_VALID_DELETIONS) -> None:
+    def create_coverage_report(self, COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, GENES_WITH_VALID_DELETIONS, TNGS) -> None:
         """
         This function reformats the coverage and average loci coverage dictionaries into
         a CSV file and adds a deletion warning if a QC-passing deletion was identified
@@ -141,7 +141,7 @@ class Coverage:
                                                                    "Average_Locus_Coverage": average_coverage, "Warning": warning}, 
                                                                    index=[0])], ignore_index=True)
 
-        if globals_.TNGS: 
+        if TNGS: 
             # TO-DO: MAKE CONFIGURABLE
             DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning"}, inplace=True)
 

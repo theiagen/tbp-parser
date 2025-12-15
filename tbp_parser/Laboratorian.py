@@ -67,7 +67,7 @@ class Laboratorian:
         self.logger.debug("LAB:iterate_section:Iterating through the variant section to turn each one into a Variant object")
         for variant in variant_section:
             # create a Variant object and add the origin gene to the class genes_reported set variable
-            variant = Variant(self.logger, self.sample_name, 
+            variant = Variant(self.logger, self.SAMPLE_NAME, 
                               self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, self.GENE_TO_ANTIMICROBIAL_DRUG_NAME, self.PROMOTER_REGIONS, variant)
             self.genes_reported.add(variant.gene_name)
 
@@ -99,7 +99,7 @@ class Laboratorian:
                 annotation_row.determine_interpretation()
             
                 # perform QC on the row
-                genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST)
+                genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions)
                 self.genes_with_valid_deletions.update(genes_with_valid_deletions)
                 self.positional_qc_fails.update(positional_qc_fails)                
             
@@ -151,18 +151,18 @@ class Laboratorian:
             row_list = self.iterate_section(input_json["dr_variants"], row_list)
             row_list = self.iterate_section(input_json["other_variants"], row_list)
 
-            self.logger.debug("LAB:Iteration complete, there are now {} rows".format(len(row_list)))
+            self.logger.debug("LAB:create_laboratorian_report:Iteration complete, there are now {} rows".format(len(row_list)))
 
-        self.logger.debug("LAB:Now adding any genes that are missing from the report and editing any rows that need to be edited")
+        self.logger.debug("LAB:create_laboratorian_report:Now adding any genes that are missing from the report and editing any rows that need to be edited")
         for gene, antimicrobial_drug_names in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
             for drug_name in antimicrobial_drug_names:
                 if gene not in self.genes_reported:
                     self.logger.debug("LAB:Gene {} with antimicrobial {} not in report, now adding it to the report".format(gene, drug_name))
                     
-                    temporary_row = Row.wildtype_row(self.logger, self.sample_name, gene, drug_name, self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, self.LOW_DEPTH_OF_COVERAGE_LIST)
+                    temporary_row = Row.wildtype_row(self.logger, self.SAMPLE_NAME, gene, drug_name, self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, self.LOW_DEPTH_OF_COVERAGE_LIST)
                     row_list.append(temporary_row)
                 else:
-                    self.logger.debug("LAB:Gene {} with antimicrobial {} already in report".format(gene, drug_name))
+                    self.logger.debug("LAB:create_laboratorian_report:Gene {} with antimicrobial {} already in report".format(gene, drug_name))
 
             # make a list to add QC fail rows to end of laboratorian report
             reorder_list = [] 
@@ -189,15 +189,14 @@ class Laboratorian:
             row.warning = ". ".join(row.warning)
 
             # make a temporary dataframe out of the Row object using vars(row) which converts the object into a dictionary
-            row_dictionary = pd.DataFrame(vars(row), index=[0])
-            row_dictionary.drop(["logger", "variant", "who_confidence"], axis=1, inplace=True)
+            row_dictionary = pd.DataFrame(vars(row), index=[0], columns=DF_LABORATORIAN.columns)
 
             if len(DF_LABORATORIAN) == 0:
-                DF_LABORATORIAN = row_dictionary # TO-DO: double check this works as expected
+                DF_LABORATORIAN = row_dictionary
             else:
                 DF_LABORATORIAN = pd.concat([DF_LABORATORIAN, row_dictionary], ignore_index=True)
 
         DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
-        self.logger.info("LAB:Laboratorian report created, now exiting function\n")
+        self.logger.info("LAB:create_laboratorian_report:Laboratorian report created, now exiting function\n")
         
         return DF_LABORATORIAN

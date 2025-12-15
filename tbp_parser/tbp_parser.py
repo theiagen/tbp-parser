@@ -8,7 +8,7 @@ from Parser import Parser
 def main():
     home_dir = importlib_resources.files("tbp_parser")
     default_coverage_regions = home_dir.joinpath("..", "data", "tbdb.bed")
-    default_gene_tier_file = home_dir.joinpath("..", "data", "gene-to-tier_2025-12-10.tsv")
+    default_gene_tier_tsv = home_dir.joinpath("..", "data", "gene-to-tier_2025-12-10.tsv")
     default_promoter_regions = home_dir.joinpath("..", "data", "who-v2-promoters_2025-12-10.tsv")   
     
     parser = argparse.ArgumentParser(
@@ -24,7 +24,7 @@ def main():
     parser.add_argument("-v", "--version", 
                         action='version', version=str(__VERSION__))
     parser.add_argument("--config",
-                        help="the configuration file to use, in YAML format\n(overrides all other arguments EXCEPT for any file-type inputs)", default="", metavar="\b", type=CheckInputs.is_file_valid)
+                        help="the configuration file to use, in YAML format\n(overrides all other arguments EXCEPT for any file-type inputs)", default="", metavar="\b", type=CheckInputs.is_optional_file_valid)
 
     file_arguments = parser.add_argument_group("file arguments",
                                                 "arguments that specify input files used to create standard dictionaries")
@@ -33,7 +33,7 @@ def main():
     file_arguments.add_argument("-b", "--tbdb_bed",
                         help="the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_coverage_regions, metavar="\b", type=CheckInputs.is_bed_valid)
     file_arguments.add_argument("-g", "--gene_tier_tsv", 
-                        help="the TSV file mapping genes to their tier\ndefault=data/gene-to-tier_2025-12-10.tsv", default=default_gene_tier_file, metavar="\b", type=CheckInputs.is_file_valid)
+                        help="the TSV file mapping genes to their tier\ndefault=data/gene-to-tier_2025-12-10.tsv", default=default_gene_tier_tsv, metavar="\b", type=CheckInputs.is_file_valid)
     file_arguments.add_argument("-p", "--promoter_regions_tsv",
                         help="the TSV file containing the promoter regions to include in interpretation designations\ndefault=data/who-v2-promoters_2025-12-10.tsv", default=default_promoter_regions, metavar="\b", type=CheckInputs.is_file_valid)
 
@@ -57,7 +57,7 @@ def main():
                                                   "arguments that are used verbatim in the reports or to name the output files")
     general_arguments.add_argument("-m", "--sequencing_method", 
                         help="the sequencing method used to generate the data; used in the LIMS & Looker reports\n** Enclose in quotes if includes a space\ndefault=\"Sequencing method not provided\"", default="Sequencing method not provided", metavar="\b")
-    general_arguments.add_argument("-p", "--operator", 
+    general_arguments.add_argument("-t", "--operator", 
                         help="the operator who ran the sequencing; used in the LIMS & Looker reports\n** Enclose in quotes if includes a space\ndefault=\"Operator not provided\"", default="Operator not provided", metavar="\b")
     general_arguments.add_argument("-o", "--output_prefix", 
                         help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b")

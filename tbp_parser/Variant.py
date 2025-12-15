@@ -323,7 +323,7 @@ class Variant:
 
             elif (self.type == "synonymous_variant"):
                 self.logger.debug("VAR:apply_expert_rules:The position is not within the special positions and is synonymous; interpretation is 'S'")
-                return "S", "rule2.2.2.2" if self.gene_name == "rpoB" else "S", "rule3.2.4"
+                return ("S", "rule2.2.2.2") if self.gene_name == "rpoB" else ("S", "rule3.2.4")
 
             if self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
                 self.logger.debug("VAR:apply_expert_rules:The position is within the proximal promoter region; interpretation is 'U'")
@@ -338,7 +338,7 @@ class Variant:
                     return "S", "rule3.2.4"
             else:
                 self.logger.debug("VAR:apply_expert_rules:The position is not within the special positions, not in the proximal promoter region, is nonsynonymous and is NOT an upstream gene variant; interpretation is 'U'")
-                return "U", "rule2.2.2.2" if self.gene_name == "rpoB" else "U", "rule3.2.4"
+                return ("U", "rule2.2.2.2") if self.gene_name == "rpoB" else ("U", "rule3.2.4")
 
         elif self.gene_name not in GENE_LIST:
             self.logger.debug("VAR:apply_expert_rules:The gene is not in the gene list that requires an expert rule.")

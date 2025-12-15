@@ -38,8 +38,8 @@ class Parser:
         
         # files used to create the standard dictionaries
         self.tbdb_bed = options.tbdb_bed
-        self.gene_tier_file = options.gene_tier_file
-        self.promoter_regions_file = options.promoter_regions_file
+        self.gene_tier_tsv = options.gene_tier_tsv
+        self.promoter_regions_tsv = options.promoter_regions_tsv
         
         # reevaluate the following global variables -- they don't need to be globals
         self.TNGS = options.tngs
@@ -107,10 +107,10 @@ class Parser:
                 drugs = cols[5]
                 locus_tag = cols[3]
                                 
-                GENE_TO_ANTIMICROBIAL_DRUG_NAME[gene_name] = drugs
+                GENE_TO_ANTIMICROBIAL_DRUG_NAME[gene_name] = drugs.split(",")
                 GENE_TO_LOCUS_TAG[gene_name] = locus_tag
 
-                if self.tngs:
+                if self.TNGS:
                     start_pos = cols[1]
                     end_pos = cols[2]
                     
@@ -126,7 +126,7 @@ class Parser:
                         TNGS_REGIONS[gene_name] = [start_pos, end_pos]
 
         GENE_TO_TIER = {}
-        with open(self.gene_tier_file, 'r') as tier_file:
+        with open(self.gene_tier_tsv, 'r') as tier_file:
             for line in tier_file:
                 cols = line.strip().split('\t')
                 gene_name = cols[0]
@@ -135,7 +135,7 @@ class Parser:
                 GENE_TO_TIER[gene_name] = tier
        
         PROMOTER_REGIONS = {}
-        with open(self.promoter_regions_file, 'r') as promoter_file:
+        with open(self.promoter_regions_tsv, 'r') as promoter_file:
             for line in promoter_file:
                 cols = line.strip().split('\t')
                 gene_name = cols[0]
@@ -180,9 +180,8 @@ class Parser:
         """
         result = subprocess.run(
             ["samtools", "--version"],
-          stdout=subprocess.PIPE,
-          stderr=subprocess.PIPE,
-          text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
         if result.returncode != 0:
@@ -199,7 +198,7 @@ class Parser:
         GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS = self.create_standard_dictionaries()
         
         self.logger.info("PARSER:run:Calculating coverage statistics")
-        coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions)
+        coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.tbdb_bed)
         COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH)
 
         # theoretically code should work up until here
@@ -219,7 +218,7 @@ class Parser:
         looker.create_looker_report(laboratorian.SAMPLE_NAME, self.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.OPERATOR)
 
         self.logger.info("PARSER:run:Creating coverage report")
-        coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.genes_with_valid_deletions)
+        coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.genes_with_valid_deletions, self.TNGS)
 
         # DO MASSIVE RENAMING HERE!!!!!
 

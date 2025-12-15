@@ -67,7 +67,7 @@ class Looker:
 
 
             # this does not appear in the logic document, but it was in legacy code; not sure if we should retain?
-            if DF_LOOKER[antimicrobial] != "R":
+            if max_looker_resistance != "R":
                 for gene in drugs_to_genes[antimicrobial]:
                     if gene in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS:
                         DF_LOOKER[antimicrobial] = "Insufficient coverage in locus"

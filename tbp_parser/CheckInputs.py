@@ -14,6 +14,20 @@ def is_file_valid(filename) -> str:
         raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
     return filename
 
+def is_optional_file_valid(filename) -> str:
+    """Checks if an optional input file is accessible (no default file provided)
+
+    Args:
+        filename (String): The name of file to check
+
+    Returns:
+        String: The name of the file if valid and accessible
+    """
+    if filename != "":
+        if not os.path.exists(filename) and filename != "-":
+            raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
+    return filename
+
 def is_bam_valid(filename) -> str:
     """Checks if the input BAM is valid and accessible and if there is an associated BAI
 

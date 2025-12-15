@@ -42,7 +42,7 @@ class Row() :
         self.depth = int(variant.__dict__.get("depth"))
         self.frequency = float(variant.__dict__.get("freq"))
         try:
-            self.read_support = int(self.depth * self.freq)
+            self.read_support = int(self.depth * self.frequency)
         except:
             ### MATH FAILS
             raise Exception("MATH BAD")
@@ -52,7 +52,7 @@ class Row() :
         # should i use the .get() method here too?
         self.tbprofiler_variant_substitution_type = variant.type
         self.tbprofiler_variant_substitution_nt = variant.nucleotide_change
-        self.tbprofiler_variant_substitution_aa = variant.protein_change if variant.protein_change is not "" else "NA"
+        self.tbprofiler_variant_substitution_aa = variant.protein_change if variant.protein_change != "" else "NA"
 
         # grab the locus_tag from the variant if it exists; otherwise, get it from the provided dictionary
         self.tbprofiler_locus_tag = variant.__dict__.get("locus_tag", variant.GENE_TO_LOCUS_TAG.get(self.tbprofiler_gene_name))
@@ -74,7 +74,7 @@ class Row() :
         self.rationale = ""
         self.mdl_interpretation = ""
         self.looker_interpretation = ""
-        self.warning = []
+        self.warning = set()
 
     @classmethod
     def wildtype_row(cls, logger, sample_name, gene_name, drug_name, GENE_TO_LOCUS_TAG, GENE_TO_TIER, LOW_DEPTH_OF_COVERAGE_LIST) -> 'Row':
@@ -91,30 +91,32 @@ class Row() :
         Returns:
             Row: An empty Row object with the appropriate NA or WT values.
         """        
-        row = cls.__new1__(cls)
+        row = cls.__new__(cls)
         row.logger = logger # is this necessary? keeping it just in case
-        row.sample_name = sample_name
+        row.variant = None
+        row.sample_id = sample_name
         row.tbprofiler_gene_name = gene_name
         row.antimicrobial = drug_name
+        row.who_confidence = "NA"
         row.confidence = "NA"
         row.depth = "NA"
         row.frequency = "NA"
         row.read_support = "NA"
         row.rationale = "NA"
-        row.warning = [""]
+        row.warning = set()
         row.source = ""
         row.tbdb_comment = ""
         row.tbprofiler_variant_substitution_type = "WT"
         row.tbprofiler_variant_substitution_nt = "WT"
         row.tbprofiler_variant_substitution_aa = "WT"
-        row.locus_tag = GENE_TO_LOCUS_TAG.get(gene_name, "NA")
+        row.tbprofiler_locus_tag = GENE_TO_LOCUS_TAG.get(gene_name, "NA")
         row.gene_tier = GENE_TO_TIER.get(gene_name, "NA")
         
         if gene_name in LOW_DEPTH_OF_COVERAGE_LIST: 
             # 4.2.2.3.1 - WT with insufficient coverage
             row.looker_interpretation = "Insufficient Coverage"
             row.mdl_interpretation = "Insufficient Coverage"
-            row.warning.append("Insufficient coverage in locus")
+            row.warning.add("Insufficient coverage in locus")
         else:
             # 4.1 - WT with sufficient coverage
             row.looker_interpretation = "S"
@@ -130,13 +132,13 @@ class Row() :
             if "del" not in self.tbprofiler_variant_substitution_nt: 
                 # 4.2.1.1 - postiional qc fail; not a deletion
                 positional_qc_fails.append(self.tbprofiler_variant_substitution_nt) 
-                self.warning.append("Failed quality in the mutation position") 
+                self.warning.add("Failed quality in the mutation position") 
                 
             elif "del" in self.tbprofiler_variant_substitution_nt:
                 if  (0 < self.depth and self.depth < MIN_DEPTH):
                     # 4.2.1.2 - postiional qc fail, deletion with some depth but not enough
                     positional_qc_fails.append(self.tbprofiler_variant_substitution_nt)
-                    self.warning.append("Failed quality in the mutation position") 
+                    self.warning.add("Failed quality in the mutation position") 
                     
                 elif (self.depth == 0 and self.frequency >= MIN_FREQUENCY): 
                     # 4.2.1.3 - deletion with zero depth but good frequency
@@ -146,26 +148,26 @@ class Row() :
                     # frequency is poor -- positional qc fail 
                     #### TO-DO: DO I NEED TO KEEP THIS? IT WAS DESCRIBED IN AN EMAIL BUT NOT IN THE INTERPRETATION DOCUMENT
                     positional_qc_fails.append(self.tbprofiler_variant_substitution_nt)
-                    self.warning.append("Failed quality in the mutation position") 
+                    self.warning.add("Failed quality in the mutation position") 
 
         # checking locus qc now
         if self.gene_name in LOW_DEPTH_OF_COVERAGE_LIST:
             if "del" in self.tbprofiler_variant_substitution_nt: # 4.2.2.2 - locus qc fail and a deletion
                 if self.tbprofiler_variant_substitution_nt in positional_qc_fails:
                     # this mutation also failed positional qc, so we need to add the locus warning
-                    self.warning.append("Insufficient coverage in locus")
+                    self.warning.add("Insufficient coverage in locus")
                     
             else: # 4.2.2.3 - locus qc fail but not a deletion -- if we maintain the "treat_r_as_s" option, we will implement that here
                 if self.mdl_interpretation == "R" and "Failed quality in the mutation position" not in self.warning:
-                    self.warning.append("Insufficient coverage in locus") # 4.2.2.3.3 - R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
+                    self.warning.add("Insufficient coverage in locus") # 4.2.2.3.3 - R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
                 
                 elif self.mdl_interpretation == "R" and "Failed quality in the mutation position" in self.warning:
-                    self.warning.append("Insufficient coverage in locus") # 4.2.2.3.4 - R mutation with BOTH positional and locus qc fail; add warning and overwrite interpretation
+                    self.warning.add("Insufficient coverage in locus") # 4.2.2.3.4 - R mutation with BOTH positional and locus qc fail; add warning and overwrite interpretation
                     self.looker_interpretation = "Insufficient Coverage"
                     self.mdl_interpretation = "Insufficient Coverage"
                 
                 elif self.mdl_interpretation == "U" or self.mdl_interpretation == "S":
-                    self.warning.append("Insufficient coverage in locus") # 4.2.2.3.2 - non-R mutation with locus qc fail; add warning and overwrite interpretation
+                    self.warning.add("Insufficient coverage in locus") # 4.2.2.3.2 - non-R mutation with locus qc fail; add warning and overwrite interpretation
                     self.looker_interpretation = "Insufficient Coverage"
                     self.mdl_interpretation = "Insufficient Coverage"
 

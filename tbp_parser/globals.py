@@ -2,7 +2,7 @@ import pandas as pd
 import re
 
 # run at the start and then use as a class feature ?
-def get_position(mutation):
+def get_position(mutation) -> list[int]:
     """  
     This function recieves a mutation (e.g. 'p.Met291Ile') and
     returns the position (numerical part) as an Int
@@ -13,29 +13,32 @@ def get_position(mutation):
         return [int(x) for x in match]
     return [None]
 
-def is_within_range(position, range_positions):
+def is_within_range(position, range_positions) -> bool:
     """
     This function determines if a position (aa or nucleotide) are within a particular range
     position is a list of either one or two items
     range_positions is a list of the start and end regions of the range. 
       occasionally, range_positions can be a list of lists, in which case the function will check both ranges and return the result
     """
-    if isinstance(range_positions[0], list):
-        # check if the value is a list of lists; if so, check both lists
-        return is_within_range(position, range_positions[0]) or is_within_range(position, range_positions[1])
+    try:
+        if isinstance(range_positions[0], list):
+            # check if the value is a list of lists; if so, check both lists
+            return is_within_range(position, range_positions[0]) or is_within_range(position, range_positions[1])
 
-    if len(position) > 1:
-        # if the value is a list of two items, check if the position is within the range
-        if any([x in range(range_positions[0], range_positions[1]) for x in position]):
+        if len(position) > 1:
+            # if the value is a list of two items, check if the position is within the range
+            if any([x in range(range_positions[0], range_positions[1]) for x in position]):
+                return True
+            if any([x in range(position[0], position[1]) for x in range_positions]):
+                return True
+
+        # the position is a single item
+        elif int(range_positions[0]) <= position[0] <= int(range_positions[1]):
             return True
-        if any([x in range(position[0], position[1]) for x in range_positions]):
-            return True
 
-    # the position is a single item
-    elif range_positions[0] <= position[0] <= range_positions[1]:
-        return True
-
-    return False
+        return False
+    except:
+        return False
 
 global ANTIMICROBIAL_CODE_TO_GENES
 ANTIMICROBIAL_CODE_TO_GENES = {
