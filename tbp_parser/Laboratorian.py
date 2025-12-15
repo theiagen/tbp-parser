@@ -102,8 +102,8 @@ class Laboratorian:
                 self.genes_with_valid_deletions.update(genes_with_valid_deletions)
                 self.positional_qc_fails.update(positional_qc_fails)                
             
-                # if in --debug mode, print the annotation row.
-                #annotation_row.print()
+                # if in --debug mode, print the annotation row -- caution, this adds a ton of extra lines to the log.
+                annotation_row.print()
 
                 row_list.append(annotation_row)
 
@@ -179,7 +179,7 @@ class Laboratorian:
                     row_list.append(row)
 
         self.logger.info("LAB:create_laboratorian_report:There are now {} rows after adding missing gene-drug combos and editing/reordering necessary rows\n".format(len(row_list)))
-        # add row list to DF_LABORATORIAN
+        
         for row in row_list:
             row.warning = list(filter(None, row.warning))
             row.warning = ". ".join(row.warning)
