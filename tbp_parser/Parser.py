@@ -44,12 +44,13 @@ class Parser:
         # reevaluate the following global variables -- they don't need to be globals
         self.TNGS = options.tngs
         globals_.TREAT_R_AS_S = options.treat_r_mutations_as_s
-        globals_.SEQUENCING_METHOD = options.sequencing_method
+        self.SEQUENCING_METHOD = options.sequencing_method
         self.MIN_READ_SUPPORT = options.min_read_support
         self.MIN_FREQUENCY = options.min_frequency
-        globals_.MIN_LOCUS_PERCENTAGE = options.min_percent_locus_covered
+        self.MIN_LOCUS_PERCENTAGE = options.min_percent_locus_covered
+        """The minimum percentage of LIMS genes to pass QC for MTBC identification to occur"""
         
-        globals_.OPERATOR = options.operator
+        self.OPERATOR = options.operator
 
         # this could cause issues if someone does more than one comma, but in that case, they deserve the error
         globals_.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
@@ -211,20 +212,15 @@ class Parser:
 
         self.logger.info("PARSER:run:Creating LIMS report")
         lims = LIMS(self.logger, self.input_json, self.output_prefix, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.SAMPLE_NAME, DF_LABORATORIAN, laboratorian.positional_qc_fails, laboratorian.genes_with_valid_deletions)
-        lims.create_lims_report()
+        lims.create_lims_report(self.TNGS, self.MIN_LOCUS_PERCENTAGE, self.OPERATOR)
 
         self.logger.info("PARSER:run:Creating Looker report")
-        looker = Looker(self.logger, self.output_prefix)
-        looker.create_looker_report()
+        looker = Looker(self.logger, self.output_prefix, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.genes_with_valid_deletions, GENE_TO_ANTIMICROBIAL_DRUG_NAME)
+        looker.create_looker_report(laboratorian.SAMPLE_NAME, self.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.OPERATOR)
 
         self.logger.info("PARSER:run:Creating coverage report")
-        coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.positional_qc_fails)
-
+        coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.genes_with_valid_deletions)
 
         # DO MASSIVE RENAMING HERE!!!!!
-
-
-
-        # rename genes
 
         self.logger.info("PARSER:run:Parsing completed")

@@ -110,31 +110,24 @@ class Coverage:
 
         return COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST
 
-    def create_coverage_report(self, coverage_dictionary, average_loci_coverage, mutation_fail_list) -> None:
+    def create_coverage_report(self, COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, GENES_WITH_VALID_DELETIONS) -> None:
         """
         This function reformats the coverage and average loci coverage dictionaries into
         a CSV file and adds a deletion warning if a QC-passing deletion was identified
         for the region in the Laboratorian report.
         """
-        # TO-DO: enable customizable column headers!!!!
         DF_COVERAGE = pd.DataFrame(columns=["Gene", "Percent_Coverage", "Average_Locus_Coverage", "Warning"])
 
         self.logger.debug("COV:create_coverage_report:Now iterating through each gene in the breadth of coverage dictionary")
-        for gene, percent_coverage in coverage_dictionary.items():            
-            average_coverage = average_loci_coverage[gene]
+        for gene, percent_coverage in COVERAGE_DICTIONARY.items():            
+            average_coverage = AVERAGE_LOCI_COVERAGE[gene]
             warning = ""
 
-            try:
-                # get a list of the nucleotide mutations for the given gene
-                nucleotide_mutations = globals_.DF_LABORATORIAN["tbprofiler_variant_substitution_nt"][globals_.DF_LABORATORIAN["tbprofiler_gene_name"] == gene]
-                for mutation in nucleotide_mutations:
-                    if "del" in mutation and mutation not in mutation_fail_list:
-                        warning = "Deletion identified"
-                        if float(percent_coverage) == 100: # if the coverage is at 100% but a deletion was identified, it's likely upstream
-                            warning = "Deletion identified (upstream)"
-                        self.logger.debug("COV:create_coverage_report:A deletion warning is being added to a gene ({}) with {}%% coverage: {}".format(gene, percent_coverage, warning))
-            except:
-                self.logger.error("An expected gene ({}) was not found in laboratorian report.\nSomething may have gone wrong.".format(gene))
+            if gene in GENES_WITH_VALID_DELETIONS:
+                warning = "Deletion identified"
+                if percent_coverage == 100: 
+                    # if the coverage is at 100% but a deletion was identified, it's likely upstream
+                    warning = "Deletion identified (upstream)"
 
             # prevent concatenation warnings if the dataframe is empty
             if len(DF_COVERAGE) == 0:
@@ -151,4 +144,3 @@ class Coverage:
             DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning"}, inplace=True)
 
         DF_COVERAGE.to_csv(self.output_prefix + ".coverage_report.csv", index=False)
-        self.logger.info("COV:create_coverage_report:The coverage report has been saved to {}\n".format(self.output_prefix + ".coverage_report.csv"))

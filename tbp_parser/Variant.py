@@ -92,7 +92,7 @@ class Variant:
         annotation field is empty or does not exist, the function creates a row
         based off of the gene_associated_drugs field.
         """
-        fake_annotation = {
+        mock_annotation = {
             "confidence": "No WHO annotation",
             "drug": "",
             "source": "",
@@ -134,19 +134,20 @@ class Variant:
 
             # add any missing drugs from the annotation list that are found on the gene associated drug list to the annotation dictionary 
             for drug in gene_associated_drug_list:  
+                # see also rule 4.3.3
                 # copy a row in the annotation dictionary, but update the confidence and drug name appropriately. no qc has been performed so this should be fine
-                fake_annotation["drug"] = drug
+                mock_annotation["drug"] = drug
                 
-                self.annotation_dictionary[drug] = Row(self.logger, self, fake_annotation)
+                self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
 
             if self.gene_name in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
                 for drug in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
                     if drug not in self.annotation_dictionary.keys():
                         # copy a row in the annotation dictionary, but update the confidence, source and drug name appropriately. no qc has been performed so this should be fine
-                        fake_annotation["source"] = "Mutation effect for given drug is not in TBDB"
-                        fake_annotation["drug"] = drug
+                        mock_annotation["source"] = "Mutation effect for given drug is not in TBDB"
+                        mock_annotation["drug"] = drug
                                                 
-                        self.annotation_dictionary[drug] = Row(self.logger, self, fake_annotation)
+                        self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
 
             self.logger.debug("VAR:extract_annotations:The annotation dictionary has all gene-drug combinations included; it now has a length of {}".format(len(self.annotation_dictionary)))
 
@@ -155,16 +156,16 @@ class Variant:
             self.logger.debug("VAR:extract_annotations:The annotation field has no content or does not exist. Now iterating through gene associated drugs and the gene-drug combination dictionary.")
 
             for drug in self.gene_associated_drugs:
-                fake_annotation["drug"] = drug
+                mock_annotation["drug"] = drug
                 
-                self.annotation_dictionary[drug] = Row(self.logger, self, fake_annotation)
+                self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
 
             if self.gene_name in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
                 for drug in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
                     if drug not in self.annotation_dictionary.keys():
-                        fake_annotation["drug"] = drug
+                        mock_annotation["drug"] = drug
                         
-                        self.annotation_dictionary[drug] = Row(self.logger, self, fake_annotation)
+                        self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
 
             self.logger.debug("VAR:extract_annotations:The annotation dictionary has all gene-drug combinations included; it now has a length of {}".format(len(self.annotation_dictionary)))
 

@@ -264,108 +264,7 @@ This is derived from the TBProfiler `genes.bed` file, which can be accessed here
 https://github.com/jodyphelan/TBProfiler/blob/master/db/tbdb/genes.bed.
 """
 
-global DF_LABORATORIAN
-DF_LABORATORIAN = pd.DataFrame(columns = [
-    "sample_id", "tbprofiler_gene_name", "tbprofiler_locus_tag", "tbprofiler_variant_substitution_type", 
-    "tbprofiler_variant_substitution_nt", "tbprofiler_variant_substitution_aa", "confidence", "antimicrobial",
-    "looker_interpretation", "mdl_interpretation", "depth", "frequency", "read_support", "rationale", "warning"
-])
-"""
-This dataframe is made to host the laboratorian report
-"""
-
-global ETHA237_FREQUENCY
-ETHA237_FREQUENCY = 0.1
-"""
-The minimum frequency for a mutation to be considered for ethA at protein position 237
-"""
-
-global GENES_WITH_DELETIONS
-GENES_WITH_DELETIONS = set()
-"""
-A set that contains genes that have deletions
-"""
-
-global LINEAGE
-LINEAGE = ""
-"""
-A string that contains the lineage of the sample from the "main_lineage" field
-"""
-
-global LINEAGE_ENGLISH
-LINEAGE_ENGLISH = ""
-"""
-A string that contains the lineage of the sample in English
-"""
-
-global MIN_FREQUENCY
-MIN_FREQUENCY = 0.1
-"""
-The minimum frequency for a mutation to pass QC
-"""
-
-global MIN_LOCUS_PERCENTAGE
-MIN_LOCUS_PERCENTAGE = 0.7
-"""
-The minimum percentage of LIMS genes to pass QC 
-for MTBC identification to occur
-"""
-
-global MIN_READ_SUPPORT
-MIN_READ_SUPPORT = 10
-"""
-The minimum read support for a mutation to pass QC
-(calculated as DEPTH * FREQUENCY)
-"""
-
-global MUTATION_FAIL_LIST
-MUTATION_FAIL_LIST = []
-""" 
-A list that will contain the nucleotide mutations that have failed
-QC: min coverage < 10x, min freq < 10%, min read support < 10x (or whatever minimums the user specifies)
-"""
-
-global OPERATOR
-OPERATOR = ""
-""" 
-This variable holds the operator's name
-"""
-
-global RPOB449_FREQUENCY
-RPOB449_FREQUENCY = 0.1
-"""
-The minimum frequency for a mutation to be considered for rpoB at protein position 449
-"""
-
-global RRL_FREQUENCY
-RRL_FREQUENCY = 0.1
-"""
-The minimum frequency for a mutation to be considered for rrl
-"""
-
-global RRL_READ_SUPPORT
-RRL_READ_SUPPORT = 10
-"""
-The minimum read support for a mutation to be considered for rrl
-"""
-
-global RRS_FREQUENCY
-RRS_FREQUENCY = 0.1
-"""
-The minimum frequency for a mutation to be considered for rrs
-"""            
-
-global RRS_READ_SUPPORT
-RRS_READ_SUPPORT = 10
-"""
-The minimum read support for a mutation to be considered for rrs
-"""
-
-global SEQUENCING_METHOD
-SEQUENCING_METHOD = ""
-"""
-This variable holds the sequencing method
-"""
+###### deal with these ones next
 
 global TNGS_READ_SUPPORT_BOUNDARIES
 TNGS_READ_SUPPORT_BOUNDARIES = []
@@ -377,12 +276,6 @@ global TNGS_FREQUENCY_BOUNDARIES
 TNGS_FREQUENCY_BOUNDARIES = []
 """
 frequency boundaries for tNGS QC; [lower_f, upper_f]
-"""
-
-global TNGS
-TNGS = False
-"""
-A flag to indicate if --tngs is activated
 """
 
 global TREAT_R_AS_S
