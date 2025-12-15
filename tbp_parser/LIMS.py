@@ -11,8 +11,6 @@ class LIMS:
         - get_id: returns the lineage in English for LIMS
         - convert_annotation: converts the resistance annotation and the target drug
             into the LIMS language
-        - get_mutation_position: returns the position where a mutation occurs
-        - apply_lims_rules: implements several parsing rules for the LIMS report
         - create_lims_report: creates the LIMS report CSV file
     """
     RESISTANCE_RANKING = {
@@ -300,3 +298,4 @@ class LIMS:
         # write to file
         DF_LIMS.to_csv("{}.lims_report.csv".format(self.output_prefix), index=False)
         self.logger.info("LIMS:LIMS report created, now exiting function\n")
+        

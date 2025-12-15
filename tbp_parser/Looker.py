@@ -10,7 +10,7 @@ class Looker:
     It has one function:
         - create_looker_report: creates the Looker report CSV file 
     """
-    # A dictionary that ranks the resistances on severity
+    
     RESISTANCE_RANKING = {
         "R": 6,
         "R-Interim": 5,
@@ -20,7 +20,9 @@ class Looker:
         "WT": 1,
         "Insufficient Coverage": 0,
         "NA": -1 # outside the expected region
-    }
+    }    
+    """A dictionary ranking the resistance annotations from highest to lowest priority."""
+    
     
     def __init__(self, logger, output_prefix, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, GENES_WITH_VALID_DELETIONS, GENE_TO_ANTIMICROBIAL_DRUG_NAME):
         self.logger = logger
@@ -30,7 +32,7 @@ class Looker:
         self.GENES_WITH_VALID_DELETIONS = GENES_WITH_VALID_DELETIONS
         self.GENE_TO_ANTIMICROBIAL_DRUG_NAME = GENE_TO_ANTIMICROBIAL_DRUG_NAME
 
-    def create_looker_report(self, SAMPLE_NAME, SEQUENCING_METHOD, LINEAGE, LINEAGE_ENGLISH, OPERATOR):
+    def create_looker_report(self, SAMPLE_NAME, SEQUENCING_METHOD, LINEAGE, LINEAGE_ENGLISH, OPERATOR) -> None:
         """
         This function recieves the input json and laboratorian report to
         write the Looker report that includes the following information: 

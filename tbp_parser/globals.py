@@ -1,7 +1,7 @@
 import pandas as pd
 import re
 
-# run at the start and then use as a class feature
+# run at the start and then use as a class feature ?
 def get_position(mutation):
     """  
     This function recieves a mutation (e.g. 'p.Met291Ile') and

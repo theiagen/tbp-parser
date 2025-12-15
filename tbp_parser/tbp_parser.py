@@ -9,9 +9,7 @@ def main():
     home_dir = importlib_resources.files("tbp_parser")
     default_coverage_regions = home_dir.joinpath("..", "data", "tbdb.bed")
     default_gene_tier_file = home_dir.joinpath("..", "data", "gene-to-tier_2025-12-10.tsv")
-    default_promoter_regions = home_dir.joinpath("..", "data", "who-v2-promoters_2025-12-10.tsv")
-    
-    
+    default_promoter_regions = home_dir.joinpath("..", "data", "who-v2-promoters_2025-12-10.tsv")   
     
     parser = argparse.ArgumentParser(
         prog = "tbp-parser",
@@ -44,7 +42,7 @@ def main():
     qc_arguments.add_argument("-d", "--min_depth", 
                         help="the minimum depth of coverage for a site to pass QC\ndefault=10", default=10, metavar="\b", type=int)
     qc_arguments.add_argument("-c", "--min_percent_coverage", 
-                        help="the minimum percentage of a region that has depth above the threshold set by min_depth\n  (used for a gene/locus to pass QC)\ndefault=100", default=100, metavar="\b", type=float)
+                        help="the minimum percentage of a region that has depth above the threshold set by min_depth\n  (used for a gene/locus to pass QC; 1.0 -> 100%%)\ndefault=1.0", default=1.0, metavar="\b", type=float)
     qc_arguments.add_argument("-s", "--min_read_support",
                         help="the minimum read support for a mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
     qc_arguments.add_argument("-f", "--min_frequency",
@@ -66,23 +64,8 @@ def main():
 
     tngs_arguments = parser.add_argument_group("tNGS-specific arguments", 
                                                 "options that are primarily used for tNGS data\n(all frequency arguments are compatible with WGS data)")
-    # TO-DO: reevaluate this argument's help message as it is incorrect
     tngs_arguments.add_argument("--tngs",
-                        help="\nindicates that the input data was generated using Deeplex + CDPH modified protocol\nTurns on tNGS-specific global parameters", action="store_true", default=False)
-
-    # TO-DO: reevaluate these arguments -- are they still needed?
-    tngs_arguments.add_argument("--rrs_frequency",
-                        help="the minimum frequency for an rrs mutation to pass QC\n  (rrs has several problematic sites in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
-    tngs_arguments.add_argument("--rrs_read_support",
-                        help="the minimum read support for an rrs mutation to pass QC\n  (rrs has several problematic sites in the Deeplex tNGS assay)\ndefault=10", default=10, metavar="\b", type=int)
-    tngs_arguments.add_argument("--rrl_frequency",
-                        help="the minimum frequency for an rrl mutation to pass QC\n  (rrl has several problematic sites in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
-    tngs_arguments.add_argument("--rrl_read_support",
-                        help="the minimum read support for an rrl mutation to pass QC\n  (rrl has several problematic sites in the Deeplex tNGS assay)\ndefault=10", default=10, metavar="\b", type=int)
-    tngs_arguments.add_argument("--rpob449_frequency",
-                        help="the minimum frequency for an rpoB mutation at protein position 449 to pass QC\n  (this is a problematic site in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
-    tngs_arguments.add_argument("--etha237_frequency",
-                        help="the minimum frequency for an ethA mutation at protein position 237 to pass QC\n  (this is a problematic site in the Deeplex tNGS assay)\ndefault=0.1", default=0.1, metavar="\b", type=float)
+                        help="\nindicates that the input data was generated using a tNGS protocol\nTurns on tNGS-specific global parameters", action="store_true", default=False)
 
     # new arguments for qc reporting
     boundary_arguments = parser.add_argument_group("tNGS-specific QC boundary arguments (NOT compatible with WGS data)",
@@ -105,7 +88,6 @@ def main():
 
     parse = Parser(options)
     parse.run()
-
 
 if __name__ == "__main__":
     main()

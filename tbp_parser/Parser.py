@@ -43,7 +43,6 @@ class Parser:
         
         # reevaluate the following global variables -- they don't need to be globals
         self.TNGS = options.tngs
-        globals_.TREAT_R_AS_S = options.treat_r_mutations_as_s
         self.SEQUENCING_METHOD = options.sequencing_method
         self.MIN_READ_SUPPORT = options.min_read_support
         self.MIN_FREQUENCY = options.min_frequency
@@ -55,6 +54,7 @@ class Parser:
         # this could cause issues if someone does more than one comma, but in that case, they deserve the error
         globals_.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
         globals_.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
+        globals_.TREAT_R_AS_S = options.treat_r_mutations_as_s
 
         if self.verbose:
             self.logger.setLevel(logging.INFO)

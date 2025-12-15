@@ -102,11 +102,11 @@ class Coverage:
                 COVERAGE_DICTIONARY[gene] = breadth_of_coverage
                 AVERAGE_LOCI_COVERAGE[gene] = average_depth
                 
-        # add to low depth of coverage list if below the breadth of coverage threshold (MIN_PERCENT_COVERAGE)
-        LOW_DEPTH_OF_COVERAGE_LIST = [gene for gene, coverage in COVERAGE_DICTIONARY.items() if coverage < MIN_PERCENT_COVERAGE]
+        # add to low depth of coverage list if below the breadth of coverage threshold (MIN_PERCENT_COVERAGE * 100)
+        LOW_DEPTH_OF_COVERAGE_LIST = [gene for gene, coverage in COVERAGE_DICTIONARY.items() if coverage < (MIN_PERCENT_COVERAGE * 100)]
 
         self.logger.info("COV:get_coverage:Coverage dictionaries of length {} and {} have been created\n".format(len(COVERAGE_DICTIONARY), len(AVERAGE_LOCI_COVERAGE)))
-        self.logger.info("COV:get_coverage:The following genes (total: {}) have coverage below the {}% breadth of coverage threshold: {}\n".format(len(LOW_DEPTH_OF_COVERAGE_LIST), MIN_PERCENT_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST))
+        self.logger.info("COV:get_coverage:The following genes (total: {}) have coverage below the {}% breadth of coverage threshold: {}\n".format(len(LOW_DEPTH_OF_COVERAGE_LIST), (MIN_PERCENT_COVERAGE * 100), LOW_DEPTH_OF_COVERAGE_LIST))
 
         return COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST
 
