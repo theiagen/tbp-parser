@@ -42,7 +42,7 @@ class Row() :
         self.depth = int(variant.__dict__.get("depth"))
         self.frequency = float(variant.__dict__.get("freq"))
         try:
-            self.read_support = int(self.depth * self.frequency)
+            self.read_support = self.depth * self.frequency
         except:
             ### MATH FAILS
             raise Exception("MATH BAD")
@@ -124,7 +124,19 @@ class Row() :
         
         return row
 
-    def add_qc_warnings(self, MIN_DEPTH, MIN_FREQUENCY, MIN_READ_SUPPORT, LOW_DEPTH_OF_COVERAGE_LIST, genes_with_valid_deletions):
+    def add_qc_warnings(self, MIN_DEPTH, MIN_FREQUENCY, MIN_READ_SUPPORT, LOW_DEPTH_OF_COVERAGE_LIST, genes_with_valid_deletions) -> tuple[set, set]:
+        """Adds QC warnings if a mutation either has poor positional quality or locus quality
+
+        Args:
+            MIN_DEPTH (int): the minimum depth for a mutation to pass positional QC
+            MIN_FREQUENCY (float): the minimum allele frequency for a mutation to pass positional QC
+            MIN_READ_SUPPORT (float): the minimum read support for a mutation to pass positional QC 
+            LOW_DEPTH_OF_COVERAGE_LIST (list[str]): a list of genes that have failed locus QC (i.e., breadth of coverage < min_percent_coverage)
+            genes_with_valid_deletions (set(str)): a set of genes with deletions that pass positional QC
+
+        Returns:
+            tuple[set, set]: the updated set of genes with valid deletions, and the set of mutations that failed positional QC
+        """        
         positional_qc_fails = set()
         
         # checking positional qc now

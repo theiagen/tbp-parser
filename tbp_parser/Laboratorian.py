@@ -3,6 +3,7 @@ from Variant import Variant
 import globals as globals_
 import pandas as pd
 import json
+import copy
 
 class Laboratorian:
     """
@@ -13,35 +14,35 @@ class Laboratorian:
         - create_laboratorian_report: creates the laboratorian report CSV file
     """
 
-    def __init__(self, logger, input_json, output_prefix, min_depth, min_frequency, min_read_support, coverage_dictionary, low_depth_of_coverage_list, gene_to_antimicrobial_drug_name, gene_to_locus_tag, tngs_regions, gene_to_tier, promoter_regions, tngs):
+    def __init__(self, logger, input_json, output_prefix, MIN_DEPTH, MIN_FREQUENCY, MIN_READ_SUPPORT, COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, TNGS):
         self.logger = logger
         self.input_json = input_json
         self.output_prefix = output_prefix
         
         # quality control variables
-        self.MIN_DEPTH = min_depth
+        self.MIN_DEPTH = MIN_DEPTH
         """An integer representing the minimum depth of coverage required for QC."""
-        self.MIN_FREQUENCY = min_frequency
+        self.MIN_FREQUENCY = MIN_FREQUENCY  
         """A float representing the minimum frequency required for QC."""
-        self.MIN_READ_SUPPORT = min_read_support
+        self.MIN_READ_SUPPORT = MIN_READ_SUPPORT
         """An integer representing the minimum read support required for QC."""
         
         # look-up dictionaries and lists 
-        self.COVERAGE_DICTIONARY = coverage_dictionary
+        self.COVERAGE_DICTIONARY = COVERAGE_DICTIONARY
         """A dictionary containing coverage information for each gene/locus."""
-        self.LOW_DEPTH_OF_COVERAGE_LIST = low_depth_of_coverage_list
+        self.LOW_DEPTH_OF_COVERAGE_LIST = LOW_DEPTH_OF_COVERAGE_LIST
         """A list of genes/loci that have low depth of coverage."""
-        self.GENE_TO_ANTIMICROBIAL_DRUG_NAME = gene_to_antimicrobial_drug_name
+        self.GENE_TO_ANTIMICROBIAL_DRUG_NAME = GENE_TO_ANTIMICROBIAL_DRUG_NAME
         """A dictionary mapping genes to their associated antimicrobial drug names."""
-        self.GENE_TO_LOCUS_TAG = gene_to_locus_tag
+        self.GENE_TO_LOCUS_TAG = GENE_TO_LOCUS_TAG
         """A dictionary mapping genes to their locus tags."""
-        self.TNGS_REGIONS = tngs_regions
+        self.TNGS_REGIONS = TNGS_REGIONS
         """A dictionary containing the specific tNGS regions for each gene (to account for non-overlapping primers in the same gene)."""
-        self.GENE_TO_TIER = gene_to_tier
+        self.GENE_TO_TIER = GENE_TO_TIER
         """A dictionary mapping genes to their tiers."""
-        self.PROMOTER_REGIONS = promoter_regions
+        self.PROMOTER_REGIONS = PROMOTER_REGIONS
         """A dictionary containing promoter regions for each gene."""
-        self.TNGS = tngs
+        self.TNGS = TNGS
         """A boolean indicating whether tNGS mode is enabled."""
 
         self.genes_reported = set()
@@ -51,7 +52,7 @@ class Laboratorian:
         self.positional_qc_fails = {}
         """A set of mutations that have failed POSITIONAL QC checks."""
 
-    def iterate_section(self, variant_section, row_list) -> list[Row]:
+    def iterate_section(self, variant_section, row_list, raw_row_list) -> list[Row]:
         """This function iterates through each subsection in the "dr_variants" and "other_variants" sections
         in the TBProfiler JSON file. Each item in the subsection is converted into an individual Variant object, 
         and each annotation within that Variant is extracted and converted into a Row object, where each Row is
@@ -68,7 +69,9 @@ class Laboratorian:
         for variant in variant_section:
             # create a Variant object and add the origin gene to the class genes_reported set variable
             variant = Variant(self.logger, self.SAMPLE_NAME, 
-                              self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, self.GENE_TO_ANTIMICROBIAL_DRUG_NAME, self.PROMOTER_REGIONS, variant)
+                              self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, 
+                              self.GENE_TO_ANTIMICROBIAL_DRUG_NAME, 
+                              self.PROMOTER_REGIONS, variant)
             self.genes_reported.add(variant.gene_name)
 
             # tNGS only: renaming the gene to the segment name to get the coverage for QC
@@ -89,33 +92,40 @@ class Laboratorian:
             # extract all of the annotations for the variant
             variant.extract_annotations()
             
+            variant.consequence_dictionary = []
             if variant.gene_name in ["mmpS5", "mmpL5", "mmpR5"]:
-                reported_genes = variant.extract_consequences()            
+                reported_genes, annotation_dictionary = variant.extract_consequences()
                 self.genes_reported.update(reported_genes)
-            
-            for annotation_row in variant.annotation_dictionary.values():
-                # determine interpretations without QC overwrites    
-                annotation_row.determine_interpretation()
-            
-                # make version of report without this -- if block this
-                # perform QC on the row
-                genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions)
-                self.genes_with_valid_deletions.update(genes_with_valid_deletions)
-                
-                if len(positional_qc_fails) > 0:
-                    if variant.gene_name not in self.positional_qc_fails.keys():
-                        self.positional_qc_fails[variant.gene_name] = positional_qc_fails
-                    else:
-                        self.positional_qc_fails[variant.gene_name].update(positional_qc_fails)
                     
+                variant.consequence_dictionary = annotation_dictionary
+
+            combined_annotations = [variant.annotation_dictionary] + (variant.consequence_dictionary or [])
+            for annotation in combined_annotations:
+                for annotation_row in annotation.values():
+                    # determine interpretations without QC overwrites    
+                    annotation_row.determine_interpretation()
                 
-                # if in --debug mode, print the annotation row -- caution, t           breakpoint()his adds a ton of extra lines to the log.
-                annotation_row.print()
+                    # make a copy of the annotation row that does not have any QC applied
+                    raw_row = copy.deepcopy(annotation_row)
+                    
+                    # perform QC on the row
+                    genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions)
+                    self.genes_with_valid_deletions.update(genes_with_valid_deletions)
+                    
+                    if len(positional_qc_fails) > 0:
+                        if variant.gene_name not in self.positional_qc_fails.keys():
+                            self.positional_qc_fails[variant.gene_name] = positional_qc_fails
+                        else:
+                            self.positional_qc_fails[variant.gene_name].update(positional_qc_fails)
 
-                row_list.append(annotation_row)
-        breakpoint()
-        return row_list
+                    # if in --debug mode, print the annotation row -- caution, this adds a ton of extra lines to the log.
+                    annotation_row.print()
 
+                    raw_row_list.append(raw_row)
+                    row_list.append(annotation_row)
+        
+        return row_list, raw_row_list
+    
     def create_laboratorian_report(self) -> pd.DataFrame:
         """
         This function creates the laboratorian report, which is a CSV file
@@ -143,10 +153,11 @@ class Laboratorian:
             "tbprofiler_variant_substitution_type", "tbprofiler_variant_substitution_nt",
             "tbprofiler_variant_substitution_aa", "confidence", "antimicrobial",
             "looker_interpretation", "mdl_interpretation", "depth", "frequency", 
-            "read_support", "rationale", "warning", "source", "tbdb_comment"
+            "read_support", "rationale", "warning", "gene_tier", "source", "tbdb_comment"
         ])
         
         row_list = []
+        raw_row_list = []
         self.logger.debug("LAB:create_laboratorian_report:Initializing the row_list; contains {} rows".format(len(row_list)))
 
         with open(self.input_json) as json_fh:
@@ -154,51 +165,56 @@ class Laboratorian:
 
             self.SAMPLE_NAME = input_json["id"]
 
-            row_list = self.iterate_section(input_json["dr_variants"], row_list)
-            row_list = self.iterate_section(input_json["other_variants"], row_list)
+            row_list, raw_row_list = self.iterate_section(input_json["dr_variants"], row_list, raw_row_list)
+            row_list, raw_row_list = self.iterate_section(input_json["other_variants"], row_list, raw_row_list)
 
             self.logger.info("LAB:create_laboratorian_report:Iteration complete, there are now {} rows".format(len(row_list)))
 
+        reorder_list = []
         self.logger.debug("LAB:create_laboratorian_report:Now adding any genes that are missing from the report and editing/reordering any rows that need to be edited")
         for gene, antimicrobial_drug_names in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.items():
+            
             for drug_name in antimicrobial_drug_names:
                 if gene not in self.genes_reported:
                     temporary_row = Row.wildtype_row(self.logger, self.SAMPLE_NAME, gene, drug_name, self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, self.LOW_DEPTH_OF_COVERAGE_LIST)
                     row_list.append(temporary_row)
+                    raw_row_list.append(copy.deepcopy(temporary_row))
+                    
+                    # add WT rows to bottom of report 
+                    reorder_list.append(temporary_row)
 
-            # make a list to add QC fail rows to end of laboratorian report
-            reorder_list = [] 
-
+            # add QC fail rows to end of laboratorian report too
             if gene in self.LOW_DEPTH_OF_COVERAGE_LIST:
                 for row in row_list:       
                     if row.tbprofiler_gene_name == gene:
                         if row.tbprofiler_gene_name in self.genes_with_valid_deletions:
+                            # remove insufficient coverage warning if a valid deletion was found
                             if "Insufficient coverage in locus" in row.warning:
                                 row.warning.remove("Insufficient coverage in locus")
 
                         # if the mutation fails quality control, move it to the end of the report
-                        if ("Insufficient coverage in locus" in row.warning or row.tbprofiler_variant_substitution_nt in self.positional_qc_fails.get(row.tbprofiler_gene_name, set())):
+                        if ("Insufficient coverage in locus" in row.warning 
+                            or row.tbprofiler_variant_substitution_nt in self.positional_qc_fails.get(row.tbprofiler_gene_name, set())):
                             reorder_list.append(row)
-
-                # remove rows in reorder_list from row_list and add them to the end of row_list
-                for row in reorder_list:
-                    row_list.remove(row)
-                    row_list.append(row)
-
+                
+        # reorder the rows so that WT and QC-fail rows are at the end of the report and sorted alphabetically by gene name
+        remaining_rows = [row for row in row_list if row not in reorder_list]
+        sorted_reorder_list = sorted(reorder_list, key=lambda x: x.tbprofiler_gene_name.lower())
+        row_list = remaining_rows + sorted_reorder_list
+        
         self.logger.info("LAB:create_laboratorian_report:There are now {} rows after adding missing gene-drug combos and editing/reordering necessary rows\n".format(len(row_list)))
-        
-        for row in row_list:
-            row.warning = list(filter(None, row.warning))
-            row.warning = ". ".join(row.warning)
 
-            # make a temporary dataframe out of the Row object using vars(row) which converts the object into a dictionary
-            row_dictionary = pd.DataFrame(vars(row), index=[0], columns=DF_LABORATORIAN.columns)
+        for rows in (row_list, raw_row_list):
+            for row in rows:
+                # concatenate warning list into a single string
+                row.warning = list(filter(None, row.warning))
+                row.warning = ". ".join(row.warning)
 
-            if len(DF_LABORATORIAN) == 0:
-                DF_LABORATORIAN = row_dictionary
-            else:
-                DF_LABORATORIAN = pd.concat([DF_LABORATORIAN, row_dictionary], ignore_index=True)
-
+        DF_LABORATORIAN = pd.DataFrame([vars(row) for row in row_list], columns=DF_LABORATORIAN.columns)
         DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
-        
+
+        # the raw laboratorian report without any QC applied is here but will not be ordered the same as the main
+        df_raw_laboratorian = pd.DataFrame([vars(row) for row in raw_row_list], columns=DF_LABORATORIAN.columns)
+        df_raw_laboratorian.to_csv("{}.raw_lab_report.csv".format(self.output_prefix), index=False)
+                
         return DF_LABORATORIAN

@@ -47,22 +47,24 @@ class LIMS:
     ]
     """A list of rpoB mutations that require unique LIMS output wording."""
 
-    def __init__(self, logger, input_json, output_prefix, LOW_DEPTH_OF_COVERAGE_LIST, SAMPLE_NAME, DF_LABORATORIAN, POSITIONAL_QC_FAILS, GENES_WITH_VALID_DELETIONS):
+    def __init__(self, logger, input_json: str, output_prefix: str, LOW_DEPTH_OF_COVERAGE_LIST: list[str], SAMPLE_NAME: str, DF_LABORATORIAN: pd.DataFrame, POSITIONAL_QC_FAILS: dict, GENES_WITH_VALID_DELETIONS: set[str]):
         self.logger = logger
         self.input_json = input_json
         self.output_prefix = output_prefix
-                
+
         self.LOW_DEPTH_OF_COVERAGE_LIST = LOW_DEPTH_OF_COVERAGE_LIST
         self.SAMPLE_NAME = SAMPLE_NAME
         self.DF_LABORATORIAN = DF_LABORATORIAN
         self.POSITIONAL_QC_FAILS = POSITIONAL_QC_FAILS
         self.GENES_WITH_VALID_DELETIONS = GENES_WITH_VALID_DELETIONS
 
-    def get_id(self, TNGS, MIN_LOCUS_PERCENTAGE, test=False) -> str:
-        """Returns the lineage in English for LIMS
+    def get_id(self, TNGS: bool, MIN_LOCUS_PERCENTAGE: float, test: bool = False) -> str:
+        """Returns both the TBProfiler identified lineage and the lineage in human-friendly languager
 
         Args:
-            test (bool, optional): set to True if this is for a pytest. Defaults to False.
+            TNGS (bool): flag to indicate if the input data is tNGS or not
+            MIN_LOCUS_PERCENTAGE (float): the minimum percentage of the loci that need to be covered to call a lineage
+            test (bool, optional): determines if this is running as part of a pytest module. Defaults to False.
 
         Returns:
             str: the lineage in English
@@ -182,16 +184,10 @@ class LIMS:
                 # remove any interpretations that have failed positional QC from consideration
                 # this is when the tbprofiler_variant_substitution_nt variable is in the POSITIONAL_QC_FAILS list
                 
-                ####### adjust for the dictionary change in Row.py
                 # remove rows with positional QC fails
-                # POSITIONAL_QC_FAILS is a dictinoary with gene as keys and sets of mutations as values
-                print(drug_associated_rows)
-                print(self.POSITIONAL_QC_FAILS)
                 qc_pass_gene_drug_associated_rows = gene_drug_associated_rows.loc[~gene_drug_associated_rows.apply(
                     lambda row: row["tbprofiler_variant_substitution_nt"] in self.POSITIONAL_QC_FAILS.get(row["tbprofiler_gene_name"], set()), axis=1)]
-                print(qc_pass_gene_drug_associated_rows)
-                # qc_pass_gene_drug_associated_rows = gene_drug_associated_rows.loc[~gene_drug_associated_rows["tbprofiler_variant_substitution_nt"].isin(self.POSITIONAL_QC_FAILS)]
-                breakpoint()
+                
                 potential_mdl_resistances = qc_pass_gene_drug_associated_rows["mdl_interpretation"].tolist()
                 try:
                     max_mdl_resistance = max(potential_mdl_resistances, key=lambda x: self.RESISTANCE_RANKING[x])

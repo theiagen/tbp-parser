@@ -4,12 +4,24 @@ import pandas as pd
 import datetime
 
 class Looker:
-    """ 
-    This class creates the CDPH Looker report.
-
-    It has one function:
-        - create_looker_report: creates the Looker report CSV file 
-    """
+    """Class to create the Looker report based on the Laboratorian report and other inputs.
+    
+    Attributes:
+        RESISTANCE_RANKING (dict): A dictionary ranking the resistance annotations from 
+            highest to lowest priority.
+        logger (_type_): the logging instance
+        output_prefix (str): the output file prefix
+        DF_LABORATORIAN (pd.DataFrame): the laboratorian report dataframe
+        LOW_DEPTH_OF_COVERAGE_LIST (list[str]): list of genes with low depth of coverage
+        GENES_WITH_VALID_DELETIONS (set[str]): set of genes with valid deletions
+        GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, dict[str, dict[str, str]]]): a
+            dictionary mapping drugs to lims report columns to associated drugs and 
+            their respective column names
+    
+    Methods:
+        create_looker_report(SAMPLE_NAME: str, SEQUENCING_METHOD: str, LINEAGE: str, 
+            LINEAGE_ENGLISH: str, OPERATOR: str) -> None: generates the looker report
+    """    
     
     RESISTANCE_RANKING = {
         "R": 6,
@@ -23,8 +35,7 @@ class Looker:
     }    
     """A dictionary ranking the resistance annotations from highest to lowest priority."""
     
-    
-    def __init__(self, logger, output_prefix, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, GENES_WITH_VALID_DELETIONS, GENE_TO_ANTIMICROBIAL_DRUG_NAME):
+    def __init__(self, logger, output_prefix: str, DF_LABORATORIAN: pd.DataFrame, LOW_DEPTH_OF_COVERAGE_LIST: list[str], GENES_WITH_VALID_DELETIONS: set[str], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, dict[str, dict[str, str]]]) -> None:    
         self.logger = logger
         self.output_prefix = output_prefix
         self.DF_LABORATORIAN = DF_LABORATORIAN
@@ -32,16 +43,19 @@ class Looker:
         self.GENES_WITH_VALID_DELETIONS = GENES_WITH_VALID_DELETIONS
         self.GENE_TO_ANTIMICROBIAL_DRUG_NAME = GENE_TO_ANTIMICROBIAL_DRUG_NAME
 
-    def create_looker_report(self, SAMPLE_NAME, SEQUENCING_METHOD, LINEAGE, LINEAGE_ENGLISH, OPERATOR) -> None:
-        """
-        This function recieves the input json and laboratorian report to
-        write the Looker report that includes the following information: 
-            - sample_id: the sample name
-            - for each antimicrobial, indication if resistant (R) or susceptible (S)
+    def create_looker_report(self, SAMPLE_NAME: str, SEQUENCING_METHOD: str, LINEAGE: str, LINEAGE_ENGLISH: str, OPERATOR: str) -> None:
+        """Creates the Looker report; lists each antimicrobial and indicates the highest resistance level found
+
+        Args:
+            SAMPLE_NAME (str): the name of the sample
+            SEQUENCING_METHOD (str): the method used to sequence the sample
+            LINEAGE (str): the lineage as determined by TBProfiler
+            LINEAGE_ENGLISH (str): the lineage rewritten to a human-readable format
+            OPERATOR (str): the name of the person running the script
         """
         DF_LOOKER = pd.DataFrame({
             "sample_id": SAMPLE_NAME, 
-          "output_seq_method_type": SEQUENCING_METHOD
+            "output_seq_method_type": SEQUENCING_METHOD
             }, index=[0])
 
         # reverse the GENE_TO_ANTIMICROBIAL_DRUG_NAME dictionary to get antimicrobial drug names
@@ -53,7 +67,6 @@ class Looker:
                     drugs_to_genes[drug] = []
                 drugs_to_genes[drug].append(gene)
                 
-
         # iterate through laboratorian dataframe to extract highest mutation
         for antimicrobial in drugs_to_genes.keys():
             potential_looker_resistances = self.DF_LABORATORIAN[self.DF_LABORATORIAN["antimicrobial"] == antimicrobial]["looker_interpretation"]

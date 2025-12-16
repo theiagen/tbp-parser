@@ -18,7 +18,7 @@ class Parser:
     the desired reports.
     """
 
-    def __init__(self, options):
+    def __init__(self, options) -> None:
         """Initialize the Parser class
 
         Args:
@@ -111,8 +111,8 @@ class Parser:
                 GENE_TO_LOCUS_TAG[gene_name] = locus_tag
 
                 if self.TNGS:
-                    start_pos = cols[1]
-                    end_pos = cols[2]
+                    start_pos = int(cols[1])
+                    end_pos = int(cols[2])
                     
                     # check if primer is split
                     match = re.match(r'(.+)_(\d+)$', gene_name)
@@ -139,14 +139,14 @@ class Parser:
             for line in promoter_file:
                 cols = line.strip().split('\t')
                 gene_name = cols[0]
-                start_pos = cols[1]
-                end_pos = cols[2]
+                start_pos = int(cols[1])
+                end_pos = int(cols[2])
                 
                 # check if gene has a second promoter in cols[3] and cols[4]
                 try:
                     if cols[3] != "" and cols[4] != "":
-                        start_pos_2 = cols[3]
-                        end_pos_2 = cols[4]
+                        start_pos_2 = int(cols[3])
+                        end_pos_2 = int(cols[4])
                         PROMOTER_REGIONS[gene_name] = [[start_pos, end_pos], [start_pos_2, end_pos_2]]
                         continue
                 except IndexError:
@@ -204,7 +204,8 @@ class Parser:
         self.logger.info("PARSER:run:Creating Laboratorian report")
         laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, 
                                     self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, 
-                                    COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS)
+                                    COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, 
+                                    GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS)
         DF_LABORATORIAN = laboratorian.create_laboratorian_report()
 
         self.logger.info("PARSER:run:Creating LIMS report")
@@ -221,5 +222,6 @@ class Parser:
         # DO MASSIVE RENAMING HERE!!!!!
         # rifampicin -> rifampin 
         # mmpR5 -> Rv0678 
+        # sed? not sure what's the best method
 
         self.logger.info("PARSER:run:Parsing completed")

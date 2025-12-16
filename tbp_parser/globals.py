@@ -3,9 +3,13 @@ import re
 
 # run at the start and then use as a class feature ?
 def get_position(mutation) -> list[int]:
-    """  
-    This function recieves a mutation (e.g. 'p.Met291Ile') and
-    returns the position (numerical part) as an Int
+    """This function recieves a mutation and returns the position as an integer
+
+    Args:
+        mutation (str): the mutation; can be either p.Met291Ile or p.Lys123_delArg125
+
+    Returns:
+        list[int]: the numerical position(s) of the mutation (in the above example, [291] or [123, 125])
     """    
     pattern = r"-?\d+"
     match = re.findall(pattern, mutation)
@@ -14,12 +18,15 @@ def get_position(mutation) -> list[int]:
     return [None]
 
 def is_within_range(position, range_positions) -> bool:
-    """
-    This function determines if a position (aa or nucleotide) are within a particular range
-    position is a list of either one or two items
-    range_positions is a list of the start and end regions of the range. 
-      occasionally, range_positions can be a list of lists, in which case the function will check both ranges and return the result
-    """
+    """Determines if a position is within a particular range
+
+    Args:
+        position (list[int]): either one or two positions
+        range_positions (list[int] or list[list[int]]): the start and end regions of the range
+
+    Returns:
+        bool: true if the position is within the range_positions, false otherwise
+    """    
     try:
         if isinstance(range_positions[0], list):
             # check if the value is a list of lists; if so, check both lists
@@ -33,7 +40,7 @@ def is_within_range(position, range_positions) -> bool:
                 return True
 
         # the position is a single item
-        elif int(range_positions[0]) <= position[0] <= int(range_positions[1]):
+        elif range_positions[0] <= position[0] <= range_positions[1]:
             return True
 
         return False

@@ -104,7 +104,7 @@ class Variant:
             # create a list of the drugs associated with the gene to check if all drugs are reported
             gene_associated_drug_list = []
             if hasattr(self, "gene_associated_drugs"):
-                gene_associated_drug_list = self.gene_associated_drugs
+                gene_associated_drug_list = self.gene_associated_drugs.copy()
         
             # iterate through each entry in the annotation
             for annotation_entry in self.annotation:
@@ -147,10 +147,11 @@ class Variant:
 
         else:
             # possibilities 1b and 2: the annotation field has no content or the field does not exist
-            for drug in self.gene_associated_drugs:
-                mock_annotation["drug"] = drug
-                
-                self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
+            if hasattr(self, "gene_associated_drugs"):
+                for drug in self.gene_associated_drugs:
+                    mock_annotation["drug"] = drug
+                    
+                    self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
 
             if self.gene_name in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
                 for drug in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
@@ -168,6 +169,8 @@ class Variant:
             set: a set of gene names that were reported from the consequences section
         """        
         reported_genes = set()
+        
+        annotation_dictionary = []
     
         self.logger.debug("VAR:extract_consequences:The gene is {}, now checking for consequences".format(self.gene_name))
         if hasattr(self, "consequences") and len(self.consequences) > 0:
@@ -176,13 +179,12 @@ class Variant:
                 if entry.get("gene_name") != self.gene_name:
                     # make a copy of the variant object 
                     copied_variant = copy.deepcopy(self) 
-                    
                     # remove drugs, locus_tag, gene_associated_drugs, and the annotation field from the copied variant
-                    attrs_to_remove = ["change", "annotation", "consequences", "drugs", "locus_tag", "gene_associated_drugs"]
+                    attrs_to_remove = ["change", "annotation", "consequences", "locus_tag"]
                     for attr in attrs_to_remove:
                         if hasattr(copied_variant, attr):
                             delattr(copied_variant, attr)
-
+                            
                     for key, value in entry.items():
                         # reset the attributes of the copied variant to those of the consequence entry
                         setattr(copied_variant, key, value)
@@ -190,8 +192,9 @@ class Variant:
                     copied_variant.extract_annotations()
                     
                     reported_genes.add(copied_variant.gene_name)
-                    
-        return reported_genes 
+                    annotation_dictionary.append(copied_variant.annotation_dictionary)
+
+        return reported_genes, annotation_dictionary
 
     def apply_expert_rules(self) -> tuple[str, str]:
         """Applies the expert rules from the interpretation logic document regarding 
@@ -201,7 +204,7 @@ class Variant:
         Returns:
             tuple[str, str]: The interpretation (str) and the rule applied (str)
         """        
-        GENE_LIST = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "Rv0678", "ethA", "gid", "katG", "pncA", "rpoB"]
+        GENE_LIST = ["atpE", "mmpL5", "mmpS5", "pepQ", "rplC", "rrl", "mmpR5", "ethA", "gid", "katG", "pncA", "rpoB"]
         """A list of genes that correspond to a certain set of expert rules."""
 
         SPECIAL_POSITIONS = {
@@ -224,7 +227,7 @@ class Variant:
         
         # FYI: There is a lot of duplicated code here but it is kept this way to ensure
         # that the rule is appropriately assigned based on the gene and scenario
-        if self.gene_name in ["Rv0678", "atpE", "pepQ", "rplC", "mmpL5", "mmpS5"]:        
+        if self.gene_name in ["mmpR5", "atpE", "pepQ", "rplC", "mmpL5", "mmpS5"]:        
             self.logger.debug("VAR:apply_expert_rules:The gene is {}, now checking if the position requires special consideration under rule 1.2".format(self.gene_name))
 
             # check if position within promoter regions
