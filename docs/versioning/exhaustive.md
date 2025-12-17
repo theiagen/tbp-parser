@@ -83,7 +83,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.8.1 - changes the LIMS report so that p.0? amino acid mutations are reported as the nucleotide change instead
 - v2.9.0 - fixes a bug in tNGS analysis where mutations outside the expected region were not identified correctly, leading to missing warnings; deprecates the TNGS_REGIONS_ACTIVATED global variable and now creates the TNGS_REGIONS dictionary directly from the input BED file
 - v2.9.1 - fixes a bug where mutations outside the expected region can lead to an erroneous "Pending Retest" in the LIMS report
-- v2.10.0 - fixes a bug where multiple mutations outside of the expected region with "NA" amino acid changes led to some mutations appearing in the LIMS report incorrectly, and adds a new column to the tNGS coverage report for the average locus coverage
+- v2.10.0 - fixes a bug where multiple mutations outside of the expected region with "NA" amino acid changes led to some mutations appearing in the LIMS report incorrectly, and adds a new column to the tNGS coverage report for the average locus coverage; adds QC range boundaries for frequency and read support for tNGS analysis; enables modification of the percentage of LIMS genes required for lineage designation
 
 ---
 
