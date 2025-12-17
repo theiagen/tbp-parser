@@ -25,7 +25,7 @@ class Parser:
         config (str): the configuration file to use, in YAML format
         verbose (bool): whether to enable verbose logging
         debug (bool): whether to enable debug logging
-        output_prefix (str): the prefix for output files
+        OUTPUT_PREFIX (str): the prefix for output files
         MIN_PERCENT_COVERAGE (float): the minimum percentage of a region that has depth above the threshold set by MIN_DEPTH to pass QC
         MIN_DEPTH (int): the minimum depth of coverage for a site to pass QC
         tbdb_bed (str): the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations
@@ -63,7 +63,7 @@ class Parser:
         self.config = options.config
         self.verbose = options.verbose
         self.debug = options.debug
-        self.output_prefix = options.output_prefix
+        self.OUTPUT_PREFIX = options.output_prefix
         
         self.MIN_PERCENT_COVERAGE = options.min_percent_coverage
         self.MIN_DEPTH = options.min_depth
@@ -230,22 +230,24 @@ class Parser:
         GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS = self.create_standard_dictionaries()
         
         self.logger.info("PARSER:run:Calculating coverage statistics")
-        coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.tbdb_bed)
+        coverage = Coverage(self.logger, self.input_bam, self.OUTPUT_PREFIX, self.tbdb_bed)
         COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH)
 
         self.logger.info("PARSER:run:Creating Laboratorian report")
-        laboratorian = Laboratorian(self.logger, self.input_json, self.output_prefix, 
+        laboratorian = Laboratorian(self.logger, self.input_json, self.OUTPUT_PREFIX, 
                                     self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, 
                                     COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, 
                                     GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS)
         DF_LABORATORIAN = laboratorian.create_laboratorian_report()
 
         self.logger.info("PARSER:run:Creating LIMS report")
-        lims = LIMS(self.logger, self.input_json, self.output_prefix, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.SAMPLE_NAME, DF_LABORATORIAN, laboratorian.positional_qc_fails, laboratorian.genes_with_valid_deletions)
+        lims = LIMS(self.logger, self.input_json, self.OUTPUT_PREFIX, LOW_DEPTH_OF_COVERAGE_LIST, 
+                    laboratorian.SAMPLE_NAME, DF_LABORATORIAN, laboratorian.positional_qc_fails,
+                    laboratorian.genes_with_valid_deletions)
         lims.create_lims_report(self.TNGS, self.MIN_LOCUS_PERCENTAGE, self.OPERATOR)
 
         self.logger.info("PARSER:run:Creating Looker report")
-        looker = Looker(self.logger, self.output_prefix, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.genes_with_valid_deletions, GENE_TO_ANTIMICROBIAL_DRUG_NAME)
+        looker = Looker(self.logger, self.OUTPUT_PREFIX, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.genes_with_valid_deletions, GENE_TO_ANTIMICROBIAL_DRUG_NAME)
         looker.create_looker_report(laboratorian.SAMPLE_NAME, self.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.OPERATOR)
 
         self.logger.info("PARSER:run:Creating coverage report")
@@ -257,7 +259,7 @@ class Parser:
             for original, replacement in globals_.OUTPUT_RENAMING.items():
                 file_suffixes = [".lims_report.csv", ".laboratorian_report.csv", ".looker_report.csv", ".coverage_report.csv"]
                 for output_suffix in file_suffixes:
-                    for line in fileinput.input(self.output_prefix + output_suffix, inplace=True):
+                    for line in fileinput.input(self.OUTPUT_PREFIX + output_suffix, inplace=True):
                         print(line.replace(original, replacement), end="")
                 
         self.logger.info("PARSER:run:Parsing completed")

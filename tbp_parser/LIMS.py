@@ -9,7 +9,7 @@ class LIMS:
     Attributes:
         logger: the logger object
         input_json (str): the path to the TBProfiler JSON file
-        output_prefix (str): the prefix for output files
+        OUTPUT_PREFIX (str): the prefix for output files
         LOW_DEPTH_OF_COVERAGE_LIST (list[str]): a list of genes with low depth of coverage (failed locus QC)
         SAMPLE_NAME (str): the sample name
         DF_LABORATORIAN (pd.DataFrame): a pandas DataFrame containing the laboratorian report data
@@ -66,13 +66,13 @@ class LIMS:
     ]
     """A list of rpoB mutations that require unique LIMS output wording."""
 
-    def __init__(self, logger, input_json: str, output_prefix: str, LOW_DEPTH_OF_COVERAGE_LIST: list[str], SAMPLE_NAME: str, DF_LABORATORIAN: pd.DataFrame, POSITIONAL_QC_FAILS: dict[str, str], GENES_WITH_VALID_DELETIONS: set[str]) -> None:
+    def __init__(self, logger, input_json: str, OUTPUT_PREFIX: str, LOW_DEPTH_OF_COVERAGE_LIST: list[str], SAMPLE_NAME: str, DF_LABORATORIAN: pd.DataFrame, POSITIONAL_QC_FAILS: dict[str, str], GENES_WITH_VALID_DELETIONS: set[str]) -> None:
         """Initializes the LIMS class
         
         Args:
             logger: the logger object
             input_json (str): the path to the TBProfiler JSON file
-            output_prefix (str): the prefix for output files
+            OUTPUT_PREFIX (str): the prefix for output files
             LOW_DEPTH_OF_COVERAGE_LIST (list[str]): a list of genes with low depth of coverage (failed locus QC)
             SAMPLE_NAME (str): the sample name
             DF_LABORATORIAN (pd.DataFrame): a pandas DataFrame containing the laboratorian report data
@@ -81,7 +81,7 @@ class LIMS:
         """
         self.logger = logger
         self.input_json = input_json
-        self.output_prefix = output_prefix
+        self.OUTPUT_PREFIX = OUTPUT_PREFIX
 
         self.LOW_DEPTH_OF_COVERAGE_LIST = LOW_DEPTH_OF_COVERAGE_LIST
         """A list of genes with low depth of coverage (failed locus QC)."""
@@ -337,10 +337,10 @@ class LIMS:
                             ], axis=1)
         
         # write to file
-        DF_LIMS.to_csv("{}.lims_report.csv".format(self.output_prefix), index=False)
+        DF_LIMS.to_csv("{}.lims_report.csv".format(self.OUTPUT_PREFIX), index=False)
         
         # create transposed version
         DF_LIMS_T = DF_LIMS.transpose()
-        DF_LIMS_T.to_csv("{}.transposed_lims_report.csv".format(self.output_prefix), header=False)
+        DF_LIMS_T.to_csv("{}.transposed_lims_report.csv".format(self.OUTPUT_PREFIX), header=False)
         
         self.logger.info("LIMS:create_lims_report:LIMS report created, now exiting function\n")

@@ -9,7 +9,7 @@ class Coverage:
     Attributes:
         logger (logging.getlogger() object): Object that handles logging
         input_bam (str): path to BAM file of sample to be analyzed (aligned to H37Rv)
-        output_prefix (str): Prefix for all output
+        OUTPUT_PREFIX (str): Prefix for all output
         coverage_regions (str): path to BED file of regions to be examined for coverage
     
     Methods:
@@ -22,19 +22,19 @@ class Coverage:
         create_coverage_report(COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: list[str], TNGS: bool) -> None:
             reformats the coverage and average loci coverage dictionaries into a CSV file and adds a deletion warning if a QC-passing deletion was identified for the region
     """
-    def __init__(self, logger, input_bam, output_prefix, coverage_regions) -> None:
+    def __init__(self, logger, input_bam, OUTPUT_PREFIX, coverage_regions) -> None:
         """ Initalizes the Coverage class
 
         Args:
             logger (logging.getlogger() object): Object that handles logging
             input_bam (str): path to BAM file of sample to be analyzed (aligned to H37Rv)
-            output_prefix (str): Prefix for all output
+            OUTPUT_PREFIX (str): Prefix for all output
             coverage_regions (str): path to BED file of regions to be examined for coverage
         """
 
         self.logger = logger
         self.input_bam = input_bam
-        self.output_prefix = output_prefix
+        self.OUTPUT_PREFIX = OUTPUT_PREFIX
         self.coverage_regions = coverage_regions
         
         # extract chromosome name from BAM file -- sometimes this can be different depending on reference used
@@ -149,4 +149,4 @@ class Coverage:
         if TNGS: 
             DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning"}, inplace=True)
 
-        DF_COVERAGE.to_csv(self.output_prefix + ".coverage_report.csv", float_format="%.2f", index=False)
+        DF_COVERAGE.to_csv(self.OUTPUT_PREFIX + ".coverage_report.csv", float_format="%.2f", index=False)

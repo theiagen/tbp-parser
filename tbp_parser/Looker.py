@@ -10,7 +10,7 @@ class Looker:
         RESISTANCE_RANKING (dict[str, int]): A dictionary ranking the resistance annotations from 
             highest to lowest priority.
         logger (_type_): the logging instance
-        output_prefix (str): the output file prefix
+        OUTPUT_PREFIX (str): the output file prefix
         DF_LABORATORIAN (pd.DataFrame): the laboratorian report dataframe
         LOW_DEPTH_OF_COVERAGE_LIST (list[str]): list of genes with low depth of coverage
         GENES_WITH_VALID_DELETIONS (set[str]): set of genes with valid deletions
@@ -35,12 +35,12 @@ class Looker:
     }    
     """A dictionary ranking the resistance annotations from highest to lowest priority."""
     
-    def __init__(self, logger, output_prefix: str, DF_LABORATORIAN: pd.DataFrame, LOW_DEPTH_OF_COVERAGE_LIST: list[str], GENES_WITH_VALID_DELETIONS: set[str], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, dict[str, dict[str, str]]]) -> None:
+    def __init__(self, logger, OUTPUT_PREFIX: str, DF_LABORATORIAN: pd.DataFrame, LOW_DEPTH_OF_COVERAGE_LIST: list[str], GENES_WITH_VALID_DELETIONS: set[str], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, dict[str, dict[str, str]]]) -> None:
         """Initializes the Looker class.
         
         Args:
             logger (_type_): the logging instance
-            output_prefix (str): the output file prefix
+            OUTPUT_PREFIX (str): the output file prefix
             DF_LABORATORIAN (pd.DataFrame): the laboratorian report dataframe
             LOW_DEPTH_OF_COVERAGE_LIST (list[str]): list of genes with low depth of coverage
             GENES_WITH_VALID_DELETIONS (set[str]): set of genes with valid deletions
@@ -49,7 +49,7 @@ class Looker:
                 their respective column names
         """    
         self.logger = logger
-        self.output_prefix = output_prefix
+        self.OUTPUT_PREFIX = OUTPUT_PREFIX
         self.DF_LABORATORIAN = DF_LABORATORIAN
         self.LOW_DEPTH_OF_COVERAGE_LIST = LOW_DEPTH_OF_COVERAGE_LIST
         self.GENES_WITH_VALID_DELETIONS = GENES_WITH_VALID_DELETIONS
@@ -109,4 +109,4 @@ class Looker:
         DF_LOOKER["analysis_date"] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
         DF_LOOKER["operator"] = OPERATOR
 
-        DF_LOOKER.to_csv("{}.looker_report.csv".format(self.output_prefix), index=False)
+        DF_LOOKER.to_csv("{}.looker_report.csv".format(self.OUTPUT_PREFIX), index=False)

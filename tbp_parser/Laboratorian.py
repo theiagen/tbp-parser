@@ -10,7 +10,7 @@ class Laboratorian:
     Attributes:
         logger (logging.Logger): The logger object for logging messages.
         input_json (str): The path to the input JSON file produced by TBProfiler.
-        output_prefix (str): The prefix for the output files.
+        OUTPUT_PREFIX (str): The prefix for the output files.
         
         MIN_DEPTH (int): The minimum depth of coverage for QC.
         MIN_FREQUENCY (float): The minimum frequency for QC.
@@ -42,7 +42,7 @@ class Laboratorian:
     def __init__(self, 
                  logger, 
                  input_json: str, 
-                 output_prefix: str, 
+                 OUTPUT_PREFIX: str, 
                  MIN_DEPTH: int, 
                  MIN_FREQUENCY: float, MIN_READ_SUPPORT: int, 
                  COVERAGE_DICTIONARY: dict[str, float], 
@@ -58,7 +58,7 @@ class Laboratorian:
         Args:
             logger (logging.Logger): The logger object for logging messages.
             input_json (str): The path to the input JSON file produced by TBProfiler.
-            output_prefix (str): The prefix for the output files.
+            OUTPUT_PREFIX (str): The prefix for the output files.
             MIN_DEPTH (int): The minimum depth of coverage for QC.
             MIN_FREQUENCY (float): The minimum frequency for QC.
             MIN_READ_SUPPORT (int): The minimum read support for QC.
@@ -73,7 +73,7 @@ class Laboratorian:
         """
         self.logger = logger
         self.input_json = input_json
-        self.output_prefix = output_prefix
+        self.OUTPUT_PREFIX = OUTPUT_PREFIX
         
         # quality control variables
         self.MIN_DEPTH = MIN_DEPTH
@@ -271,10 +271,10 @@ class Laboratorian:
                 row.warning = ". ".join(row.warning)
 
         DF_LABORATORIAN = pd.DataFrame([vars(row) for row in row_list], columns=DF_LABORATORIAN.columns)
-        DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.output_prefix), index=False)
+        DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.OUTPUT_PREFIX), index=False)
 
         # the raw laboratorian report without any QC applied is here but will not be ordered the same as the main
         df_raw_laboratorian = pd.DataFrame([vars(row) for row in raw_row_list], columns=DF_LABORATORIAN.columns)
-        df_raw_laboratorian.to_csv("{}.raw_lab_report.csv".format(self.output_prefix), index=False)
+        df_raw_laboratorian.to_csv("{}.raw_lab_report.csv".format(self.OUTPUT_PREFIX), index=False)
                 
         return DF_LABORATORIAN
