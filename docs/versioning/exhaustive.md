@@ -2,6 +2,9 @@
 title: Exhaustive version descriptions
 ---
 
+!!! warning "Validate Before Use"
+    **CAUTION**: The information produced by this program should **not** be used for clinical reporting unless and until extensive validation has occured in ==_**your**_== laboratory on a stable version. Otherwise, the outputs of tbp-parser are for research use only.
+
 The following is a list of every version of `tbp-parser` and a short summary of the changes made in each version.
 
 <span style="color:blue">Blue</span> indicates that CDPH performed a clinical validation on that version
@@ -84,8 +87,13 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.9.0 - fixes a bug in tNGS analysis where mutations outside the expected region were not identified correctly, leading to missing warnings; deprecates the TNGS_REGIONS_ACTIVATED global variable and now creates the TNGS_REGIONS dictionary directly from the input BED file
 - v2.9.1 - fixes a bug where mutations outside the expected region can lead to an erroneous "Pending Retest" in the LIMS report
 - v2.10.0 - fixes a bug where multiple mutations outside of the expected region with "NA" amino acid changes led to some mutations appearing in the LIMS report incorrectly, and adds a new column to the tNGS coverage report for the average locus coverage; adds QC range boundaries for frequency and read support for tNGS analysis; enables modification of the percentage of LIMS genes required for lineage designation
+- v3.0.0 - a complete refactor of the codebase to improve maintainability and add new features
 
 ---
 
-The following diagram shows how each version is related to the others without technical details:
-![This diagram shows how each version is related to the others without technical details.](../assets/tbp-parser_versioning.png){ align = left }
+??? info "Diagram of Version Relationships before v2.1.0"
+    The following diagram shows how each version prior to v2.1.0 is related to the others without technical details.
+
+    After v2.1.0, all changes are made in a linear fashion on the `main` branch.
+
+    ![This diagram shows how each version is related to the others without technical details.](../assets/tbp-parser_versioning.png){ align = left }

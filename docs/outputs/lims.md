@@ -2,63 +2,93 @@
 title: LIMS Report
 ---
 
-The LIMS report is intended for direct import into a STAR LIMS system. The columns are in the specific LIMS code format for CDPH, and may not apply to your LIMS system. Please contact us if you need different column headers and we can work with you towards a solution.
+The LIMS report contains a summary of the mutations that confer resistance to any respective antimicrobial drug.
 
-### Explanation of column headers
+## Resistance columns
 
-| Column name | Explanation |
-| --- | --- |
-| MDL sample accession numbers | The name of the sample |
-| M_DST_A01_ID | The lineage of the sample in human-readable language |
-| M_DST_B01_INH | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (isoniazid) |
-| M_DST_B02_katG | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for ethionamideresponsible for the predicted resistance for isoniazid |
-| M_DST_B03_fabG1 | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for isoniazid|
-| M_DST_B04_inhA | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for isoniazid |
-| M_DST_C01_ETO | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (ethionamide) |
-| M_DST_C02_ethA | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for ethionamide |
-| M_DST_C03_fabG1 | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for ethionamide |
-| M_DST_C04_inhA | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for ethionamide |
-| M_DST_D01_RIF | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (rifampin) |
-| M_DST_D02_rpoB | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for rifampin |
-| M_DST_E01_PZA | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (pyrazinamide) |
-| M_DST_E02_pncA | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for pyrazinamide |
-| M_DST_F01_EMB | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (ethambutol) |
-| M_DST_F02_embA | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for ethambutol |
-| M_DST_F03_embB | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for ethambutol |
-| M_DST_G01_AMK | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (amikacin) |
-| M_DST_G02_rrs | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for amikacin |
-| M_DST_G03_eis | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for amikacin |
-| M_DST_H01_KAN | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (kanamycin) |
-| M_DST_H02_rrs | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for kanamycin |
-| M_DST_H03_eis | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for kanamycin |
-| M_DST_I01_CAP | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (capreomycin) |
-| M_DST_I02_rrs | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for capreomycin |
-| M_DST_I03_tlyA | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for capreomycin |
-| M_DST_J01_MFX | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (moxifloxacin) |
-| M_DST_J02_gyrA | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for moxifloxacin |
-| M_DST_J03_gyrB | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for moxifloxacin |
-| M_DST_K01_LFX | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (levofloxacin) |
-| M_DST_K02_gyrA | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for levofloxacin |
-| M_DST_K03_gyrB | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for levofloxacin |
-| M_DST_L01_BDQ | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (bedaquiline) |
-| M_DST_L02_Rv0678 | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for bedaquiline |
-| M_DST_L03_atpE | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for bedaquiline |
-| M_DST_L04_pepQ | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for bedaquiline |
-| M_DST_L05_mmpL5 | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for bedaquiline |
-| M_DST_L06_mmpS5 | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for bedaquiline |
-| M_DST_M01_CFZ | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (clofazimine) |
-| M_DST_M02_Rv0678 | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for clofazimine |
-| M_DST_M03_pepQ | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for clofazimine |
-| M_DST_M04_mmpL5 | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for clofazimine |
-| M_DST_M05_mmpS5 | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for clofazimine |
-| M_DST_N01_LZD | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (linezolid) |
-| M_DST_N02_rrl | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for linezolid |
-| M_DST_N03_rplC | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for linezolid |
-| Analysis date | The date `tbp-parser` was run in YYYY-MM-DD HH:SS format |
-| Operator | The name of the person who ran `tbp-parser`; can be provided with the `--operator` input parameter. If left blank, “Operator not provided” is the default value. |
-| M_DST_O01_lineage | The lineage of the sample (the `main_lin` of the sample as reported by TBProfiler) |
-| M_DST_P01_CS | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (cycloserine); only included when `--add_cs_lims` is set to true |
-| M_DST_P02_ald | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for cycloserine; only included when `--add_cs_lims` is set to true |
-| M_DST_PO3_alr | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for cycloserine; only included when `--add_cs_lims` is set to true |
+The LIMS report will contain one column for each drug defined in the `DRUG_COLUMNS_TO_GENE_COLUMNS` dictionary. Each drug will have one or more associated gene columns, depending on how many genes are responsible for resistance to that drug and indicated in the dictionary.
 
-The LIMS report offers a condensed version of the laboratorian report with more details than the Looker report. By containing only the most important information about a drug and its related mutations, the LIMS report provides an invaluable summary.
+By default, **every** gene-drug combination found in the default `tbdb.bed` file is included in the LIMS report by virtue of its default inclusion in the `DRUG_COLUMNS_TO_GENE_COLUMNS` dictionary.
+
+This dictionary takes the following format in `globals.py`:
+
+```python
+DRUG_COLUMNS_TO_GENE_COLUMNS = {
+    "antimicrobial_drug_name": {
+        "antimicrobial_column_name_in_lims_report": {
+            "gene_name": "gene_drug_combo_column_name_in_lims_report",
+            "gene2_name": "gene2_drug_combo_column_name_in_lims_report",            
+            ...
+        }
+    },
+    "antimicrobial2_drug_name": {
+        "antimicrobial2_column_name_in_lims_report": {
+            "gene3_name": "gene3_drug_combo_column_name_in_lims_report",
+            ...
+        }
+    },
+    ...
+}
+```
+
+The column content is as follows:
+
+| Column name  | Explanation | Source |
+| --- | --- | --- |
+| `antimicrobial_column_name_in_lims_report` | The highest `mdl_interpretation` identified for that drug in the Laboratorian report for the associated genes | Determined by tbp-parser |
+| `gene_drug_combo_column_name_in_lims_report` | Any non-S (susceptible) mutations found in this gene that are responsible for the predicted resistance for the antimicrobial | Determined by tbp-parser |
+
+These columns will be repeated for each drug and associated genes defined in the `DRUG_COLUMNS_TO_GENE_COLUMNS` dictionary. All genes associated with an antimicrobial drug will be grouped together with that antimicrobial column in the report.
+
+### **Customizing the resistance column names**
+
+In the example dictionary shown above, please do not modify these fields unless they are being removed or added as new drugs/genes:
+
+- `antimicrobial_drug_name` is the name of the drug **as it appears in TBProfiler** (for example, "rifampicin").
+- `gene_name` is the name of the gene **as it appears in TBProfiler** (for example, "rpoB").
+
+However, the following fields can be customized to contain any text according to your laboratory's needs:
+
+- `antimicrobial_column_name_in_lims_report` is the **desired name of the output column** in the LIMS report that indicates the highest resistance interpretation for that drug (for example, "RIF_RESISTANCE").
+- `gene_drug_combo_column_name_in_lims_report` is the **desired name of the output column** in the LIMS report that indicates any mutations found in that gene that are responsible for the predicted resistance for that drug (for example, "RIF_RPOB_MUTATIONS").
+
+To overwrite this dictionary in a configuration file, use the following format:
+
+```yaml
+DRUG_COLUMNS_TO_GENE_COLUMNS:
+    rifampicin: # do not modify this text
+        RIF_RESISTANCE: # this is the column name for the antimicrobial
+            rpoB: RIF_RPOB_MUTATIONS # do not modify rpoB, but modify RIF_RPOB_MUTATIONS as needed
+    linezolid:
+        LZD_RESISTANCE:
+            rrl: LZD_RRL_MUTATIONS
+            rplC: LZD_RPLC_MUTATIONS
+    ...
+```
+
+## Miscellaneous columns
+
+These miscellaneous columns are not set with the dictionary described above and contain default names, but they can be renamed via the `OUTPUT_RENAMING` dictionary in a configuration file.
+
+| Column name | Explanation | Source |
+| --- | --- | --- |
+| Sample_Name | The name of the sample | TBProfiler "id" field |
+| Lineage_ID | The lineage of the sample in human-readable language | Determined by tbp-parser using the TBProfiler "lineage" field |
+| Analysis_Date | The date `tbp-parser` was run in YYYY-MM-DD HH:SS format | Determined by tbp-parser at runtime |
+| Operator | The name of the person who ran `tbp-parser`; can be provided with the `--operator` input parameter. If left blank, “Operator not provided” is the default value. | tbp-parser input parameter |
+| Lineage | The lineage of the sample | TBProfiler "lineage" field |
+
+### **Customizing miscellaneous column names**
+
+To customize these column names in a configuration file, use the following format:
+
+```yaml
+OUTPUT_RENAMING:
+  Sample_Name: "My_Sample_Column"
+  Lineage_ID: "My_Lineage_ID_Column"
+  Analysis_Date: "My_Analysis_Date_Column"
+  Operator: "My_Operator_Column"
+  Lineage: "My_Lineage_Column"
+```
+
+Please note that this will rename every instance of that text in all output reports (all "Sample_Name" will be renamed to "My_Sample_Column" in all output files, etc.).
