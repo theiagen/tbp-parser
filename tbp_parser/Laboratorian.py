@@ -1,20 +1,76 @@
 from Row import Row
 from Variant import Variant
-import globals as globals_
 import pandas as pd
 import json
 import copy
 
 class Laboratorian:
-    """
-    This class creates the CDPH Laboratorian report.
-    It has two functions:
-        - iterate_section: iterates through each variant in a section and creates
-            a Variant in the Variant class for each variant
-        - create_laboratorian_report: creates the laboratorian report CSV file
+    """A class representing the Laboratorian report generation process.
+    
+    Attributes:
+        logger (logging.Logger): The logger object for logging messages.
+        input_json (str): The path to the input JSON file produced by TBProfiler.
+        output_prefix (str): The prefix for the output files.
+        
+        MIN_DEPTH (int): The minimum depth of coverage for QC.
+        MIN_FREQUENCY (float): The minimum frequency for QC.
+        MIN_READ_SUPPORT (int): The minimum read support for QC.
+        COVERAGE_DICTIONARY (dict[str, float]): A dictionary containing coverage information for each gene/locus.
+        LOW_DEPTH_OF_COVERAGE_LIST (list[str]): A list of genes/loci that have low depth of coverage.
+        GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, str]): A dictionary mapping genes to their associated antimicrobial drug names.
+        GENE_TO_LOCUS_TAG (dict[str, str]): A dictionary mapping genes to their locus tags.
+        TNGS_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing the specific tNGS regions for each gene (to account for non-overlapping primers in the same gene).
+        GENE_TO_TIER (dict[str, str]): A dictionary mapping genes to their tiers.
+        PROMOTER_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing promoter regions for each gene.
+        TNGS (bool): A boolean indicating whether tNGS mode is enabled.
+        
+        genes_reported (set[str]): A set of genes that have already been reported in the laboratorian report.
+        genes_with_valid_deletions (set[str]): A set of genes that have valid deletions reported in the laboratorian report.
+        positional_qc_fails (dict[str, set[str]]): A dictionary of genes to mutations that have failed POSITIONAL QC checks.
+    
+    Methods:
+        iterate_section(variant_section: dict, row_list: list[Row], raw_row_list: list[Row]) -> list[Row]:
+            Iterates through each subsection in the "dr_variants" and "other_variants" sections
+            in the TBProfiler JSON file, converting each item into a Variant object and extracting
+            annotations into Row objects for the Laboratorian report.
+        
+        create_laboratorian_report() -> pd.DataFrame:
+            Creates the laboratorian report as a CSV file containing mutation information
+            extracted from the input JSON file.
     """
 
-    def __init__(self, logger, input_json, output_prefix, MIN_DEPTH, MIN_FREQUENCY, MIN_READ_SUPPORT, COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, TNGS):
+    def __init__(self, 
+                 logger, 
+                 input_json: str, 
+                 output_prefix: str, 
+                 MIN_DEPTH: int, 
+                 MIN_FREQUENCY: float, MIN_READ_SUPPORT: int, 
+                 COVERAGE_DICTIONARY: dict[str, float], 
+                 LOW_DEPTH_OF_COVERAGE_LIST: list[str], 
+                 GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, str], 
+                 GENE_TO_LOCUS_TAG: dict[str, str], 
+                 TNGS_REGIONS: dict[str, list[int] | list[list[int]]], 
+                 GENE_TO_TIER: dict[str, str],
+                 PROMOTER_REGIONS: dict[str, list[int] | list[list[int]]], 
+                 TNGS: bool) -> None:
+        """Initializes the Laboratorian class with the provided parameters.
+        
+        Args:
+            logger (logging.Logger): The logger object for logging messages.
+            input_json (str): The path to the input JSON file produced by TBProfiler.
+            output_prefix (str): The prefix for the output files.
+            MIN_DEPTH (int): The minimum depth of coverage for QC.
+            MIN_FREQUENCY (float): The minimum frequency for QC.
+            MIN_READ_SUPPORT (int): The minimum read support for QC.
+            COVERAGE_DICTIONARY (dict[str, float]): A dictionary containing coverage information for each gene/locus.
+            LOW_DEPTH_OF_COVERAGE_LIST (list[str]): A list of genes/loci that have low depth of coverage.
+            GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, str]): A dictionary mapping genes to their associated antimicrobial drug names.
+            GENE_TO_LOCUS_TAG (dict[str, str]): A dictionary mapping genes to their locus tags.
+            TNGS_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing the specific tNGS regions for each gene (to account for non-overlapping primers in the same gene).
+            GENE_TO_TIER (dict[str, str]): A dictionary mapping genes to their tiers.
+            PROMOTER_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing promoter regions for each gene.
+            TNGS (bool): A boolean indicating whether tNGS mode is enabled.
+        """
         self.logger = logger
         self.input_json = input_json
         self.output_prefix = output_prefix
@@ -50,9 +106,9 @@ class Laboratorian:
         self.genes_with_valid_deletions = set()
         """A set of genes that have valid deletions reported in the laboratorian report."""
         self.positional_qc_fails = {}
-        """A set of mutations that have failed POSITIONAL QC checks."""
+        """A dictionary of genes to their mutations that have failed POSITIONAL QC checks."""
 
-    def iterate_section(self, variant_section, row_list, raw_row_list) -> list[Row]:
+    def iterate_section(self, variant_section: dict, row_list: list[Row], raw_row_list: list[Row]) -> list[Row]:
         """This function iterates through each subsection in the "dr_variants" and "other_variants" sections
         in the TBProfiler JSON file. Each item in the subsection is converted into an individual Variant object, 
         and each annotation within that Variant is extracted and converted into a Row object, where each Row is
@@ -61,6 +117,7 @@ class Laboratorian:
         Args:
             variant_section (json.load() object): The subsection of the TBProfiler JSON file to iterate through
             row_list (List): A list of rows that have been extracted so far
+            raw_row_list (List): A list of rows (without QC applied) that have been extracted so far
 
         Returns:
             list[Row]: The list of rows, including the newly extracted rows
@@ -127,8 +184,7 @@ class Laboratorian:
         return row_list, raw_row_list
     
     def create_laboratorian_report(self) -> pd.DataFrame:
-        """
-        This function creates the laboratorian report, which is a CSV file
+        """This function creates the laboratorian report, which is a CSV file
         containing the following information for each mutation in the input JSON:
             - sample_id: the sample name
             - tbprofiler_gene_name: the gene name
@@ -145,8 +201,12 @@ class Laboratorian:
             - read_support: the number of reads supporting the mutation (10, depth*frequency)
             - rationale: the rationale for resistance calling (WHO classification, Expert rule)
             - warning: a column reserved for warnings such as low depth of coverage 
+            - gene_tier: the tier of the gene
             - source: a column used to indicate the resistance source as specified by TBDB
             - tbdb_comment: a column used to include any additional comments as specified by TBDB
+            
+        Returns:
+            pd.DataFrame: The laboratorian report as a pandas DataFrame.
         """
         DF_LABORATORIAN = pd.DataFrame(columns = [
             "sample_id", "tbprofiler_gene_name", "tbprofiler_locus_tag", 

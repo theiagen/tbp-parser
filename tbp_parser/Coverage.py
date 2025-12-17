@@ -4,23 +4,32 @@ import pandas as pd
 import os
 
 class Coverage:
+    """A class representing the coverage report and coverage statistics
+    
+    Attributes:
+        logger (logging.getlogger() object): Object that handles logging
+        input_bam (str): path to BAM file of sample to be analyzed (aligned to H37Rv)
+        output_prefix (str): Prefix for all output
+        coverage_regions (str): path to BED file of regions to be examined for coverage
+    
+    Methods:
+        calculate_depth(line: str, MIN_DEPTH: int) -> tuple[str, float, float]:
+            uses samtools to calculate the breadth of coverage and average depth for a given region
+        
+        get_coverage(MIN_PERCENT_COVERAGE: float, MIN_DEPTH: int) -> tuple[dict[str, float], dict[str, float], list[str]]:
+            iterates through a bedfile and adds the breadth of coverage to the coverage dictionary and the average depth to the average loci coverage dictionary
+        
+        create_coverage_report(COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: list[str], TNGS: bool) -> None:
+            reformats the coverage and average loci coverage dictionaries into a CSV file and adds a deletion warning if a QC-passing deletion was identified for the region
     """
-    This class creates the CDPH coverage report.
-    It has several functions: 
-        - calculate_depth: uses samtools to calculate the breadth of coverage and average depth for a given region
-        - get_coverage: creates the initial coverage report.
-        - reformat_coverage: adds a warning column if a deletion was identified
-            within the gene.
-    """
-
-    def __init__(self, logger, input_bam, output_prefix, coverage_regions):
+    def __init__(self, logger, input_bam, output_prefix, coverage_regions) -> None:
         """ Initalizes the Coverage class
 
         Args:
             logger (logging.getlogger() object): Object that handles logging
-            input_bam (File): BAM file of sample to be analyzed (aligned to H37Rv)
-            output_prefix (String): Prefix for all output
-            coverage_regions (File): Bed file of regions to be examined for coverage
+            input_bam (str): path to BAM file of sample to be analyzed (aligned to H37Rv)
+            output_prefix (str): Prefix for all output
+            coverage_regions (str): path to BED file of regions to be examined for coverage
         """
 
         self.logger = logger
@@ -32,7 +41,7 @@ class Coverage:
         command = "samtools idxstats {} | cut -f 1 | head -1".format(self.input_bam)
         self.chromosome = subprocess.check_output(command, shell=True).decode("utf-8").strip()
 
-    def calculate_depth(self, line, MIN_DEPTH) -> tuple[str, float, float]:
+    def calculate_depth(self, line: str, MIN_DEPTH: int) -> tuple[str, float, float]:
         """Uses samtools to calculate the breadth of coverage and average depth for a given region
 
         Args:
@@ -75,7 +84,7 @@ class Coverage:
 
         return gene, float(breadth_of_coverage), float(average_depth)
 
-    def get_coverage(self, MIN_PERCENT_COVERAGE, MIN_DEPTH) -> tuple[dict, dict, list]:
+    def get_coverage(self, MIN_PERCENT_COVERAGE: float, MIN_DEPTH: int) -> tuple[dict[str, float], dict[str, float], list[str]]:
         """ Iterates through a bedfile and adds the breadth of coverage to the global variable "COVERAGE_DICTIONARY" 
         and the average depth to "AVERAGE_LOCI_COVERAGE"
 
@@ -108,7 +117,7 @@ class Coverage:
 
         return COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST
 
-    def create_coverage_report(self, COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, GENES_WITH_VALID_DELETIONS, TNGS) -> None:
+    def create_coverage_report(self, COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: list[str], TNGS: bool) -> None:
         """
         This function reformats the coverage and average loci coverage dictionaries into
         a CSV file and adds a deletion warning if a QC-passing deletion was identified

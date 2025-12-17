@@ -1,13 +1,10 @@
-import re
+import copy
 import globals as globals_
 from Row import Row 
-import copy
 
 class Variant:
-    """
-    This class represents a single Variant reported by TBProfiler.
+    """This class represents a single Variant reported by TBProfiler.
     
-    Note:
     A variant can have either (1) an annotation field. This field could
     (a) have 1 or more annotations, or (b) have none. A variant could also 
     have (2) no annotation field at all.
@@ -16,16 +13,27 @@ class Variant:
     listed. In addition, it is possible that the same drug can show up twice
     within the same annotation for a single variant.
 
-    This class has three functions:
-        - extract_annotations: splits up the annotation field into individual
-            annotations and creates a Row object for each annotation.
-        - extract_consequences: iterates through the consequences section of
-            the variant to add any additional genes that this mutation could be
-            classified under.
-        - apply_expert_rules: applies the expert rules from the interpretation
-            logic document to the variant.
+    Attributes:
+        logger (logging.Logger): generates logs
+        annotation_dictionary (dict[str, Row]): A dictionary mapping drugs to their Row annotations for this variant.
+        sample_name (str): The sample name associated with this variant.
+        GENE_TO_LOCUS_TAG (dict[str, str]): A dictionary mapping genes to their locus tags.
+        GENE_TO_TIER (dict[str, str]): A dictionary mapping genes to their tiers.
+        GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, str]): A dictionary mapping genes to their associated antimicrobial drugs.
+        PROMOTER_REGIONS (dict[str, list[int] | list[list[int]]]]): A dictionary mapping genes to their promoter regions.  
+        variant (dict): A dictionary of attributes about the variant.
+    
+    Methods:
+        extract_annotations() -> None:
+            Extracts the annotations from the variant and populates the annotation_dictionary attribute.
+        
+        extract_consequences() -> tuple[set[str], list[dict[str, Row]]]:
+            Extracts additional gene consequences from the variant and returns a set of reported genes and an annotation dictionary.
+        
+        apply_expert_rules() -> tuple[str, str]:
+            Applies expert rules to determine the interpretation and returns the interpretation and rule applied for the annotation.
     """
-    def __init__(self, logger, sample_name, gene_to_locus_tag, gene_to_tier, gene_to_antimicrobial_drug_name, promoter_regions, variant=None):
+    def __init__(self, logger, sample_name: str, GENE_TO_LOCUS_TAG: dict[str, str], GENE_TO_TIER: dict[str, str], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, str], PROMOTER_REGIONS: dict[str, list[int] | list[list[int]]], variant: dict = None) -> None:
         """Initializes the Variant class
 
         Args:
@@ -68,16 +76,16 @@ class Variant:
         self.sample_name = sample_name
         """The sample name associated with this variant."""
         
-        self.GENE_TO_LOCUS_TAG = gene_to_locus_tag
+        self.GENE_TO_LOCUS_TAG = GENE_TO_LOCUS_TAG
         """A dictionary mapping genes to their locus tags."""
 
-        self.GENE_TO_TIER = gene_to_tier
+        self.GENE_TO_TIER = GENE_TO_TIER
         """A dictionary mapping genes to their tiers."""
         
-        self.GENE_TO_ANTIMICROBIAL_DRUG_NAME = gene_to_antimicrobial_drug_name
+        self.GENE_TO_ANTIMICROBIAL_DRUG_NAME = GENE_TO_ANTIMICROBIAL_DRUG_NAME
         """A dictionary mapping genes to their associated antimicrobial drugs."""
 
-        self.PROMOTER_REGIONS = promoter_regions
+        self.PROMOTER_REGIONS = PROMOTER_REGIONS
         """A dictionary mapping genes to their promoter regions."""
 
         if variant is not None:
@@ -86,8 +94,7 @@ class Variant:
                 setattr(self, key, value)
 
     def extract_annotations(self) -> None:
-        """
-        This function takes the annotation field in a variant and splits it into
+        """This function takes the annotation field in a variant and splits it into
         its individual parts, creating an Row object for the annotation field. If the
         annotation field is empty or does not exist, the function creates a row
         based off of the gene_associated_drugs field.
@@ -160,13 +167,14 @@ class Variant:
                         
                         self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
 
-    def extract_consequences(self) -> set:
+    def extract_consequences(self) -> tuple[set[str], list[dict[str, Row]]]:
         """This section iterates through the "consequences" section of a variant in 
         order to add any additional genes that this mutation could be classified under.
         For example, mutations in mmpR5 could also be classified under mmpS5 or mmpL5.
         
         Returns:
-            set: a set of gene names that were reported from the consequences section
+            set[str]: a set of gene names that were reported from the consequences section
+            list[dict[str, Row]]: a list of dictionaries mapping drugs to their Row annotations for the consequences
         """        
         reported_genes = set()
         

@@ -4,14 +4,33 @@ import json
 import datetime
 
 class LIMS:
-    """
-    This class creates the CDPH LIMS report.
-
-    It has four functions:
-        - get_id: returns the lineage in English for LIMS
-        - convert_annotation: converts the resistance annotation and the target drug
-            into the LIMS language
-        - create_lims_report: creates the LIMS report CSV file
+    """A class to perform LIMS-report specific functions
+    
+    Attributes:
+        logger: the logger object
+        input_json (str): the path to the TBProfiler JSON file
+        output_prefix (str): the prefix for output files
+        LOW_DEPTH_OF_COVERAGE_LIST (list[str]): a list of genes with low depth of coverage (failed locus QC)
+        SAMPLE_NAME (str): the sample name
+        DF_LABORATORIAN (pd.DataFrame): a pandas DataFrame containing the laboratorian report data
+        POSITIONAL_QC_FAILS (dict[str, str]): a dictionary mapping genes to their nucleotide mutation that failed positional QC
+        GENES_WITH_VALID_DELETIONS (set[str]): a set of genes that have valid (QC-pass) deletions
+        LINEAGE (str): the TBProfiler identified lineage
+        LINEAGE_ENGLISH (str): the lineage in human-friendly language
+        
+        RESISTANCE_RANKING (dict[str, int]): a dictionary ranking the resistance annotations from highest to lowest priority
+        SPECIAL_POSITIONS (dict[str, list[int] | list[list[int]]]): a dictionary of positions for genes requiring different consideration
+        RPOB_MUTATIONS (list[str]): a list of rpoB mutations that require unique LIMS output wording
+    
+    Methods:
+        get_id(TNGS: bool, MIN_LOCUS_PERCENTAGE: float, test: bool = False) -> str:
+            Returns both the TBProfiler identified lineage and the lineage in human-friendly language
+            
+        convert_annotation(annotation, drug) -> str:
+            Converts the resistance annotation into the appropriate LIMS text
+            
+        create_lims_report(TNGS: bool, MIN_LOCUS_PERCENTAGE: float, OPERATOR: str) -> None:
+            Creates the LIMS report using the laboratorian pd.DataFrame
     """
     RESISTANCE_RANKING = {
         "R": 4,
@@ -47,16 +66,33 @@ class LIMS:
     ]
     """A list of rpoB mutations that require unique LIMS output wording."""
 
-    def __init__(self, logger, input_json: str, output_prefix: str, LOW_DEPTH_OF_COVERAGE_LIST: list[str], SAMPLE_NAME: str, DF_LABORATORIAN: pd.DataFrame, POSITIONAL_QC_FAILS: dict, GENES_WITH_VALID_DELETIONS: set[str]):
+    def __init__(self, logger, input_json: str, output_prefix: str, LOW_DEPTH_OF_COVERAGE_LIST: list[str], SAMPLE_NAME: str, DF_LABORATORIAN: pd.DataFrame, POSITIONAL_QC_FAILS: dict[str, str], GENES_WITH_VALID_DELETIONS: set[str]) -> None:
+        """Initializes the LIMS class
+        
+        Args:
+            logger: the logger object
+            input_json (str): the path to the TBProfiler JSON file
+            output_prefix (str): the prefix for output files
+            LOW_DEPTH_OF_COVERAGE_LIST (list[str]): a list of genes with low depth of coverage (failed locus QC)
+            SAMPLE_NAME (str): the sample name
+            DF_LABORATORIAN (pd.DataFrame): a pandas DataFrame containing the laboratorian report data
+            POSITIONAL_QC_FAILS (dict[str, str]): a dictionary mapping genes to their nucleotide mutation that failed positional QC
+            GENES_WITH_VALID_DELETIONS (set[str]): a set of genes that have valid (QC-pass) deletions
+        """
         self.logger = logger
         self.input_json = input_json
         self.output_prefix = output_prefix
 
         self.LOW_DEPTH_OF_COVERAGE_LIST = LOW_DEPTH_OF_COVERAGE_LIST
+        """A list of genes with low depth of coverage (failed locus QC)."""
         self.SAMPLE_NAME = SAMPLE_NAME
+        """The sample name"""
         self.DF_LABORATORIAN = DF_LABORATORIAN
+        """A pandas DataFrame containing the laboratorian report data."""
         self.POSITIONAL_QC_FAILS = POSITIONAL_QC_FAILS
+        """A dictionary mapping genes to their nucleotide mutation that failed positional QC"""
         self.GENES_WITH_VALID_DELETIONS = GENES_WITH_VALID_DELETIONS
+        """A set of genes that have valid (QC-pass) deletions"""
 
     def get_id(self, TNGS: bool, MIN_LOCUS_PERCENTAGE: float, test: bool = False) -> str:
         """Returns both the TBProfiler identified lineage and the lineage in human-friendly languager
@@ -148,17 +184,16 @@ class LIMS:
 
         return message
 
-    def create_lims_report(self, TNGS, MIN_LOCUS_PERCENTAGE, OPERATOR) -> None:
-        """
-        This function recieves the input json file and laboratorian report to
-        write the LIMS report that includes the following information:
-            - Sample Name:  sample name
-            - Lineage
-            - The set of information in ANTIMICROBIAL_CODE_TO_GENES dictionary with 
-                target drug resistance information in layman's terms, and the 
-                mutations responsible for the predicted phenotype
-            - Analysis Date (in YYYY-MM-DD HH:SS format)
-            - Operator information
+    def create_lims_report(self, TNGS: bool, MIN_LOCUS_PERCENTAGE: float, OPERATOR: str) -> None:
+        """Creates the LIMS report using the laboratorian pd.DataFrame
+        
+        Args:
+            TNGS (bool): flag to indicate if the input data is tNGS or not
+            MIN_LOCUS_PERCENTAGE (float): the minimum percentage of the loci that need to be covered to call a lineage
+            OPERATOR (str): the operator who ran the sequencing
+        
+        Returns:
+            None
         """
         DF_LIMS = pd.DataFrame({
             "Sample_Name": self.SAMPLE_NAME, 

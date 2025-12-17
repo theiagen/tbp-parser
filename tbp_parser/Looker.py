@@ -7,7 +7,7 @@ class Looker:
     """Class to create the Looker report based on the Laboratorian report and other inputs.
     
     Attributes:
-        RESISTANCE_RANKING (dict): A dictionary ranking the resistance annotations from 
+        RESISTANCE_RANKING (dict[str, int]): A dictionary ranking the resistance annotations from 
             highest to lowest priority.
         logger (_type_): the logging instance
         output_prefix (str): the output file prefix
@@ -35,7 +35,19 @@ class Looker:
     }    
     """A dictionary ranking the resistance annotations from highest to lowest priority."""
     
-    def __init__(self, logger, output_prefix: str, DF_LABORATORIAN: pd.DataFrame, LOW_DEPTH_OF_COVERAGE_LIST: list[str], GENES_WITH_VALID_DELETIONS: set[str], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, dict[str, dict[str, str]]]) -> None:    
+    def __init__(self, logger, output_prefix: str, DF_LABORATORIAN: pd.DataFrame, LOW_DEPTH_OF_COVERAGE_LIST: list[str], GENES_WITH_VALID_DELETIONS: set[str], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, dict[str, dict[str, str]]]) -> None:
+        """Initializes the Looker class.
+        
+        Args:
+            logger (_type_): the logging instance
+            output_prefix (str): the output file prefix
+            DF_LABORATORIAN (pd.DataFrame): the laboratorian report dataframe
+            LOW_DEPTH_OF_COVERAGE_LIST (list[str]): list of genes with low depth of coverage
+            GENES_WITH_VALID_DELETIONS (set[str]): set of genes with valid deletions
+            GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, dict[str, dict[str, str]]]): a
+                dictionary mapping drugs to lims report columns to associated drugs and 
+                their respective column names
+        """    
         self.logger = logger
         self.output_prefix = output_prefix
         self.DF_LABORATORIAN = DF_LABORATORIAN

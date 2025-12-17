@@ -16,6 +16,37 @@ class Parser:
     It initializes with the input arguments provided at runtime, creates the standard
     look-up dictionaries, checks for dependencies, and runs the main logic to generate
     the desired reports.
+    
+    Attributes:
+        logger (logging.Logger): the logger object for logging messages
+        input_json (str): the JSON file produced by TBProfiler
+        input_bam (str): the BAM file produced by TBProfiler
+        config (str): the configuration file to use, in YAML format
+        verbose (bool): whether to enable verbose logging
+        debug (bool): whether to enable debug logging
+        output_prefix (str): the prefix for output files
+        MIN_PERCENT_COVERAGE (float): the minimum percentage of a region that has depth above the threshold set by MIN_DEPTH to pass QC
+        MIN_DEPTH (int): the minimum depth of coverage for a site to pass QC
+        tbdb_bed (str): the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations
+        gene_tier_tsv (str): the TSV file mapping genes to their tier
+        promoter_regions_tsv (str): the TSV file containing the promoter regions to include in interpretation designations
+        TNGS (bool): whether tNGS mode is enabled
+        SEQUENCING_METHOD (str): the sequencing method used to generate the data
+        MIN_READ_SUPPORT (int): the minimum read support for a mutation to pass QC
+        MIN_FREQUENCY (float): the minimum frequency for a mutation to pass QC
+        MIN_LOCUS_PERCENTAGE (float): the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC
+        OPERATOR (str): the operator who ran the sequencing
+        
+    Methods:
+        create_standard_dictionaries() -> tuple[dict[str, list[str]], dict[str, str], dict[str, list[int] | list[list[int]]], dict[str, str], dict[str, list[int] | list[list[int]]]]:
+            Creates the standard look-up dictionaries used throughout tbp-parser
+        overwrite_variables() -> None:
+            Overwrites input variables with those from the config file
+        check_dependency_exists() -> None:
+            Checks if samtools is installed and available
+        run() -> None:
+            Runs the main logic of the Parser class to generate the reports
+    
     """
 
     def __init__(self, options) -> None:
@@ -70,7 +101,7 @@ class Parser:
             self.logger.info("PARSER:__init__:Overwriting variables with the provided config file")
             self.overwrite_variables()
 
-    def create_standard_dictionaries(self) -> tuple[dict, dict, dict, dict, dict]:
+    def create_standard_dictionaries(self) -> tuple[dict[str, list[str]], dict[str, str], dict[str, list[int] | list[list[int]]], dict[str, str], dict[str, list[int] | list[list[int]]]]:
         """Parses the provided coverage regions bed file to create the standard
         look-up dictionaries used throughout tbp-parser
         

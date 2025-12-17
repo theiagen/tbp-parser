@@ -1,26 +1,59 @@
 import globals as globals_
 
 class Row() :
-    """
-    This class represents a row in the Laboratorian report.
+    """A class representing a row in the Laboratorian report.
     
-    The __init__ function assigns each variant attribute to the appropriate
-    column in the Laboratorian report.
-
-    This class has seven additional functions:
-        - wildtype_row: creates a WT row for genes with no mutations
-        - add_qc_warnings: adds QC warnings based on depth, frequency, and read 
-           support
-        - print: prints the row in a readable format
-        - determine_interpretations: determines the Looker and MDL interpretations
-        - rank_annotation: ranks the WHO annotation based on resistance
-        - is_mutation_outside_region: checks if a mutation falls within the primer 
-           regions
-        - describe_rationale: describes the rationale for the interpretation if it
-           originated from an expert rule
+    Attributes:
+        sample_id (str): The sample ID.
+        tbprofiler_gene_name (str): The gene name from TBProfiler.
+        tbprofiler_locus_tag (str): The locus tag from TBProfiler.
+        tbprofiler_variant_substitution_type (str): The type of variant substitution from TBProfiler.
+        tbprofiler_variant_substitution_nt (str): The nucleotide change from TBProfiler.
+        tbprofiler_variant_substitution_aa (str): The amino acid change from TBProfiler.
+        confidence (str): The confidence used in the output report.
+        who_confidence (str): The WHO confidence annotation.
+        antimicrobial (str): The associated antimicrobial drug name.
+        looker_interpretation (str): The Looker interpretation of the mutation.
+        mdl_interpretation (str): The MDL interpretation of the mutation.
+        depth (int): The depth of coverage at the mutation position.
+        frequency (float): The allele frequency of the mutation.
+        read_support (float): The read support for the mutation.
+        rationale (str): The rationale for the interpretation.
+        warning (set[str]): A set of warnings related to QC failures.
+        gene_tier (str): The tier of the gene.
+        source (str): The source of the annotation.
+        tbdb_comment (str): Additional comments from the TBDB.
+        variant (Variant): The Variant object associated with this row.
+    
+    Methods:
+        wildtype_row(logger, sample_name: str, gene_name: str, drug_name: str, GENE_TO_LOCUS_TAG: dict[str, str], GENE_TO_TIER: dict[str, str], LOW_DEPTH_OF_COVERAGE_LIST: list[str]) -> 'Row':
+            CLASS METHOD. Creates a wildtype Row object for genes that were not found in the TBProfiler
+            JSON output (i.e., no mutations were found in that gene). This is used to create
+            WT rows for genes that were sequenced but had no mutations.
+            
+        add_qc_warnings(MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str]) -> tuple[set, set]:
+            Adds QC warnings if a mutation either has poor positional quality or locus quality.
+            
+        print() -> None:
+            Prints the row in a readable format if debugging is enabled.
+            
+        determine_interpretation() -> None:
+            Updates the Row's values for the rationale, confidence, and interpretations
+            for the row.
+            
+        rank_annotation() -> int:
+            Generates an integer ranking of the WHO annotation based on resistance,
+            with 4 being the most resistant category and 1 the least.
+        
+        is_mutation_outside_region() -> bool:
+            Checks if a mutation falls within the tNGS primer regions.
+        
+        describe_rationale(rule: str) -> str:
+            Turns the rule number into a more descriptive string for the rationale
+            column in the Laboratorian report.
     """
     
-    def __init__(self, logger, variant, annotation):
+    def __init__(self, logger, variant: Variant, annotation: dict) -> None:
         """
         This function initializes the Row object with the appropriate
         values for each column in the CDPH Laboratorian report.
@@ -28,8 +61,8 @@ class Row() :
 
         Args:
             logger: The logger object for logging messages.
-            variant: A Variant object containing information about the mutation.
-            annotation: The annotation dictionary containing WHO confidence and drug information.
+            variant (Variant): A Variant object containing information about the mutation.
+            annotation (dict): The annotation dictionary containing WHO confidence and drug information.
         """
         self.logger = logger
 
@@ -77,7 +110,7 @@ class Row() :
         self.warning = set()
 
     @classmethod
-    def wildtype_row(cls, logger, sample_name, gene_name, drug_name, GENE_TO_LOCUS_TAG, GENE_TO_TIER, LOW_DEPTH_OF_COVERAGE_LIST) -> 'Row':
+    def wildtype_row(cls, logger, sample_name: str, gene_name: str, drug_name: str, GENE_TO_LOCUS_TAG: dict[str, str], GENE_TO_TIER: dict[str, str], LOW_DEPTH_OF_COVERAGE_LIST: list[str]) -> 'Row':
         """This class method creates an wildtype Row object for genes that
         were not found in the TBProfiler JSON output (i.e., no mutations
         were found in that gene). This is used to create WT rows for
@@ -86,7 +119,10 @@ class Row() :
         Args:
             logger: The logger object for logging messages.
             gene_name (str): The name of the gene.
-            drug_name (str): The name of the associated drug.
+            drug_name (str): The name of the associated drug
+            GENE_TO_LOCUS_TAG (dict[str, str]): A dictionary mapping gene names to locus tags.
+            GENE_TO_TIER (dict[str, str]): A dictionary mapping gene names to their tier.
+            LOW_DEPTH_OF_COVERAGE_LIST (list[str]): A list of genes with low depth of coverage (failed locus QC).
 
         Returns:
             Row: An empty Row object with the appropriate NA or WT values.
@@ -124,7 +160,7 @@ class Row() :
         
         return row
 
-    def add_qc_warnings(self, MIN_DEPTH, MIN_FREQUENCY, MIN_READ_SUPPORT, LOW_DEPTH_OF_COVERAGE_LIST, genes_with_valid_deletions) -> tuple[set, set]:
+    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str]) -> tuple[set[str], set[str]]:
         """Adds QC warnings if a mutation either has poor positional quality or locus quality
 
         Args:
@@ -132,10 +168,10 @@ class Row() :
             MIN_FREQUENCY (float): the minimum allele frequency for a mutation to pass positional QC
             MIN_READ_SUPPORT (float): the minimum read support for a mutation to pass positional QC 
             LOW_DEPTH_OF_COVERAGE_LIST (list[str]): a list of genes that have failed locus QC (i.e., breadth of coverage < min_percent_coverage)
-            genes_with_valid_deletions (set(str)): a set of genes with deletions that pass positional QC
+            genes_with_valid_deletions (set[str]): a set of genes with deletions that pass positional QC
 
         Returns:
-            tuple[set, set]: the updated set of genes with valid deletions, and the set of mutations that failed positional QC
+            tuple[set[str], set[str]]: the updated set of genes with valid deletions, and the set of mutations that failed positional QC
         """        
         positional_qc_fails = set()
         
@@ -189,8 +225,7 @@ class Row() :
         return genes_with_valid_deletions, positional_qc_fails
 
     def print(self) -> None:
-        """
-        This function prints the row in a readable format.
+        """This function prints the row in a readable format if debugging is enabled.
         """
         self.logger.debug("ROW:print:Now printing the row in a readable format:")
         self.logger.debug("ROW:print:\tsample_id: {}".format(self.sample_id))
@@ -213,12 +248,9 @@ class Row() :
         self.logger.debug("ROW:print:\ttbdb_comment: {}".format(self.tbdb_comment))
 
     def determine_interpretation(self) -> None:
-        """
-        This function finishes each row with the rest of the values needed. It depends
-        on the ANNOTATION_TO_INTERPRETATION dictionary which is a dictionary to turn
-        TBProfiler WHO annotations into their corresponding Looker or MDL
-        interpretations; MDL interpretations are the same as Looker but drop the 
-        "- Interim" designations.
+        """This function updates the Row's values for the rationale, confidence,
+        and interpretations for the row. MDL interpretations are the same as Looker but
+        drop the "- Interim" designations.
         """    
         ANNOTATION_TO_INTERPRETATION = {
             "Assoc w R": {
@@ -266,9 +298,11 @@ class Row() :
             self.confidence = "No WHO annotation"
 
     def rank_annotation(self) -> int: 
-        """
-        This function ranks the WHO annotation based on resistance,
+        """Generates an integer ranking of the WHO annotation based on resistance,
         with 4 being the most resistant category and 1 the least.
+        
+        Returns:
+            int: The rank of the WHO annotation.
         """
         if self.who_confidence == "Assoc w R":
             return 4
@@ -280,9 +314,10 @@ class Row() :
             return 1  
 
     def is_mutation_outside_region(self) -> bool:
-        """
-        This function checks if a mutation falls within the primer regions.
-        Returns a boolean flag indicating if the mutation is outside the expected region.
+        """This function checks if a mutation falls within the primer regions.
+            
+            Returns:
+                bool: True if the mutation is outside the expected region, false otherwise
         """
         # default to failure (mutation outside expected region)
         for primer, positions in globals_.TNGS_REGIONS.items():
@@ -312,7 +347,7 @@ class Row() :
 
         return True  # no matching position found, mutation is outside region
 
-    def describe_rationale(self, rule) -> str:
+    def describe_rationale(self, rule: str) -> str:
         """This function turns the rule number into a more descriptive string for the rationale
         column in the Laboratorian report
 
