@@ -65,7 +65,7 @@ def main():
     tngs_arguments = parser.add_argument_group("tNGS-specific arguments", 
                                                 "options that are primarily used for tNGS data\n(all frequency arguments are compatible with WGS data)")
     tngs_arguments.add_argument("--tngs",
-                        help="\nindicates that the input data was generated using a tNGS protocol\nTurns on tNGS-specific global parameters", action="store_true", default=False)
+                        help="\nindicates that the input data was generated using a tNGS protocol\nTurns on tNGS-specific features", action="store_true", default=False)
 
     # new arguments for qc reporting
     boundary_arguments = parser.add_argument_group("tNGS-specific QC boundary arguments (NOT compatible with WGS data)",

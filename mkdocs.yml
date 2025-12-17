@@ -40,27 +40,20 @@ theme:
         name: Switch to Light Mode
 
 nav:
-  - Home: index.md
-  - Getting Started: usage.md
-  - Inputs: 
-      - inputs/inputs.md
-      - TheiaProk Inputs on Terra: inputs/theiaprok.md
-  - Outputs:
-      - outputs/index.md
-      - Laboratorian report: outputs/laboratorian.md
-      - LIMS report: outputs/lims.md
-      - Looker report: outputs/looker.md
-      - Coverage report: outputs/coverage.md
-      - TheiaProk Outputs on Terra: outputs/theiaprok.md
-  - Versioning: 
-     - versioning/index.md
-     - Brief Description of Versions: versioning/brief.md
-     - Exhaustive List of Versions: versioning/exhaustive.md
-  - Algorithm:
-      - algorithm/index.md
-      - Technical Code Breakdown: algorithm/technical.md
-      - Interpretation Document: algorithm/interpretation.md
-      - Global Variables: algorithm/globals.md
+  - tbp-parser:
+    - Home: index.md
+    - Inputs: inputs.md
+    - Outputs:
+        - Laboratorian report: outputs/laboratorian.md
+        - LIMS report: outputs/lims.md
+        - Looker report: outputs/looker.md
+        - Coverage report: outputs/coverage.md
+    - Versioning:
+      - Brief Description of Versions: versioning/brief.md
+      - Exhaustive List of Versions: versioning/exhaustive.md
+    - Algorithm:
+        - Technical Code Breakdown: algorithm/technical.md
+        - Interpretation Document: algorithm/interpretation.md
 
 markdown_extensions: 
   - admonition
