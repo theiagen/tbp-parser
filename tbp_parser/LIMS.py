@@ -208,10 +208,8 @@ class LIMS:
             DF_LIMS = DF_LIMS.copy()
             
             for antimicrobial_code, gene_codes in drug_gene_dictionary.items():
-                print("Processing drug: {}, antimicrobial code: {}".format(drug, antimicrobial_code))
                 # extract list of all genes associated with this drug (this dictionary is only for the LIMS report so not all genes need be considered) 
                 genes_associated_with_drug = gene_codes.keys()
-                print("Genes associated with drug {}: {}".format(drug, genes_associated_with_drug))
                 
                 # capture all rows in DF_LABORATORIAN associated with this drug and then 
                 #  capture only gene-drug associated rows that are reported on in the LIMS report
@@ -235,7 +233,6 @@ class LIMS:
 
                 # the antimicrobial code message may need to change depending on the mutations present
                 # additionally, we must now provide content for the gene codes associated with this drug
-                print("max_mdl_resistance for drug {}: {}".format(drug, max_mdl_resistance))
                 if max_mdl_resistance in ["WT", "Insufficient Coverage", "NA"]:
                     # set all gene codes to "No mutations detected" or "No sequence" if Insufficient Coverage
                     for gene, gene_code in gene_codes.items():
@@ -247,7 +244,6 @@ class LIMS:
                         
                 elif max_mdl_resistance in ["S"]:
                     for gene, gene_code in gene_codes.items():
-                        print("gene: {}, gene_code: {}".format(gene, gene_code))
                         mutation_list = []
                         
                         gene_subset = qc_pass_gene_drug_associated_rows[qc_pass_gene_drug_associated_rows["tbprofiler_gene_name"] == gene]
@@ -271,8 +267,6 @@ class LIMS:
 
                         else: 
                             if len(gene_subset) > 0 and max(gene_subset["mdl_interpretation"].tolist(), key=lambda x: self.RESISTANCE_RANKING[x]) == "S":
-                                print(gene_subset["mdl_interpretation"].tolist())
-                                print(gene_subset)
                                 DF_LIMS[gene_code] = "No high confidence mutations detected"
                             else:
                                 # no mutations for this gene, wildtype
@@ -331,8 +325,6 @@ class LIMS:
                         else:
                             # if max_mdl_resistance for this gene is "S" then set to "No high confidence mutations detected"
                             if len(gene_subset) > 0 and max(gene_subset["mdl_interpretation"].tolist(), key=lambda x: self.RESISTANCE_RANKING[x]) == "S":
-                                    print(gene_subset["mdl_interpretation"].tolist())
-                                    print(gene_subset)
                                     DF_LIMS[gene_code] = "No high confidence mutations detected"
                             else:
                                 # no mutations for this gene, wildtype
