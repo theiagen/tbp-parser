@@ -53,7 +53,7 @@ class Row() :
             column in the Laboratorian report.
     """
     
-    def __init__(self, logger, variant: Variant, annotation: dict) -> None:
+    def __init__(self, logger, variant: 'Variant', annotation: dict) -> None:
         """
         This function initializes the Row object with the appropriate
         values for each column in the CDPH Laboratorian report.

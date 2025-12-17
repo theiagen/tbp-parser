@@ -147,7 +147,6 @@ class Coverage:
                                                                    index=[0])], ignore_index=True)
 
         if TNGS: 
-            # TO-DO: MAKE CONFIGURABLE
             DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning"}, inplace=True)
 
         DF_COVERAGE.to_csv(self.output_prefix + ".coverage_report.csv", float_format="%.2f", index=False)

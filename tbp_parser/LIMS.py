@@ -115,7 +115,7 @@ class LIMS:
             detected_sublineage = input_json["sub_lineage"]
             
             lims_genes = list({
-                gene_name for code_to_genes in globals_.ANTIMICROBIAL_CODE_TO_GENES.values()
+                gene_name for code_to_genes in globals_.DRUG_COLUMNS_TO_GENE_COLUMNS.values()
                 for gene_to_code in code_to_genes.values()
                 for gene_name in gene_to_code.keys()
             })
@@ -197,19 +197,21 @@ class LIMS:
         """
         DF_LIMS = pd.DataFrame({
             "Sample_Name": self.SAMPLE_NAME, 
-            "ID": self.get_id(TNGS, MIN_LOCUS_PERCENTAGE)
+            "Lineage_ID": self.get_id(TNGS, MIN_LOCUS_PERCENTAGE)
         }, index=[0])
 
         self.logger.debug("LIMS:create_lims_report:Now iterating through each LIMS antimicrobial code")
-        for drug, drug_gene_dictionary in globals_.ANTIMICROBIAL_CODE_TO_GENES.items():
+        for drug, drug_gene_dictionary in globals_.DRUG_COLUMNS_TO_GENE_COLUMNS.items():
             genes_associated_with_drug = set()
             
             # avoid highly fragmented performance warning
             DF_LIMS = DF_LIMS.copy()
             
             for antimicrobial_code, gene_codes in drug_gene_dictionary.items():
+                print("Processing drug: {}, antimicrobial code: {}".format(drug, antimicrobial_code))
                 # extract list of all genes associated with this drug (this dictionary is only for the LIMS report so not all genes need be considered) 
                 genes_associated_with_drug = gene_codes.keys()
+                print("Genes associated with drug {}: {}".format(drug, genes_associated_with_drug))
                 
                 # capture all rows in DF_LABORATORIAN associated with this drug and then 
                 #  capture only gene-drug associated rows that are reported on in the LIMS report
@@ -218,8 +220,6 @@ class LIMS:
                     
                 # remove any interpretations that have failed positional QC from consideration
                 # this is when the tbprofiler_variant_substitution_nt variable is in the POSITIONAL_QC_FAILS list
-                
-                # remove rows with positional QC fails
                 qc_pass_gene_drug_associated_rows = gene_drug_associated_rows.loc[~gene_drug_associated_rows.apply(
                     lambda row: row["tbprofiler_variant_substitution_nt"] in self.POSITIONAL_QC_FAILS.get(row["tbprofiler_gene_name"], set()), axis=1)]
                 
@@ -235,7 +235,7 @@ class LIMS:
 
                 # the antimicrobial code message may need to change depending on the mutations present
                 # additionally, we must now provide content for the gene codes associated with this drug
-
+                print("max_mdl_resistance for drug {}: {}".format(drug, max_mdl_resistance))
                 if max_mdl_resistance in ["WT", "Insufficient Coverage", "NA"]:
                     # set all gene codes to "No mutations detected" or "No sequence" if Insufficient Coverage
                     for gene, gene_code in gene_codes.items():
@@ -245,15 +245,17 @@ class LIMS:
                         else:
                             DF_LIMS[gene_code] = "No mutations detected"
                         
-                elif max_mdl_resistance == ["S"]:
+                elif max_mdl_resistance in ["S"]:
                     for gene, gene_code in gene_codes.items():
+                        print("gene: {}, gene_code: {}".format(gene, gene_code))
                         mutation_list = []
+                        
+                        gene_subset = qc_pass_gene_drug_associated_rows[qc_pass_gene_drug_associated_rows["tbprofiler_gene_name"] == gene]
                         if gene == "rpoB" and drug == "rifampicin":
                             # by default, assume no RRDR synonymous mutations
                             DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampicin"
 
                             # check if there is a mutation appears in the RRDR (codons 426-452) (in the special-positions dictionary)
-                            gene_subset = qc_pass_gene_drug_associated_rows[qc_pass_gene_drug_associated_rows["tbprofiler_gene_name"] == gene]
                             # reduce gene_subset to only those that are synonymous type
                             gene_subset = gene_subset[gene_subset["tbprofiler_variant_substitution_type"] == "synonymous_variant"]                        
                             if len(gene_subset) > 0:               
@@ -267,8 +269,14 @@ class LIMS:
                             
                             DF_LIMS[gene_code] = "; ".join(mutation_list) if len(mutation_list) > 0 else "No high confidence mutations detected"
 
-                        else:
-                            DF_LIMS[gene_code] = "No high confidence mutations detected"
+                        else: 
+                            if len(gene_subset) > 0 and max(gene_subset["mdl_interpretation"].tolist(), key=lambda x: self.RESISTANCE_RANKING[x]) == "S":
+                                print(gene_subset["mdl_interpretation"].tolist())
+                                print(gene_subset)
+                                DF_LIMS[gene_code] = "No high confidence mutations detected"
+                            else:
+                                # no mutations for this gene, wildtype
+                                DF_LIMS[gene_code] = "No mutations detected"
                 
                 elif max_mdl_resistance in ["R", "U"]:
                     # only report R or U mutations (and RRDR synonymous mutations that are S)
@@ -321,10 +329,15 @@ class LIMS:
                         if len(mutation_list) > 0:
                             DF_LIMS[gene_code] = "; ".join(mutation_list)
                         else:
-                            DF_LIMS[gene_code] = "No mutations detected"
-                                                    
-        # TO-DO: adjust column names to make configurable
-        
+                            # if max_mdl_resistance for this gene is "S" then set to "No high confidence mutations detected"
+                            if len(gene_subset) > 0 and max(gene_subset["mdl_interpretation"].tolist(), key=lambda x: self.RESISTANCE_RANKING[x]) == "S":
+                                    print(gene_subset["mdl_interpretation"].tolist())
+                                    print(gene_subset)
+                                    DF_LIMS[gene_code] = "No high confidence mutations detected"
+                            else:
+                                # no mutations for this gene, wildtype
+                                DF_LIMS[gene_code] = "No mutations detected"
+                                        
         DF_LIMS = pd.concat([DF_LIMS, pd.DataFrame({
                                 "Analysis_Date": datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 
                                 "Operator": OPERATOR, 
@@ -333,5 +346,9 @@ class LIMS:
         
         # write to file
         DF_LIMS.to_csv("{}.lims_report.csv".format(self.output_prefix), index=False)
-        self.logger.info("LIMS:create_lims_report:LIMS report created, now exiting function\n")
         
+        # create transposed version
+        DF_LIMS_T = DF_LIMS.transpose()
+        DF_LIMS_T.to_csv("{}.transposed_lims_report.csv".format(self.output_prefix), header=False)
+        
+        self.logger.info("LIMS:create_lims_report:LIMS report created, now exiting function\n")

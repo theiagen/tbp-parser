@@ -79,6 +79,7 @@ class Looker:
                     drugs_to_genes[drug] = []
                 drugs_to_genes[drug].append(gene)
                 
+        antimicrobial_resistances = {}
         # iterate through laboratorian dataframe to extract highest mutation
         for antimicrobial in drugs_to_genes.keys():
             potential_looker_resistances = self.DF_LABORATORIAN[self.DF_LABORATORIAN["antimicrobial"] == antimicrobial]["looker_interpretation"]
@@ -88,15 +89,19 @@ class Looker:
             except:
                 max_looker_resistance = "NA"
                 
-            DF_LOOKER[antimicrobial] = max_looker_resistance
+            antimicrobial_resistances[antimicrobial] = max_looker_resistance
 
             # this does not appear in the logic document, but it was in legacy code; not sure if we should retain?
             if max_looker_resistance != "R":
                 for gene in drugs_to_genes[antimicrobial]:
                     if gene in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS:
-                        DF_LOOKER[antimicrobial] = "Insufficient coverage in locus"
+                        antimicrobial_resistances[antimicrobial] = "Insufficient coverage in locus"
                         break
 
+        for antimicrobial in sorted(antimicrobial_resistances.keys()):
+            # order alphabetically; probably doesn't matter but makes it easy to compare to old versions of the script
+            DF_LOOKER[antimicrobial] = antimicrobial_resistances[antimicrobial]
+        
         # as per rule 6.1.2 and 6.1.3, the lineage field is the main_lineage field from TBProfiler and the ID field is the same as ID in the LIMS report
         DF_LOOKER["lineage"] = LINEAGE
         DF_LOOKER["ID"] = LINEAGE_ENGLISH

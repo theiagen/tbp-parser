@@ -2,6 +2,7 @@ import logging
 import subprocess
 import globals as globals_
 import sys
+import fileinput
 import re
 import yaml
 from Coverage import Coverage
@@ -250,9 +251,13 @@ class Parser:
         self.logger.info("PARSER:run:Creating coverage report")
         coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.genes_with_valid_deletions, self.TNGS)
 
-        # DO MASSIVE RENAMING HERE!!!!!
-        # rifampicin -> rifampin 
-        # mmpR5 -> Rv0678 
-        # sed? not sure what's the best method
-
+        if len(globals_.OUTPUT_RENAMING) > 0:
+            self.logger.info("PARSER:run:Renaming output columns as specified in globals.OUTPUT_RENAMING")
+            
+            for original, replacement in globals_.OUTPUT_RENAMING.items():
+                file_suffixes = [".lims_report.csv", ".laboratorian_report.csv", ".looker_report.csv", ".coverage_report.csv"]
+                for output_suffix in file_suffixes:
+                    for line in fileinput.input(self.output_prefix + output_suffix, inplace=True):
+                        print(line.replace(original, replacement), end="")
+                
         self.logger.info("PARSER:run:Parsing completed")

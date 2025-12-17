@@ -46,8 +46,8 @@ def is_within_range(position, range_positions) -> bool:
     except:
         return False
 
-global ANTIMICROBIAL_CODE_TO_GENES
-ANTIMICROBIAL_CODE_TO_GENES = {
+global DRUG_COLUMNS_TO_GENE_COLUMNS
+DRUG_COLUMNS_TO_GENE_COLUMNS = {
     "amikacin": {
         "AMK": {
             "bacA": "AMK_bacA",
@@ -241,15 +241,15 @@ ANTIMICROBIAL_CODE_TO_GENES = {
         }
     },
     "streptomycin": {
-        "STR": {
-            "bacA": "STR_bacA",
-            "gid": "STR_gid",
-            "glpK": "STR_glpK",
-            "rpsL": "STR_rpsL",
-            "rrs": "STR_rrs",
-            "Rv1258c": "STR_Rv1258c",
-            "Rv2477c": "STR_Rv2477c",
-            "whiB7": "STR_whiB7",
+        "STM": {
+            "bacA": "STM_bacA",
+            "gid": "STM_gid",
+            "glpK": "STM_glpK",
+            "rpsL": "STM_rpsL",
+            "rrs": "STM_rrs",
+            "Rv1258c": "STM_Rv1258c",
+            "Rv2477c": "STM_Rv2477c",
+            "whiB7": "STM_whiB7",
         }
     }
 }
@@ -271,6 +271,14 @@ new drugs/genes or reduced to only the drugs/genes needed in the configuration f
 
 This is derived from the TBProfiler `genes.bed` file, which can be accessed here: 
 https://github.com/jodyphelan/TBProfiler/blob/master/db/tbdb/genes.bed.
+"""
+
+global OUTPUT_RENAMING
+OUTPUT_RENAMING = {}
+"""This dictionary maps existing default language to new language for output reports.
+For example, if the desired output language for 'rifampicin' is 'rifampin', the dictionary
+would contain the entry {'rifampicin': 'rifampin'}. At the end of processing, all instances
+of 'rifampicin' in the output reports would be replaced with 'rifampin'.
 """
 
 ###### deal with these ones next
