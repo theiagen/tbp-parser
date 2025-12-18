@@ -19,13 +19,13 @@ The inputs on this page reflect the parameters that are applicable for the comma
 
 The following global variables are used in the `tbp-parser` algorithm. These variables are used to determine the columns in the LIMS report and to rename certain output text in all output files.
 
-These variables can be overwritten using a configuration file. For more information on how to overwrite these variables, please see the [Configuration File](../inputs/inputs.md#configuration-file) section.
+These variables can be overwritten using a configuration file. For more information on how to overwrite these variables, please see the [Configuration File](#configuration-file) section.
 
 ## Global Variables
 
 The content of the global variables can be found by browsing the [globals.py](https://github.com/theiagen/tbp-parser/blob/main/tbp_parser/globals.py) file on GitHub. These variables are used to determine the columns in the LIMS report and to rename certain output text in all output files.
 
-These variables can be overwritten using a configuration file. For more information on how to overwrite these variables, please see the [Configuration File](../inputs/inputs.md#configuration-file) section.
+These variables can be overwritten using a configuration file. For more information on how to overwrite these variables, please see the [Configuration File](#configuration-file) section.
 
 | Variable Name | Description | Format |
 | :------------ | :---------- | :------------ |
@@ -60,11 +60,11 @@ OUTPUT_RENAMING:
 DRUG_COLUMNS_TO_GENE_COLUMNS:
     rifampicin: 
         MY_UNIQUE_COLUMN_NAME_FOR_RIF:
-            rpoB: MY_UNIQUE_GENE_NAME_FOR_RPOB
+            rpoB: MY_UNIQUE_COLUMN_NAME_FOR_RPOB
     linezolid:
         MY_UNIQUE_COLUMN_NAME_FOR_LZD:
-            rrl: MY_UNIQUE_GENE_NAME_FOR_RRL
-            rplC: MY_UNIQUE_GENE_NAME_FOR_RPLC
+            rrl: MY_UNIQUE_COLUMN_NAME_FOR_RRL
+            rplC: MY_UNIQUE_COLUMN_NAME_FOR_RPLC
 
 # overwrite the following input parameters
 min_depth: 15
@@ -82,9 +82,9 @@ These options are used to create standard variables that are used throughout the
 
 | Short Version | Long Version | Description | Default Value |
 | :------------ | :------------ | :---------- | :------------ |
-| -b | --tbdb_bed | the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler | [/data/tbdb.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb.bed) |
-| -g | --gene_tier_tsv | a TSV file mapping genes to their tier | [/data/gene-to-tier_2025-12-10.tsv](https://github.com/theiagen/tbp-parser/blob/main/data/gene-to-tier_2025-12-10.tsv) |
-| -p | --promoter_regions_tsv | a TSV file containing the promoter regions to include in interpretation designations; created from the WHO v2 catalogue | [/data/who-v2-promoter-regions_2025-12-10.tsv](https://github.com/theiagen/tbp-parser/blob/main/data/who-v2-promoter-regions_2025-12-10.tsv) |
+| `-b` | `--tbdb_bed` | the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler | [/data/tbdb.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb.bed) |
+| `-g` | `--gene_tier_tsv` | a TSV file mapping genes to their tier | [/data/gene-to-tier_2025-12-10.tsv](https://github.com/theiagen/tbp-parser/blob/main/data/gene-to-tier_2025-12-10.tsv) |
+| `-p` | `--promoter_regions_tsv` | a TSV file containing the promoter regions to include in interpretation designations; created from the WHO v2 catalogue | [/data/who-v2-promoter-regions_2025-12-10.tsv](https://github.com/theiagen/tbp-parser/blob/main/data/who-v2-promoter-regions_2025-12-10.tsv) |
 
 ### Quality Control Arguments
 
@@ -92,11 +92,11 @@ These options determine the thresholds for quality control.
 
 | Short Version | Long Version           | Description | Default Value |
 | :------------ | :--------------------- | :---------- | :------------ |
-| -d | --min_depth | The minimum depth of coverage required for a site to pass QC | 10 |
-| -c | --min_percent_coverage | The minimum percentage of a region that has depth above the threshold set by `min_depth` (used for a gene/locus to pass QC; 1.0 -> 100%) | 1.0 |
-| -s | --min_read_support | The minimum read support for a mutation to pass QC | 10 |
-| -f | --min_frequency | The minimum frequency for a mutation to pass QC (0.1 -> 10%) | 0.1 |
-| -l | --min_percent_locus_covered | The minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%) | 0.7 |
+| `-d` | `--min_depth` | The minimum depth of coverage required for a site to pass QC | 10 |
+| `-c` | `--min_percent_coverage` | The minimum percentage of a region that has depth above the threshold set by `min_depth` (used for a gene/locus to pass QC; 1.0 -> 100%) | 1.0 |
+| `-s` | `--min_read_support` | The minimum read support for a mutation to pass QC | 10 |
+| `-f` | `--min_frequency` | The minimum frequency for a mutation to pass QC (0.1 -> 10%) | 0.1 |
+| `-l` | `--min_percent_locus_covered` | The minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%) | 0.7 |
 
 ### Text Arguments
 
@@ -104,9 +104,9 @@ These options are used verbatim in the reports, or are used to name the output f
 
 | Short Version | Long Version | Description | Default Value |
 | :--- | :--- | :---------- | :------------ |
-| -m | --sequencing_method | The sequencing method used to gerneate the data; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Sequencing method not provided" |
-| -t | --operator | The operator who ran the analysis; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Operator not provided" |
-| -o | --output_prefix | The prefix to use for the output files. Do not include any spaces | "tbp_parser" |
+| `-m` | `--sequencing_method` | The sequencing method used to gerneate the data; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Sequencing method not provided" |
+| `-t` | `--operator` | The operator who ran the analysis; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Operator not provided" |
+| `-o` | `--output_prefix` | The prefix to use for the output files. Do not include any spaces | "tbp_parser" |
 
 ### tNGS-specific Arguments
 
@@ -114,7 +114,7 @@ These options are primarily used for tNGS data.
 
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
-| --tngs | Indicates that the input data was generated using a tNGS protocol. Turns on tNGS-specific features | false |
+| `--tngs` | Indicates that the input data was generated using a tNGS protocol. Turns on tNGS-specific features | false |
 
 ### Logging Arguments
 
@@ -122,5 +122,5 @@ These options change the verbosity of the `stdout` log.
 
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
-| --verbose | Increases the output verbosity to describe which stage of the analysis is currently running | false |
-| --debug | The highest level of output verbosity detailing every step of the analysis and logic implemented; overwrites --verbose | false |
+| `--verbose` | Increases the output verbosity to describe which stage of the analysis is currently running | false |
+| `--debug` | The highest level of output verbosity detailing every step of the analysis and logic implemented; overwrites --verbose | false |

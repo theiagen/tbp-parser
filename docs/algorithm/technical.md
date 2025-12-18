@@ -1,12 +1,12 @@
 # Technical Code Breakdown
 
-`tbp-parser` is object-oriented, with each class representing either *an output file*, *a part of an output file*, or *a part of the input JSON file* produced by TBProfiler.
+`tbp-parser` is object-oriented, with each class representing either _an output file_, _a part of an output file_, or _a part of the input JSON file_ produced by TBProfiler.
 
 The first class that is invoked by the `tbp-parser.py` script is `Parser` which is a control class that orchestrates the creation of the different output reports.
 
 ## Calculating percent gene coverage
 
-Before creating any reports, `Parser` calls the `Coverage` class to calculate the percent gene coverage over a specified minimum depth (default: 10) for the coding regions of all genes included in the TBDB (the database used in TBProfiler to generate the drug resistance annotations). This requires as input the BAM and BAI files produced by TBProfiler during alignment to the H37Rv reference genome. The percent gene coverage results are then stored in a global dictionary that is accessed multiple times for QC purposes during the creation of the final reports.
+Before creating any reports, `Parser` calls the `Coverage` class to calculate the percent breadth of coverage of a particular gene or locus over a specified minimum depth (default: 10) for any regions included in the `--tbdb_bed` input file (default value is the `genes.bed` file used in TBProfiler's TBDB). This requires the BAM and BAI files produced by TBProfiler during alignment to the H37Rv reference genome. The percent breadth of coverage results are then stored in a dictionary that is accessed multiple times for QC purposes during the creation of the final reports. At the same time, the average locus depth is calculated and any loci that do not meet the minimum breadth of coverage (determined by `--min_percent_coverage`, default: 1.0) are added to a list of failed loci for later use in QC checks.
 
 ## Creating the Laboratorian report
 
@@ -132,13 +132,13 @@ There are many other fields available that have useful information but are not u
 
 /// html | div[style='float: left; width: 50%; padding: 20px;']
 
-Within the input JSON file, there are two fields that are examined the most: `"dr_variants"` and `"other_variants"`. These fields are treated the same, and have the same format, although different mutations are found in both regions.
+Within the input JSON file, there are two fields that are examined the most by tbp-parser: `"dr_variants"` and `"other_variants"`. These fields are treated the same, and have the same format, although different mutations are found in both regions.
 
-After the global `SAMPLENAME` variable is set from the top-level `"id"` field, the `Laboratorian` class calls the `.iterate_section()` method, which starts by iterating through the `"dr_variants"` field.
+After the sample name is retrieved from the top-level `"id"` field, the `Laboratorian` class calls the `.iterate_section()` method, which starts by iterating through the `"dr_variants"` field.
 
-The contents of each variant section in the JSON dictionary are considered a list. Each list item, which consists of the contents within the curly brackets `{...}`. In the example to the right, I’ve only included 1 item in the `"dr_variants"` and `"other_variants"` list for simplicity, with all of the internal list items collapsed for simplicity.
+The contents of each variant section in the JSON dictionary are considered a list. Each list item consists of the contents within the curly brackets `{...}`. In the example to the right, I’ve only included 1 item in the `"dr_variants"` and `"other_variants"` list for simplicity, with all of the internal list items collapsed for simplicity.
 
-Each item in each of the two lists is converted into a `Variant` class object, and every item in each list item (the `"chrom"`, `"pos"`, `"locus_tag"`, etc.) is converted to a class attribute. This is because each item in the list represents a single mutation or a single variant. I’ll now refer to each variant section item as a `Variant`.
+Each item in each of the two lists is converted into a `Variant` class object, and every item in each list item (the `"chrom"`, `"pos"`, `"locus_tag"`, etc.) is converted to a class attribute. I’ll now refer to each variant section item as a `Variant`.
 
 Each new `Variant` object has the `.extract_annotations()` method called. This method starts by iterating through the `"annotation"` field in the input JSON. The annotation field can contain multiple different annotations, so we look at each one individually.
 
@@ -185,7 +185,7 @@ Each new `Variant` object has the `.extract_annotations()` method called. This m
 
 /// html | div[style='float: right; width: 50%; padding: 20px;']
 
-Each item in the `"annotation"` is turned into a `Row` object, which represents a row in the Laboratorian report. During the initiation of the `Row` object, each column in the Laboratorian report is created based on both the annotation field and the originating `Variant` object. Additionally, a warning field is created based on both the global dictionary created with the `Coverage` class and the originating `Variant` object's `"depth"` and `"freq"` fields.
+Each item in the `"annotation"` is turned into a `Row` object, which represents a row in the Laboratorian report. During the initiation of the `Row` object, each column in the Laboratorian report is created based on both the annotation field and the originating `Variant` object. Warnings are determined based on the results from the `Coverage` calculations and the `Variant` object's `"depth"` and `"freq"` fields.
 
 Sometimes multiple annotations for the same drug can appear for a single `Variant`. If this is the case, only the most severe annotation is saved (that is, an annotation that indicates resistance is kept instead of one that indicates susceptibility).
 
@@ -297,7 +297,7 @@ It starts by iterating through a list of antimicrobial drugs and extracting all 
 
 Then, a quality check is performed and if a particular gene fails coverage that contributed to the highest resistance rating, an insufficient coverage warning is given.
 
-The `"main_lin"` and `"sublin"` fields from the input JSON file are used to fill the `ID` field in the report. These fields are converted into shortened English without any technical lineage information.
+The `"main_lineage"` and `"sub_lineage"` fields from the input JSON file are used to fill the `ID` field in the report. These fields are converted into shortened English without any technical lineage information.
 
 Finally, the information is written to a CSV file which concludes the creation of the Looker report.
 
@@ -305,9 +305,7 @@ Finally, the information is written to a CSV file which concludes the creation o
 
 The `Parser` class then creates `LIMS` object which uses the `.create_lims_report()` method. The LIMS report also uses the Laboratorian report to generate the bulk of the information included.
 
-The `.create_lims_report()` method begins by iterating through each LIMS antimicrobial and gene code (corresponding to the LIMS codes in the CDPH STAR LIMS system). Then, the highest `mdl_interpretation` value is extracted for each row in the report that is associated with that antimicrobial drug, like in the Looker report. Then, the annotation is converted into a human-readable format (R → Mutations(s) associated with resistance to {antimicrobial} detected”, etc.).
-
-Then, the `.apply_lims_rules()` function is activated which determines which mutations should be output for the corresponding drug-gene combination. The mutations are then formatted so that they appear in the following format: `{nucleotide mutation} ({amino acid mutation, if available})` repeated, separated by semicolons.
+The `.create_lims_report()` method begins by iterating through each LIMS antimicrobial and gene code (corresponding to the LIMS codes in the CDPH STAR LIMS system). Then, the highest `mdl_interpretation` value is extracted for each row in the report that is associated with that antimicrobial drug, like in the Looker report. Then, the annotation is converted into a human-readable format (R → "Mutations(s) associated with resistance to {antimicrobial} detected", etc.).
 
 Some specific parsing rules apply to mutations within the rpoB gene, which changes the output language on the LIMS report. These rules depend on the position of the mutation in the gene.
 
@@ -315,6 +313,6 @@ After the rules are applied and the mutations are collected, the information is 
 
 ## Creating the coverage report
 
-The `Parser` class then reuses the `Coverage` object created first and calls the `.reformat_coverage()` method which adds any warnings, such as any deletion mutations detected for a gene. If a deletion is detected, a warning is useful because it indicates that although the reported coverage is less than 100%, it may be due to that deletion. If the coverage is still 100% and a deletion was identified, the warning will say that the deletion *may* be upstream.
+The `Parser` class then reuses the `Coverage` object created first and calls the `.create_coverage_report()` method which adds any warnings, such as any deletion mutations detected for a gene. If a deletion is detected, a warning is useful because it indicates that although the reported coverage is less than 100%, it may be due to that deletion. If the coverage is still 100% and a deletion was identified, the warning will say that the deletion _may_ be upstream.
 
 The coverage dictionary and the associated warnings are then written to a CSV file which concludes the creation of the coverage report, and the `tbp-parser` script.

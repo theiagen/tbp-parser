@@ -72,11 +72,11 @@ These miscellaneous columns are not set with the dictionary described above and 
 
 | Column name | Explanation | Source |
 | --- | --- | --- |
-| Sample_Name | The name of the sample | TBProfiler "id" field |
-| Lineage_ID | The lineage of the sample in human-readable language | Determined by tbp-parser using the TBProfiler "lineage" field |
+| Sample_Name | The name of the sample | TBProfiler `"id"` field |
+| Lineage_ID | The lineage of the sample in human-readable language | Determined by tbp-parser using the TBProfiler `"main_lineage"` and `"sub_lineage"` fields |
 | Analysis_Date | The date `tbp-parser` was run in YYYY-MM-DD HH:SS format | Determined by tbp-parser at runtime |
 | Operator | The name of the person who ran `tbp-parser`; can be provided with the `--operator` input parameter. If left blank, “Operator not provided” is the default value. | tbp-parser input parameter |
-| Lineage | The lineage of the sample | TBProfiler "lineage" field |
+| Lineage | The lineage of the sample | TBProfiler `"main_lineage"` field |
 
 ### **Customizing miscellaneous column names**
 
