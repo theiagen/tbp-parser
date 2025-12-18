@@ -16,7 +16,7 @@ class Variant:
     Attributes:
         logger (logging.Logger): generates logs
         annotation_dictionary (dict[str, Row]): A dictionary mapping drugs to their Row annotations for this variant.
-        sample_name (str): The sample name associated with this variant.
+        SAMPLE_NAME (str): The sample name associated with this variant.
         GENE_TO_LOCUS_TAG (dict[str, str]): A dictionary mapping genes to their locus tags.
         GENE_TO_TIER (dict[str, str]): A dictionary mapping genes to their tiers.
         GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, str]): A dictionary mapping genes to their associated antimicrobial drugs.
@@ -33,15 +33,16 @@ class Variant:
         apply_expert_rules() -> tuple[str, str]:
             Applies expert rules to determine the interpretation and returns the interpretation and rule applied for the annotation.
     """
-    def __init__(self, logger, sample_name: str, GENE_TO_LOCUS_TAG: dict[str, str], GENE_TO_TIER: dict[str, str], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, str], PROMOTER_REGIONS: dict[str, list[int] | list[list[int]]], variant: dict = None) -> None:
+    def __init__(self, logger, SAMPLE_NAME: str, GENE_TO_LOCUS_TAG: dict[str, str], GENE_TO_TIER: dict[str, str], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, str], PROMOTER_REGIONS: dict[str, list[int] | list[list[int]]], TNGS: bool, variant: dict = None) -> None:
         """Initializes the Variant class
 
         Args:
             logger (logging): generates logs
-            sample_name (str): the sample name
-            gene_to_locus_tag (dict): a dictionary mapping genes to their locus tags
-            gene_to_tier (dict): a dictionary mapping genes to their tiers
-            gene_to_antimicrobial_drug_name (dict): a dictionary mapping genes to their associated antimicrobial drugs
+            SAMPLE_NAME (str): the sample name
+            GENE_TO_LOCUS_TAG (dict): a dictionary mapping genes to their locus tags
+            GENE_TO_TIER (dict): a dictionary mapping genes to their tiers
+            GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict): a dictionary mapping genes to their associated antimicrobial drugs
+            TNGS (bool): A flag indicating if tNGS processing is enabled.
             variant (dict, optional): a dictionary of attributes about the variant. Defaults to None. The potential keys in the dictionary are:
 
             - chrom (str): the name of the chromosome in the BAM file
@@ -67,13 +68,14 @@ class Variant:
             - drugs (list): a list of drugs associated with the gene and the resistance call and/or comment for each drug
             - locus_tag (str): the locus tag of the gene where the variant is located
             - gene_associated_drugs (list): a list of drugs associated with the gene where the variant is located
+            
         """        
         self.logger = logger
 
         self.annotation_dictionary = {}
         """A dictionary containing the various annotations for this variant"""
         
-        self.sample_name = sample_name
+        self.SAMPLE_NAME = SAMPLE_NAME
         """The sample name associated with this variant."""
         
         self.GENE_TO_LOCUS_TAG = GENE_TO_LOCUS_TAG
@@ -87,6 +89,9 @@ class Variant:
 
         self.PROMOTER_REGIONS = PROMOTER_REGIONS
         """A dictionary mapping genes to their promoter regions."""
+        
+        self.TNGS = TNGS
+        """A flag indicating if tNGS processing is enabled."""
 
         if variant is not None:
             for key, value in variant.items():
@@ -117,7 +122,7 @@ class Variant:
             for annotation_entry in self.annotation:
                 drug = annotation_entry["drug"]
                 
-                new_row = Row(self.logger, self, annotation_entry)
+                new_row = Row(self.logger, self, annotation_entry, self.TNGS)
                 
                 # if this is the first time a drug has been seen, add it to the annotation dictionary
                 if drug not in self.annotation_dictionary.keys():
@@ -141,7 +146,7 @@ class Variant:
                 # copy a row in the annotation dictionary, but update the confidence and drug name appropriately. no qc has been performed so this should be fine
                 mock_annotation["drug"] = drug
                 
-                self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
+                self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation, self.TNGS)
 
             if self.gene_name in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
                 for drug in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
@@ -150,7 +155,7 @@ class Variant:
                         mock_annotation["source"] = "Mutation effect for given drug is not in TBDB"
                         mock_annotation["drug"] = drug
                                                 
-                        self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
+                        self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation, self.TNGS)
 
         else:
             # possibilities 1b and 2: the annotation field has no content or the field does not exist
@@ -158,14 +163,14 @@ class Variant:
                 for drug in self.gene_associated_drugs:
                     mock_annotation["drug"] = drug
                     
-                    self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
+                    self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation, self.TNGS)
 
             if self.gene_name in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():
                 for drug in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME[self.gene_name]:
                     if drug not in self.annotation_dictionary.keys():
                         mock_annotation["drug"] = drug
                         
-                        self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation)
+                        self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation, self.TNGS)
 
     def extract_consequences(self) -> tuple[set[str], list[dict[str, Row]]]:
         """This section iterates through the "consequences" section of a variant in 

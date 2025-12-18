@@ -120,10 +120,10 @@ class LIMS:
                 for gene_name in gene_to_code.keys()
             })
             
-            # count number of LIMS genes in the LOW_DEPTH_OF_COVERAGE_LIST
+            # count number of LIMS genes in the LOW_DEPTH_OF_COVERAGE_LIST that do not have valid deletions that may explain the coverage
             passing_gene_count = 0
             for gene in lims_genes:
-                if gene not in self.LOW_DEPTH_OF_COVERAGE_LIST:
+                if gene not in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS:
                     passing_gene_count += 1 
             
             try:
@@ -141,7 +141,6 @@ class LIMS:
 
                 else:  
                     sublineages = detected_sublineage.split(";")
-
                     if "lineage" in detected_lineage:
                         lineage.add("DNA of Mycobacterium tuberculosis species detected")
 

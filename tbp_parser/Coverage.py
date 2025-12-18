@@ -110,6 +110,7 @@ class Coverage:
                 AVERAGE_LOCI_COVERAGE[gene] = average_depth
                 
         # add to low depth of coverage list if below the breadth of coverage threshold (MIN_PERCENT_COVERAGE * 100)
+        # combine split primers so if one fails, gene fails rpoB_1 = 0 but rpob_2 = 100 -> rpoB = 0
         LOW_DEPTH_OF_COVERAGE_LIST = [gene for gene, coverage in COVERAGE_DICTIONARY.items() if coverage < (MIN_PERCENT_COVERAGE * 100)]
 
         self.logger.info("COV:get_coverage:Coverage dictionaries of length {} and {} have been created".format(len(COVERAGE_DICTIONARY), len(AVERAGE_LOCI_COVERAGE)))
@@ -142,6 +143,7 @@ class Coverage:
                                             "Average_Locus_Coverage": average_coverage, "Warning": warning}, 
                                            index=[0])
             else:
+                # consider adding their "ERR" column to mimic existing functionality?
                 DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, 
                                                                    "Average_Locus_Coverage": average_coverage, "Warning": warning}, 
                                                                    index=[0])], ignore_index=True)

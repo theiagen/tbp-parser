@@ -1,5 +1,6 @@
 from Row import Row
 from Variant import Variant
+import globals as globals_
 import pandas as pd
 import json
 import copy
@@ -128,21 +129,21 @@ class Laboratorian:
             variant = Variant(self.logger, self.SAMPLE_NAME, 
                               self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, 
                               self.GENE_TO_ANTIMICROBIAL_DRUG_NAME, 
-                              self.PROMOTER_REGIONS, variant)
+                              self.PROMOTER_REGIONS, self.TNGS, variant)
             self.genes_reported.add(variant.gene_name)
 
-            # tNGS only: renaming the gene to the segment name to get the coverage for QC
+            # tNGS only: add a new attribute to the variant to accurately determine which primer segment (if split) to evaluate for QC
             if self.TNGS and variant.gene_name in self.TNGS_REGIONS.keys():
-                self.logger.debug("LAB:iterate_section:[tNGS only] checking to see if this is a split primer")
                 if isinstance(self.TNGS_REGIONS[variant.gene_name], dict):
                     for segment in self.TNGS_REGIONS[variant.gene_name]:
-                        self.logger.debug("LAB:iterate_section:[tNGS only] checking if variant from {} is found in segment {}".format(variant.gene_name, segment))
-                        if (self.TNGS_REGIONS[variant.gene_name][segment][0] <= variant.pos <= self.TNGS_REGIONS[variant.gene_name][segment][1]):
+                        
+                        if globals_.is_within_range(variant.pos, self.TNGS_REGIONS[variant.gene_name][segment]):
+                            # the variant falls within this segment -- however, both segments must be checked to determine breadth of coverage QC pass
                             variant.gene_name_segment = segment
-                            self.logger.debug("LAB:iterate_section:[tNGS only] variant from {} is found in segment {}; setting gene_name_segment to segment name".format(variant.gene_name, variant.gene_name_segment))
                             break
-
-                    if hasattr(variant, "gene_name_segment") is False:
+                        
+                    if not hasattr(variant, "gene_name_segment"):
+                        # this variant doesn't fall in any segment for this gene which means it is outside of the expected region
                         self.logger.warning("LAB:iterate_section:[tNGS only] This mutation is not in an expected region and is not within any segments")
                         variant.gene_name_segment = "Outside of expected region"
 
@@ -192,6 +193,7 @@ class Laboratorian:
             - tbprofiler_variant_substitution_type: the variant substitution type (missense_variant, upstream_gene_variant...)
             - tbprofiler_variant_substitution_nt: the nucleotide substitution (c.1349C>G)
             - tbprofiler_variant_substitution_aa: the amino acid substitution (p.Ser450Trp)
+            - tbprofiler_variant_position: the position of the mutation in reference to the whole genome (761155)
             - confidence: the tbprofiler annotation regarding resistance (Not assoc w R, Uncertain significance...)
             - antimicrobial: the antimicrobial drug the mutation confers resistance to (streptomycin, rifampin...)
             - looker_interpretation: the interpretation of resistance for the CDPH Looker report (R, R-interim, U, S, S-interim)
@@ -211,7 +213,7 @@ class Laboratorian:
         DF_LABORATORIAN = pd.DataFrame(columns = [
             "sample_id", "tbprofiler_gene_name", "tbprofiler_locus_tag", 
             "tbprofiler_variant_substitution_type", "tbprofiler_variant_substitution_nt",
-            "tbprofiler_variant_substitution_aa", "confidence", "antimicrobial",
+            "tbprofiler_variant_substitution_aa", "tbprofiler_variant_position", "confidence", "antimicrobial",
             "looker_interpretation", "mdl_interpretation", "depth", "frequency", 
             "read_support", "rationale", "warning", "gene_tier", "source", "tbdb_comment"
         ])
@@ -236,7 +238,7 @@ class Laboratorian:
             
             for drug_name in antimicrobial_drug_names:
                 if gene not in self.genes_reported:
-                    temporary_row = Row.wildtype_row(self.logger, self.SAMPLE_NAME, gene, drug_name, self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, self.LOW_DEPTH_OF_COVERAGE_LIST)
+                    temporary_row = Row.wildtype_row(self.logger, self.SAMPLE_NAME, gene, drug_name, self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, self.LOW_DEPTH_OF_COVERAGE_LIST, self.TNGS)
                     row_list.append(temporary_row)
                     raw_row_list.append(copy.deepcopy(temporary_row))
                     
