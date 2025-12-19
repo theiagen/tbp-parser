@@ -20,7 +20,7 @@ class Laboratorian:
         LOW_DEPTH_OF_COVERAGE_LIST (list[str]): A list of genes/loci that have low depth of coverage.
         GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, str]): A dictionary mapping genes to their associated antimicrobial drug names.
         GENE_TO_LOCUS_TAG (dict[str, str]): A dictionary mapping genes to their locus tags.
-        TNGS_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing the specific tNGS regions for each gene (to account for non-overlapping primers in the same gene).
+        TNGS_REGIONS (dict[str, list[int] | dict[str, list[int]]]): A dictionary containing the specific tNGS regions for each gene (to account for non-overlapping primers in the same gene).
         GENE_TO_TIER (dict[str, str]): A dictionary mapping genes to their tiers.
         PROMOTER_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing promoter regions for each gene.
         TNGS (bool): A boolean indicating whether tNGS mode is enabled.
@@ -50,10 +50,10 @@ class Laboratorian:
                  LOW_DEPTH_OF_COVERAGE_LIST: list[str], 
                  GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, str], 
                  GENE_TO_LOCUS_TAG: dict[str, str], 
-                 TNGS_REGIONS: dict[str, list[int] | list[list[int]]], 
+                 TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], 
                  GENE_TO_TIER: dict[str, str],
                  PROMOTER_REGIONS: dict[str, list[int] | list[list[int]]], 
-                 TNGS: bool) -> None:
+                 TNGS: bool, DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool) -> None:
         """Initializes the Laboratorian class with the provided parameters.
         
         Args:
@@ -67,10 +67,11 @@ class Laboratorian:
             LOW_DEPTH_OF_COVERAGE_LIST (list[str]): A list of genes/loci that have low depth of coverage.
             GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, str]): A dictionary mapping genes to their associated antimicrobial drug names.
             GENE_TO_LOCUS_TAG (dict[str, str]): A dictionary mapping genes to their locus tags.
-            TNGS_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing the specific tNGS regions for each gene (to account for non-overlapping primers in the same gene).
+            TNGS_REGIONS (dict[str, list[int] | dict[str, list[int]]]): A dictionary containing the specific tNGS regions for each gene (to account for non-overlapping primers in the same gene).
             GENE_TO_TIER (dict[str, str]): A dictionary mapping genes to their tiers.
             PROMOTER_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing promoter regions for each gene.
             TNGS (bool): A boolean indicating whether tNGS mode is enabled.
+            DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): A boolean indicating whether R mutations should be treated the same as S/U mutations for locus QC.
         """
         self.logger = logger
         self.input_json = input_json
@@ -101,6 +102,8 @@ class Laboratorian:
         """A dictionary containing promoter regions for each gene."""
         self.TNGS = TNGS
         """A boolean indicating whether tNGS mode is enabled."""
+        self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY
+        """A boolean indicating whether R mutations should be treated the same as S/U mutations for locus QC."""
 
         self.genes_reported = set()
         """A set of genes that have already been reported in the laboratorian report."""
@@ -132,21 +135,6 @@ class Laboratorian:
                               self.PROMOTER_REGIONS, self.TNGS, variant)
             self.genes_reported.add(variant.gene_name)
 
-            # tNGS only: add a new attribute to the variant to accurately determine which primer segment (if split) to evaluate for QC
-            if self.TNGS and variant.gene_name in self.TNGS_REGIONS.keys():
-                if isinstance(self.TNGS_REGIONS[variant.gene_name], dict):
-                    for segment in self.TNGS_REGIONS[variant.gene_name]:
-                        
-                        if globals_.is_within_range(variant.pos, self.TNGS_REGIONS[variant.gene_name][segment]):
-                            # the variant falls within this segment -- however, both segments must be checked to determine breadth of coverage QC pass
-                            variant.gene_name_segment = segment
-                            break
-                        
-                    if not hasattr(variant, "gene_name_segment"):
-                        # this variant doesn't fall in any segment for this gene which means it is outside of the expected region
-                        self.logger.warning("LAB:iterate_section:[tNGS only] This mutation is not in an expected region and is not within any segments")
-                        variant.gene_name_segment = "Outside of expected region"
-
             # extract all of the annotations for the variant
             variant.extract_annotations()
             
@@ -167,7 +155,7 @@ class Laboratorian:
                     raw_row = copy.deepcopy(annotation_row)
                     
                     # perform QC on the row
-                    genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions)
+                    genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions, self.TNGS_REGIONS, self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY)
                     self.genes_with_valid_deletions.update(genes_with_valid_deletions)
                     
                     if len(positional_qc_fails) > 0:

@@ -21,6 +21,7 @@ class Variant:
         GENE_TO_TIER (dict[str, str]): A dictionary mapping genes to their tiers.
         GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, str]): A dictionary mapping genes to their associated antimicrobial drugs.
         PROMOTER_REGIONS (dict[str, list[int] | list[list[int]]]]): A dictionary mapping genes to their promoter regions.  
+        TNGS (bool): A flag indicating if tNGS processing is enabled.
         variant (dict): A dictionary of attributes about the variant.
     
     Methods:

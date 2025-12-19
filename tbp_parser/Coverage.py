@@ -11,6 +11,7 @@ class Coverage:
         input_bam (str): path to BAM file of sample to be analyzed (aligned to H37Rv)
         OUTPUT_PREFIX (str): Prefix for all output
         coverage_regions (str): path to BED file of regions to be examined for coverage
+        TNGS_REGIONS (dict[str, list[int] | dict[str, list[int]]]): A dictionary containing the specific tNGS regions for each gene (to account for non-overlapping primers in the same gene).
     
     Methods:
         calculate_depth(line: str, MIN_DEPTH: int) -> tuple[str, float, float]:
@@ -22,20 +23,22 @@ class Coverage:
         create_coverage_report(COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: list[str], TNGS: bool) -> None:
             reformats the coverage and average loci coverage dictionaries into a CSV file and adds a deletion warning if a QC-passing deletion was identified for the region
     """
-    def __init__(self, logger, input_bam, OUTPUT_PREFIX, coverage_regions) -> None:
+    def __init__(self, logger, input_bam: str, OUTPUT_PREFIX: str, coverage_regions: str, TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]]) -> None:
         """ Initalizes the Coverage class
 
         Args:
             logger (logging.getlogger() object): Object that handles logging
             input_bam (str): path to BAM file of sample to be analyzed (aligned to H37Rv)
             OUTPUT_PREFIX (str): Prefix for all output
-            coverage_regions (str): path to BED file of regions to be examined for coverage
+            coverage_regions (str): path to BED file of regions to be examined for coverage\
+            TNGS_REGIONS (dict[str, list[int] | dict[str, list[int]]]): A dictionary containing the specific tNGS regions for each gene (to account for non-overlapping primers in the same gene).
         """
 
         self.logger = logger
         self.input_bam = input_bam
         self.OUTPUT_PREFIX = OUTPUT_PREFIX
         self.coverage_regions = coverage_regions
+        self.TNGS_REGIONS = TNGS_REGIONS
         
         # extract chromosome name from BAM file -- sometimes this can be different depending on reference used
         command = "samtools idxstats {} | cut -f 1 | head -1".format(self.input_bam)
@@ -84,7 +87,7 @@ class Coverage:
 
         return gene, float(breadth_of_coverage), float(average_depth)
 
-    def get_coverage(self, MIN_PERCENT_COVERAGE: float, MIN_DEPTH: int) -> tuple[dict[str, float], dict[str, float], list[str]]:
+    def get_coverage(self, MIN_PERCENT_COVERAGE: float, MIN_DEPTH: int, TNGS: bool) -> tuple[dict[str, float], dict[str, float], list[str]]:
         """ Iterates through a bedfile and adds the breadth of coverage to the global variable "COVERAGE_DICTIONARY" 
         and the average depth to "AVERAGE_LOCI_COVERAGE"
 
@@ -110,9 +113,26 @@ class Coverage:
                 AVERAGE_LOCI_COVERAGE[gene] = average_depth
                 
         # add to low depth of coverage list if below the breadth of coverage threshold (MIN_PERCENT_COVERAGE * 100)
-        # combine split primers so if one fails, gene fails rpoB_1 = 0 but rpob_2 = 100 -> rpoB = 0
+        # combine split primers so if one fails, gene fails rpoB_1 = 0 but rpob_2 = 100 -> rpoB is added to this list
+        if TNGS:
+            # combine split primers
+            for gene in COVERAGE_DICTIONARY.keys():
+                if gene in self.TNGS_REGIONS and isinstance(self.TNGS_REGIONS[gene], dict):
+                    # 7.1.3.1 - breadth of coverage QC fails if at least one segment does not meet QC thresholds (use the minimum here)
+                    combined_coverage = min([COVERAGE_DICTIONARY[region] for region in self.TNGS_REGIONS[gene].keys()])
+                    COVERAGE_DICTIONARY[gene] = combined_coverage
+                    
+                    # calculate the average coverage across the segments for average loci coverage
+                    average_coverage = sum([AVERAGE_LOCI_COVERAGE[region] for region in self.TNGS_REGIONS[gene].keys()]) / len(self.TNGS_REGIONS[gene].keys())
+                    AVERAGE_LOCI_COVERAGE[gene] = average_coverage
+                    
+                    # drop the individual segments from COVERAGE_DICTIONARY and AVERAGE_LOCI_COVERAGE
+                    for region in self.TNGS_REGIONS[gene].keys():
+                        del COVERAGE_DICTIONARY[region]
+                        del AVERAGE_LOCI_COVERAGE[region]
+                    
         LOW_DEPTH_OF_COVERAGE_LIST = [gene for gene, coverage in COVERAGE_DICTIONARY.items() if coverage < (MIN_PERCENT_COVERAGE * 100)]
-
+    
         self.logger.info("COV:get_coverage:Coverage dictionaries of length {} and {} have been created".format(len(COVERAGE_DICTIONARY), len(AVERAGE_LOCI_COVERAGE)))
         self.logger.info("COV:get_coverage:The following genes (total: {}) have coverage below the {}% breadth of coverage threshold: {}\n".format(len(LOW_DEPTH_OF_COVERAGE_LIST), (MIN_PERCENT_COVERAGE * 100), LOW_DEPTH_OF_COVERAGE_LIST))
 

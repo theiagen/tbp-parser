@@ -37,6 +37,7 @@ class Parser:
         MIN_FREQUENCY (float): the minimum frequency for a mutation to pass QC
         MIN_LOCUS_PERCENTAGE (float): the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC
         OPERATOR (str): the operator who ran the sequencing
+        DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): whether R mutations should be treated the same as S/U mutations for locus QC
         
     Methods:
         create_standard_dictionaries() -> tuple[dict[str, list[str]], dict[str, str], dict[str, list[int] | list[list[int]]], dict[str, str], dict[str, list[int] | list[list[int]]]]:
@@ -86,23 +87,22 @@ class Parser:
         # this could cause issues if someone does more than one comma, but in that case, they deserve the error
         globals_.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
         globals_.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
-        globals_.TREAT_R_AS_S = options.treat_r_mutations_as_s
+        self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = options.do_not_treat_r_mutations_differently
 
         if self.verbose:
             self.logger.setLevel(logging.INFO)
             self.logger.info("PARSER:__init__:Verbose mode enabled")
-        else:
-            self.logger.setLevel(logging.ERROR)
-
-        if self.debug:
+        elif self.debug:
             self.logger.setLevel(logging.DEBUG)
             self.logger.debug("PARSER:__init__:Debug mode enabled")
+        else:
+            self.logger.setLevel(logging.ERROR)
 
         if self.config != "":
             self.logger.info("PARSER:__init__:Overwriting variables with the provided config file")
             self.overwrite_variables()
 
-    def create_standard_dictionaries(self) -> tuple[dict[str, list[str]], dict[str, str], dict[str, list[int] | list[list[int]]], dict[str, str], dict[str, list[int] | list[list[int]]]]:
+    def create_standard_dictionaries(self) -> tuple[dict[str, list[str]], dict[str, str], dict[str, list[int] | dict[str, list[int]]], dict[str, str], dict[str, list[int] | list[list[int]]]]:
         """Parses the provided coverage regions bed file to create the standard
         look-up dictionaries used throughout tbp-parser
         
@@ -230,14 +230,15 @@ class Parser:
         GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS = self.create_standard_dictionaries()
         
         self.logger.info("PARSER:run:Calculating coverage statistics")
-        coverage = Coverage(self.logger, self.input_bam, self.OUTPUT_PREFIX, self.tbdb_bed)
-        COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH)
+        coverage = Coverage(self.logger, self.input_bam, self.OUTPUT_PREFIX, self.tbdb_bed, TNGS_REGIONS)
+        COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH, self.TNGS)
 
         self.logger.info("PARSER:run:Creating Laboratorian report")
         laboratorian = Laboratorian(self.logger, self.input_json, self.OUTPUT_PREFIX, 
                                     self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, 
                                     COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, 
-                                    GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS)
+                                    GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS, 
+                                    self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY)
         DF_LABORATORIAN = laboratorian.create_laboratorian_report()
 
         self.logger.info("PARSER:run:Creating LIMS report")

@@ -50,8 +50,8 @@ def main():
     qc_arguments.add_argument("-l", "--min_percent_locus_covered", default=0.7, metavar="\b", type=float,
                         help="the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%%)\ndefault=0.7")
     
-    qc_arguments.add_argument("--treat_r_mutations_as_s", default=False, action="store_true",
-                        help="treat R mutations the same as S or U mutations in that if locus coverage is poor, they will not be reported regardless of mutation quality\ndefault=False")
+    qc_arguments.add_argument("--do_not_treat_r_mutations_differently", default=False, action="store_true",
+                        help="treat R mutations the same as S or U mutations in that if locus coverage is poor, they will not be reported\ndefault=False")
 
     general_arguments = parser.add_argument_group("text arguments", 
                                                   "arguments that are used verbatim in the reports or to name the output files")
@@ -63,7 +63,7 @@ def main():
                         help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b")
 
     tngs_arguments = parser.add_argument_group("tNGS-specific arguments", 
-                                                "options that are primarily used for tNGS data\n(all frequency arguments are compatible with WGS data)")
+                                                "options that are primarily used for tNGS data")
     tngs_arguments.add_argument("--tngs",
                         help="\nindicates that the input data was generated using a tNGS protocol\nTurns on tNGS-specific features", action="store_true", default=False)
 

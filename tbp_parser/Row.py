@@ -24,14 +24,15 @@ class Row() :
         source (str): The source of the annotation.
         tbdb_comment (str): Additional comments from the TBDB.
         variant (Variant): The Variant object associated with this row.
+        TNGS (bool): A flag indicating if tNGS processing is enabled.
     
     Methods:
-        wildtype_row(logger, sample_name: str, gene_name: str, drug_name: str, GENE_TO_LOCUS_TAG: dict[str, str], GENE_TO_TIER: dict[str, str], LOW_DEPTH_OF_COVERAGE_LIST: list[str]) -> 'Row':
+        wildtype_row(logger, sample_name: str, gene_name: str, drug_name: str, GENE_TO_LOCUS_TAG: dict[str, str], GENE_TO_TIER: dict[str, str], LOW_DEPTH_OF_COVERAGE_LIST: list[str], TNGS: bool) -> 'Row':
             CLASS METHOD. Creates a wildtype Row object for genes that were not found in the TBProfiler
             JSON output (i.e., no mutations were found in that gene). This is used to create
             WT rows for genes that were sequenced but had no mutations.
             
-        add_qc_warnings(MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str]) -> tuple[set, set]:
+        add_qc_warnings(MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]]) -> tuple[set, set]:
             Adds QC warnings if a mutation either has poor positional quality or locus quality.
             
         print() -> None:
@@ -45,7 +46,7 @@ class Row() :
             Generates an integer ranking of the WHO annotation based on resistance,
             with 4 being the most resistant category and 1 the least.
         
-        is_mutation_outside_region() -> bool:
+        is_mutation_outside_region(TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]]) -> bool:
             Checks if a mutation falls within the tNGS primer regions.
         
         describe_rationale(rule: str) -> str:
@@ -63,11 +64,12 @@ class Row() :
             logger: The logger object for logging messages.
             variant (Variant): A Variant object containing information about the mutation.
             annotation (dict): The annotation dictionary containing WHO confidence and drug information.
+            TNGS (bool): A flag indicating if tNGS processing is enabled.
         """
         self.logger = logger
 
         self.variant = variant
-        self.sample_id = variant.sample_name
+        self.sample_id = variant.SAMPLE_NAME
         
         # extract fields from the variant object
         self.tbprofiler_gene_name = variant.__dict__.get("gene_name")
@@ -89,8 +91,6 @@ class Row() :
 
         # grab the locus_tag from the variant if it exists; otherwise, get it from the provided dictionary
         self.tbprofiler_locus_tag = variant.__dict__.get("locus_tag", variant.GENE_TO_LOCUS_TAG.get(self.tbprofiler_gene_name))
-
-        self.gene_name = self.variant.__dict__.get("gene_name_segment", self.tbprofiler_gene_name)
         self.gene_tier = self.variant.GENE_TO_TIER.get(self.tbprofiler_gene_name, "NA")
 
         # extract fields from the annotation dictionary        
@@ -112,7 +112,7 @@ class Row() :
         self.TNGS = TNGS
 
     @classmethod
-    def wildtype_row(cls, logger, sample_name: str, gene_name: str, drug_name: str, GENE_TO_LOCUS_TAG: dict[str, str], GENE_TO_TIER: dict[str, str], LOW_DEPTH_OF_COVERAGE_LIST: list[str], TNGS: bool, TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]]) -> 'Row':
+    def wildtype_row(cls, logger, sample_name: str, gene_name: str, drug_name: str, GENE_TO_LOCUS_TAG: dict[str, str], GENE_TO_TIER: dict[str, str], LOW_DEPTH_OF_COVERAGE_LIST: list[str], TNGS: bool) -> 'Row':
         """This class method creates an wildtype Row object for genes that
         were not found in the TBProfiler JSON output (i.e., no mutations
         were found in that gene). This is used to create WT rows for
@@ -156,18 +156,8 @@ class Row() :
         # 4.1 - Assume mutation is WT with sufficient coverage
         row.looker_interpretation = "S"
         row.mdl_interpretation = "WT"
-        
-        if TNGS and isinstance(TNGS_REGIONS.get(gene_name), dict):    
-            # 7.1.3.1 - breadth of coverage QC for split primers uses both segments and fails loci QC if at least one segment fails
-            for segment in TNGS_REGIONS.get(gene_name).keys():
-                if segment in LOW_DEPTH_OF_COVERAGE_LIST:        
-                    row.looker_interpretation = "Insufficient Coverage"
-                    row.mdl_interpretation = "Insufficient Coverage"
-                    row.warning.add("Insufficient coverage in locus")
-                    
-                    break
                 
-        elif gene_name in LOW_DEPTH_OF_COVERAGE_LIST:
+        if gene_name in LOW_DEPTH_OF_COVERAGE_LIST:
             # 4.2.2.3.1 - WT with insufficient coverage
             row.looker_interpretation = "Insufficient Coverage"
             row.mdl_interpretation = "Insufficient Coverage"
@@ -175,7 +165,7 @@ class Row() :
             
         return row
 
-    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]]) -> tuple[set[str], set[str]]:
+    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool) -> tuple[set[str], set[str]]:
         """Adds QC warnings if a mutation either has poor positional quality or locus quality
 
         Args:
@@ -184,6 +174,8 @@ class Row() :
             MIN_READ_SUPPORT (float): the minimum read support for a mutation to pass positional QC 
             LOW_DEPTH_OF_COVERAGE_LIST (list[str]): a list of genes that have failed locus QC (i.e., breadth of coverage < min_percent_coverage)
             genes_with_valid_deletions (set[str]): a set of genes with deletions that pass positional QC
+            TNGS_REGIONS (dict[str, list[int] | dict[str, list[int]]]): a dictionary of tNGS primer regions for genes with split primers
+            DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): a flag indicating whether R mutations should be treated the same as S/U mutations for locus QC
 
         Returns:
             tuple[set[str], set[str]]: the updated set of genes with valid deletions, and the set of mutations that failed positional QC
@@ -214,41 +206,42 @@ class Row() :
                     self.warning.add("Failed quality in the mutation position") 
 
         # checking if the mutation is from a gene with split primerse and set tngs_loci_fail accordingly
-        if self.TNGS and isinstance(TNGS_REGIONS.get(self.tbprofiler_gene_name), dict):
-            tngs_loci_fail = False
-            for segment in TNGS_REGIONS.get(self.tbprofiler_gene_name).keys():
-                if segment in LOW_DEPTH_OF_COVERAGE_LIST:        
-                    tngs_loci_fail = True
-                    break
-        elif self.TNGS:
-            if self.is_mutation_outside_region():
+        if self.TNGS and self.is_mutation_outside_region(TNGS_REGIONS):
                 self.warning.add("This mutation is outside the expected region")
+                # overwrite fields to "NA" since mutation is outside expected region
+                self.rationale = "NA"
+                self.confidence = "NA"
+                self.looker_interpretation = "NA"
+                self.mdl_interpretation = "NA"
+                
+                # we don't want these mutations appearing in the LIMS report -- add to positional QC fails
+                positional_qc_fails.add(self.tbprofiler_variant_substitution_nt)
         
         # checking locus qc now
-        if self.gene_name in LOW_DEPTH_OF_COVERAGE_LIST or tngs_loci_fail:
+        if self.tbprofiler_gene_name in LOW_DEPTH_OF_COVERAGE_LIST:
             if "del" in self.tbprofiler_variant_substitution_nt: # 4.2.2.2 - locus qc fail and a deletion
                 if self.tbprofiler_variant_substitution_nt in positional_qc_fails:
                     # this mutation also failed positional qc, so we need to add the locus warning
                     self.warning.add("Insufficient coverage in locus")
                     
-            else: # 4.2.2.3 - locus qc fail but not a deletion -- if we maintain the "treat_r_as_s" option, we will implement that here
-                if self.mdl_interpretation == "R" and "Failed quality in the mutation position" not in self.warning:
-                    self.warning.add("Insufficient coverage in locus") # 4.2.2.3.3 - R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
-                
-                elif self.mdl_interpretation == "R" and "Failed quality in the mutation position" in self.warning:
-                    self.warning.add("Insufficient coverage in locus") # 4.2.2.3.4 - R mutation with BOTH positional and locus qc fail; add warning and overwrite interpretation
-                    self.looker_interpretation = "Insufficient Coverage"
-                    self.mdl_interpretation = "Insufficient Coverage"
+            else: # 4.2.2.3 - locus qc fail but not a deletion
+                if self.mdl_interpretation == "R" and not DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY:
+                    if "Failed quality in the mutation position" not in self.warning:
+                        self.warning.add("Insufficient coverage in locus") # 4.2.2.3.3 - R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
+                    else:
+                        self.warning.add("Insufficient coverage in locus") # 4.2.2.3.4 - R mutation with BOTH positional and locus qc fail; add warning and overwrite interpretation
+                        self.looker_interpretation = "Insufficient Coverage"
+                        self.mdl_interpretation = "Insufficient Coverage"
                 
                 elif self.mdl_interpretation == "U" or self.mdl_interpretation == "S":
-                    self.warning.add("Insufficient coverage in locus") # 4.2.2.3.2 - non-R mutation with locus qc fail; add warning and overwrite interpretation
+                    self.warning.add("Insufficient coverage in locus") # 4.2.2.3.2 - non-R mutation with locus qc fail; add warning and overwrite interpretation (or if indicated that r mutations should be treated the same as s/u)
                     self.looker_interpretation = "Insufficient Coverage"
                     self.mdl_interpretation = "Insufficient Coverage"
                 
         if ("Failed quality in the mutation position" not in self.warning 
             and "This mutation is outside the expected region" not in self.warning 
             and "del" in self.tbprofiler_variant_substitution_nt):
-            genes_with_valid_deletions.add(self.gene_name)
+            genes_with_valid_deletions.add(self.tbprofiler_gene_name)
         
         return genes_with_valid_deletions, positional_qc_fails
 
@@ -341,11 +334,14 @@ class Row() :
         else:
             return 1  
 
-    def is_mutation_outside_region(self, TNGS_REGIONS: dict[str, list[int] | list[list[int]]]) -> bool:
+    def is_mutation_outside_region(self, TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]]) -> bool:
         """This function checks if a mutation falls within the primer regions.
+        
+        Args:
+            TNGS_REGIONS (dict[str, list[int] | dict[str, list[int]]]): a dictionary of tNGS primer regions for genes with split primers
             
-            Returns:
-                bool: True if the mutation is outside the expected region, false otherwise
+        Returns:
+            bool: True if the mutation is outside the expected region, false otherwise
         """
         # default to failure (mutation outside expected region)
         for primer, positions in TNGS_REGIONS.items():
@@ -355,10 +351,7 @@ class Row() :
             # split primers (positions is a dictionary)
             if isinstance(positions, dict):
                 for segment, seg_positions in positions.items():
-                    if segment != self.gene_name:
-                        continue
-
-                    if seg_positions[0] <= self.tbprofiler_variant_position <= seg_positions[1]:
+                    if globals_.is_within_range(self.tbprofiler_variant_position, seg_positions):
                         self.logger.debug("ROW:[tNGS only] Mutation falls within split primer region {}: {} is within {}".format(segment, self.tbprofiler_variant_position, seg_positions))
                         return False  # position found, mutation is within region
 
@@ -366,7 +359,7 @@ class Row() :
 
             # regular primers (positions is a list)
             else:
-                if positions[0] <= self.tbprofiler_variant_position <= positions[1]:
+                if globals_.is_within_range(self.tbprofiler_variant_position, positions):
                     self.logger.debug("ROW:[tNGS only] Mutation falls within primer region {}: {} is within {}".format(primer, self.tbprofiler_variant_position, positions))
                     return False  # position found, mutation is within region
 
