@@ -103,6 +103,7 @@ class Coverage:
 
         COVERAGE_DICTIONARY = {}
         AVERAGE_LOCI_COVERAGE = {}
+        LOW_DEPTH_OF_COVERAGE_LIST = []
 
         with open(self.coverage_regions, "r") as bedfile_fh:
             for line in bedfile_fh:
@@ -117,21 +118,14 @@ class Coverage:
         if TNGS:
             # combine split primers
             for gene in COVERAGE_DICTIONARY.keys():
+                # TO-DO: ADJUST THIS SO THIS WORKS APPROPRIATELY -- NEED TO CHECK THE VALUES OF TNGS_REGIONS
                 if gene in self.TNGS_REGIONS and isinstance(self.TNGS_REGIONS[gene], dict):
                     # 7.1.3.1 - breadth of coverage QC fails if at least one segment does not meet QC thresholds (use the minimum here)
                     combined_coverage = min([COVERAGE_DICTIONARY[region] for region in self.TNGS_REGIONS[gene].keys()])
-                    COVERAGE_DICTIONARY[gene] = combined_coverage
+                    if combined_coverage < (MIN_PERCENT_COVERAGE * 100):
+                        LOW_DEPTH_OF_COVERAGE_LIST.append(gene)
                     
-                    # calculate the average coverage across the segments for average loci coverage
-                    average_coverage = sum([AVERAGE_LOCI_COVERAGE[region] for region in self.TNGS_REGIONS[gene].keys()]) / len(self.TNGS_REGIONS[gene].keys())
-                    AVERAGE_LOCI_COVERAGE[gene] = average_coverage
-                    
-                    # drop the individual segments from COVERAGE_DICTIONARY and AVERAGE_LOCI_COVERAGE
-                    for region in self.TNGS_REGIONS[gene].keys():
-                        del COVERAGE_DICTIONARY[region]
-                        del AVERAGE_LOCI_COVERAGE[region]
-                    
-        LOW_DEPTH_OF_COVERAGE_LIST = [gene for gene, coverage in COVERAGE_DICTIONARY.items() if coverage < (MIN_PERCENT_COVERAGE * 100)]
+        LOW_DEPTH_OF_COVERAGE_LIST.extend([gene for gene, coverage in COVERAGE_DICTIONARY.items() if coverage < (MIN_PERCENT_COVERAGE * 100)])
     
         self.logger.info("COV:get_coverage:Coverage dictionaries of length {} and {} have been created".format(len(COVERAGE_DICTIONARY), len(AVERAGE_LOCI_COVERAGE)))
         self.logger.info("COV:get_coverage:The following genes (total: {}) have coverage below the {}% breadth of coverage threshold: {}\n".format(len(LOW_DEPTH_OF_COVERAGE_LIST), (MIN_PERCENT_COVERAGE * 100), LOW_DEPTH_OF_COVERAGE_LIST))
