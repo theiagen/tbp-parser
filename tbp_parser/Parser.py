@@ -138,10 +138,7 @@ class Parser:
                 gene_name = cols[4]
                 drugs = cols[5]
                 locus_tag = cols[3]
-                                
-                GENE_TO_ANTIMICROBIAL_DRUG_NAME[gene_name] = drugs.split(",")
-                GENE_TO_LOCUS_TAG[gene_name] = locus_tag
-
+                             
                 if self.TNGS:
                     start_pos = int(cols[1])
                     end_pos = int(cols[2])
@@ -153,9 +150,13 @@ class Parser:
                         if base_gene_name not in TNGS_REGIONS:
                             TNGS_REGIONS[base_gene_name] = {}
                         TNGS_REGIONS[base_gene_name][gene_name] = [start_pos, end_pos]
-
                     else:
                         TNGS_REGIONS[gene_name] = [start_pos, end_pos]
+                    
+                    gene_name = base_gene_name if match else gene_name
+                    
+                GENE_TO_ANTIMICROBIAL_DRUG_NAME[gene_name] = drugs.split(",")
+                GENE_TO_LOCUS_TAG[gene_name] = locus_tag
 
         GENE_TO_TIER = {}
         with open(self.gene_tier_tsv, 'r') as tier_file:

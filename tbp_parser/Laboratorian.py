@@ -153,7 +153,7 @@ class Laboratorian:
                 
                     # make a copy of the annotation row that does not have any QC applied
                     raw_row = copy.deepcopy(annotation_row)
-                     
+                                          
                     # perform QC on the row
                     genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions, self.TNGS_REGIONS, self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY)
                     self.genes_with_valid_deletions.update(genes_with_valid_deletions)
@@ -230,7 +230,8 @@ class Laboratorian:
                     row_list.append(temporary_row)
                     raw_row_list.append(copy.deepcopy(temporary_row))
                     # add WT rows to bottom of report 
-                    reorder_list.append(temporary_row)
+                    if temporary_row not in reorder_list:
+                        reorder_list.append(temporary_row)
             
             # add QC fail rows to end of laboratorian report too
             if gene in self.LOW_DEPTH_OF_COVERAGE_LIST:
@@ -243,8 +244,9 @@ class Laboratorian:
                         # if the mutation fails quality control, move it to the end of the report
                         if ("Insufficient coverage in locus" in row.warning 
                             or row.tbprofiler_variant_substitution_nt in self.positional_qc_fails.get(row.tbprofiler_gene_name, set())):
-                            reorder_list.append(row)
-                    
+                            if row not in reorder_list:
+                                reorder_list.append(row)
+
         # reorder the rows so that WT and QC-fail rows are at the end of the report and sorted alphabetically by gene name
         remaining_rows = [row for row in row_list if row not in reorder_list]
         sorted_reorder_list = sorted(reorder_list, key=lambda x: x.tbprofiler_gene_name.lower())
@@ -254,11 +256,7 @@ class Laboratorian:
 
         for rows in (row_list, raw_row_list):
             for row in rows:
-                # row.warning can end up sometimes as a str due to the various copying and I can't figure out where to nix it
-                # so while this code fixes that problem, it would be better to find the root cause and fix it there
-                # @theron fix this-- decouple rows so that they're true deep copies and not shallow copies, despite using copy.deepcopy()
-                row.warning = ". ".join(row.warning) if isinstance(row.warning, set) and len(row.warning) > 0 else (
-                    row.warning if isinstance(row.warning, str) else "")
+                row.warning = ". ".join(row.warning)
                 
         DF_LABORATORIAN = pd.DataFrame([vars(row) for row in row_list], columns=DF_LABORATORIAN.columns)
         DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.OUTPUT_PREFIX), index=False)

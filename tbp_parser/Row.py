@@ -351,20 +351,20 @@ class Row() :
             # split primers (positions is a dictionary)
             if isinstance(positions, dict):
                 for segment, seg_positions in positions.items():
-                    if globals_.is_within_range(self.tbprofiler_variant_position, seg_positions):
-                        self.logger.debug("ROW:[tNGS only] Mutation falls within split primer region {}: {} is within {}".format(segment, self.tbprofiler_variant_position, seg_positions))
+                    if globals_.is_within_range([self.tbprofiler_variant_position], seg_positions):
+                        self.logger.debug("ROW:[tNGS only] Mutation falls within split primer region {}: {} IS within {}".format(segment, self.tbprofiler_variant_position, seg_positions))
                         return False  # position found, mutation is within region
 
                     self.logger.debug("ROW:[tNGS only] Mutation falls outside split primer region {}; {} is NOT within {}".format(segment, self.tbprofiler_variant_position, seg_positions))
 
             # regular primers (positions is a list)
             else:
-                if globals_.is_within_range(self.tbprofiler_variant_position, positions):
-                    self.logger.debug("ROW:[tNGS only] Mutation falls within primer region {}: {} is within {}".format(primer, self.tbprofiler_variant_position, positions))
+                if globals_.is_within_range([self.tbprofiler_variant_position], positions):
+                    self.logger.debug("ROW:[tNGS only] Mutation falls within primer region {}: {} IS within {}".format(primer, self.tbprofiler_variant_position, positions))
                     return False  # position found, mutation is within region
-
-                self.logger.debug("ROW:[tNGS only] Mutation does not fall within any primer regions for {}; {} is NOT within {}".format(primer, self.tbprofiler_variant_position, positions))
-                return True
+                else:
+                    self.logger.debug("ROW:[tNGS only] Mutation does not fall within any primer regions for {}; {} is NOT within {}".format(primer, self.tbprofiler_variant_position, positions))
+                    return True
 
         return True  # no matching position found, mutation is outside region
 

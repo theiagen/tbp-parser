@@ -127,7 +127,7 @@ class Coverage:
                     combined_coverage = min(COVERAGE_DICTIONARY[region] for region in children)
                     if combined_coverage < (MIN_PERCENT_COVERAGE * 100):
                         LOW_DEPTH_OF_COVERAGE_LIST.append(parent_gene)
-        
+                        
         # this will contain split primers if tNGS, but they will be reported as part of the parent gene above
         LOW_DEPTH_OF_COVERAGE_LIST.extend([gene for gene, coverage in COVERAGE_DICTIONARY.items() if coverage < (MIN_PERCENT_COVERAGE * 100)])
     
