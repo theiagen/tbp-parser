@@ -66,3 +66,24 @@ def is_bed_valid(filename) -> str:
                     raise argparse.ArgumentTypeError("{0} does not have at least 6 columns as required".format(filename))
                 break  # only need to check the first line
     return filename
+
+def is_boundary_valid(boundary_string) -> str:
+    """Checks if the boundary string is valid (two comma-separated values)
+
+    Args:
+        boundary_string (String): The boundary string to check
+    Returns:
+        String: The boundary string if valid
+    """
+    cols = boundary_string.split(',')
+    if len(cols) != 2:
+        raise argparse.ArgumentTypeError("{0} is not formatted correctly; must be two comma-separated values".format(boundary_string))
+    
+    # check if values are numeric
+    for val in cols:
+        try:
+            float(val)
+        except ValueError:
+            raise argparse.ArgumentTypeError("{0} is not formatted correctly; both values must be numeric".format(boundary_string))
+        
+    return boundary_string

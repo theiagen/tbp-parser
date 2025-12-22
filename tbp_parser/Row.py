@@ -31,6 +31,9 @@ class Row() :
             CLASS METHOD. Creates a wildtype Row object for genes that were not found in the TBProfiler
             JSON output (i.e., no mutations were found in that gene). This is used to create
             WT rows for genes that were sequenced but had no mutations.
+         
+        does_mutation_fail_boundary_qc(TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float]) -> bool:
+            Adds QC warnings if a tNGS mutation falls outside the read support or frequency boundaries (tNGS only) 
             
         add_qc_warnings(MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]]) -> tuple[set, set]:
             Adds QC warnings if a mutation either has poor positional quality or locus quality.
@@ -165,7 +168,34 @@ class Row() :
             
         return row
 
-    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool) -> tuple[set[str], set[str]]:
+    def does_mutation_fail_boundary_qc(self, TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float]) -> bool:
+        """Checks if a mutation (tNGS only) fails the boundary QC checks
+
+        Args:
+            TNGS_READ_SUPPORT_BOUNDARIES (list[int]): the lower and upper read support boundaries
+            TNGS_FREQUENCY_BOUNDARIES (list[float]): the lower and upper frequency boundaries
+
+        Returns:
+            bool: true if the mutation fails QC, false if the mutation passes QC
+        """        
+        lower_rs = TNGS_READ_SUPPORT_BOUNDARIES[0]
+        upper_rs = TNGS_READ_SUPPORT_BOUNDARIES[1]
+        lower_f = TNGS_FREQUENCY_BOUNDARIES[0]
+        upper_f = TNGS_FREQUENCY_BOUNDARIES[1]
+        
+        if (lower_rs <= self.read_support and self.read_support < upper_rs):
+            if (self.frequency < upper_f):
+                print("QC FAIL!")
+                return True
+        elif (self.read_support >= upper_rs):
+            if (self.frequency < lower_f):
+                return True
+        elif (self.read_support < lower_rs):
+            return True
+        
+        return False
+        
+    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool, TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float]) -> tuple[set[str], set[str]]:
         """Adds QC warnings if a mutation either has poor positional quality or locus quality
 
         Args:
@@ -176,6 +206,8 @@ class Row() :
             genes_with_valid_deletions (set[str]): a set of genes with deletions that pass positional QC
             TNGS_REGIONS (dict[str, list[int] | dict[str, list[int]]]): a dictionary of tNGS primer regions for genes with split primers
             DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): a flag indicating whether R mutations should be treated the same as S/U mutations for locus QC
+            TNGS_READ_SUPPORT_BOUNDARIES (list[int]): boundaries for read support in tNGS
+            TNGS_FREQUENCY_BOUNDARIES (list[float]): boundaries for frequency in tNGS
 
         Returns:
             tuple[set[str], set[str]]: the updated set of genes with valid deletions, and the set of mutations that failed positional QC
@@ -205,8 +237,13 @@ class Row() :
                     positional_qc_fails.add(self.tbprofiler_variant_substitution_nt)
                     self.warning.add("Failed quality in the mutation position") 
 
-        # checking if the mutation is from a gene with split primerse and set tngs_loci_fail accordingly
-        if self.TNGS and self.is_mutation_outside_region(TNGS_REGIONS):
+        # checking tNGS-specific positional qc (if applicable)
+        if self.TNGS:
+            if self.does_mutation_fail_boundary_qc(TNGS_READ_SUPPORT_BOUNDARIES, TNGS_FREQUENCY_BOUNDARIES):
+                positional_qc_fails.add(self.tbprofiler_variant_substitution_nt)
+                self.warning.add("Failed quality in the mutation position")
+    
+            if self.is_mutation_outside_region(TNGS_REGIONS):
                 self.warning.add("This mutation is outside the expected region")
                 # overwrite fields to "NA" since mutation is outside expected region
                 self.rationale = "NA"
@@ -214,9 +251,8 @@ class Row() :
                 self.looker_interpretation = "NA"
                 self.mdl_interpretation = "NA"
                 
-                # we don't want these mutations appearing in the LIMS report -- add to positional QC fails
                 positional_qc_fails.add(self.tbprofiler_variant_substitution_nt)
-        
+
         # checking locus qc now
         if self.tbprofiler_gene_name in LOW_DEPTH_OF_COVERAGE_LIST:
             if "del" in self.tbprofiler_variant_substitution_nt: # 4.2.2.2 - locus qc fail and a deletion

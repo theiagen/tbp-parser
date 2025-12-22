@@ -194,11 +194,6 @@ class LIMS:
         Returns:
             None
         """
-        DF_LIMS = pd.DataFrame({
-            "Sample_Name": self.SAMPLE_NAME, 
-            "Lineage_ID": self.get_id(TNGS, MIN_LOCUS_PERCENTAGE)
-        }, index=[0])
-        
         lims_report = {
             "Sample_Name": self.SAMPLE_NAME, 
             "Lineage_ID": self.get_id(TNGS, MIN_LOCUS_PERCENTAGE)

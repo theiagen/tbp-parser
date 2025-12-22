@@ -24,6 +24,9 @@ class Laboratorian:
         GENE_TO_TIER (dict[str, str]): A dictionary mapping genes to their tiers.
         PROMOTER_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing promoter regions for each gene.
         TNGS (bool): A boolean indicating whether tNGS mode is enabled.
+        DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): A boolean indicating whether R mutations should be treated the same as S/U mutations for locus QC.
+        TNGS_READ_SUPPORT_BOUNDARIES (list[int]): A list of read support boundaries for tNGS positional QC.
+        TNGS_FREQUENCY_BOUNDARIES (list[float]): A list of frequency boundaries for tNGS positional QC.
         
         genes_reported (set[str]): A set of genes that have already been reported in the laboratorian report.
         genes_with_valid_deletions (set[str]): A set of genes that have valid deletions reported in the laboratorian report.
@@ -53,7 +56,9 @@ class Laboratorian:
                  TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], 
                  GENE_TO_TIER: dict[str, str],
                  PROMOTER_REGIONS: dict[str, list[int] | list[list[int]]], 
-                 TNGS: bool, DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool) -> None:
+                 TNGS: bool, DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool,
+                 TNGS_READ_SUPPORT_BOUNDARIES: list[int], 
+                 TNGS_FREQUENCY_BOUNDARIES: list[float]) -> None:
         """Initializes the Laboratorian class with the provided parameters.
         
         Args:
@@ -72,6 +77,8 @@ class Laboratorian:
             PROMOTER_REGIONS (dict[str, list[int] | list[list[int]]]): A dictionary containing promoter regions for each gene.
             TNGS (bool): A boolean indicating whether tNGS mode is enabled.
             DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): A boolean indicating whether R mutations should be treated the same as S/U mutations for locus QC.
+            TNGS_READ_SUPPORT_BOUNDARIES (list[int]): A list of read support boundaries for tNGS positional QC.
+            TNGS_FREQUENCY_BOUNDARIES (list[float]): A list of frequency boundaries for tNGS positional QC.
         """
         self.logger = logger
         self.input_json = input_json
@@ -104,6 +111,10 @@ class Laboratorian:
         """A boolean indicating whether tNGS mode is enabled."""
         self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY
         """A boolean indicating whether R mutations should be treated the same as S/U mutations for locus QC."""
+        self.TNGS_READ_SUPPORT_BOUNDARIES = TNGS_READ_SUPPORT_BOUNDARIES
+        """A list of read support boundaries for tNGS positional QC."""
+        self.TNGS_FREQUENCY_BOUNDARIES = TNGS_FREQUENCY_BOUNDARIES
+        """A list of frequency boundaries for tNGS positional QC."""
 
         self.genes_reported = set()
         """A set of genes that have already been reported in the laboratorian report."""
@@ -155,7 +166,7 @@ class Laboratorian:
                     raw_row = copy.deepcopy(annotation_row)
                                           
                     # perform QC on the row
-                    genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions, self.TNGS_REGIONS, self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY)
+                    genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions, self.TNGS_REGIONS, self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY, self.TNGS_READ_SUPPORT_BOUNDARIES, self.TNGS_FREQUENCY_BOUNDARIES)
                     self.genes_with_valid_deletions.update(genes_with_valid_deletions)
                     
                     if len(positional_qc_fails) > 0:

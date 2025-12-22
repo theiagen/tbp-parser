@@ -75,7 +75,7 @@ class Parser:
         self.promoter_regions_tsv = options.promoter_regions_tsv
         
         # reevaluate the following global variables -- they don't need to be globals
-        self.TNGS = options.tngs
+        
         self.SEQUENCING_METHOD = options.sequencing_method
         self.MIN_READ_SUPPORT = options.min_read_support
         self.MIN_FREQUENCY = options.min_frequency
@@ -84,10 +84,13 @@ class Parser:
         
         self.OPERATOR = options.operator
 
-        # this could cause issues if someone does more than one comma, but in that case, they deserve the error
-        globals_.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
-        globals_.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
+        # tngs-specific options
+        self.TNGS = options.tngs
+        self.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
+        self.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
         self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = options.do_not_treat_r_mutations_differently
+        self.err_bed = options.err_bed
+
 
         if self.verbose:
             self.logger.setLevel(logging.INFO)
@@ -231,7 +234,7 @@ class Parser:
         GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS = self.create_standard_dictionaries()
         
         self.logger.info("PARSER:run:Calculating coverage statistics")
-        coverage = Coverage(self.logger, self.input_bam, self.OUTPUT_PREFIX, self.tbdb_bed, TNGS_REGIONS)
+        coverage = Coverage(self.logger, self.input_bam, self.OUTPUT_PREFIX, self.tbdb_bed, TNGS_REGIONS, self.err_bed)
         COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH, self.TNGS)
 
         self.logger.info("PARSER:run:Creating Laboratorian report")
@@ -239,7 +242,8 @@ class Parser:
                                     self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, 
                                     COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, 
                                     GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS, 
-                                    self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY)
+                                    self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY, self.TNGS_READ_SUPPORT_BOUNDARIES,
+                                    self.TNGS_FREQUENCY_BOUNDARIES)
         DF_LABORATORIAN = laboratorian.create_laboratorian_report()
 
         self.logger.info("PARSER:run:Creating LIMS report")
