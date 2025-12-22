@@ -153,7 +153,7 @@ class Laboratorian:
                 
                     # make a copy of the annotation row that does not have any QC applied
                     raw_row = copy.deepcopy(annotation_row)
-                    
+                     
                     # perform QC on the row
                     genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions, self.TNGS_REGIONS, self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY)
                     self.genes_with_valid_deletions.update(genes_with_valid_deletions)
@@ -166,10 +166,10 @@ class Laboratorian:
 
                     # if in --debug mode, print the annotation row -- caution, this adds a ton of extra lines to the log.
                     annotation_row.print()
-
+                    
                     raw_row_list.append(raw_row)
                     row_list.append(annotation_row)
-        
+
         return row_list, raw_row_list
     
     def create_laboratorian_report(self) -> pd.DataFrame:
@@ -229,42 +229,42 @@ class Laboratorian:
                     temporary_row = Row.wildtype_row(self.logger, self.SAMPLE_NAME, gene, drug_name, self.GENE_TO_LOCUS_TAG, self.GENE_TO_TIER, self.LOW_DEPTH_OF_COVERAGE_LIST, self.TNGS)
                     row_list.append(temporary_row)
                     raw_row_list.append(copy.deepcopy(temporary_row))
-                    
                     # add WT rows to bottom of report 
                     reorder_list.append(temporary_row)
-
+            
             # add QC fail rows to end of laboratorian report too
             if gene in self.LOW_DEPTH_OF_COVERAGE_LIST:
-                for row in row_list:       
+                for row in row_list:                              
                     if row.tbprofiler_gene_name == gene:
                         if row.tbprofiler_gene_name in self.genes_with_valid_deletions:
                             # remove insufficient coverage warning if a valid deletion was found
                             if "Insufficient coverage in locus" in row.warning:
                                 row.warning.remove("Insufficient coverage in locus")
-
                         # if the mutation fails quality control, move it to the end of the report
                         if ("Insufficient coverage in locus" in row.warning 
                             or row.tbprofiler_variant_substitution_nt in self.positional_qc_fails.get(row.tbprofiler_gene_name, set())):
                             reorder_list.append(row)
-                
+                    
         # reorder the rows so that WT and QC-fail rows are at the end of the report and sorted alphabetically by gene name
         remaining_rows = [row for row in row_list if row not in reorder_list]
         sorted_reorder_list = sorted(reorder_list, key=lambda x: x.tbprofiler_gene_name.lower())
         row_list = remaining_rows + sorted_reorder_list
-        
+                
         self.logger.info("LAB:create_laboratorian_report:There are now {} rows after adding missing gene-drug combos and editing/reordering necessary rows\n".format(len(row_list)))
 
         for rows in (row_list, raw_row_list):
             for row in rows:
-                # concatenate warning list into a single string
-                row.warning = list(filter(None, row.warning))
-                row.warning = ". ".join(row.warning)
-
+                # row.warning can end up sometimes as a str due to the various copying and I can't figure out where to nix it
+                # so while this code fixes that problem, it would be better to find the root cause and fix it there
+                # @theron fix this-- decouple rows so that they're true deep copies and not shallow copies, despite using copy.deepcopy()
+                row.warning = ". ".join(row.warning) if isinstance(row.warning, set) and len(row.warning) > 0 else (
+                    row.warning if isinstance(row.warning, str) else "")
+                
         DF_LABORATORIAN = pd.DataFrame([vars(row) for row in row_list], columns=DF_LABORATORIAN.columns)
         DF_LABORATORIAN.to_csv("{}.laboratorian_report.csv".format(self.OUTPUT_PREFIX), index=False)
 
         # the raw laboratorian report without any QC applied is here but will not be ordered the same as the main
         df_raw_laboratorian = pd.DataFrame([vars(row) for row in raw_row_list], columns=DF_LABORATORIAN.columns)
-        df_raw_laboratorian.to_csv("{}.raw_lab_report.csv".format(self.OUTPUT_PREFIX), index=False)
+        df_raw_laboratorian.to_csv("{}.lab_report.raw.csv".format(self.OUTPUT_PREFIX), index=False)
                 
         return DF_LABORATORIAN

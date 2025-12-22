@@ -122,7 +122,6 @@ class Variant:
             # iterate through each entry in the annotation
             for annotation_entry in self.annotation:
                 drug = annotation_entry["drug"]
-                
                 new_row = Row(self.logger, self, annotation_entry, self.TNGS)
                 
                 # if this is the first time a drug has been seen, add it to the annotation dictionary
@@ -146,7 +145,6 @@ class Variant:
                 # see also rule 4.3.3
                 # copy a row in the annotation dictionary, but update the confidence and drug name appropriately. no qc has been performed so this should be fine
                 mock_annotation["drug"] = drug
-                
                 self.annotation_dictionary[drug] = Row(self.logger, self, mock_annotation, self.TNGS)
 
             if self.gene_name in self.GENE_TO_ANTIMICROBIAL_DRUG_NAME.keys():

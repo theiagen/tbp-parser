@@ -113,7 +113,7 @@ class LIMS:
             detected_lineage = input_json["main_lineage"]
             self.LINEAGE = detected_lineage
             detected_sublineage = input_json["sub_lineage"]
-            
+                       
             lims_genes = list({
                 gene_name for code_to_genes in globals_.DRUG_COLUMNS_TO_GENE_COLUMNS.values()
                 for gene_to_code in code_to_genes.values()
@@ -198,91 +198,82 @@ class LIMS:
             "Sample_Name": self.SAMPLE_NAME, 
             "Lineage_ID": self.get_id(TNGS, MIN_LOCUS_PERCENTAGE)
         }, index=[0])
+        
+        lims_report = {
+            "Sample_Name": self.SAMPLE_NAME, 
+            "Lineage_ID": self.get_id(TNGS, MIN_LOCUS_PERCENTAGE)
+        }
+
+        qc_mask = ~self.DF_LABORATORIAN.apply(
+            lambda row: row["tbprofiler_variant_substitution_nt"] in self.POSITIONAL_QC_FAILS.get(row["tbprofiler_gene_name"], set()), axis=1
+        )
+        qc_pass_laboratorian = self.DF_LABORATORIAN[qc_mask]
 
         self.logger.debug("LIMS:create_lims_report:Now iterating through each LIMS antimicrobial code")
         for drug, drug_gene_dictionary in globals_.DRUG_COLUMNS_TO_GENE_COLUMNS.items():
-            genes_associated_with_drug = set()
-            
-            # avoid highly fragmented performance warning
-            DF_LIMS = DF_LIMS.copy()
             
             for antimicrobial_code, gene_codes in drug_gene_dictionary.items():
-                # extract list of all genes associated with this drug (this dictionary is only for the LIMS report so not all genes need be considered) 
-                genes_associated_with_drug = gene_codes.keys()
                 
-                # capture all rows in DF_LABORATORIAN associated with this drug and then 
-                #  capture only gene-drug associated rows that are reported on in the LIMS report
-                drug_associated_rows = self.DF_LABORATORIAN[self.DF_LABORATORIAN["antimicrobial"] == drug]
-                gene_drug_associated_rows = drug_associated_rows.loc[drug_associated_rows["tbprofiler_gene_name"].isin(genes_associated_with_drug)]          
-                    
-                # remove any interpretations that have failed positional QC from consideration
-                # this is when the tbprofiler_variant_substitution_nt variable is in the POSITIONAL_QC_FAILS list
-                qc_pass_gene_drug_associated_rows = gene_drug_associated_rows.loc[~gene_drug_associated_rows.apply(
-                    lambda row: row["tbprofiler_variant_substitution_nt"] in self.POSITIONAL_QC_FAILS.get(row["tbprofiler_gene_name"], set()), axis=1)]
+                drug_associated_rows = qc_pass_laboratorian[qc_pass_laboratorian["antimicrobial"] == drug]
+                gene_drug_associated_rows = drug_associated_rows.loc[drug_associated_rows["tbprofiler_gene_name"].isin(gene_codes.keys())]
                 
-                potential_mdl_resistances = qc_pass_gene_drug_associated_rows["mdl_interpretation"].tolist()
+                
+                potential_mdl_resistances = gene_drug_associated_rows["mdl_interpretation"].tolist()
                 try:
                     max_mdl_resistance = max(potential_mdl_resistances, key=lambda x: self.RESISTANCE_RANKING[x])
-                except:
+                except ValueError:
                     max_mdl_resistance = "NA"
                 
                 self.logger.debug("LIMS:create_lims_report:The max MDL resistance for this antimicrobial ({}) is {}".format(drug, max_mdl_resistance))
                     
-                DF_LIMS[antimicrobial_code] = self.convert_annotation(max_mdl_resistance, drug) 
+                lims_report[antimicrobial_code] = self.convert_annotation(max_mdl_resistance, drug) 
 
-                # the antimicrobial code message may need to change depending on the mutations present
-                # additionally, we must now provide content for the gene codes associated with this drug
-                if max_mdl_resistance in ["WT", "Insufficient Coverage", "NA"]:
-                    # set all gene codes to "No mutations detected" or "No sequence" if Insufficient Coverage
-                    for gene, gene_code in gene_codes.items():
+                for gene, gene_code in gene_codes.items():
+                    gene_subset = gene_drug_associated_rows[gene_drug_associated_rows["tbprofiler_gene_name"] == gene]
+                    mutation_list = []
+                    # the antimicrobial code message may need to change depending on the mutations present
+                    # additionally, we must now provide content for the gene codes associated with this drug
+                    if max_mdl_resistance in ["WT", "Insufficient Coverage", "NA"]:
                         # if the gene has insufficient coverage without a valid deletion (NOT in GENES_WITH_VALID_DELETIONS but in LOW_DEPTH_OF_COVERAGE_LIST), set to "No sequence"
                         if gene in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS:
-                            DF_LIMS[gene_code] = "No sequence"
+                            lims_report[gene_code] = "No sequence"
                         else:
-                            DF_LIMS[gene_code] = "No mutations detected"
+                            lims_report[gene_code] = "No mutations detected"
                         
-                elif max_mdl_resistance in ["S"]:
-                    for gene, gene_code in gene_codes.items():
-                        mutation_list = []
-                        
-                        gene_subset = qc_pass_gene_drug_associated_rows[qc_pass_gene_drug_associated_rows["tbprofiler_gene_name"] == gene]
+                    elif max_mdl_resistance in ["S"]:
                         if gene == "rpoB" and drug == "rifampicin":
                             # by default, assume no RRDR synonymous mutations
-                            DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampicin"
+                            lims_report[antimicrobial_code] = "Predicted susceptibility to rifampicin"
 
                             # check if there is a mutation appears in the RRDR (codons 426-452) (in the special-positions dictionary)
                             # reduce gene_subset to only those that are synonymous type
-                            gene_subset = gene_subset[gene_subset["tbprofiler_variant_substitution_type"] == "synonymous_variant"]                        
-                            if len(gene_subset) > 0:               
-                                for aa_mutation in gene_subset["tbprofiler_variant_substitution_aa"].tolist():
-                                    position_aa = globals_.get_position(aa_mutation)
-                                    
-                                    if globals_.is_within_range(position_aa, self.SPECIAL_POSITIONS[gene]):
-                                        # synonymous RRDR mutation - update antimicrobial code message
-                                        DF_LIMS[antimicrobial_code] = "Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance"
-                                        mutation_list.append("{} [synonymous]".format(aa_mutation))
+                            synonymous_subset = gene_subset[gene_subset["tbprofiler_variant_substitution_type"] == "synonymous_variant"]
+                               
+                            for aa_mutation in synonymous_subset["tbprofiler_variant_substitution_aa"].tolist():
+                                position_aa = globals_.get_position(aa_mutation)
+                                
+                                if globals_.is_within_range(position_aa, self.SPECIAL_POSITIONS[gene]):
+                                    # synonymous RRDR mutation - update antimicrobial code message
+                                    lims_report[antimicrobial_code] = "Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance"
+                                    mutation_list.append("{} [synonymous]".format(aa_mutation))
                             
-                            DF_LIMS[gene_code] = "; ".join(mutation_list) if len(mutation_list) > 0 else "No high confidence mutations detected"
+                            lims_report[gene_code] = "; ".join(mutation_list) if len(mutation_list) > 0 else "No high confidence mutations detected"
 
                         else: 
                             if len(gene_subset) > 0 and max(gene_subset["mdl_interpretation"].tolist(), key=lambda x: self.RESISTANCE_RANKING[x]) == "S":
-                                DF_LIMS[gene_code] = "No high confidence mutations detected"
+                                lims_report[gene_code] = "No high confidence mutations detected"
                             else:
                                 # no mutations for this gene, wildtype
-                                DF_LIMS[gene_code] = "No mutations detected"
-                
-                elif max_mdl_resistance in ["R", "U"]:
-                    # only report R or U mutations (and RRDR synonymous mutations that are S)
-                    for gene, gene_code in gene_codes.items():
-                        mutation_list = []
-                        gene_subset = qc_pass_gene_drug_associated_rows[qc_pass_gene_drug_associated_rows["tbprofiler_gene_name"] == gene]
-                        
-                        for index, row in gene_subset.iterrows():
-                            mutation = row["tbprofiler_variant_substitution_nt"]
-                            aa_mutation = row["tbprofiler_variant_substitution_aa"]
-                            mutation_type = row["tbprofiler_variant_substitution_type"]
-                            mdl_interpretation = row["mdl_interpretation"]
+                                lims_report[gene_code] = "No mutations detected"
+                    
+                    elif max_mdl_resistance in ["R", "U"]:
+                        # only report R or U mutations (and RRDR synonymous mutations that are S)
+                        nt_list = gene_subset["tbprofiler_variant_substitution_nt"].tolist()
+                        aa_list = gene_subset["tbprofiler_variant_substitution_aa"].tolist()
+                        type_list = gene_subset["tbprofiler_variant_substitution_type"].tolist()
+                        mdl_list = gene_subset["mdl_interpretation"].tolist()
         
+                        for mutation, aa_mutation, mutation_type, mdl_interpretation in zip(nt_list, aa_list, type_list, mdl_list):
                             if ((mdl_interpretation in ["R", "U"]) 
                                 or (gene == "rpoB" 
                                     and globals_.is_within_range(globals_.get_position(aa_mutation), self.SPECIAL_POSITIONS[gene]) 
@@ -315,31 +306,28 @@ class LIMS:
                                             break
 
                                 if rpob_specific_mutations_counter > 0:
-                                    DF_LIMS[antimicrobial_code] = "Predicted low-level resistance to rifampicin. May test susceptible by phenotypic methods."
+                                    lims_report[antimicrobial_code] = "Predicted low-level resistance to rifampicin. May test susceptible by phenotypic methods."
                                 else:
-                                    DF_LIMS[antimicrobial_code] = "Predicted resistance to rifampicin"
+                                    lims_report[antimicrobial_code] = "Predicted resistance to rifampicin"
 
-                        if len(mutation_list) > 0:
-                            DF_LIMS[gene_code] = "; ".join(mutation_list)
+
+                    if len(mutation_list) > 0:
+                        lims_report[gene_code] = "; ".join(mutation_list)
+                    else:
+                        # if max_mdl_resistance for this gene is "S" then set to "No high confidence mutations detected"
+                        if len(gene_subset) > 0 and max(gene_subset["mdl_interpretation"].tolist(), key=lambda x: self.RESISTANCE_RANKING[x]) == "S":
+                                lims_report[gene_code] = "No high confidence mutations detected"
                         else:
-                            # if max_mdl_resistance for this gene is "S" then set to "No high confidence mutations detected"
-                            if len(gene_subset) > 0 and max(gene_subset["mdl_interpretation"].tolist(), key=lambda x: self.RESISTANCE_RANKING[x]) == "S":
-                                    DF_LIMS[gene_code] = "No high confidence mutations detected"
-                            else:
-                                # no mutations for this gene, wildtype
-                                DF_LIMS[gene_code] = "No mutations detected"
+                            # no mutations for this gene, wildtype
+                            lims_report[gene_code] = "No mutations detected"
                                         
-        DF_LIMS = pd.concat([DF_LIMS, pd.DataFrame({
-                                "Analysis_Date": datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 
-                                "Operator": OPERATOR, 
-                                "Lineage": self.LINEAGE}, index=DF_LIMS.index)
-                            ], axis=1)
+        DF_LIMS = pd.DataFrame([lims_report])
+        DF_LIMS["Analysis_Date"]= datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+        DF_LIMS["Operator"] = OPERATOR
+        DF_LIMS["Lineage"] = self.LINEAGE
         
         # write to file
         DF_LIMS.to_csv("{}.lims_report.csv".format(self.OUTPUT_PREFIX), index=False)
-        
-        # create transposed version
-        DF_LIMS_T = DF_LIMS.transpose()
-        DF_LIMS_T.to_csv("{}.transposed_lims_report.csv".format(self.OUTPUT_PREFIX), header=False)
+        DF_LIMS.T.to_csv("{}.lims_report.transposed.csv".format(self.OUTPUT_PREFIX), header=False)
         
         self.logger.info("LIMS:create_lims_report:LIMS report created, now exiting function\n")

@@ -78,9 +78,14 @@ class Coverage:
                     positions_above_min += 1
         
         region_length = int(end) - int(start) + 1  #1-based indexing
-        breadth_of_coverage = (positions_above_min / region_length) * 100
-        average_depth = (depth_sum / region_length) if region_length > 0 else 0
         
+        if region_length > 0:
+            breadth_of_coverage = (positions_above_min / region_length) * 100
+            average_depth = depth_sum / region_length
+        else:
+            breadth_of_coverage = 0
+            average_depth = 0
+            
         self.logger.debug("COV:calculate_depth:The average breadth of coverage for this gene ({}) is {} and the average depth is {}".format(gene, breadth_of_coverage, average_depth))
         
         os.remove(gene + "-depths.txt")
@@ -116,15 +121,14 @@ class Coverage:
         # add to low depth of coverage list if below the breadth of coverage threshold (MIN_PERCENT_COVERAGE * 100)
         # combine split primers so if one fails, gene fails rpoB_1 = 0 but rpob_2 = 100 -> rpoB is added to this list
         if TNGS:
-            # combine split primers
-            for gene in COVERAGE_DICTIONARY.keys():
-                # TO-DO: ADJUST THIS SO THIS WORKS APPROPRIATELY -- NEED TO CHECK THE VALUES OF TNGS_REGIONS
-                if gene in self.TNGS_REGIONS and isinstance(self.TNGS_REGIONS[gene], dict):
+            for parent_gene, children in self.TNGS_REGIONS.items():
+                if isinstance(children, dict):
                     # 7.1.3.1 - breadth of coverage QC fails if at least one segment does not meet QC thresholds (use the minimum here)
-                    combined_coverage = min([COVERAGE_DICTIONARY[region] for region in self.TNGS_REGIONS[gene].keys()])
+                    combined_coverage = min(COVERAGE_DICTIONARY[region] for region in children)
                     if combined_coverage < (MIN_PERCENT_COVERAGE * 100):
-                        LOW_DEPTH_OF_COVERAGE_LIST.append(gene)
-                    
+                        LOW_DEPTH_OF_COVERAGE_LIST.append(parent_gene)
+        
+        # this will contain split primers if tNGS, but they will be reported as part of the parent gene above
         LOW_DEPTH_OF_COVERAGE_LIST.extend([gene for gene, coverage in COVERAGE_DICTIONARY.items() if coverage < (MIN_PERCENT_COVERAGE * 100)])
     
         self.logger.info("COV:get_coverage:Coverage dictionaries of length {} and {} have been created".format(len(COVERAGE_DICTIONARY), len(AVERAGE_LOCI_COVERAGE)))
@@ -138,9 +142,9 @@ class Coverage:
         a CSV file and adds a deletion warning if a QC-passing deletion was identified
         for the region in the Laboratorian report.
         """
-        DF_COVERAGE = pd.DataFrame(columns=["Gene", "Percent_Coverage", "Average_Locus_Coverage", "Warning"])
-
         self.logger.debug("COV:create_coverage_report:Now iterating through each gene in the breadth of coverage dictionary")
+        
+        coverage_report = []
         for gene, percent_coverage in COVERAGE_DICTIONARY.items():            
             average_coverage = AVERAGE_LOCI_COVERAGE[gene]
             warning = ""
@@ -148,20 +152,19 @@ class Coverage:
             if gene in GENES_WITH_VALID_DELETIONS:
                 warning = "Deletion identified"
                 if percent_coverage == 100: 
-                    # if the coverage is at 100% but a deletion was identified, it's likely upstream
+                    # if the coverage is at 100% and a deletion was identified, it's likely upstream
                     warning = "Deletion identified (upstream)"
 
-            # prevent concatenation warnings if the dataframe is empty
-            if len(DF_COVERAGE) == 0:
-                DF_COVERAGE = pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, 
-                                            "Average_Locus_Coverage": average_coverage, "Warning": warning}, 
-                                           index=[0])
-            else:
-                # consider adding their "ERR" column to mimic existing functionality?
-                DF_COVERAGE = pd.concat([DF_COVERAGE, pd.DataFrame({"Gene": gene, "Percent_Coverage": percent_coverage, 
-                                                                   "Average_Locus_Coverage": average_coverage, "Warning": warning}, 
-                                                                   index=[0])], ignore_index=True)
+            coverage_report.append({
+                "Gene": gene,
+                "Percent_Coverage": percent_coverage,
+                "Average_Locus_Coverage": average_coverage,
+                "Warning": warning
+            })
 
+        DF_COVERAGE = pd.DataFrame(coverage_report)
+        
+        # @theron -- do we want to move this to configuration?
         if TNGS: 
             DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning"}, inplace=True)
 
