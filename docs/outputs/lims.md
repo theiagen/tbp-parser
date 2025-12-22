@@ -11,7 +11,7 @@ The LIMS report is intended for direct import into a STAR LIMS system. The colum
 | MDL sample accession numbers | The name of the sample |
 | M_DST_A01_ID | The lineage of the sample in human-readable language |
 | M_DST_B01_INH | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (isoniazid) |
-| M_DST_B02_katG | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for ethionamideresponsible for the predicted resistance for isoniazid |
+| M_DST_B02_katG | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for isoniazid |
 | M_DST_B03_fabG1 | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for isoniazid|
 | M_DST_B04_inhA | Any non-S mutations found in this gene with good quality responsible for the predicted resistance for isoniazid |
 | M_DST_C01_ETO | The highest `mdl_interpretation` resistance identified for mutations associated with this drug (ethionamide) |
