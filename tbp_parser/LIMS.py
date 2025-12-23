@@ -23,13 +23,13 @@ class LIMS:
         RPOB_MUTATIONS (list[str]): a list of rpoB mutations that require unique LIMS output wording
     
     Methods:
-        get_id(TNGS: bool, MIN_LOCUS_PERCENTAGE: float, test: bool = False) -> str:
+        get_id(TNGS: bool, MIN_PERCENT_LOCI_COVERED: float, test: bool = False) -> str:
             Returns both the TBProfiler identified lineage and the lineage in human-friendly language
             
         convert_annotation(annotation, drug) -> str:
             Converts the resistance annotation into the appropriate LIMS text
             
-        create_lims_report(TNGS: bool, MIN_LOCUS_PERCENTAGE: float, OPERATOR: str) -> None:
+        create_lims_report(TNGS: bool, MIN_PERCENT_LOCI_COVERED: float, OPERATOR: str) -> None:
             Creates the LIMS report using the laboratorian pd.DataFrame
     """
     RESISTANCE_RANKING = {
@@ -94,12 +94,12 @@ class LIMS:
         self.GENES_WITH_VALID_DELETIONS = GENES_WITH_VALID_DELETIONS
         """A set of genes that have valid (QC-pass) deletions"""
 
-    def get_id(self, TNGS: bool, MIN_LOCUS_PERCENTAGE: float, test: bool = False) -> str:
+    def get_id(self, TNGS: bool, MIN_PERCENT_LOCI_COVERED: float, test: bool = False) -> str:
         """Returns both the TBProfiler identified lineage and the lineage in human-friendly languager
 
         Args:
             TNGS (bool): flag to indicate if the input data is tNGS or not
-            MIN_LOCUS_PERCENTAGE (float): the minimum percentage of the loci that need to be covered to call a lineage
+            MIN_PERCENT_LOCI_COVERED (float): the minimum percentage of the loci that need to be covered to call a lineage
             test (bool, optional): determines if this is running as part of a pytest module. Defaults to False.
 
         Returns:
@@ -131,7 +131,7 @@ class LIMS:
             except:
                 percentage_lims_genes_above = 0
             
-            if test or (percentage_lims_genes_above >= MIN_LOCUS_PERCENTAGE):
+            if test or (percentage_lims_genes_above >= MIN_PERCENT_LOCI_COVERED):
                 if TNGS:
                     pncA_mutations = self.DF_LABORATORIAN[(self.DF_LABORATORIAN["tbprofiler_gene_name"] == "pncA")]
                     if "p.His57Asp" in pncA_mutations["tbprofiler_variant_substitution_aa"].tolist():
@@ -183,12 +183,12 @@ class LIMS:
 
         return message
 
-    def create_lims_report(self, TNGS: bool, MIN_LOCUS_PERCENTAGE: float, OPERATOR: str) -> None:
+    def create_lims_report(self, TNGS: bool, MIN_PERCENT_LOCI_COVERED: float, OPERATOR: str) -> None:
         """Creates the LIMS report using the laboratorian pd.DataFrame
         
         Args:
             TNGS (bool): flag to indicate if the input data is tNGS or not
-            MIN_LOCUS_PERCENTAGE (float): the minimum percentage of the loci that need to be covered to call a lineage
+            MIN_PERCENT_LOCI_COVERED (float): the minimum percentage of the loci that need to be covered to call a lineage
             OPERATOR (str): the operator who ran the sequencing
         
         Returns:
@@ -196,7 +196,7 @@ class LIMS:
         """
         lims_report = {
             "Sample_Name": self.SAMPLE_NAME, 
-            "Lineage_ID": self.get_id(TNGS, MIN_LOCUS_PERCENTAGE)
+            "Lineage_ID": self.get_id(TNGS, MIN_PERCENT_LOCI_COVERED)
         }
 
         qc_mask = ~self.DF_LABORATORIAN.apply(

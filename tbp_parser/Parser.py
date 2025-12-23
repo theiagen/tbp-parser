@@ -22,22 +22,27 @@ class Parser:
         logger (logging.Logger): the logger object for logging messages
         input_json (str): the JSON file produced by TBProfiler
         input_bam (str): the BAM file produced by TBProfiler
-        config (str): the configuration file to use, in YAML format
-        verbose (bool): whether to enable verbose logging
-        debug (bool): whether to enable debug logging
+        config (str): the configuration file to use, in YAML format        
+        
+        OPERATOR (str): the operator who ran the sequencing
         OUTPUT_PREFIX (str): the prefix for output files
-        MIN_PERCENT_COVERAGE (float): the minimum percentage of a region that has depth above the threshold set by MIN_DEPTH to pass QC
-        MIN_DEPTH (int): the minimum depth of coverage for a site to pass QC
+        SEQUENCING_METHOD (str): the sequencing method used to generate the data
+        
         tbdb_bed (str): the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations
         gene_tier_tsv (str): the TSV file mapping genes to their tier
         promoter_regions_tsv (str): the TSV file containing the promoter regions to include in interpretation designations
-        TNGS (bool): whether tNGS mode is enabled
-        SEQUENCING_METHOD (str): the sequencing method used to generate the data
-        MIN_READ_SUPPORT (int): the minimum read support for a mutation to pass QC
+        
+        MIN_PERCENT_COVERAGE (float): the minimum percentage of a region that has depth above the threshold set by MIN_DEPTH to pass QC 
+        MIN_PERCENT_LOCI_COVERED (float): the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC
+        MIN_DEPTH (int): the minimum depth of coverage for a site to pass QC
         MIN_FREQUENCY (float): the minimum frequency for a mutation to pass QC
-        MIN_LOCUS_PERCENTAGE (float): the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC
-        OPERATOR (str): the operator who ran the sequencing
+        MIN_READ_SUPPORT (int): the minimum read support for a mutation to pass QC
+        
+        TNGS (bool): whether tNGS mode is enabled
         DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): whether R mutations should be treated the same as S/U mutations for locus QC
+        TNGS_READ_SUPPORT_BOUNDARIES (list[int]): the read support boundaries for tNGS QC reporting
+        TNGS_FREQUENCY_BOUNDARIES (list[float]): the frequency boundaries for tNGS QC reporting
+        err_bed (str | None): an optional BED file containing ranges that are essential for resistance [tNGS only]
         
     Methods:
         create_standard_dictionaries() -> tuple[dict[str, list[str]], dict[str, str], dict[str, list[int] | list[list[int]]], dict[str, str], dict[str, list[int] | list[list[int]]]]:
@@ -61,29 +66,26 @@ class Parser:
         self.logger = logging.getLogger(__name__)
         self.input_json = options.input_json
         self.input_bam = options.input_bam
-        self.config = options.config
-        self.verbose = options.verbose
-        self.debug = options.debug
-        self.OUTPUT_PREFIX = options.output_prefix
         
-        self.MIN_PERCENT_COVERAGE = options.min_percent_coverage
-        self.MIN_DEPTH = options.min_depth
+        self.config = options.config
+        
+        # test inputs
+        self.SEQUENCING_METHOD = options.sequencing_method
+        self.OUTPUT_PREFIX = options.output_prefix
+        self.OPERATOR = options.operator
         
         # files used to create the standard dictionaries
         self.tbdb_bed = options.tbdb_bed
         self.gene_tier_tsv = options.gene_tier_tsv
         self.promoter_regions_tsv = options.promoter_regions_tsv
         
-        # reevaluate the following global variables -- they don't need to be globals
-        
-        self.SEQUENCING_METHOD = options.sequencing_method
-        self.MIN_READ_SUPPORT = options.min_read_support
-        self.MIN_FREQUENCY = options.min_frequency
-        self.MIN_LOCUS_PERCENTAGE = options.min_percent_locus_covered
+        self.MIN_PERCENT_COVERAGE = options.min_percent_coverage
+        self.MIN_PERCENT_LOCI_COVERED = options.min_percent_loci_covered
         """The minimum percentage of LIMS genes to pass QC for MTBC identification to occur"""
+        self.MIN_DEPTH = options.min_depth
+        self.MIN_FREQUENCY = options.min_frequency
+        self.MIN_READ_SUPPORT = options.min_read_support
         
-        self.OPERATOR = options.operator
-
         # tngs-specific options
         self.TNGS = options.tngs
         self.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
@@ -91,16 +93,17 @@ class Parser:
         self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = options.do_not_treat_r_mutations_differently
         self.err_bed = options.err_bed
 
-
-        if self.verbose:
+        # logging options
+        if options.verbose:
             self.logger.setLevel(logging.INFO)
             self.logger.info("PARSER:__init__:Verbose mode enabled")
-        elif self.debug:
+        elif options.debug:
             self.logger.setLevel(logging.DEBUG)
             self.logger.debug("PARSER:__init__:Debug mode enabled")
         else:
             self.logger.setLevel(logging.ERROR)
 
+        # configuration file overwrite
         if self.config != "":
             self.logger.info("PARSER:__init__:Overwriting variables with the provided config file")
             self.overwrite_variables()
@@ -250,7 +253,7 @@ class Parser:
         lims = LIMS(self.logger, self.input_json, self.OUTPUT_PREFIX, LOW_DEPTH_OF_COVERAGE_LIST, 
                     laboratorian.SAMPLE_NAME, DF_LABORATORIAN, laboratorian.positional_qc_fails,
                     laboratorian.genes_with_valid_deletions)
-        lims.create_lims_report(self.TNGS, self.MIN_LOCUS_PERCENTAGE, self.OPERATOR)
+        lims.create_lims_report(self.TNGS, self.MIN_PERCENT_LOCI_COVERED, self.OPERATOR)
 
         self.logger.info("PARSER:run:Creating Looker report")
         looker = Looker(self.logger, self.OUTPUT_PREFIX, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.genes_with_valid_deletions, GENE_TO_ANTIMICROBIAL_DRUG_NAME)

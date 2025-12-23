@@ -68,7 +68,7 @@ def is_bed_valid(filename) -> str:
     return filename
 
 def is_boundary_valid(boundary_string) -> str:
-    """Checks if the boundary string is valid (two comma-separated values)
+    """Checks if the boundary string for tNGS is valid (two comma-separated numerical values)
 
     Args:
         boundary_string (String): The boundary string to check

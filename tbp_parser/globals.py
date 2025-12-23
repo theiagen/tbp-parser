@@ -1,6 +1,5 @@
 import re
 
-# run at the start and then use as a class feature ?
 def get_position(mutation) -> list[int]:
     """This function recieves a mutation and returns the position as an integer
 
@@ -279,26 +278,4 @@ OUTPUT_RENAMING = {}
 For example, if the desired output language for 'rifampicin' is 'rifampin', the dictionary
 would contain the entry {'rifampicin': 'rifampin'}. At the end of processing, all instances
 of 'rifampicin' in the output reports would be replaced with 'rifampin'.
-"""
-
-###### deal with these ones next
-
-global TNGS_READ_SUPPORT_BOUNDARIES
-TNGS_READ_SUPPORT_BOUNDARIES = []
-"""
-read support boundaries for tNGS QC; [lower_rs, upper_rs]
-"""
-
-global TNGS_FREQUENCY_BOUNDARIES
-TNGS_FREQUENCY_BOUNDARIES = []
-"""
-frequency boundaries for tNGS QC; [lower_f, upper_f]
-"""
-
-global TREAT_R_AS_S
-TREAT_R_AS_S = False
-"""
-A flag to indicate if --treat-r-as-s is activated; indicates that r mutations in loci 
-that are below the coverage threshold will be treated like S or U mutations and will 
-not be reported regardless of mutation quality
 """

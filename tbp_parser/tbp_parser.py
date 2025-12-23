@@ -47,7 +47,7 @@ def main():
                         help="the minimum read support for a mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
     qc_arguments.add_argument("-f", "--min_frequency",
                         help="the minimum frequency for a mutation to pass QC (0.1 -> 10%%)\ndefault=0.1", default=0.1, metavar="\b", type=float)
-    qc_arguments.add_argument("-l", "--min_percent_locus_covered", default=0.7, metavar="\b", type=float,
+    qc_arguments.add_argument("-l", "--min_percent_loci_covered", default=0.7, metavar="\b", type=float,
                         help="the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%%)\ndefault=0.7")
     
     qc_arguments.add_argument("--do_not_treat_r_mutations_differently", default=False, action="store_true",
