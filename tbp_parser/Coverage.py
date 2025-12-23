@@ -149,7 +149,7 @@ class Coverage:
 
         return coverage_dictionary, average_loci_coverage, low_depth_of_coverage_list
 
-    def create_coverage_report(self, COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: list[str], TNGS: bool) -> None:
+    def create_coverage_report(self, SAMPLE_NAME: str, COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: list[str], TNGS: bool) -> None:
         """
         This function reformats the coverage and average loci coverage dictionaries into
         a CSV file and adds a deletion warning if a QC-passing deletion was identified
@@ -170,6 +170,7 @@ class Coverage:
 
             if len(self.err_coverage) == 0:
                 coverage_report.append({
+                    "Sample": SAMPLE_NAME,
                     "Gene": gene,
                     "Percent_Coverage": percent_coverage,
                     "Average_Locus_Coverage": average_coverage,
@@ -179,6 +180,7 @@ class Coverage:
                 err_coverage = self.err_coverage.get(gene, "N/A")
                 
                 coverage_report.append({
+                    "Sample": SAMPLE_NAME,
                     "Gene": gene,
                     "Percent_Coverage": percent_coverage,
                     "Average_Locus_Coverage": average_coverage,
@@ -187,9 +189,4 @@ class Coverage:
                 })
 
         DF_COVERAGE = pd.DataFrame(coverage_report)
-        
-        # @theron -- do we want to move this to configuration?
-        if TNGS: 
-            DF_COVERAGE.rename(columns={"Percent_Coverage": "Coverage_Breadth_reportableQC_region", "Warning": "QC_Warning", "Essential_Regions_Percent_Coverage": "Coverage_Breadth_R_expert-rule_region"}, inplace=True)
-
         DF_COVERAGE.to_csv(self.OUTPUT_PREFIX + ".coverage_report.csv", float_format="%.2f", index=False)

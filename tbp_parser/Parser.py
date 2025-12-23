@@ -260,7 +260,7 @@ class Parser:
         looker.create_looker_report(laboratorian.SAMPLE_NAME, self.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.OPERATOR)
 
         self.logger.info("PARSER:run:Creating coverage report")
-        coverage.create_coverage_report(COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.genes_with_valid_deletions, self.TNGS)
+        coverage.create_coverage_report(laboratorian.SAMPLE_NAME, COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.genes_with_valid_deletions, self.TNGS)
 
         if len(globals_.OUTPUT_RENAMING) > 0:
             self.logger.info("PARSER:run:Renaming output columns as specified in globals.OUTPUT_RENAMING")

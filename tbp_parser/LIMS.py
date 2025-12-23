@@ -308,7 +308,8 @@ class LIMS:
 
                     if len(mutation_list) > 0:
                         lims_report[gene_code] = "; ".join(mutation_list)
-                    elif (gene_code not in lims_report.keys()) or (lims_report[gene_code] not in ["No sequence", "No mutations detected"]):
+                    elif ((gene_code not in lims_report.keys()) 
+                          or (lims_report[gene_code] not in ["No sequence", "No mutations detected"])):
                         # if max_mdl_resistance for this gene is "S" then set to "No high confidence mutations detected"
                         if len(gene_subset) > 0 and max(gene_subset["mdl_interpretation"].tolist(), key=lambda x: self.RESISTANCE_RANKING[x]) == "S":
                                 lims_report[gene_code] = "No high confidence mutations detected"
