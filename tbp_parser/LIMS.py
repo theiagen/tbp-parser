@@ -206,18 +206,17 @@ class LIMS:
 
         self.logger.debug("LIMS:create_lims_report:Now iterating through each LIMS antimicrobial code")
         for drug, drug_gene_dictionary in globals_.DRUG_COLUMNS_TO_GENE_COLUMNS.items():
-            
             for antimicrobial_code, gene_codes in drug_gene_dictionary.items():
                 
                 drug_associated_rows = qc_pass_laboratorian[qc_pass_laboratorian["antimicrobial"] == drug]
                 gene_drug_associated_rows = drug_associated_rows.loc[drug_associated_rows["tbprofiler_gene_name"].isin(gene_codes.keys())]
                 
-                
                 potential_mdl_resistances = gene_drug_associated_rows["mdl_interpretation"].tolist()
                 try:
                     max_mdl_resistance = max(potential_mdl_resistances, key=lambda x: self.RESISTANCE_RANKING[x])
                 except ValueError:
-                    max_mdl_resistance = "NA"
+                    # no mutations associated with this drug -- this should only happen if all mutations were masked due to failing QC; set to "Insufficient Coverage"
+                    max_mdl_resistance = "Insufficient Coverage"
                 
                 self.logger.debug("LIMS:create_lims_report:The max MDL resistance for this antimicrobial ({}) is {}".format(drug, max_mdl_resistance))
                     
@@ -232,6 +231,7 @@ class LIMS:
                         # if the gene has insufficient coverage without a valid deletion (NOT in GENES_WITH_VALID_DELETIONS but in LOW_DEPTH_OF_COVERAGE_LIST), set to "No sequence"
                         if gene in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS:
                             lims_report[gene_code] = "No sequence"
+                            lims_report[antimicrobial_code] = "Pending Retest"
                         else:
                             lims_report[gene_code] = "No mutations detected"
                         
@@ -308,7 +308,7 @@ class LIMS:
 
                     if len(mutation_list) > 0:
                         lims_report[gene_code] = "; ".join(mutation_list)
-                    else:
+                    elif (gene_code not in lims_report.keys()) or (lims_report[gene_code] not in ["No sequence", "No mutations detected"]):
                         # if max_mdl_resistance for this gene is "S" then set to "No high confidence mutations detected"
                         if len(gene_subset) > 0 and max(gene_subset["mdl_interpretation"].tolist(), key=lambda x: self.RESISTANCE_RANKING[x]) == "S":
                                 lims_report[gene_code] = "No high confidence mutations detected"
