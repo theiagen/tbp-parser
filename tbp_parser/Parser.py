@@ -43,6 +43,8 @@ class Parser:
         TNGS_READ_SUPPORT_BOUNDARIES (list[int]): the read support boundaries for tNGS QC reporting
         TNGS_FREQUENCY_BOUNDARIES (list[float]): the frequency boundaries for tNGS QC reporting
         err_bed (str | None): an optional BED file containing ranges that are essential for resistance [tNGS only]
+        TNGS_SPECIFIC_QC_OPTIONS (dict): tNGS-specific QC options that are hold-overs from prior versions; retained for backwards compatibility
+        USE_ERR_AS_BRR (bool): whether to use ERR regions in place of TBDB regions for breadth of coverage calculations [tNGS only]
         
     Methods:
         create_standard_dictionaries() -> tuple[dict[str, list[str]], dict[str, str], dict[str, list[int] | list[list[int]]], dict[str, str], dict[str, list[int] | list[list[int]]]]:
@@ -92,6 +94,17 @@ class Parser:
         self.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
         self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = options.do_not_treat_r_mutations_differently
         self.err_bed = options.err_bed
+        self.USE_ERR_AS_BRR = options.use_err_as_brr
+
+        # tngs-specific qc options that are hold-overs from prior versions; retained for backwards compatibility
+        self.TNGS_SPECIFIC_QC_OPTIONS = {
+            "RRS_FREQUENCY": options.rrs_frequency,
+            "RRS_READ_SUPPORT": options.rrs_read_support,
+            "RRL_FREQUENCY": options.rrl_frequency,
+            "RRL_READ_SUPPORT": options.rrl_read_support,
+            "ETHA237_FREQUENCY": options.etha237_frequency,
+            "RPOB449_FREQUENCY": options.rpob449_frequency,
+        }
 
         # logging options
         if options.verbose:
@@ -237,8 +250,8 @@ class Parser:
         GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS = self.create_standard_dictionaries()
         
         self.logger.info("PARSER:run:Calculating coverage statistics")
-        coverage = Coverage(self.logger, self.input_bam, self.OUTPUT_PREFIX, self.tbdb_bed, TNGS_REGIONS, self.err_bed)
-        COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH, self.TNGS)
+        coverage = Coverage(self.logger, self.input_bam, self.OUTPUT_PREFIX, self.tbdb_bed, TNGS_REGIONS, self.USE_ERR_AS_BRR, self.err_bed)
+        COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH, self.TNGS)
 
         self.logger.info("PARSER:run:Creating Laboratorian report")
         laboratorian = Laboratorian(self.logger, self.input_json, self.OUTPUT_PREFIX, 
@@ -246,7 +259,7 @@ class Parser:
                                     COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, 
                                     GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS, 
                                     self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY, self.TNGS_READ_SUPPORT_BOUNDARIES,
-                                    self.TNGS_FREQUENCY_BOUNDARIES)
+                                    self.TNGS_FREQUENCY_BOUNDARIES, self.TNGS_SPECIFIC_QC_OPTIONS)
         DF_LABORATORIAN = laboratorian.create_laboratorian_report()
 
         self.logger.info("PARSER:run:Creating LIMS report")
@@ -260,7 +273,7 @@ class Parser:
         looker.create_looker_report(laboratorian.SAMPLE_NAME, self.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.OPERATOR)
 
         self.logger.info("PARSER:run:Creating coverage report")
-        coverage.create_coverage_report(laboratorian.SAMPLE_NAME, COVERAGE_DICTIONARY, AVERAGE_LOCI_COVERAGE, laboratorian.genes_with_valid_deletions, self.TNGS)
+        coverage.create_coverage_report(laboratorian.SAMPLE_NAME, laboratorian.genes_with_valid_deletions)
 
         if len(globals_.OUTPUT_RENAMING) > 0:
             self.logger.info("PARSER:run:Renaming output columns as specified in globals.OUTPUT_RENAMING")

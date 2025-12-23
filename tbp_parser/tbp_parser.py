@@ -68,6 +68,22 @@ def main():
                         help="\nindicates that the input data was generated using a tNGS protocol\nTurns on tNGS-specific features", action="store_true", default=False)
     tngs_arguments.add_argument("-e", "--err_bed",
                                 help="an optional BED file formatted similarly to the --tbdb_bed file but containing ranges that are essential for resistance", default=None, metavar="\b", type=CheckInputs.is_optional_file_valid)
+    tngs_arguments.add_argument("--use_err_as_brr",
+                                help="if an ERR BED file is provided, use the ERR regions in place of the TBDB regions for breadth of coverage calculations\nNote: this is an experimental option", action="store_true", default=False)
+    
+    # tngs-specific qc arguments that are hold-overs from prior versions; retained for now
+    tngs_arguments.add_argument("--rrs_frequency",
+                        help="the minimum frequency for an rrs mutation to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
+    tngs_arguments.add_argument("--rrs_read_support",
+                        help="the minimum read support for an rrs mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
+    tngs_arguments.add_argument("--rrl_frequency",
+                        help="the minimum frequency for an rrl mutation to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
+    tngs_arguments.add_argument("--rrl_read_support",
+                        help="the minimum read support for an rrl mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
+    tngs_arguments.add_argument("--rpob449_frequency",
+                        help="the minimum frequency for an rpoB mutation at protein position 449 to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
+    tngs_arguments.add_argument("--etha237_frequency",
+                        help="the minimum frequency for an ethA mutation at protein position 237 to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
 
     # new arguments for qc reporting
     boundary_arguments = parser.add_argument_group("tNGS-specific QC boundary arguments (NOT compatible with WGS data)",

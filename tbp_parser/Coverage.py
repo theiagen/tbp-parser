@@ -1,6 +1,6 @@
 import subprocess
-import globals as globals_
 import pandas as pd
+import copy
 import os
 
 class Coverage:
@@ -23,7 +23,7 @@ class Coverage:
         create_coverage_report(COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: list[str], TNGS: bool) -> None:
             reformats the coverage and average loci coverage dictionaries into a CSV file and adds a deletion warning if a QC-passing deletion was identified for the region
     """
-    def __init__(self, logger, input_bam: str, OUTPUT_PREFIX: str, coverage_regions: str, TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], err_bed: str = None) -> None:
+    def __init__(self, logger, input_bam: str, OUTPUT_PREFIX: str, coverage_regions: str, TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], USE_ERR_AS_BRR: bool, err_bed: str = None) -> None:
         """ Initalizes the Coverage class
 
         Args:
@@ -40,8 +40,11 @@ class Coverage:
         self.coverage_regions = coverage_regions
         self.TNGS_REGIONS = TNGS_REGIONS
         self.err_bed = err_bed
+        self.USE_ERR_AS_BRR = USE_ERR_AS_BRR
         
-        self.err_coverage = {}
+        self.err_coverage_dictionary = {}
+        self.brr_coverage_dictionary = {}
+        self.average_loci_coverage = {}
         
         # extract chromosome name from BAM file -- sometimes this can be different depending on reference used
         command = "samtools idxstats {} | cut -f 1 | head -1".format(self.input_bam)
@@ -95,7 +98,7 @@ class Coverage:
 
         return gene, float(breadth_of_coverage), float(average_depth)
 
-    def get_coverage(self, MIN_PERCENT_COVERAGE: float, MIN_DEPTH: int, TNGS: bool) -> tuple[dict[str, float], dict[str, float], list[str]]:
+    def get_coverage(self, MIN_PERCENT_COVERAGE: float, MIN_DEPTH: int, TNGS: bool) -> tuple[dict[str, float], list[str]]:
         """ Iterates through a bedfile and adds the breadth of coverage to the coverage_dictionary
             and the average depth to the average_loci_coverage dictionary. If an err_bed file was provided,
             it also calculates coverage for those regions and adds them to the err_coverage object dictionary.
@@ -105,14 +108,11 @@ class Coverage:
             MIN_DEPTH (int): The minimum depth threshold for a gene/locus
 
         Returns:
-            tuple[dict, dict, list]: A tuple containing the coverage dictionary, average loci coverage dictionary, and a list of genes below the MIN_PERCENT_COVERAGE
+            tuple[dict, dict, list]: A tuple containing the coverage dictionary and a list of genes below the MIN_PERCENT_COVERAGE
         """
         self.logger.debug("COV:get_coverage:The chromosome name was collected during class initialization: {}".format(self.chromosome))
         self.logger.debug("COV:get_coverage:Now calculating breadth of coverage and average coverage for each gene in the {} file".format(self.coverage_regions))
-
-        # these values are not constants yet, so they are lowercase right now
-        coverage_dictionary = {}
-        average_loci_coverage = {}
+        
         low_depth_of_coverage_list = []
 
         with open(self.coverage_regions, "r") as bedfile_fh:
@@ -120,8 +120,8 @@ class Coverage:
                 line = line.split("\t")
                 gene, breadth_of_coverage, average_depth = self.calculate_depth(line, MIN_DEPTH)
 
-                coverage_dictionary[gene] = breadth_of_coverage
-                average_loci_coverage[gene] = average_depth
+                self.brr_coverage_dictionary[gene] = breadth_of_coverage
+                self.average_loci_coverage[gene] = average_depth
 
         if self.err_bed is not None:
             with open(self.err_bed, "r") as err_bed_fh:
@@ -129,8 +129,13 @@ class Coverage:
                     line = line.split("\t")
                     gene, breadth_of_coverage, average_depth = self.calculate_depth(line, MIN_DEPTH)
 
-                    self.err_coverage[gene] = breadth_of_coverage
-        
+                    self.err_coverage_dictionary[gene] = breadth_of_coverage
+                    
+        if self.USE_ERR_AS_BRR and self.err_bed is not None:
+            coverage_dictionary = copy.deepcopy(self.err_coverage_dictionary)
+        else:
+            coverage_dictionary = copy.deepcopy(self.brr_coverage_dictionary)
+    
         # add to low depth of coverage list if below the breadth of coverage threshold (MIN_PERCENT_COVERAGE * 100)
         # combine split primers so if one fails, gene fails rpoB_1 = 0 but rpob_2 = 100 -> rpoB is added to this list
         if TNGS:
@@ -144,12 +149,12 @@ class Coverage:
         # this will contain split primers if tNGS, but they will be reported as part of the parent gene above
         low_depth_of_coverage_list.extend([gene for gene, coverage in coverage_dictionary.items() if coverage < (MIN_PERCENT_COVERAGE * 100)])
     
-        self.logger.info("COV:get_coverage:Coverage dictionaries of length {} and {} have been created".format(len(coverage_dictionary), len(average_loci_coverage)))
+        self.logger.info("COV:get_coverage:Coverage dictionaries of length {} and {} have been created".format(len(coverage_dictionary), len(self.average_loci_coverage)))
         self.logger.info("COV:get_coverage:The following genes (total: {}) have coverage below the {}% breadth of coverage threshold: {}\n".format(len(low_depth_of_coverage_list), (MIN_PERCENT_COVERAGE * 100), low_depth_of_coverage_list))
 
-        return coverage_dictionary, average_loci_coverage, low_depth_of_coverage_list
+        return coverage_dictionary, low_depth_of_coverage_list
 
-    def create_coverage_report(self, SAMPLE_NAME: str, COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: list[str], TNGS: bool) -> None:
+    def create_coverage_report(self, SAMPLE_NAME: str, GENES_WITH_VALID_DELETIONS: list[str]) -> None:
         """
         This function reformats the coverage and average loci coverage dictionaries into
         a CSV file and adds a deletion warning if a QC-passing deletion was identified
@@ -158,17 +163,19 @@ class Coverage:
         self.logger.debug("COV:create_coverage_report:Now iterating through each gene in the breadth of coverage dictionary")
         
         coverage_report = []
-        for gene, percent_coverage in COVERAGE_DICTIONARY.items():            
-            average_coverage = AVERAGE_LOCI_COVERAGE[gene]
+        
+        for gene, percent_coverage in self.brr_coverage_dictionary.items():            
+            average_coverage = self.average_loci_coverage[gene]
             warning = ""
 
             if gene in GENES_WITH_VALID_DELETIONS:
+                # only add this warning if err_as_brr if this deletion falls within the ERR regions (if provided)
                 warning = "Deletion identified"
                 if percent_coverage == 100: 
                     # if the coverage is at 100% and a deletion was identified, it's likely upstream
                     warning = "Deletion identified (upstream)"
 
-            if len(self.err_coverage) == 0:
+            if len(self.err_coverage_dictionary) == 0:
                 coverage_report.append({
                     "Sample": SAMPLE_NAME,
                     "Gene": gene,
@@ -177,7 +184,7 @@ class Coverage:
                     "Warning": warning
                 })
             else:
-                err_coverage = self.err_coverage.get(gene, "N/A")
+                err_coverage = self.err_coverage_dictionary.get(gene, "N/A")
                 
                 coverage_report.append({
                     "Sample": SAMPLE_NAME,

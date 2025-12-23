@@ -58,7 +58,8 @@ class Laboratorian:
                  PROMOTER_REGIONS: dict[str, list[int] | list[list[int]]], 
                  TNGS: bool, DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool,
                  TNGS_READ_SUPPORT_BOUNDARIES: list[int], 
-                 TNGS_FREQUENCY_BOUNDARIES: list[float]) -> None:
+                 TNGS_FREQUENCY_BOUNDARIES: list[float],
+                 TNGS_SPECIFIC_QC_OPTIONS: dict[str, float]) -> None:
         """Initializes the Laboratorian class with the provided parameters.
         
         Args:
@@ -79,6 +80,7 @@ class Laboratorian:
             DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): A boolean indicating whether R mutations should be treated the same as S/U mutations for locus QC.
             TNGS_READ_SUPPORT_BOUNDARIES (list[int]): A list of read support boundaries for tNGS positional QC.
             TNGS_FREQUENCY_BOUNDARIES (list[float]): A list of frequency boundaries for tNGS positional QC.
+            TNGS_SPECIFIC_QC_OPTIONS (dict[str, float]): A dictionary containing tNGS specific QC options.
         """
         self.logger = logger
         self.input_json = input_json
@@ -115,6 +117,8 @@ class Laboratorian:
         """A list of read support boundaries for tNGS positional QC."""
         self.TNGS_FREQUENCY_BOUNDARIES = TNGS_FREQUENCY_BOUNDARIES
         """A list of frequency boundaries for tNGS positional QC."""
+        self.TNGS_SPECIFIC_QC_OPTIONS = TNGS_SPECIFIC_QC_OPTIONS
+        """A dictionary containing tNGS specific QC options."""
 
         self.genes_reported = set()
         """A set of genes that have already been reported in the laboratorian report."""
@@ -166,7 +170,18 @@ class Laboratorian:
                     raw_row = copy.deepcopy(annotation_row)
                                           
                     # perform QC on the row
-                    genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, self.LOW_DEPTH_OF_COVERAGE_LIST, self.genes_with_valid_deletions, self.TNGS_REGIONS, self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY, self.TNGS_READ_SUPPORT_BOUNDARIES, self.TNGS_FREQUENCY_BOUNDARIES)
+                    genes_with_valid_deletions, positional_qc_fails = annotation_row.add_qc_warnings(
+                        self.MIN_DEPTH,
+                        self.MIN_FREQUENCY,
+                        self.MIN_READ_SUPPORT,
+                        self.LOW_DEPTH_OF_COVERAGE_LIST,
+                        self.genes_with_valid_deletions,
+                        self.TNGS_REGIONS,
+                        self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY,
+                        self.TNGS_READ_SUPPORT_BOUNDARIES,
+                        self.TNGS_FREQUENCY_BOUNDARIES,
+                        self.TNGS_SPECIFIC_QC_OPTIONS
+                    )
                     self.genes_with_valid_deletions.update(genes_with_valid_deletions)
                     
                     if len(positional_qc_fails) > 0:

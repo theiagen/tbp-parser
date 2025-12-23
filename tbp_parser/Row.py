@@ -35,7 +35,7 @@ class Row() :
         does_mutation_fail_boundary_qc(TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float]) -> bool:
             Adds QC warnings if a tNGS mutation falls outside the read support or frequency boundaries (tNGS only) 
             
-        add_qc_warnings(MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]]) -> tuple[set, set]:
+        add_qc_warnings(MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], dict[str, float]) -> tuple[set, set]:
             Adds QC warnings if a mutation either has poor positional quality or locus quality.
             
         print() -> None:
@@ -134,7 +134,7 @@ class Row() :
             Row: An empty Row object with the appropriate NA or WT values.
         """        
         row = cls.__new__(cls)
-        row.logger = logger # is this necessary? keeping it just in case
+        row.logger = logger
         row.variant = None
         row.sample_id = sample_name
         row.tbprofiler_gene_name = gene_name
@@ -168,6 +168,37 @@ class Row() :
             
         return row
 
+    def does_mutation_fail_tngs_specific_qc(self, TNGS_SPECIFIC_QC_OPTIONS: dict[str, float]) -> bool:
+        """Checks if a mutation (tNGS only) fails the tNGS-specific QC checks
+
+        Args:
+            TNGS_SPECIFIC_QC_OPTIONS (dict[str, float]): a dictionary containing tNGS specific QC options 
+        
+        Returns:
+            bool: true if the mutation fails QC, false if the mutation passes QC
+        """
+        
+        RRS_FREQUENCY = TNGS_SPECIFIC_QC_OPTIONS["RRS_FREQUENCY"]
+        RRS_READ_SUPPORT = TNGS_SPECIFIC_QC_OPTIONS["RRS_READ_SUPPORT"]
+        RRL_FREQUENCY = TNGS_SPECIFIC_QC_OPTIONS["RRL_FREQUENCY"]
+        RRL_READ_SUPPORT = TNGS_SPECIFIC_QC_OPTIONS["RRL_READ_SUPPORT"]
+        ETHA237_FREQUENCY = TNGS_SPECIFIC_QC_OPTIONS["ETHA237_FREQUENCY"]
+        RPOB449_FREQUENCY = TNGS_SPECIFIC_QC_OPTIONS["RPOB449_FREQUENCY"]
+            
+        if self.tbprofiler_gene_name == "rrs":
+            if self.frequency < RRS_FREQUENCY or self.read_support < RRS_READ_SUPPORT:
+                return True
+        elif self.tbprofiler_gene_name == "rrl":
+            if self.frequency < RRL_FREQUENCY or self.read_support < RRL_READ_SUPPORT:
+                return True
+        elif self.tbprofiler_gene_name == "ethA" and globals_.get_position(self.tbprofiler_variant_substitution_aa) == 237:
+            if self.frequency < ETHA237_FREQUENCY:
+                return True
+        elif self.tbprofiler_gene_name == "rpoB" and globals_.get_position(self.tbprofiler_variant_substitution_aa) == 449:
+            if self.frequency < RPOB449_FREQUENCY:
+                return True
+        return False
+    
     def does_mutation_fail_boundary_qc(self, TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float]) -> bool:
         """Checks if a mutation (tNGS only) fails the boundary QC checks
 
@@ -195,7 +226,7 @@ class Row() :
         
         return False
         
-    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool, TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float]) -> tuple[set[str], set[str]]:
+    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool, TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float], TNGS_SPECIFIC_QC_OPTIONS: dict[str, float]) -> tuple[set[str], set[str]]:
         """Adds QC warnings if a mutation either has poor positional quality or locus quality
 
         Args:
@@ -215,7 +246,8 @@ class Row() :
         positional_qc_fails = set()
         
         # checking positional qc now
-        if (self.depth < MIN_DEPTH or self.frequency < MIN_FREQUENCY or self.read_support < MIN_READ_SUPPORT):
+        if ((self.depth < MIN_DEPTH or self.frequency < MIN_FREQUENCY or self.read_support < MIN_READ_SUPPORT)
+            or (self.TNGS and self.does_mutation_fail_tngs_specific_qc(TNGS_SPECIFIC_QC_OPTIONS))):
             if "del" not in self.tbprofiler_variant_substitution_nt: 
                 # 4.2.1.1 - postiional qc fail; not a deletion
                 positional_qc_fails.add(self.tbprofiler_variant_substitution_nt) 
@@ -233,11 +265,10 @@ class Row() :
             
                 elif (self.frequency < MIN_FREQUENCY):
                     # frequency is poor -- positional qc fail 
-                    #### TO-DO: DO I NEED TO KEEP THIS? IT WAS DESCRIBED IN AN EMAIL BUT NOT IN THE INTERPRETATION DOCUMENT
                     positional_qc_fails.add(self.tbprofiler_variant_substitution_nt)
                     self.warning.add("Failed quality in the mutation position") 
 
-        # checking tNGS-specific positional qc (if applicable)
+        # checking tNGS-specific qc (if applicable)
         if self.TNGS:
             if self.does_mutation_fail_boundary_qc(TNGS_READ_SUPPORT_BOUNDARIES, TNGS_FREQUENCY_BOUNDARIES):
                 positional_qc_fails.add(self.tbprofiler_variant_substitution_nt)
@@ -263,14 +294,17 @@ class Row() :
             else: # 4.2.2.3 - locus qc fail but not a deletion
                 if self.mdl_interpretation == "R" and not DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY:
                     if "Failed quality in the mutation position" not in self.warning:
-                        self.warning.add("Insufficient coverage in locus") # 4.2.2.3.3 - R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
+                        # 4.2.2.3.3 - R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
+                        self.warning.add("Insufficient coverage in locus") 
                     else:
-                        self.warning.add("Insufficient coverage in locus") # 4.2.2.3.4 - R mutation with BOTH positional and locus qc fail; add warning and overwrite interpretation
+                        # 4.2.2.3.4 - R mutation with BOTH positional and locus qc fail; add warning and overwrite interpretation
+                        self.warning.add("Insufficient coverage in locus") 
                         self.looker_interpretation = "Insufficient Coverage"
                         self.mdl_interpretation = "Insufficient Coverage"
                 
                 elif self.mdl_interpretation == "U" or self.mdl_interpretation == "S":
-                    self.warning.add("Insufficient coverage in locus") # 4.2.2.3.2 - non-R mutation with locus qc fail; add warning and overwrite interpretation (or if indicated that r mutations should be treated the same as s/u)
+                    # 4.2.2.3.2 - non-R mutation with locus qc fail; add warning and overwrite interpretation (or if indicated that r mutations should be treated the same as s/u)
+                    self.warning.add("Insufficient coverage in locus") 
                     self.looker_interpretation = "Insufficient Coverage"
                     self.mdl_interpretation = "Insufficient Coverage"
                 
