@@ -278,10 +278,12 @@ class Parser:
         if len(globals_.OUTPUT_RENAMING) > 0:
             self.logger.info("PARSER:run:Renaming output columns as specified in globals.OUTPUT_RENAMING")
             
-            for original, replacement in globals_.OUTPUT_RENAMING.items():
-                file_suffixes = [".lims_report.csv", ".laboratorian_report.csv", ".looker_report.csv", ".coverage_report.csv"]
-                for output_suffix in file_suffixes:
-                    for line in fileinput.input(self.OUTPUT_PREFIX + output_suffix, inplace=True):
-                        print(line.replace(original, replacement), end="")
-                
+            # only rename the fields in the final output files
+            file_suffixes = [".lims_report.csv", ".laboratorian_report.csv", ".looker_report.csv", ".coverage_report.csv"]
+            for output_suffix in file_suffixes:
+                for line in fileinput.input(self.OUTPUT_PREFIX + output_suffix, inplace=True):
+                    # match full words to prevent partial replacements
+                    print(re.sub('|'.join(r'\b%s\b' % re.escape(original) for original in globals_.OUTPUT_RENAMING.keys()),
+                                 lambda match: globals_.OUTPUT_RENAMING[match.group(0)], line), end="")
+                    
         self.logger.info("PARSER:run:Parsing completed")
