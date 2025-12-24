@@ -179,8 +179,10 @@ class Coverage:
         for line in bedfile_fh:
           line = line.split("\t")
           gene, average_depth = self.calculate_average_depth(line)
+          if gene == "mmpR5":
+            gene = "Rv0678"
           average_depths[gene] = average_depth
-        
+          
         df_average_depths = pd.DataFrame(average_depths, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Average_Locus_Coverage"})
         DF_COVERAGE = pd.merge(DF_COVERAGE, df_average_depths, on="Gene", how="outer")      
 
