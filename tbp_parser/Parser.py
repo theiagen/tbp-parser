@@ -100,6 +100,8 @@ class Parser:
         start_pos = int(cols[1])
         end_pos = int(cols[2])
         gene_name = cols[4]
+        if gene_name == "mmpR5":
+          gene_name = "Rv0678"
         
         # check if primer is split
         match = re.match(r'(.+)_(\d+)$', gene_name)
