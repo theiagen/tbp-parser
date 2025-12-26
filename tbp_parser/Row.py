@@ -32,10 +32,13 @@ class Row() :
             JSON output (i.e., no mutations were found in that gene). This is used to create
             WT rows for genes that were sequenced but had no mutations.
          
-        does_mutation_fail_boundary_qc(TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float]) -> bool:
+        does_mutation_fail_tngs_specific_qc()
+            Checks if a mutation (tNGS only) fails the tNGS-specific QC checks
+         
+        does_mutation_fail_boundary_qc()
             Adds QC warnings if a tNGS mutation falls outside the read support or frequency boundaries (tNGS only) 
             
-        add_qc_warnings(MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: dict[str, list[int]], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], dict[str, float]) -> tuple[set, set]:
+        add_qc_warnings()
             Adds QC warnings if a mutation either has poor positional quality or locus quality.
             
         print() -> None:
@@ -83,17 +86,15 @@ class Row() :
             self.read_support = self.depth * self.frequency
         except:
             ### MATH FAILS
-            raise Exception("MATH BAD")
+            raise Exception("Something went wrong when calculating read support -- confirm that depth and frequency are numeric values")
         
         self.tbprofiler_variant_position = variant.__dict__.get("pos")
-        self.variant_genomic_start_pos, self.variant_genomic_end_pos = globals_.get_mutation_position_range(self.tbprofiler_variant_position, variant.nucleotide_change)
+        self.variant_genomic_start_pos, self.variant_genomic_end_pos = globals_.get_mutation_genomic_positions(self.tbprofiler_variant_position, variant.nucleotide_change)
 
-        # should i use the .get() method here too?
         self.tbprofiler_variant_substitution_type = variant.type
         self.tbprofiler_variant_substitution_nt = variant.nucleotide_change
         self.tbprofiler_variant_substitution_aa = variant.protein_change if variant.protein_change != "" else "NA"
 
-        # grab the locus_tag from the variant if it exists; otherwise, get it from the provided dictionary
         self.tbprofiler_locus_tag = variant.__dict__.get("locus_tag", variant.GENE_TO_LOCUS_TAG.get(self.tbprofiler_gene_name))
         self.gene_tier = self.variant.GENE_TO_TIER.get(self.tbprofiler_gene_name, "NA")
 
@@ -107,7 +108,6 @@ class Row() :
         self.source = annotation.get("source", "")
         self.tbdb_comment = annotation.get("comment", "")
 
-        # initialize empty values for the rest of the columns
         self.rationale = ""
         self.mdl_interpretation = ""
         self.looker_interpretation = ""
@@ -180,7 +180,6 @@ class Row() :
         Returns:
             bool: true if the mutation fails QC, false if the mutation passes QC
         """
-        
         RRS_FREQUENCY = TNGS_SPECIFIC_QC_OPTIONS["RRS_FREQUENCY"]
         RRS_READ_SUPPORT = TNGS_SPECIFIC_QC_OPTIONS["RRS_READ_SUPPORT"]
         RRL_FREQUENCY = TNGS_SPECIFIC_QC_OPTIONS["RRL_FREQUENCY"]
@@ -229,7 +228,7 @@ class Row() :
         
         return False
         
-    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: dict[str, list[int]], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool, TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float], TNGS_SPECIFIC_QC_OPTIONS: dict[str, float]) -> tuple[set[str], set[str]]:
+    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: dict[str, list[int]], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool, TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float], TNGS_SPECIFIC_QC_OPTIONS: dict[str, float]) -> tuple[dict[str, list[int]], set[str]]:
         """Adds QC warnings if a mutation either has poor positional quality or locus quality
 
         Args:
@@ -242,9 +241,10 @@ class Row() :
             DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): a flag indicating whether R mutations should be treated the same as S/U mutations for locus QC
             TNGS_READ_SUPPORT_BOUNDARIES (list[int]): boundaries for read support in tNGS
             TNGS_FREQUENCY_BOUNDARIES (list[float]): boundaries for frequency in tNGS
+            TNGS_SPECIFIC_QC_OPTIONS (dict[str, float]): specific QC options for tNGS
 
         Returns:
-            tuple[set[str], set[str]]: the updated set of genes with valid deletions, and the set of mutations that failed positional QC
+            tuple[dict[str, list[int]], set[str]]: the updated set of genes with valid deletions, and the set of mutations that failed positional QC
         """        
         positional_qc_fails = set()
         
@@ -431,7 +431,7 @@ class Row() :
             # split primers (positions is a dictionary)
             if isinstance(positions, dict):
                 for segment, seg_positions in positions.items():
-                    if globals_.is_within_range([self.tbprofiler_variant_position], seg_positions):
+                    if globals_.is_mutation_within_range([self.tbprofiler_variant_position], seg_positions):
                         self.logger.debug("ROW:[tNGS only] Mutation falls within split primer region {}: {} IS within {}".format(segment, self.tbprofiler_variant_position, seg_positions))
                         return False  # position found, mutation is within region
 
@@ -439,7 +439,7 @@ class Row() :
 
             # regular primers (positions is a list)
             else:
-                if globals_.is_within_range([self.tbprofiler_variant_position], positions):
+                if globals_.is_mutation_within_range([self.tbprofiler_variant_position], positions):
                     self.logger.debug("ROW:[tNGS only] Mutation falls within primer region {}: {} IS within {}".format(primer, self.tbprofiler_variant_position, positions))
                     return False  # position found, mutation is within region
                 else:

@@ -32,6 +32,7 @@ class LIMS:
         create_lims_report(TNGS: bool, MIN_PERCENT_LOCI_COVERED: float, OPERATOR: str) -> None:
             Creates the LIMS report using the laboratorian pd.DataFrame
     """
+    
     RESISTANCE_RANKING = {
         "R": 4,
         "U": 3,
@@ -247,7 +248,7 @@ class LIMS:
                             for aa_mutation in synonymous_subset["tbprofiler_variant_substitution_aa"].tolist():
                                 position_aa = globals_.get_position(aa_mutation)
                                 
-                                if globals_.is_within_range(position_aa, self.SPECIAL_POSITIONS[gene]):
+                                if globals_.is_mutation_within_range(position_aa, self.SPECIAL_POSITIONS[gene]):
                                     # synonymous RRDR mutation - update antimicrobial code message
                                     lims_report[antimicrobial_code] = "Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance"
                                     mutation_list.append("{} [synonymous]".format(aa_mutation))
@@ -271,7 +272,7 @@ class LIMS:
                         for mutation, aa_mutation, mutation_type, mdl_interpretation in zip(nt_list, aa_list, type_list, mdl_list):
                             if ((mdl_interpretation in ["R", "U"]) 
                                 or (gene == "rpoB" 
-                                    and globals_.is_within_range(globals_.get_position(aa_mutation), self.SPECIAL_POSITIONS[gene]) 
+                                    and globals_.is_mutation_within_range(globals_.get_position(aa_mutation), self.SPECIAL_POSITIONS[gene]) 
                                     and mutation_type == "synonymous_variant" 
                                     and mdl_interpretation == "S")):
                                 

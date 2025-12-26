@@ -15,7 +15,7 @@ def get_position(mutation) -> list[int]:
         return [int(x) for x in match]
     return [None]
 
-def get_mutation_position_range(position, mutation) -> tuple[int, int]:
+def get_mutation_genomic_positions(position, mutation) -> tuple[int, int]:
     """This function receives the genomic position and a mutation and returns the genomic position range as a list of integers
 
     Args:
@@ -33,7 +33,7 @@ def get_mutation_position_range(position, mutation) -> tuple[int, int]:
         return (position, position + (abs(int(match[0]) - int(match[1]))))
     return (None, None)
 
-def is_within_range(position, range_positions) -> bool:
+def is_mutation_within_range(position, range_positions) -> bool:
     """Determines if a position is within a particular range
 
     Args:
@@ -46,7 +46,7 @@ def is_within_range(position, range_positions) -> bool:
     try:
         if isinstance(range_positions[0], list):
             # check if the value is a list of lists; if so, check both lists
-            return is_within_range(position, range_positions[0]) or is_within_range(position, range_positions[1])
+            return is_mutation_within_range(position, range_positions[0]) or is_mutation_within_range(position, range_positions[1])
 
         if len(position) > 1:
             # if the value is a list of two items, check if the position is within the range

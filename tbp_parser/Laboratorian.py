@@ -1,6 +1,5 @@
 from Row import Row
 from Variant import Variant
-import globals as globals_
 import pandas as pd
 import json
 import copy

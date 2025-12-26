@@ -11,7 +11,7 @@ class TestLIMS:
     BAM = os.path.join(data_dir, "mtb.bam")
     COVERAGE_BED = os.path.join(data_dir, "tbdb-modified-regions-for-tests.bed")
     
-    COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, OUTPUT_PREFIX="test", coverage_regions=COVERAGE_BED)
+    COVERAGE1 = Coverage(logger=LOGGER, input_bam=BAM, OUTPUT_PREFIX="test", tbdb_bed=COVERAGE_BED)
     COVERAGE_DICTIONARY, AVERAGE_LOCUS_COVERAGE, LOW_DEPTH_OF_COVERAGE_LIST = COVERAGE1.get_coverage(1.0, 10)
 
 

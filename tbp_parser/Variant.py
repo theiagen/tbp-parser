@@ -243,7 +243,7 @@ class Variant:
             self.logger.debug("VAR:apply_expert_rules:The gene is {}, now checking if the position requires special consideration under rule 1.2".format(self.gene_name))
 
             # check if position within promoter regions
-            if self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
+            if self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_mutation_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
                 self.logger.debug("VAR:apply_expert_rules:The position is within the promoter region; interpretation is 'U'")
                 return "U", "whov2"
 
@@ -266,11 +266,11 @@ class Variant:
         elif self.gene_name == "rrl":
             self.logger.debug("VAR:apply_expert_rules:The gene is rrl, now checking if the position requires special consideration")
 
-            if globals_.is_within_range(position_nt, SPECIAL_POSITIONS[self.gene_name]):
+            if globals_.is_mutation_within_range(position_nt, SPECIAL_POSITIONS[self.gene_name]):
                 return "U", "rule1.2"
 
             # check if position within promoter regions
-            if self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
+            if self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_mutation_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
                 self.logger.debug("VAR:apply_expert_rules:The position is within the proximal promoter region; interpretation is 'U'")
                 return "U", "whov2"
 
@@ -294,7 +294,7 @@ class Variant:
                 return "S", "rule2.2.1"
 
             # check if position within promoter regions
-            if self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
+            if self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_mutation_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
                 self.logger.debug("VAR:apply_expert_rules:The position is within the proximal promoter region; interpretation is 'U'")
                 return "U", "whov2"
 
@@ -309,7 +309,7 @@ class Variant:
         elif self.gene_name in ["gyrA", "gyrB", "rpoB"]: 
             self.logger.debug("VAR:apply_expert_rules:The gene is {}, now checking if the position requires special consideration".format(self.gene_name))
 
-            if globals_.is_within_range(position_aa, SPECIAL_POSITIONS[self.gene_name]):
+            if globals_.is_mutation_within_range(position_aa, SPECIAL_POSITIONS[self.gene_name]):
                 self.logger.debug("VAR:apply_expert_rules:The position is within the special positions; interpretation is 'R' if rpoB (or 'U' if not) and nonsynonymous, else 'S'")
 
                 if self.gene_name == "rpoB":
@@ -330,7 +330,7 @@ class Variant:
                 self.logger.debug("VAR:apply_expert_rules:The position is not within the special positions and is synonymous; interpretation is 'S'")
                 return ("S", "rule2.2.2.2") if self.gene_name == "rpoB" else ("S", "rule3.2.4")
 
-            if self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
+            if self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_mutation_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
                 self.logger.debug("VAR:apply_expert_rules:The position is within the proximal promoter region; interpretation is 'U'")
                 return "U", "whov2"
 
@@ -355,7 +355,7 @@ class Variant:
                     self.logger.debug("VAR:apply_expert_rules:The position is within the special positions; interpretation is 'U'")
                     return "U", "rule3.2.1"
 
-                elif self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
+                elif self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_mutation_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
                     self.logger.debug("VAR:apply_expert_rules:The position is within the proximal promoter region; interpretation is 'U'")
                     return "U", "whov2"
 
@@ -367,7 +367,7 @@ class Variant:
             elif (self.type == "synonymous_variant"):
                 self.logger.debug("VAR:apply_expert_rules:The mutation is synonymous; interpretation is 'S'")
                 return "S", "rule3.2.4"
-            elif self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
+            elif self.gene_name in self.PROMOTER_REGIONS.keys() and globals_.is_mutation_within_range(position_nt, self.PROMOTER_REGIONS[self.gene_name]):
                 self.logger.debug("VAR:apply_expert_rules:The position is within the proximal promoter region; interpretation is 'U'")
                 return "U", "whov2"
             elif ("upstream_gene_variant" in self.type):
