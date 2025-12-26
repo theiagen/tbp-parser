@@ -1,5 +1,6 @@
 import subprocess
 import pandas as pd
+import globals as globals_
 import copy
 import os
 
@@ -20,7 +21,7 @@ class Coverage:
         get_coverage(MIN_PERCENT_COVERAGE: float, MIN_DEPTH: int) -> tuple[dict[str, float], dict[str, float], list[str]]:
             iterates through a bedfile and adds the breadth of coverage to the coverage dictionary and the average depth to the average loci coverage dictionary
         
-        create_coverage_report(COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: list[str], TNGS: bool) -> None:
+        create_coverage_report(COVERAGE_DICTIONARY: dict[str, float], AVERAGE_LOCI_COVERAGE: dict[str, float], GENES_WITH_VALID_DELETIONS: dict[str, list[int]], TNGS: bool) -> None:
             reformats the coverage and average loci coverage dictionaries into a CSV file and adds a deletion warning if a QC-passing deletion was identified for the region
     """
     def __init__(self, logger, input_bam: str, OUTPUT_PREFIX: str, coverage_regions: str, TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], USE_ERR_AS_BRR: bool, err_bed: str = None) -> None:
@@ -41,6 +42,7 @@ class Coverage:
         self.TNGS_REGIONS = TNGS_REGIONS
         self.err_bed = err_bed
         self.USE_ERR_AS_BRR = USE_ERR_AS_BRR
+        self.err_regions = {}
         
         self.err_coverage_dictionary = {}
         self.brr_coverage_dictionary = {}
@@ -117,7 +119,7 @@ class Coverage:
 
         with open(self.coverage_regions, "r") as bedfile_fh:
             for line in bedfile_fh:
-                line = line.split("\t")
+                line = line.strip().split("\t")
                 gene, breadth_of_coverage, average_depth = self.calculate_depth(line, MIN_DEPTH)
 
                 self.brr_coverage_dictionary[gene] = breadth_of_coverage
@@ -126,9 +128,12 @@ class Coverage:
         if self.err_bed is not None:
             with open(self.err_bed, "r") as err_bed_fh:
                 for line in err_bed_fh:
-                    line = line.split("\t")
+                    line = line.strip().split("\t")
+                    start = line[1]
+                    end = line[2]
                     gene, breadth_of_coverage, average_depth = self.calculate_depth(line, MIN_DEPTH)
 
+                    self.err_regions[gene] = [int(start), int(end)]  # store the start and end positions of the essential region
                     self.err_coverage_dictionary[gene] = breadth_of_coverage
                     
         if self.USE_ERR_AS_BRR and self.err_bed is not None:
@@ -154,7 +159,7 @@ class Coverage:
 
         return coverage_dictionary, low_depth_of_coverage_list
 
-    def create_coverage_report(self, SAMPLE_NAME: str, GENES_WITH_VALID_DELETIONS: list[str]) -> None:
+    def create_coverage_report(self, SAMPLE_NAME: str, GENES_WITH_VALID_DELETIONS: dict[str, list[int]]) -> None:
         """
         This function reformats the coverage and average loci coverage dictionaries into
         a CSV file and adds a deletion warning if a QC-passing deletion was identified
@@ -168,12 +173,23 @@ class Coverage:
             average_coverage = self.average_loci_coverage[gene]
             warning = ""
 
-            if gene in GENES_WITH_VALID_DELETIONS:
-                # only add this warning if err_as_brr if this deletion falls within the ERR regions (if provided)
-                warning = "Deletion identified"
-                if percent_coverage == 100: 
-                    # if the coverage is at 100% and a deletion was identified, it's likely upstream
-                    warning = "Deletion identified (upstream)"
+            if gene in GENES_WITH_VALID_DELETIONS.keys():
+                if self.USE_ERR_AS_BRR and gene in self.err_regions.keys():
+                    for positions in  GENES_WITH_VALID_DELETIONS[gene]:
+                        if globals_.is_within_range(list(positions), self.err_regions[gene]):
+                            warning = "Deletion identified"
+                            if percent_coverage == 100: 
+                                warning = "Deletion identified (upstream)"
+                            self.logger.info("COV:create_coverage_report:Deletion positions {} for gene {} are within the essential region {}; adding a warning".format(positions, gene, self.err_regions[gene]))
+                            # at least one deletion position is within the essential region; no need to check further
+                            break
+                        else:
+                            self.logger.info("COV:create_coverage_report:Deletion positions {} for gene {} are outside the essential region {}; not adding a warning".format(positions, gene, self.err_regions[gene]))
+                else:                    
+                    warning = "Deletion identified"
+                    if percent_coverage == 100: 
+                        # if the coverage is at 100% and a deletion was identified, it's likely upstream
+                        warning = "Deletion identified (upstream)"
 
             if len(self.err_coverage_dictionary) == 0:
                 coverage_report.append({

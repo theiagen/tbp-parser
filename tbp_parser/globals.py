@@ -15,6 +15,24 @@ def get_position(mutation) -> list[int]:
         return [int(x) for x in match]
     return [None]
 
+def get_mutation_position_range(position, mutation) -> tuple[int, int]:
+    """This function receives the genomic position and a mutation and returns the genomic position range as a list of integers
+
+    Args:
+        position(int): the genomic position of the mutation (e.g., 2000)
+        mutation (str): the nucleotide mutation; can be either c.-33_327del or c.1693G>T
+
+    Returns:
+        tuple[int, int]: the start and stop genomic positions of the mutation (in the above example, [2000, 2360] or [2000, 2000])
+    """    
+    pattern = r"-?\d+"
+    match = re.findall(pattern, mutation)
+    if len(match) == 1:
+        return (position, position) 
+    elif len(match) == 2:
+        return (position, position + (abs(int(match[0]) - int(match[1]))))
+    return (None, None)
+
 def is_within_range(position, range_positions) -> bool:
     """Determines if a position is within a particular range
 

@@ -29,7 +29,7 @@ class Laboratorian:
         TNGS_FREQUENCY_BOUNDARIES (list[float]): A list of frequency boundaries for tNGS positional QC.
         
         genes_reported (set[str]): A set of genes that have already been reported in the laboratorian report.
-        genes_with_valid_deletions (set[str]): A set of genes that have valid deletions reported in the laboratorian report.
+        genes_with_valid_deletions (dict[str, list[int]]): A dictionary of genes to lists of genomic positions with valid deletions reported in the laboratorian report.
         positional_qc_fails (dict[str, set[str]]): A dictionary of genes to mutations that have failed POSITIONAL QC checks.
     
     Methods:
@@ -122,8 +122,8 @@ class Laboratorian:
 
         self.genes_reported = set()
         """A set of genes that have already been reported in the laboratorian report."""
-        self.genes_with_valid_deletions = set()
-        """A set of genes that have valid deletions reported in the laboratorian report."""
+        self.genes_with_valid_deletions = {}
+        """A dictionary of genes (to the deletion genomic positions) that have valid deletions reported in the laboratorian report."""
         self.positional_qc_fails = {}
         """A dictionary of genes to their mutations that have failed POSITIONAL QC checks."""
 
@@ -208,6 +208,8 @@ class Laboratorian:
             - tbprofiler_variant_substitution_nt: the nucleotide substitution (c.1349C>G)
             - tbprofiler_variant_substitution_aa: the amino acid substitution (p.Ser450Trp)
             - tbprofiler_variant_position: the position of the mutation in reference to the whole genome (761155)
+            - variant_genomic_start_pos: the start position of the mutation in reference to the whole genome
+            - variant_genomic_end_pos: the end position of the mutation in reference to the whole genome
             - confidence: the tbprofiler annotation regarding resistance (Not assoc w R, Uncertain significance...)
             - antimicrobial: the antimicrobial drug the mutation confers resistance to (streptomycin, rifampin...)
             - looker_interpretation: the interpretation of resistance for the CDPH Looker report (R, R-interim, U, S, S-interim)
@@ -227,7 +229,8 @@ class Laboratorian:
         DF_LABORATORIAN = pd.DataFrame(columns = [
             "sample_id", "tbprofiler_gene_name", "tbprofiler_locus_tag", 
             "tbprofiler_variant_substitution_type", "tbprofiler_variant_substitution_nt",
-            "tbprofiler_variant_substitution_aa", "tbprofiler_variant_position", "confidence", "antimicrobial",
+            "tbprofiler_variant_substitution_aa", "tbprofiler_variant_position", 
+            "variant_genomic_start_pos", "variant_genomic_end_pos", "confidence", "antimicrobial",
             "looker_interpretation", "mdl_interpretation", "depth", "frequency", 
             "read_support", "rationale", "warning", "gene_tier", "source", "tbdb_comment"
         ])
@@ -261,9 +264,9 @@ class Laboratorian:
             
             # add QC fail rows to end of laboratorian report too
             if gene in self.LOW_DEPTH_OF_COVERAGE_LIST:
-                for row in row_list:                              
+                for row in row_list:
                     if row.tbprofiler_gene_name == gene:
-                        if row.tbprofiler_gene_name in self.genes_with_valid_deletions:
+                        if row.tbprofiler_gene_name in self.genes_with_valid_deletions.keys():
                             # remove insufficient coverage warning if a valid deletion was found
                             if "Insufficient coverage in locus" in row.warning:
                                 row.warning.remove("Insufficient coverage in locus")

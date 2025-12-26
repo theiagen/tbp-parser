@@ -13,7 +13,7 @@ class Looker:
         OUTPUT_PREFIX (str): the output file prefix
         DF_LABORATORIAN (pd.DataFrame): the laboratorian report dataframe
         LOW_DEPTH_OF_COVERAGE_LIST (list[str]): list of genes with low depth of coverage
-        GENES_WITH_VALID_DELETIONS (set[str]): set of genes with valid deletions
+        GENES_WITH_VALID_DELETIONS (dict[str, list[int]]): dictionary of genes (to the deletion genomic positions) with valid deletions
         GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, dict[str, dict[str, str]]]): a
             dictionary mapping drugs to lims report columns to associated drugs and 
             their respective column names
@@ -35,7 +35,7 @@ class Looker:
     }    
     """A dictionary ranking the resistance annotations from highest to lowest priority."""
     
-    def __init__(self, logger, OUTPUT_PREFIX: str, DF_LABORATORIAN: pd.DataFrame, LOW_DEPTH_OF_COVERAGE_LIST: list[str], GENES_WITH_VALID_DELETIONS: set[str], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, dict[str, dict[str, str]]]) -> None:
+    def __init__(self, logger, OUTPUT_PREFIX: str, DF_LABORATORIAN: pd.DataFrame, LOW_DEPTH_OF_COVERAGE_LIST: list[str], GENES_WITH_VALID_DELETIONS: dict[str, list[int]], GENE_TO_ANTIMICROBIAL_DRUG_NAME: dict[str, dict[str, dict[str, str]]]) -> None:
         """Initializes the Looker class.
         
         Args:
@@ -43,7 +43,7 @@ class Looker:
             OUTPUT_PREFIX (str): the output file prefix
             DF_LABORATORIAN (pd.DataFrame): the laboratorian report dataframe
             LOW_DEPTH_OF_COVERAGE_LIST (list[str]): list of genes with low depth of coverage
-            GENES_WITH_VALID_DELETIONS (set[str]): set of genes with valid deletions
+            GENES_WITH_VALID_DELETIONS (dict[str, list[int]]): dictionary of genes (to the deletion genomic positions) with valid deletions
             GENE_TO_ANTIMICROBIAL_DRUG_NAME (dict[str, dict[str, dict[str, str]]]): a
                 dictionary mapping drugs to lims report columns to associated drugs and 
                 their respective column names
@@ -94,7 +94,7 @@ class Looker:
             # this does not appear in the logic document, but it was in legacy code; not sure if we should retain?
             if max_looker_resistance != "R":
                 for gene in drugs_to_genes[antimicrobial]:
-                    if gene in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS:
+                    if gene in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS.keys():
                         antimicrobial_resistances[antimicrobial] = "Insufficient coverage in locus"
                         break
 

@@ -35,7 +35,7 @@ class Row() :
         does_mutation_fail_boundary_qc(TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float]) -> bool:
             Adds QC warnings if a tNGS mutation falls outside the read support or frequency boundaries (tNGS only) 
             
-        add_qc_warnings(MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], dict[str, float]) -> tuple[set, set]:
+        add_qc_warnings(MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: dict[str, list[int]], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], dict[str, float]) -> tuple[set, set]:
             Adds QC warnings if a mutation either has poor positional quality or locus quality.
             
         print() -> None:
@@ -86,6 +86,7 @@ class Row() :
             raise Exception("MATH BAD")
         
         self.tbprofiler_variant_position = variant.__dict__.get("pos")
+        self.variant_genomic_start_pos, self.variant_genomic_end_pos = globals_.get_mutation_position_range(self.tbprofiler_variant_position, variant.nucleotide_change)
 
         # should i use the .get() method here too?
         self.tbprofiler_variant_substitution_type = variant.type
@@ -152,6 +153,8 @@ class Row() :
         row.tbprofiler_variant_substitution_nt = "WT"
         row.tbprofiler_variant_substitution_aa = "WT"
         row.tbprofiler_variant_position = "NA"
+        row.variant_genomic_start_pos = "NA"
+        row.variant_genomic_end_pos = "NA"
         row.tbprofiler_locus_tag = GENE_TO_LOCUS_TAG.get(gene_name, "NA")
         row.gene_tier = GENE_TO_TIER.get(gene_name, "NA")
         row.TNGS = TNGS
@@ -226,7 +229,7 @@ class Row() :
         
         return False
         
-    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: set[str], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool, TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float], TNGS_SPECIFIC_QC_OPTIONS: dict[str, float]) -> tuple[set[str], set[str]]:
+    def add_qc_warnings(self, MIN_DEPTH: int, MIN_FREQUENCY: float, MIN_READ_SUPPORT: float, LOW_DEPTH_OF_COVERAGE_LIST: list[str], genes_with_valid_deletions: dict[str, list[int]], TNGS_REGIONS: dict[str, list[int] | dict[str, list[int]]], DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY: bool, TNGS_READ_SUPPORT_BOUNDARIES: list[int], TNGS_FREQUENCY_BOUNDARIES: list[float], TNGS_SPECIFIC_QC_OPTIONS: dict[str, float]) -> tuple[set[str], set[str]]:
         """Adds QC warnings if a mutation either has poor positional quality or locus quality
 
         Args:
@@ -234,7 +237,7 @@ class Row() :
             MIN_FREQUENCY (float): the minimum allele frequency for a mutation to pass positional QC
             MIN_READ_SUPPORT (float): the minimum read support for a mutation to pass positional QC 
             LOW_DEPTH_OF_COVERAGE_LIST (list[str]): a list of genes that have failed locus QC (i.e., breadth of coverage < min_percent_coverage)
-            genes_with_valid_deletions (set[str]): a set of genes with deletions that pass positional QC
+            genes_with_valid_deletions (dict[str, list[int]]): a dictionary of genes (to the deletion genomic positions) with deletions that pass positional QC
             TNGS_REGIONS (dict[str, list[int] | dict[str, list[int]]]): a dictionary of tNGS primer regions for genes with split primers
             DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY (bool): a flag indicating whether R mutations should be treated the same as S/U mutations for locus QC
             TNGS_READ_SUPPORT_BOUNDARIES (list[int]): boundaries for read support in tNGS
@@ -311,7 +314,11 @@ class Row() :
         if ("Failed quality in the mutation position" not in self.warning 
             and "This mutation is outside the expected region" not in self.warning 
             and "del" in self.tbprofiler_variant_substitution_nt):
-            genes_with_valid_deletions.add(self.tbprofiler_gene_name)
+            if self.tbprofiler_gene_name not in genes_with_valid_deletions.keys():
+                genes_with_valid_deletions[self.tbprofiler_gene_name] = [(self.variant_genomic_start_pos, self.variant_genomic_end_pos)]
+            else:
+                genes_with_valid_deletions[self.tbprofiler_gene_name].append((self.variant_genomic_start_pos, self.variant_genomic_end_pos))
+                
         
         return genes_with_valid_deletions, positional_qc_fails
 

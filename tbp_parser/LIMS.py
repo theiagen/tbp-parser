@@ -14,7 +14,7 @@ class LIMS:
         SAMPLE_NAME (str): the sample name
         DF_LABORATORIAN (pd.DataFrame): a pandas DataFrame containing the laboratorian report data
         POSITIONAL_QC_FAILS (dict[str, str]): a dictionary mapping genes to their nucleotide mutation that failed positional QC
-        GENES_WITH_VALID_DELETIONS (set[str]): a set of genes that have valid (QC-pass) deletions
+        GENES_WITH_VALID_DELETIONS (dict[str, list[int]]): a dictionary of genes (to the deletion genomic positions) with valid (QC-pass) deletions
         LINEAGE (str): the TBProfiler identified lineage
         LINEAGE_ENGLISH (str): the lineage in human-friendly language
         
@@ -66,7 +66,7 @@ class LIMS:
     ]
     """A list of rpoB mutations that require unique LIMS output wording."""
 
-    def __init__(self, logger, input_json: str, OUTPUT_PREFIX: str, LOW_DEPTH_OF_COVERAGE_LIST: list[str], SAMPLE_NAME: str, DF_LABORATORIAN: pd.DataFrame, POSITIONAL_QC_FAILS: dict[str, str], GENES_WITH_VALID_DELETIONS: set[str]) -> None:
+    def __init__(self, logger, input_json: str, OUTPUT_PREFIX: str, LOW_DEPTH_OF_COVERAGE_LIST: list[str], SAMPLE_NAME: str, DF_LABORATORIAN: pd.DataFrame, POSITIONAL_QC_FAILS: dict[str, str], GENES_WITH_VALID_DELETIONS: dict[str, list[int]]) -> None:
         """Initializes the LIMS class
         
         Args:
@@ -77,7 +77,7 @@ class LIMS:
             SAMPLE_NAME (str): the sample name
             DF_LABORATORIAN (pd.DataFrame): a pandas DataFrame containing the laboratorian report data
             POSITIONAL_QC_FAILS (dict[str, str]): a dictionary mapping genes to their nucleotide mutation that failed positional QC
-            GENES_WITH_VALID_DELETIONS (set[str]): a set of genes that have valid (QC-pass) deletions
+            GENES_WITH_VALID_DELETIONS (dict[str, list[int]]): a dictionary of genes (to the deletion genomic positions) with valid (QC-pass) deletions
         """
         self.logger = logger
         self.input_json = input_json
@@ -92,7 +92,7 @@ class LIMS:
         self.POSITIONAL_QC_FAILS = POSITIONAL_QC_FAILS
         """A dictionary mapping genes to their nucleotide mutation that failed positional QC"""
         self.GENES_WITH_VALID_DELETIONS = GENES_WITH_VALID_DELETIONS
-        """A set of genes that have valid (QC-pass) deletions"""
+        """A dictionary of genes (to the deletion genomic positions) with valid (QC-pass) deletions"""
 
     def get_id(self, TNGS: bool, MIN_PERCENT_LOCI_COVERED: float, test: bool = False) -> str:
         """Returns both the TBProfiler identified lineage and the lineage in human-friendly languager
@@ -123,7 +123,7 @@ class LIMS:
             # count number of LIMS genes in the LOW_DEPTH_OF_COVERAGE_LIST that do not have valid deletions that may explain the coverage
             passing_gene_count = 0
             for gene in lims_genes:
-                if gene not in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS:
+                if gene not in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS.keys():
                     passing_gene_count += 1 
             
             try:
@@ -229,7 +229,7 @@ class LIMS:
                     # additionally, we must now provide content for the gene codes associated with this drug
                     if max_mdl_resistance in ["WT", "Insufficient Coverage", "NA"]:
                         # if the gene has insufficient coverage without a valid deletion (NOT in GENES_WITH_VALID_DELETIONS but in LOW_DEPTH_OF_COVERAGE_LIST), set to "No sequence"
-                        if gene in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS:
+                        if gene in self.LOW_DEPTH_OF_COVERAGE_LIST and gene not in self.GENES_WITH_VALID_DELETIONS.keys():
                             lims_report[gene_code] = "No sequence"
                             lims_report[antimicrobial_code] = "Pending Retest"
                         else:

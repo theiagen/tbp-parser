@@ -191,8 +191,8 @@ class Variant:
                 if entry.get("gene_name") != self.gene_name:
                     # make a copy of the variant object 
                     copied_variant = copy.deepcopy(self) 
-                    # remove drugs, locus_tag, gene_associated_drugs, and the annotation field from the copied variant
-                    attrs_to_remove = ["change", "annotation", "consequences", "locus_tag"]
+                    # remove drugs, locus_tag, gene_associated_drugs, variant_genomic_start_pos, variant_genomic_end_pos, and the annotation field from the copied variant
+                    attrs_to_remove = ["change", "annotation", "consequences", "locus_tag", "variant_genomic_start_pos", "variant_genomic_end_pos"]
                     for attr in attrs_to_remove:
                         if hasattr(copied_variant, attr):
                             delattr(copied_variant, attr)
