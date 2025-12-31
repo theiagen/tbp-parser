@@ -109,6 +109,23 @@ class Laboratorian:
       
       globals_.SAMPLE_NAME = input_json["id"]
       
+      # add any split primers that fail coverage QC to the LOW_DEPTH_OF_COVERAGE_LIST
+      if globals_.TNGS:
+        self.logger.debug("LAB:[tNGS only] Checking for any split primers that fail coverage QC to add to the LOW_DEPTH_OF_COVERAGE_LIST")
+        for primer in globals_.TNGS_REGIONS.keys():
+          if isinstance(globals_.TNGS_REGIONS[primer], dict):
+            for segment in globals_.TNGS_REGIONS[primer]:
+              self.logger.debug("LAB:[tNGS only] Now checking segment {} of primer {}".format(segment, primer))
+              percent_coverage = globals_.COVERAGE_DICTIONARY[segment]
+              if percent_coverage < globals_.COVERAGE_THRESHOLD:
+                
+                self.logger.debug("LAB:[tNGS only] Segment {} of primer {} has poor coverage ({}%% < {}%%); adding to LOW_DEPTH_OF_COVERAGE_LIST".format(segment, primer, percent_coverage, globals_.COVERAGE_THRESHOLD))
+                globals_.LOW_DEPTH_OF_COVERAGE_LIST.append(primer)
+                break
+              else:
+                self.logger.debug("LAB:[tNGS only] Segment {} of primer {} has good coverage ({}%% >= {}%%); not adding to LOW_DEPTH_OF_COVERAGE_LIST".format(segment, primer, percent_coverage, globals_.COVERAGE_THRESHOLD))
+      
+      print(globals_.LOW_DEPTH_OF_COVERAGE_LIST)
       self.logger.debug("LAB:About to parse through the variant sections for the sample with name {}".format(globals_.SAMPLE_NAME))
       
       row_list = self.iterate_section(input_json["dr_variants"], row_list)

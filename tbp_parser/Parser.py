@@ -45,6 +45,11 @@ class Parser:
     globals_.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
     globals_.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
 
+    # overwrite variables if config file is provided; this is required to allow the --tngs flag to be set via the config file.
+    if self.config != "":
+      self.logger.info("PARSER:Overwriting variables with the provided config file")
+      self.overwrite_variables()
+
     if self.verbose:
       self.logger.setLevel(logging.INFO)
       self.logger.info("PARSER:Verbose mode enabled")
@@ -56,36 +61,40 @@ class Parser:
       self.logger.debug("PARSER:Debug mode enabled")
 
     if globals_.TNGS:
-      self.logger.info("PARSER:tNGS flag detected; adjusting outputs to reflect this")
-      if (self.coverage_regions == "../data/tbdb-modified-regions.bed"):
+      # adjust the default coverage regions file to the default tNGS coverage regions file if --tNGS flag detected and the --coverage_regions file was not specified
+      if self.coverage_regions == "../data/tbdb-modified-regions.bed":
+        self.logger.info("PARSER:tNGS flag detected; and ../data/tbdb-modified-regions.bed default coverage regions detected")
         self.logger.debug("PARSER:Changing default coverage regions to ../data/tngs-reportable-regions.bed")
         self.coverage_regions = "../data/tngs-reportable-regions.bed"
-      
-      self.logger.debug("PARSER:Altering the ANTIMICROBIAL_CODE_TO_GENES dictionary to include only tNGS entries")
-      globals_.ANTIMICROBIAL_CODE_TO_GENES = globals_.ANTIMICROBIAL_CODE_TO_GENES_tNGS
-      
-      self.logger.debug("PARSER:Altering the GENES_FOR_LIMS list to include only tNGS genes")
-      globals_.GENES_FOR_LIMS = globals_.GENES_FOR_LIMS_tNGS
-      
+
       self.logger.debug("PARSER:Setting the tNGS regions dictionary")
       self.convert_bed_into_dictionary()
-         
-    else:
-      self.logger.debug("PARSER:Setting the ANTIMICROBIAL_CODE_TO_GENES dictionary to include all WGS entries")
-      globals_.ANTIMICROBIAL_CODE_TO_GENES = globals_.ANTIMICROBIAL_CODE_TO_GENES_WGS
-    
-      self.logger.debug("PARSER:Setting the GENES_FOR_LIMS list to include all WGS genes")
-      globals_.GENES_FOR_LIMS = globals_.GENES_FOR_LIMS_WGS
+
+    # set the ANTIMICROBIAL_CODE_TO_GENES global dictionary if it's not overridden via the config file
+    if not globals_.ANTIMICROBIAL_CODE_TO_GENES:
+      # if --tNGS flag detected, set the ANTIMICROBIAL_CODE_TO_GENES global dictionary to the default tNGS version
+      if globals_.TNGS:
+        self.logger.debug("PARSER:Altering the ANTIMICROBIAL_CODE_TO_GENES dictionary to include default tNGS entries")
+        globals_.ANTIMICROBIAL_CODE_TO_GENES = globals_.ANTIMICROBIAL_CODE_TO_GENES_tNGS
+      else:
+        self.logger.debug("PARSER:Setting the ANTIMICROBIAL_CODE_TO_GENES dictionary to include all WGS entries")
+        globals_.ANTIMICROBIAL_CODE_TO_GENES = globals_.ANTIMICROBIAL_CODE_TO_GENES_WGS
+
+    # set the GENES_FOR_LIMS global list if it's not overridden via the config file
+    if not globals_.GENES_FOR_LIMS:
+      # if --tNGS flag detected, set the GENES_FOR_LIMS global list to the default tNGS version
+      if globals_.TNGS:
+        self.logger.debug("PARSER:Altering the GENES_FOR_LIMS list to include default tNGS entries")
+        globals_.GENES_FOR_LIMS = globals_.GENES_FOR_LIMS_tNGS
+      else:
+        self.logger.debug("PARSER:Setting the GENES_FOR_LIMS list to include all WGS genes")
+        globals_.GENES_FOR_LIMS = globals_.GENES_FOR_LIMS_WGS
     
     if self.add_cs_lims:
       self.logger.info("PARSER:Adding cycloserine (CS) fields to the LIMS report")
       globals_.GENES_FOR_LIMS.extend(globals_.GENES_FOR_LIMS_CS)
       globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME.update(globals_.ANTIMICROBIAL_CODE_TO_DRUG_NAME_CS) 
       globals_.ANTIMICROBIAL_CODE_TO_GENES.update(globals_.ANTIMICROBIAL_CODE_TO_GENES_CS)
-      
-    if self.config != "":
-      self.logger.info("PARSER:Overwriting variables with the provided config file")
-      self.overwrite_variables()
 
   def convert_bed_into_dictionary(self):
     """This function converts the bed file into a dictionary to confirm that the mutations are within the expected regions [tNGS only]
@@ -100,6 +109,8 @@ class Parser:
         start_pos = int(cols[1])
         end_pos = int(cols[2])
         gene_name = cols[4]
+        if gene_name == "mmpR5":
+          gene_name = "Rv0678"
         
         # check if primer is split
         match = re.match(r'(.+)_(\d+)$', gene_name)
@@ -151,8 +162,8 @@ class Parser:
     self.logger.info("PARSER:Creating initial coverage report")
     coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions, self.tngs_expert_regions)
     coverage.calculate_coverage()
-    
-    if globals_.TNGS and self.tngs_expert_regions != "":
+
+    if globals_.TNGS and self.tngs_expert_regions is not None:
       self.logger.info("PARSER:Calculating the coverage for the expert rule regions")
       coverage.calculate_r_expert_rule_regions_coverage()
   

@@ -349,11 +349,12 @@ class Row() :
     This function checks if a mutation falls within the primer regions.
     Returns a boolean flag indicating if the mutation is outside the expected region.
     """
+    print(globals_.TNGS_REGIONS)
     # default to failure (mutation outside expected region)
     for primer, positions in globals_.TNGS_REGIONS.items():
       if primer != self.tbprofiler_gene_name:
         continue
-      
+      print(primer, positions)
       # split primers (positions is a dictionary)
       if isinstance(positions, dict):
         for segment, seg_positions in positions.items():
