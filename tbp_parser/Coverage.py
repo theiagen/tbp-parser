@@ -105,14 +105,15 @@ class Coverage:
       for line in bedfile_fh:
         line = line.split("\t")
         gene, coverage = self.calculate_depth(line)
-        
+
+        if gene == "mmpR5":
+          gene = "Rv0678"
+          self.logger.debug("COV:calculate_coverage: Renaming mmpR5 to Rv0678 for CDPH nomenclature")
+        if gene == "fbiD":
+          gene = "Rv2983"
+          self.logger.debug("COV:calculate_coverage: Renaming fbiD to Rv2983 for CDPH nomenclature")
+
         globals_.COVERAGE_DICTIONARY[gene] = coverage
-    
-    # rename some genes to match CDPH nomenclature
-    if "mmpR5" in globals_.COVERAGE_DICTIONARY.keys():
-      globals_.COVERAGE_DICTIONARY["Rv0678"] = globals_.COVERAGE_DICTIONARY["mmpR5"]
-    if "fbiD" in globals_.COVERAGE_DICTIONARY.keys():
-      globals_.COVERAGE_DICTIONARY["Rv2983"] = globals_.COVERAGE_DICTIONARY["fbiD"]
     
     self.logger.info("COV:Initial coverage report created, now exiting function\n")
    
@@ -130,12 +131,12 @@ class Coverage:
       for line in bedfile_fh:
         line = line.split("\t")
         gene, coverage = self.calculate_depth(line)
-        
+
+        if gene == "mmpR5":
+          gene = "Rv0678"
+          self.logger.debug("COV:calculate_r_expert_rule_regions_coverage: Renaming mmpR5 to Rv0678 for CDPH nomenclature")
+
         self.tngs_expert_regions_coverage[gene] = coverage
-          
-    # rename some genes to match CDPH nomenclature
-    if "mmpR5" in globals_.COVERAGE_DICTIONARY.keys():
-       self.tngs_expert_regions_coverage["Rv0678"] =  self.tngs_expert_regions_coverage["mmpR5"]
         
     self.logger.info("COV:Expert regions coverage dictionary created, now exiting function\n")
     
@@ -181,6 +182,8 @@ class Coverage:
           gene, average_depth = self.calculate_average_depth(line)
           if gene == "mmpR5":
             gene = "Rv0678"
+            self.logger.debug("COV:reformat_coverage: Renaming mmpR5 to Rv0678 for CDPH nomenclature")
+
           average_depths[gene] = average_depth
           
         df_average_depths = pd.DataFrame(average_depths, index=[0]).T.reset_index().rename(columns={"index": "Gene", 0: "Average_Locus_Coverage"})
