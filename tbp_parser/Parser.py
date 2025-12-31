@@ -162,8 +162,8 @@ class Parser:
     self.logger.info("PARSER:Creating initial coverage report")
     coverage = Coverage(self.logger, self.input_bam, self.output_prefix, self.coverage_regions, self.tngs_expert_regions)
     coverage.calculate_coverage()
-    
-    if globals_.TNGS and self.tngs_expert_regions != "":
+
+    if globals_.TNGS and self.tngs_expert_regions is not None:
       self.logger.info("PARSER:Calculating the coverage for the expert rule regions")
       coverage.calculate_r_expert_rule_regions_coverage()
   
