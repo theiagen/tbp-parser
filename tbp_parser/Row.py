@@ -376,6 +376,7 @@ class Row() :
         self.logger.debug("ROW:[tNGS only] Mutation does not fall within any primer regions for {}; {} is NOT within {}".format(primer, self.variant.pos, positions))
         return True
 
+    self.logger.debug("ROW:[tNGS only] No matching primer region found for [gene:{}, pos:{}]; setting mutation to 'outside expected region'".format(self.tbprofiler_gene_name, self.variant.pos))
     return True  # no matching position found, mutation is outside region
 
   def describe_rationale(self):
