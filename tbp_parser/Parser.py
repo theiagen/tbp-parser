@@ -45,11 +45,6 @@ class Parser:
     globals_.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
     globals_.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
 
-    # overwrite variables if config file is provided; this is required to allow the --tngs flag to be set via the config file.
-    if self.config != "":
-      self.logger.info("PARSER:Overwriting variables with the provided config file")
-      self.overwrite_variables()
-
     if self.verbose:
       self.logger.setLevel(logging.INFO)
       self.logger.info("PARSER:Verbose mode enabled")
@@ -59,6 +54,11 @@ class Parser:
     if self.debug:
       self.logger.setLevel(logging.DEBUG)
       self.logger.debug("PARSER:Debug mode enabled")
+
+    # overwrite variables if config file is provided; this is required to allow the --tngs flag to be set via the config file.
+    if self.config != "":
+      self.logger.info("PARSER:Overwriting variables with the provided config file")
+      self.overwrite_variables()
 
     if globals_.TNGS:
       # adjust the default coverage regions file to the default tNGS coverage regions file if --tNGS flag detected and the --coverage_regions file was not specified
@@ -129,14 +129,14 @@ class Parser:
     """This function overwrites the input variables provided at runtime with those from the config file"""
     with open(self.config, "r") as config:
       settings = yaml.safe_load(config)
-      
+
       for key, value in settings.items():
         if key.replace("self.", "") in vars(self):
           setattr(self, key.replace("self.", ""), value)
-          self.logger.info("PARSER:self.{} has been overwritten with a config-specified value".format(key))
+          self.logger.debug("PARSER:CONFIG-OVERRIDE: self.{}={}".format(key, value))
         if key.replace("globals.", "") in dir(globals_):
           setattr(globals_, key.replace("globals.", ""), value) 
-          self.logger.info("PARSER:globals.{} has been overwritten with a config-specified value".format(key))
+          self.logger.debug("PARSER:CONFIG-OVERRIDE: globals.{}={}".format(key, value))
   
   def check_dependency_exists(self):
     """This function confirms that samtools is installed and available"""
