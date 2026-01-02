@@ -55,7 +55,12 @@ class Variant:
         if var.gene_name != parent_row.tbprofiler_gene_name:
           globals_.GENES_REPORTED.add(var.gene_name)
           self.logger.debug("VAR:This alternate consequence is not from the same gene; creating a new row")
-          
+
+          # needed to calculate `is_mutation_outside_region()` correctly if alternate_consequence variant is in TNGS_REGIONS dictionary
+          if not hasattr(var, "pos"):
+            self.logger.debug("VAR:The alternate consequence does not have a position; inheriting from parent_row.variant")
+            var.pos = parent_row.variant.pos
+
           # there can be multiple annotations for the same alternate consequence or none
           if len(var.annotation) == 0:
             self.logger.debug("VAR:There are no annotations for this alternate consequence; creating a row with the gene associated drugs")
