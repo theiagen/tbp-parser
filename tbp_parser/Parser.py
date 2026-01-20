@@ -10,7 +10,7 @@ from Laboratorian import Laboratorian
 from Looker import Looker
 from LIMS import LIMS
 
-
+logger = logging.getLogger(__name__)
 class Parser:
     """This class orchestrates the different modules within the tbp_parser tool.
     
@@ -244,41 +244,39 @@ class Parser:
         """This function runs the main logic of the Parser class, orchestrating the
         different modules to generate the desired reports.
         """    
-        self.logger.info("PARSER:run:Checking for dependencies")
-        self.check_dependency_exists()
-
+        logger.info("Checking for dependencies")
         GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS = self.create_standard_dictionaries()
         
-        self.logger.info("PARSER:run:Calculating coverage statistics")
         coverage = Coverage(self.logger, self.input_bam, self.OUTPUT_PREFIX, self.tbdb_bed, TNGS_REGIONS, self.USE_ERR_AS_BRR, self.err_bed)
         COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH, self.TNGS)
+        logger.info("Calculating coverage statistics")
 
-        self.logger.info("PARSER:run:Creating Laboratorian report")
         laboratorian = Laboratorian(self.logger, self.input_json, self.OUTPUT_PREFIX, 
                                     self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, 
+        logger.info("Creating Laboratorian report")
                                     COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, 
                                     GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS, 
                                     self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY, self.TNGS_READ_SUPPORT_BOUNDARIES,
                                     self.TNGS_FREQUENCY_BOUNDARIES, self.TNGS_SPECIFIC_QC_OPTIONS)
         DF_LABORATORIAN = laboratorian.create_laboratorian_report()
 
-        self.logger.info("PARSER:run:Creating LIMS report")
         lims = LIMS(self.logger, self.input_json, self.OUTPUT_PREFIX, LOW_DEPTH_OF_COVERAGE_LIST, 
+        logger.info("Creating LIMS report")
                     laboratorian.SAMPLE_NAME, DF_LABORATORIAN, laboratorian.positional_qc_fails,
                     laboratorian.genes_with_valid_deletions)
         DF_LIMS = lims.create_lims_report(self.config.TNGS, self.config.MIN_PERCENT_LOCI_COVERED, self.config.OPERATOR)
 
-        self.logger.info("PARSER:run:Creating Looker report")
         looker = Looker(self.logger, self.OUTPUT_PREFIX, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.genes_with_valid_deletions, GENE_TO_ANTIMICROBIAL_DRUG_NAME)
         looker.create_looker_report(laboratorian.SAMPLE_NAME, self.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.OPERATOR)
+        logger.info("Creating Looker report")
         DF_LOOKER = looker.create_looker_report(laboratorian.SAMPLE_NAME, self.config.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.config.OPERATOR)
 
-        self.logger.info("PARSER:run:Creating coverage report")
         coverage.create_coverage_report(laboratorian.SAMPLE_NAME, laboratorian.genes_with_valid_deletions)
+        logger.info("Creating coverage report")
         DF_COVERAGE = coverage.create_coverage_report(laboratorian.SAMPLE_NAME, laboratorian.genes_with_valid_deletions)
 
         if len(globals_.OUTPUT_RENAMING) > 0:
-            self.logger.info("PARSER:run:Renaming output columns as specified in globals.OUTPUT_RENAMING")
+            logger.info("Renaming output columns as specified in globals.OUTPUT_RENAMING")
             
             # only rename the fields in the final output files
             file_suffixes = [".lims_report.csv", ".laboratorian_report.csv", ".looker_report.csv", ".coverage_report.csv"]
@@ -295,4 +293,4 @@ class Parser:
             DF_LIMS,
         ).compare()
                     
-        self.logger.info("PARSER:run:Parsing completed")
+        logger.info("Parsing completed")

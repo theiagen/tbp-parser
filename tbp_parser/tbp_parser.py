@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 import argparse
+import logging
 import CheckInputs
 import importlib_resources
 from __init__ import __VERSION__
-from Parser import Parser 
+from Parser import Parser
+from utils.logger_setup import setup_logger
+
 
 def main():
     home_dir = importlib_resources.files("tbp_parser")
@@ -102,6 +105,7 @@ def main():
                         help="increase output verbosity to debug; overwrites --verbose", action="store_true", default=False)
 
     options = parser.parse_args()
+    setup_logger(logging.DEBUG if options.debug else logging.INFO)
 
     parse = Parser(options)
     parse.run()
