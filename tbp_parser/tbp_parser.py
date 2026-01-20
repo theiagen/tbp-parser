@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 import argparse
 import logging
-import CheckInputs
 import importlib_resources
 from __init__ import __VERSION__
 from Parser import Parser
 from utils.config import Configuration
 from utils.logger_setup import setup_logger
-
+import utils.check_inputs as CheckInputs
 
 def main():
     home_dir = importlib_resources.files("tbp_parser")
@@ -111,6 +110,7 @@ def main():
 
     options = parser.parse_args()
     setup_logger(logging.DEBUG if options.debug else logging.INFO)
+    CheckInputs.check_dependency_exists()
 
     config = Configuration(options)
     parse = Parser(config)
