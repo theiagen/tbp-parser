@@ -5,6 +5,7 @@ import CheckInputs
 import importlib_resources
 from __init__ import __VERSION__
 from Parser import Parser
+from utils.config import Configuration
 from utils.logger_setup import setup_logger
 
 
@@ -13,7 +14,8 @@ def main():
     default_tbdb_bed = home_dir.joinpath("..", "data", "tbdb.bed")
     default_gene_tier_tsv = home_dir.joinpath("..", "data", "gene-to-tier_2025-12-10.tsv")
     default_promoter_regions = home_dir.joinpath("..", "data", "who-v2-promoters_2025-12-10.tsv")   
-    
+    default_lims_report_format = home_dir.joinpath("..", "data", "default-lims-report-format.yml")
+
     parser = argparse.ArgumentParser(
         prog = "tbp-parser",
         description = "Parses Jody Phelon's TBProfiler JSON output into four files:\n- a Laboratorian report,\n- a LIMS report\n- a Looker report, and\n- a coverage report",
@@ -30,15 +32,19 @@ def main():
                         help="the configuration file to use, in YAML format\n(overrides all other arguments EXCEPT for any file-type inputs)", default="", metavar="\b", type=CheckInputs.is_optional_file_valid)
     file_arguments = parser.add_argument_group("file arguments",
                                                 "arguments that specify input files used to create standard dictionaries")
-    
+
     ### TO-DO: brainstorm better name for this argument -- regions_bed, targets_bed, genes_bed, etc.
     file_arguments.add_argument("-b", "--tbdb_bed",
                         help="the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_tbdb_bed, metavar="\b", type=CheckInputs.is_bed_valid)
+    file_arguments.add_argument("-e", "--err_bed",
+                                help="an optional BED file formatted similarly to the --tbdb_bed file but containing ranges that are essential for resistance", default=None, metavar="\b", type=CheckInputs.is_optional_file_valid)
     file_arguments.add_argument("-g", "--gene_tier_tsv", 
                         help="the TSV file mapping genes to their tier\ndefault=data/gene-to-tier_2025-12-10.tsv", default=default_gene_tier_tsv, metavar="\b", type=CheckInputs.is_file_valid)
     file_arguments.add_argument("-p", "--promoter_regions_tsv",
                         help="the TSV file containing the promoter regions to include in interpretation designations\ndefault=data/who-v2-promoters_2025-12-10.tsv", default=default_promoter_regions, metavar="\b", type=CheckInputs.is_file_valid)
-
+    ### TO-DO: make yaml format validation function
+    file_arguments.add_argument("--lims_report_format_yml",
+                        help="an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used", default=default_lims_report_format, metavar="\b", type=CheckInputs.is_file_valid)
     qc_arguments = parser.add_argument_group("quality control arguments", 
                                               "options that determine what passes QC")
     qc_arguments.add_argument("-d", "--min_depth", 
@@ -51,7 +57,7 @@ def main():
                         help="the minimum frequency for a mutation to pass QC (0.1 -> 10%%)\ndefault=0.1", default=0.1, metavar="\b", type=float)
     qc_arguments.add_argument("-l", "--min_percent_loci_covered", default=0.7, metavar="\b", type=float,
                         help="the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%%)\ndefault=0.7")
-    
+
     qc_arguments.add_argument("--do_not_treat_r_mutations_differently", default=False, action="store_true",
                         help="treat R mutations the same as S or U mutations in that if locus coverage is poor, they will not be reported\ndefault=False")
 
@@ -63,16 +69,17 @@ def main():
                         help="the operator who ran the sequencing; used in the LIMS & Looker reports\n** Enclose in quotes if includes a space\ndefault=\"Operator not provided\"", default="Operator not provided", metavar="\b")
     general_arguments.add_argument("-o", "--output_prefix", 
                         help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b")
+    ### TO-DO: create dict format validation function
+    general_arguments.add_argument("-fr", "--find_and_replace",
+                        help="a dictionary (in string format) used to find and replace text in the LIMS report\nExample: '--find_and_replace \"{'old_text1': 'new_text1', 'old_text2': 'new_text2'}\"'", default="{}", metavar="\b")
 
     tngs_arguments = parser.add_argument_group("tNGS-specific arguments", 
                                                 "options that are primarily used for tNGS data")
     tngs_arguments.add_argument("--tngs",
                         help="\nindicates that the input data was generated using a tNGS protocol\nTurns on tNGS-specific features", action="store_true", default=False)
-    tngs_arguments.add_argument("-e", "--err_bed",
-                                help="an optional BED file formatted similarly to the --tbdb_bed file but containing ranges that are essential for resistance", default=None, metavar="\b", type=CheckInputs.is_optional_file_valid)
     tngs_arguments.add_argument("--use_err_as_brr",
                                 help="if an ERR BED file is provided, use the ERR regions in place of the TBDB regions for breadth of coverage calculations\nNote: this is an experimental option", action="store_true", default=False)
-    
+
     # tngs-specific qc arguments that are hold-overs from prior versions; retained for now
     tngs_arguments.add_argument("--rrs_frequency",
                         help="the minimum frequency for an rrs mutation to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
@@ -99,15 +106,14 @@ def main():
 
     logging_arguments = parser.add_argument_group("logging arguments", 
                                                   "options that change the verbosity of the stdout log")
-    logging_arguments.add_argument("--verbose", 
-                        help="increase output verbosity", action="store_true", default=False)
     logging_arguments.add_argument("--debug", 
                         help="increase output verbosity to debug; overwrites --verbose", action="store_true", default=False)
 
     options = parser.parse_args()
     setup_logger(logging.DEBUG if options.debug else logging.INFO)
 
-    parse = Parser(options)
+    config = Configuration(options)
+    parse = Parser(config)
     parse.run()
 
 if __name__ == "__main__":
