@@ -1,0 +1,25 @@
+import logging
+from typing import List
+from models.bed_record import BedRecord
+
+logger = logging.getLogger(__name__)
+
+def parse_bed_file(bed_file: str) -> List[BedRecord]:
+    """Parses a BED file and creates BedRecord instances.
+
+    Args:
+        bed_file (str): The path to the BED file to parse.
+    Returns:
+        list[BedRecord]: A list of BedRecord instances parsed from the BED file.
+            representing the columns in the BED file.
+    """
+    bed_records = []
+    logger.debug(f"Parsing BED file: {bed_file}")
+
+    with open(bed_file, 'r') as bf:
+        for entry in bf:
+            bed_record = BedRecord.from_bed_line(entry)
+            bed_records.append(bed_record)
+
+    logger.debug(f"Parsed {len(bed_records)} records from {bed_file}")
+    return bed_records

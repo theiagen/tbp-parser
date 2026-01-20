@@ -10,6 +10,8 @@ from Laboratorian import Laboratorian
 from Looker import Looker
 from LIMS import LIMS
 from utils.config import Configuration
+from parsers.bed_parser import parse_bed_file
+from processors.coverage_calculator import CoverageCalculator
 from validator import Validator
 
 logger = logging.getLogger(__name__)
@@ -168,7 +170,18 @@ class Parser:
         
         logger.info("Calculating coverage statistics")
         coverage = Coverage(logger, self.config.input_bam, self.config.OUTPUT_PREFIX, self.config.tbdb_bed, TNGS_REGIONS, self.config.USE_ERR_AS_BRR, self.config.err_bed)
-        COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.config.MIN_PERCENT_COVERAGE, self.config.MIN_DEPTH, self.config.TNGS)
+        # COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.config.MIN_PERCENT_COVERAGE, self.config.MIN_DEPTH, self.config.TNGS)
+
+        bed_records = parse_bed_file(self.config.tbdb_bed)
+        coverage_calculator = CoverageCalculator(self.config)
+        bed_records = coverage_calculator.generate_cov_attr(bed_records)
+        bed_records = coverage_calculator.update_overlapping_bed_records(bed_records)
+        COVERAGE_DICTIONARY = coverage_calculator.get_breadth_of_coverage_map(bed_records)
+        AVERAGE_LOCI_COVERAGE = coverage_calculator.get_depth_of_coverage_map(bed_records)
+        LOW_DEPTH_OF_COVERAGE_LIST = coverage_calculator.get_low_coverage_list(bed_records)
+
+        coverage.brr_coverage_dictionary = COVERAGE_DICTIONARY
+        coverage.average_loci_coverage = AVERAGE_LOCI_COVERAGE
 
         logger.info("Creating Laboratorian report")
         laboratorian = Laboratorian(logger, self.config.input_json, self.config.OUTPUT_PREFIX, 
