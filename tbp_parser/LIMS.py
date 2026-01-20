@@ -136,7 +136,12 @@ class LIMS:
                 if TNGS:
                     pncA_mutations = self.DF_LABORATORIAN[(self.DF_LABORATORIAN["tbprofiler_gene_name"] == "pncA")]
                     if "p.His57Asp" in pncA_mutations["tbprofiler_variant_substitution_aa"].tolist():
-                        lineage.add("DNA of Mycobacterium bovis detected")
+                        if "Failed quality in the mutation position" in pncA_mutations["warning"].tolist():
+                          self.logger.debug("LIMS:[tNGS only] p.His57Asp detected in pncA but failed quality in the mutation position; M. bovis cannot be ruled out")
+                          lineage.add("DNA of Mycobacterium tuberculosis complex detected (M. bovis not ruled out)")
+                        else:
+                          self.logger.debug("LIMS:[tNGS only] p.His57Asp detected in pncA, lineage is likely M. bovis")
+                          lineage.add("DNA of Mycobacterium bovis detected")
                     else:
                         lineage.add("DNA of Mycobacterium tuberculosis complex detected (not M. bovis)") 
 
