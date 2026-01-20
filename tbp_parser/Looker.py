@@ -109,3 +109,4 @@ class Looker:
         DF_LOOKER["operator"] = OPERATOR
 
         DF_LOOKER.to_csv("{}.looker_report.csv".format(self.OUTPUT_PREFIX), index=False)
+        return DF_LOOKER

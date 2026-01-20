@@ -266,14 +266,16 @@ class Parser:
         lims = LIMS(self.logger, self.input_json, self.OUTPUT_PREFIX, LOW_DEPTH_OF_COVERAGE_LIST, 
                     laboratorian.SAMPLE_NAME, DF_LABORATORIAN, laboratorian.positional_qc_fails,
                     laboratorian.genes_with_valid_deletions)
-        lims.create_lims_report(self.TNGS, self.MIN_PERCENT_LOCI_COVERED, self.OPERATOR)
+        DF_LIMS = lims.create_lims_report(self.config.TNGS, self.config.MIN_PERCENT_LOCI_COVERED, self.config.OPERATOR)
 
         self.logger.info("PARSER:run:Creating Looker report")
         looker = Looker(self.logger, self.OUTPUT_PREFIX, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.genes_with_valid_deletions, GENE_TO_ANTIMICROBIAL_DRUG_NAME)
         looker.create_looker_report(laboratorian.SAMPLE_NAME, self.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.OPERATOR)
+        DF_LOOKER = looker.create_looker_report(laboratorian.SAMPLE_NAME, self.config.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.config.OPERATOR)
 
         self.logger.info("PARSER:run:Creating coverage report")
         coverage.create_coverage_report(laboratorian.SAMPLE_NAME, laboratorian.genes_with_valid_deletions)
+        DF_COVERAGE = coverage.create_coverage_report(laboratorian.SAMPLE_NAME, laboratorian.genes_with_valid_deletions)
 
         if len(globals_.OUTPUT_RENAMING) > 0:
             self.logger.info("PARSER:run:Renaming output columns as specified in globals.OUTPUT_RENAMING")
@@ -285,5 +287,12 @@ class Parser:
                     # match full words to prevent partial replacements
                     print(re.sub('|'.join(r'\b%s\b' % re.escape(original) for original in globals_.OUTPUT_RENAMING.keys()),
                                  lambda match: globals_.OUTPUT_RENAMING[match.group(0)], line), end="")
+
+        Validator(
+            DF_LABORATORIAN,
+            DF_COVERAGE,
+            DF_LOOKER,
+            DF_LIMS,
+        ).compare()
                     
         self.logger.info("PARSER:run:Parsing completed")

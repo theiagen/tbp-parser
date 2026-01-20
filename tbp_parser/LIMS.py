@@ -328,3 +328,4 @@ class LIMS:
         DF_LIMS.T.to_csv("{}.lims_report.transposed.csv".format(self.OUTPUT_PREFIX), header=False)
         
         self.logger.info("LIMS:create_lims_report:LIMS report created, now exiting function\n")
+        return DF_LIMS
