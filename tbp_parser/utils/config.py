@@ -61,6 +61,11 @@ class Configuration:
                 else:
                     # enforce type checking for subsequent assignments to configurable inputs (from config file)
                     expected_type = self._CONFIGURABLE_INPUTS[name]
+
+                    # allow int/float interchangeability
+                    if expected_type in (int, float) and isinstance(value, (int, float)):
+                        value = expected_type(value)
+
                     if type(value) != expected_type:
                         raise TypeError(f"Type mismatch for attribute '{name}': expected {expected_type}, got {type(value)}")
         super().__setattr__(name, value)

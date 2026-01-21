@@ -2,10 +2,12 @@ import logging
 import pysam
 from collections import defaultdict
 from itertools import combinations
-from typing import Optional, List
+from typing import Dict, Optional, List
+from collections import defaultdict
 
 from utils.config import Configuration
 from models.bed_record import BedRecord
+from models.coverage_data import GeneCoverage, LocusCoverage
 
 logger = logging.getLogger(__name__)
 
@@ -15,30 +17,12 @@ class CoverageCalculator:
     def __init__(self, config: Configuration) -> None:
         self.config = config
 
-
-    def generate_cov_attr(self, bed_records: List[BedRecord]) -> List[BedRecord]:
-        """
-        Populates the coverage attributes for all BedRecords using the config BAM file.
-
-        Args:
-            bed_records (List[BedRecord]): The list of BedRecords to populate coverage attributes for.
-        Returns:
-            List[BedRecord]: The list of BedRecords with populated coverage attributes.
-        """
-        logger.debug(f"Populating coverage attributes for {len(bed_records)} BedRecords")
-
-        with pysam.AlignmentFile(self.config.input_bam, "rb") as input_bam:
-            for bed_record in bed_records:
-                self._calculate_coverage(bed_record, input_bam)
-                logger.debug(f"{bed_record}: Breadth of Coverage: {bed_record.breadth_of_coverage}, Average Depth: {bed_record.average_depth}")
-        return bed_records
-
-
-    def _calculate_coverage(
-        self,
+    @staticmethod
+    def _fetch_reads_by_position(
         bed_record: BedRecord,
         input_bam: pysam.AlignmentFile,
-        whitelisted_reads: Optional[set[str]] = None) -> None:
+        whitelisted_reads: Optional[set[str]] = None
+    ) -> Dict[int, List[str]]:
         """
         Calculate coverage for a single BedRecord.
 
@@ -46,6 +30,7 @@ class CoverageCalculator:
             bed_record: The BedRecord to calculate coverage for
             whitelisted_reads: Optional set of read names to filter by (for overlap handling)
         """
+        reads_by_position = {}
         bam_chrom = input_bam.get_reference_name(0) # just in case theres a chance this chromosome name is different from the bed file
         for rec in input_bam.pileup(
             contig=bam_chrom,
@@ -62,18 +47,38 @@ class CoverageCalculator:
                 # if reads_removed > 0:
                 #     self.logger.debug(f"{bed_record}Position: {rec.pos + 1} | Total Reads: {len(rec.get_query_names())} | Non-overlapping Reads: {len(read_list)} | Reads Removed: {reads_removed}")
 
-            bed_record.reads_by_position[rec.pos + 1] = read_list # convert to 1-based indexing
-
-        # Calculates coverage statistics for a given BedRecord.
-        total_positions = bed_record.length
-        positions_above_min_depth = sum(1 for reads in bed_record.reads_by_position.values() if len(reads) >= self.config.MIN_DEPTH)
-        depth_sum = sum(len(reads) for reads in bed_record.reads_by_position.values())
-
-        bed_record.breadth_of_coverage = (positions_above_min_depth / total_positions) * 100
-        bed_record.average_depth = depth_sum / total_positions
+            reads_by_position[rec.pos + 1] = read_list # convert to 1-based indexing
+        return reads_by_position
 
 
-    def update_overlapping_bed_records(self, bed_records: List[BedRecord]) -> List[BedRecord]:
+    def populate_reads_by_position(self, bed_records: List[BedRecord]) -> List[BedRecord]:
+        """
+        Populates the reads_by_position attribute for all BedRecords using the config BAM file.
+        Args:
+            bed_records (List[BedRecord]): The list of BedRecords to populate reads_by_position
+        """
+        logger.debug(f"Populating reads_by_position for {len(bed_records)} BedRecords")
+
+        with pysam.AlignmentFile(self.config.input_bam, "rb") as input_bam:
+            for bed_record in bed_records:
+                bed_record.reads_by_position = self._fetch_reads_by_position(bed_record, input_bam)
+                logger.debug(f"Populated reads_by_position for {bed_record} with {len(bed_record.reads_by_position)} positions")
+        return bed_records
+
+
+    def _calculate_breadth_of_coverage(self, reads_by_position: dict[int, list[str]], length: int) -> float:
+        # Calculates breadth of coverage for a given BedRecord.
+        positions_above_min_depth = sum(1 for reads in reads_by_position.values() if len(reads) >= self.config.MIN_DEPTH)
+        return (positions_above_min_depth / length) * 100
+
+
+    def _calculate_average_depth(self, reads_by_position: dict[int, list[str]], length: int) -> float:
+        # Calculates average depth of coverage for a given BedRecord.
+        depth_sum = sum(len(reads) for reads in reads_by_position.values())
+        return depth_sum / length
+
+
+    def resolve_overlapping_regions(self, bed_records: List[BedRecord]) -> List[BedRecord]:
         """
         Update coverage for all overlapping regions in the provided list of BedRecords.
         For records with overlaps, recalculates coverage using only reads
@@ -100,69 +105,83 @@ class CoverageCalculator:
             return bed_records
 
         # found overlaps - need to recalculate
-        logger.info(f"Found {len(overlap_map)} overlapping records, recalculating coverage")
+        logger.info(f"Found {len(overlap_map)} overlapping records, reassigning BedRecord.reads_by_position with non-overlapping regions only")
 
         with pysam.AlignmentFile(self.config.input_bam, "rb") as input_bam:
             for bed_record in overlap_map.keys():
                 overlapping_bed_records = overlap_map[bed_record]
-                logger.debug(f"Found overlapping region for {bed_record} which overlaps with {len(overlapping_bed_records)} other BedRecord(s)")
+                logger.debug(f"Resolving overlapping region for {bed_record} which overlaps with {len(overlapping_bed_records)} other BedRecord(s)")
 
                 # get names of all reads in non-overlapping regions for this bed_record
                 whitelisted_reads = bed_record.get_non_overlapping_reads(overlapping_bed_records)
 
-                # store old values just for logging
-                old_breadth = bed_record.breadth_of_coverage
-                old_depth = bed_record.average_depth
-
-                # recalculate coverage attributes of this bedrecord only considering the whitelisted reads
-                self._calculate_coverage(bed_record, input_bam, whitelisted_reads)
-
-                logger.debug(f"BEFORE: {bed_record}: Breadth of Coverage: {old_breadth}, Average Depth: {old_depth}")
-                logger.debug(f"AFTER: {bed_record}: Breadth of Coverage: {bed_record.breadth_of_coverage}, Average Depth: {bed_record.average_depth}")
+                # reassigning reads_by_position for this bedrecord only considering the whitelisted reads
+                bed_record.reads_by_position = self._fetch_reads_by_position(bed_record, input_bam, whitelisted_reads)
         return bed_records
 
 
-    def get_breadth_of_coverage_map(self, bed_records: List[BedRecord]) -> dict[str, float]:
+    def generate_gene_coverage_list(self, bed_records: List[BedRecord]) -> List[GeneCoverage]:
         """
-        Generates a coverage map for the provided BedRecords.
+        Calculates gene-level coverage statistics for the provided BedRecords.
+        One GeneCoverage object is created per BedRecord.
 
         Args:
-            bed_records (List[BedRecord]): A list of BedRecords to generate the coverage map for.
+            bed_records (List[BedRecord]): A list of BedRecords to calculate gene coverage for.
         Returns:
-            dict[str, float]: A dictionary mapping BedRecord names to their breadth of coverage.
+            List[GeneCoverage]: A list of GeneCoverage objects representing coverage statistics for each gene.
         """
-        coverage_map = {}
+        gene_coverage_list = []
         for bed_record in bed_records:
-            coverage_map[bed_record.name] = bed_record.breadth_of_coverage
-        return coverage_map
+            total_length = bed_record.length
+            breadth_of_coverage = self._calculate_breadth_of_coverage(bed_record.reads_by_position, total_length)
+            average_depth = self._calculate_average_depth(bed_record.reads_by_position, total_length)
+
+            gene_coverage = GeneCoverage(
+                locus_tag=bed_record.locus_tag,
+                gene_name=bed_record.gene_name,
+                coords=bed_record.coords,
+                breadth_of_coverage=breadth_of_coverage,
+                average_depth=average_depth,
+            )
+            gene_coverage_list.append(gene_coverage)
+        return gene_coverage_list
 
 
-    def get_depth_of_coverage_map(self, bed_records: List[BedRecord]) -> dict[str, float]:
+    def generate_locus_coverage_list(self, bed_records: List[BedRecord]) -> List[LocusCoverage]:
         """
-        Generates a depth of coverage map for the provided BedRecords.
+        Calculates locus-level coverage statistics for the provided BedRecords.
+        Aggregates multiple BedRecords with the same locus tag into a single LocusCoverage object.
 
         Args:
-            bed_records (List[BedRecord]): A list of BedRecords to generate the depth of coverage map for.
+            bed_records (List[BedRecord]): A list of BedRecords to calculate locus coverage for.
         Returns:
-            dict[str, float]: A dictionary mapping BedRecord names to their average depth of coverage.
+            List[LocusCoverage]: A list of LocusCoverage objects representing coverage statistics for each locus tag.
         """
-        coverage_map = {}
+
+        locus_groups = defaultdict(list)
         for bed_record in bed_records:
-            coverage_map[bed_record.name] = bed_record.average_depth
-        return coverage_map
+            locus_groups[bed_record.locus_tag].append(bed_record)
 
+        locus_coverage_list = []
+        for locus_tag, bed_records in locus_groups.items():
+            all_reads_by_position = {}
+            for bed_record in bed_records:
+                # at this point there should be no overlapping regions across any BedRecords, this is double checking
+                if bed_record.reads_by_position.keys() & all_reads_by_position.keys():
+                    logger.warning(f"Overlapping regions detected for locus tag {locus_tag} when aggregating coverage statistics")
+                    raise ValueError(f"Overlapping regions detected for locus tag {locus_tag} when aggregating coverage statistics")
+                all_reads_by_position.update(bed_record.reads_by_position)
 
-    def get_low_coverage_list(self, bed_records: List[BedRecord]) -> List[str]:
-        """
-        Identifies BedRecords with breadth of coverage below the minimum threshold.
+            total_length = len(all_reads_by_position)
+            breadth_of_coverage = self._calculate_breadth_of_coverage(all_reads_by_position, total_length)
+            average_depth = self._calculate_average_depth(all_reads_by_position, total_length)
 
-        Args:
-            bed_records (List[BedRecord]): A list of BedRecords to check for low coverage.
-        Returns:
-            List[str]: A list of BedRecord names with breadth of coverage below the minimum threshold.
-        """
-        low_coverage_records = []
-        for bed_record in bed_records:
-            if bed_record.breadth_of_coverage < (self.config.MIN_PERCENT_COVERAGE * 100):
-                low_coverage_records.append(bed_record.name)
-        return low_coverage_records
+            locus_coverage = LocusCoverage(
+                locus_tag=locus_tag,
+                gene_names=[r.gene_name for r in bed_records],
+                coords=[r.coords for r in bed_records],
+                breadth_of_coverage=breadth_of_coverage,
+                average_depth=average_depth,
+            )
+            locus_coverage_list.append(locus_coverage)
+        return locus_coverage_list
