@@ -21,6 +21,9 @@ class GeneCoverage:
     def __str__(self):
         return f"GeneCoverage([{self.gene_name}][{self.locus_tag}][{self.coords}] BC:{self.breadth_of_coverage} AD:{self.average_depth})"
 
+    def __repr__(self):
+        return f"GeneCoverage([{self.gene_name}][{self.locus_tag}][{self.coords}] BC:{self.breadth_of_coverage} AD:{self.average_depth})"
+
     def __len__(self) -> int:
         return self.length
 
@@ -49,6 +52,9 @@ class LocusCoverage:
         self.average_depth = average_depth
 
     def __str__(self):
+        return f"LocusCoverage([{self.gene_names}][{self.locus_tag}][{self.coords}] BC:{self.breadth_of_coverage} AD:{self.average_depth})"
+
+    def __repr__(self):
         return f"LocusCoverage([{self.gene_names}][{self.locus_tag}][{self.coords}] BC:{self.breadth_of_coverage} AD:{self.average_depth})"
 
     def __len__(self) -> int:

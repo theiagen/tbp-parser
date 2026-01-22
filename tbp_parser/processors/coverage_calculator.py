@@ -45,7 +45,7 @@ class CoverageCalculator:
                 read_list = [read for read in read_list if read in whitelisted_reads]
                 # reads_removed = len(rec.get_query_names()) - len(read_list)
                 # if reads_removed > 0:
-                #     self.logger.debug(f"{bed_record}Position: {rec.pos + 1} | Total Reads: {len(rec.get_query_names())} | Non-overlapping Reads: {len(read_list)} | Reads Removed: {reads_removed}")
+                #     logger.debug(f"{bed_record} | Position: {rec.pos + 1} | Total Reads: {len(rec.get_query_names())} | Non-overlapping Reads: {len(read_list)} | Reads Removed: {reads_removed}")
 
             reads_by_position[rec.pos + 1] = read_list # convert to 1-based indexing
         return reads_by_position
@@ -115,6 +115,10 @@ class CoverageCalculator:
                 # get names of all reads in non-overlapping regions for this bed_record
                 whitelisted_reads = bed_record.get_non_overlapping_reads(overlapping_bed_records)
 
+                # just for logging/debugging
+                non_overlapping_coords = bed_record.get_non_overlapping_coords(overlapping_bed_records)
+                logger.debug(f"{bed_record} | Non-overlapping coords: {non_overlapping_coords}")
+
                 # reassigning reads_by_position for this bedrecord only considering the whitelisted reads
                 bed_record.reads_by_position = self._fetch_reads_by_position(bed_record, input_bam, whitelisted_reads)
         return bed_records
@@ -162,15 +166,13 @@ class CoverageCalculator:
         for bed_record in bed_records:
             locus_groups[bed_record.locus_tag].append(bed_record)
 
+        # at this point, overlaps should be resolved, so we can just aggregate reads_by_position
         locus_coverage_list = []
         for locus_tag, bed_records in locus_groups.items():
-            all_reads_by_position = {}
+            all_reads_by_position = defaultdict(list)
             for bed_record in bed_records:
-                # at this point there should be no overlapping regions across any BedRecords, this is double checking
-                if bed_record.reads_by_position.keys() & all_reads_by_position.keys():
-                    logger.warning(f"Overlapping regions detected for locus tag {locus_tag} when aggregating coverage statistics")
-                    raise ValueError(f"Overlapping regions detected for locus tag {locus_tag} when aggregating coverage statistics")
-                all_reads_by_position.update(bed_record.reads_by_position)
+                for pos, reads in bed_record.reads_by_position.items():
+                    all_reads_by_position[pos].extend(reads)
 
             total_length = len(all_reads_by_position)
             breadth_of_coverage = self._calculate_breadth_of_coverage(all_reads_by_position, total_length)

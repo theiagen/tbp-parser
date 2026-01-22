@@ -15,6 +15,9 @@ class BedRecord:
     def __str__(self):
         return f"BedRecord([{self.gene_name}][{self.locus_tag}]{self.coords})"
 
+    def __repr__(self):
+        return f"BedRecord([{self.gene_name}][{self.locus_tag}]{self.coords})"
+
     def __len__(self) -> int:
         return self.length
 
@@ -45,6 +48,13 @@ class BedRecord:
             drug=cols[5].strip().split(',')
         )
 
+    def get_unique_reads(self) -> set[str]:
+        """Get a set of unique read names covering this BedRecord."""
+        unique_reads = set()
+        for read_list in self.reads_by_position.values():
+            unique_reads.update(read_list)
+        return unique_reads
+
     def overlaps_with(self, other: 'BedRecord') -> bool:
         """Check if this BedRecord overlaps with another BedRecord.
 
@@ -62,35 +72,85 @@ class BedRecord:
         Args:
             other (BedRecord): Another BedRecord to get overlapping coordinates with.
         Returns:
-            tuple[int, int] | None: A tuple containing the start and end of the overlapping region, or None if there is no overlap.
+            tuple[int, int]: A tuple containing the start and end of the overlapping region.
         """
+        # exception here because this should only be called if an overlap exists
+        # can change this behavior if needed later
         if not self.overlaps_with(other):
             raise Exception("No overlap exists between BedRecords")
         overlap_start = max(self.start, other.start)
         overlap_end = min(self.end, other.end)
         return (overlap_start, overlap_end)
 
-    def get_non_overlapping_reads(self, overlapping_bed_records: list['BedRecord']) -> set[str]:
+    def _get_non_overlapping_positions(self, others: list['BedRecord']) -> set[int]:
+        """Get the non-overlapping positions between this BedRecord and another BedRecord.
+
+        Args:
+            others (list['BedRecord']): A list of BedRecord instances that overlap with this BedRecord.
+        Returns:
+            set[int]: A set of non-overlapping positions.
+        """
+        # collect all positions from this BedRecord
+        non_overlapping_positions = set(range(self.start, self.end + 1))
+
+        # remove positions that overlap with `other` bed_records
+        for other in others:
+            if self.overlaps_with(other):
+                overlap_start, overlap_end = self.overlapping_coords(other)
+                # remove overlapping positions from the set
+                non_overlapping_positions -= set(range(overlap_start, overlap_end + 1))
+
+        return non_overlapping_positions
+
+    def get_non_overlapping_coords(self, others: list['BedRecord']) -> list[tuple[int, int]]:
+        """Get the non-overlapping coordinates between this BedRecord and another BedRecord.
+        Args:
+            others (list['BedRecord']): A list of BedRecord instances that overlap with this BedRecord.
+        Returns:
+            list[tuple[int, int]]: A list of tuples containing the start and end of non-overlapping regions.
+                                   Empty list when self is completely contained within other.
+                                   1 tuple when they partially overlap on one side.
+                                   2 tuples when other is completely contained within self.
+        """
+        non_overlapping_positions = self._get_non_overlapping_positions(others)
+        if not non_overlapping_positions:
+            return []
+
+        # convert set of ordered positions back to a list of tuples
+        coords = []
+        sorted_positions = sorted(non_overlapping_positions)
+        start = sorted_positions[0]
+        prev = start
+
+        # if a gap is detected, that indicates the end of a non-overlapping region
+        for pos in sorted_positions[1:]:
+            if pos != prev + 1:
+                coords.append((start, prev))
+                start = pos
+            prev = pos
+
+        # add the last region
+        coords.append((start, prev))
+
+        # sanity check - should be at most 2 non-overlapping regions
+        if len(coords) > 2:
+            raise ValueError(f"Expected at most 2 non-overlapping regions, got {len(coords)}: {coords}")
+        return coords
+
+    def get_non_overlapping_reads(self, others: list['BedRecord']) -> set[str]:
         """Get a list of unique reads that cover the specified range within this BedRecord.
         Needed for when a bed_record overlaps with one or more other bed_records to avoid double-counting reads.
 
         Args:
-            overlapping_bed_records (list['BedRecord']): A list of BedRecord instances that overlap with this BedRecord.
+            others (list['BedRecord']): A list of BedRecord instances that overlap with this BedRecord.
         Returns:
             set[str]: A set of unique read names covering the specified range.
         """
-        # collect all positions from this BedRecord
-        all_positions = set(range(self.start, self.end + 1))
-
-        # remove positions that overlap with other bed_records
-        for other in overlapping_bed_records:
-            overlap_start, overlap_end = self.overlapping_coords(other)
-            # remove overlapping positions from the set
-            all_positions -= set(range(overlap_start, overlap_end + 1))
+        non_overlapping_positions = self._get_non_overlapping_positions(others)
 
         # get reads from non-overlapping positions only in this BedRecord
         unique_reads = set()
-        for pos in all_positions:
+        for pos in non_overlapping_positions:
             if pos in self.reads_by_position:
                 unique_reads.update(self.reads_by_position[pos])
         return unique_reads
