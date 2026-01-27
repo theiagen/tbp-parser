@@ -87,7 +87,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.11.0 - fixes an issue where both mmpR5 and Rv0678 were being counted when calculating the percentage_lims_genes_above >= MIN_LOCUS_PERCENTAGE; minor changes to configuration parsing
 - v2.11.1 - handles missing positions for `alternative_consequence` variants
 - v2.11.2 - ensures that mutation QC is considered when determining tNGS lineage designation (MTBC ID)
-
+- v2.11.3 - adds missing proximal promoter region for Rv0678
 ---
 
 The following diagram shows how each version is related to the others without technical details:
