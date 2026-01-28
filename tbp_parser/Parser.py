@@ -9,12 +9,8 @@ from Coverage import Coverage
 from Laboratorian import Laboratorian
 from Looker import Looker
 from LIMS import LIMS
-from utils.config import Configuration
-from parsers.bed_parser import parse_bed_file
-from processors.coverage_calculator import CoverageCalculator
-from validator import Validator
 
-logger = logging.getLogger(__name__)
+
 class Parser:
     """This class orchestrates the different modules within the tbp_parser tool.
     
@@ -62,13 +58,68 @@ class Parser:
     
     """
 
-    def __init__(self, config: Configuration) -> None:
+    def __init__(self, options) -> None:
         """Initialize the Parser class
 
         Args:
             options (argparse.NameSpace): an object with the input arguments provided at runtime
         """        
-        self.config = config
+        logging.basicConfig(encoding='utf-8', level=logging.ERROR, stream=sys.stderr)
+        self.logger = logging.getLogger(__name__)
+        self.input_json = options.input_json
+        self.input_bam = options.input_bam
+        
+        self.config = options.config
+        
+        # test inputs
+        self.SEQUENCING_METHOD = options.sequencing_method
+        self.OUTPUT_PREFIX = options.output_prefix
+        self.OPERATOR = options.operator
+        
+        # files used to create the standard dictionaries
+        self.tbdb_bed = options.tbdb_bed
+        self.gene_tier_tsv = options.gene_tier_tsv
+        self.promoter_regions_tsv = options.promoter_regions_tsv
+        
+        self.MIN_PERCENT_COVERAGE = options.min_percent_coverage
+        self.MIN_PERCENT_LOCI_COVERED = options.min_percent_loci_covered
+        """The minimum percentage of LIMS genes to pass QC for MTBC identification to occur"""
+        self.MIN_DEPTH = options.min_depth
+        self.MIN_FREQUENCY = options.min_frequency
+        self.MIN_READ_SUPPORT = options.min_read_support
+        
+        # tngs-specific options
+        self.TNGS = options.tngs
+        self.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
+        self.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
+        self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = options.do_not_treat_r_mutations_differently
+        self.err_bed = options.err_bed
+        self.USE_ERR_AS_BRR = options.use_err_as_brr
+
+        # tngs-specific qc options that are hold-overs from prior versions; retained for backwards compatibility
+        self.TNGS_SPECIFIC_QC_OPTIONS = {
+            "RRS_FREQUENCY": options.rrs_frequency,
+            "RRS_READ_SUPPORT": options.rrs_read_support,
+            "RRL_FREQUENCY": options.rrl_frequency,
+            "RRL_READ_SUPPORT": options.rrl_read_support,
+            "ETHA237_FREQUENCY": options.etha237_frequency,
+            "RPOB449_FREQUENCY": options.rpob449_frequency,
+        }
+
+        # logging options
+        if options.verbose:
+            self.logger.setLevel(logging.INFO)
+            self.logger.info("PARSER:__init__:Verbose mode enabled")
+        elif options.debug:
+            self.logger.setLevel(logging.DEBUG)
+            self.logger.debug("PARSER:__init__:Debug mode enabled")
+        else:
+            self.logger.setLevel(logging.ERROR)
+
+        # configuration file overwrite
+        if self.config != "":
+            self.logger.info("PARSER:__init__:Overwriting variables with the provided config file")
+            self.overwrite_variables()
 
     def create_standard_dictionaries(self) -> tuple[dict[str, list[str]], dict[str, str], dict[str, list[int] | dict[str, list[int]]], dict[str, str], dict[str, list[int] | list[list[int]]]]:
         """Parses the provided coverage regions bed file to create the standard
@@ -100,14 +151,14 @@ class Parser:
         GENE_TO_ANTIMICROBIAL_DRUG_NAME = {}
         GENE_TO_LOCUS_TAG = {}
         TNGS_REGIONS = {}
-        with open(self.config.tbdb_bed, 'r') as bed_file:
+        with open(self.tbdb_bed, 'r') as bed_file:
             for line in bed_file:
                 cols = line.strip().split('\t')
                 gene_name = cols[4]
                 drugs = cols[5]
                 locus_tag = cols[3]
                              
-                if self.config.TNGS:
+                if self.TNGS:
                     start_pos = int(cols[1])
                     end_pos = int(cols[2])
                     
@@ -127,7 +178,7 @@ class Parser:
                 GENE_TO_LOCUS_TAG[gene_name] = locus_tag
 
         GENE_TO_TIER = {}
-        with open(self.config.gene_tier_tsv, 'r') as tier_file:
+        with open(self.gene_tier_tsv, 'r') as tier_file:
             for line in tier_file:
                 cols = line.strip().split('\t')
                 gene_name = cols[0]
@@ -136,7 +187,7 @@ class Parser:
                 GENE_TO_TIER[gene_name] = tier
        
         PROMOTER_REGIONS = {}
-        with open(self.config.promoter_regions_tsv, 'r') as promoter_file:
+        with open(self.promoter_regions_tsv, 'r') as promoter_file:
             for line in promoter_file:
                 cols = line.strip().split('\t')
                 gene_name = cols[0]
@@ -160,67 +211,79 @@ class Parser:
                                 
         return GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS
 
+    def overwrite_variables(self) -> None:
+        """This function overwrites the input variables provided at runtime with those 
+        from the config file
+        """
+        with open(self.config, "r") as config:
+            settings = yaml.safe_load(config)
+
+            for key, value in settings.items():
+                if key.replace("self.", "") in vars(self):
+                    setattr(self, key.replace("self.", ""), value)
+                    self.logger.info("PARSER:overwrite_variables:self.{} has been overwritten with a config-specified value".format(key))
+                if key.replace("globals.", "") in dir(globals_):
+                    setattr(globals_, key.replace("globals.", ""), value) 
+                    self.logger.info("PARSER:overwrite_variables:globals.{} has been overwritten with a config-specified value".format(key))
+
+    def check_dependency_exists(self) -> None:
+        """This function confirms that samtools is installed and available; if it is
+        not, the program exits with an error message.
+        """
+        result = subprocess.run(
+            ["samtools", "--version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        if result.returncode != 0:
+            self.logger.critical("PARSER:Error: samtools not found. Please install samtools and try again.")
+            sys.exit(1)
 
     def run(self) -> None:
         """This function runs the main logic of the Parser class, orchestrating the
         different modules to generate the desired reports.
         """    
-        logger.info("Checking for dependencies")
+        self.logger.info("PARSER:run:Checking for dependencies")
+        self.check_dependency_exists()
+
         GENE_TO_ANTIMICROBIAL_DRUG_NAME, GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS = self.create_standard_dictionaries()
         
-        logger.info("Calculating coverage statistics")
-        coverage = Coverage(logger, self.config.input_bam, self.config.OUTPUT_PREFIX, self.config.tbdb_bed, TNGS_REGIONS, self.config.USE_ERR_AS_BRR, self.config.err_bed)
-        # COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.config.MIN_PERCENT_COVERAGE, self.config.MIN_DEPTH, self.config.TNGS)
+        self.logger.info("PARSER:run:Calculating coverage statistics")
+        coverage = Coverage(self.logger, self.input_bam, self.OUTPUT_PREFIX, self.tbdb_bed, TNGS_REGIONS, self.USE_ERR_AS_BRR, self.err_bed)
+        COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST = coverage.get_coverage(self.MIN_PERCENT_COVERAGE, self.MIN_DEPTH, self.TNGS)
 
-        bed_records = parse_bed_file(self.config.tbdb_bed)
-        coverage_calculator = CoverageCalculator(self.config)
-        bed_records = coverage_calculator.generate_cov_attr(bed_records)
-        bed_records = coverage_calculator.update_overlapping_bed_records(bed_records)
-        COVERAGE_DICTIONARY = coverage_calculator.get_breadth_of_coverage_map(bed_records)
-        AVERAGE_LOCI_COVERAGE = coverage_calculator.get_depth_of_coverage_map(bed_records)
-        LOW_DEPTH_OF_COVERAGE_LIST = coverage_calculator.get_low_coverage_list(bed_records)
-
-        coverage.brr_coverage_dictionary = COVERAGE_DICTIONARY
-        coverage.average_loci_coverage = AVERAGE_LOCI_COVERAGE
-
-        logger.info("Creating Laboratorian report")
-        laboratorian = Laboratorian(logger, self.config.input_json, self.config.OUTPUT_PREFIX, 
-                                    self.config.MIN_DEPTH, self.config.MIN_FREQUENCY, self.config.MIN_READ_SUPPORT, 
+        self.logger.info("PARSER:run:Creating Laboratorian report")
+        laboratorian = Laboratorian(self.logger, self.input_json, self.OUTPUT_PREFIX, 
+                                    self.MIN_DEPTH, self.MIN_FREQUENCY, self.MIN_READ_SUPPORT, 
                                     COVERAGE_DICTIONARY, LOW_DEPTH_OF_COVERAGE_LIST, GENE_TO_ANTIMICROBIAL_DRUG_NAME, 
-                                    GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.config.TNGS, 
-                                    self.config.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY, self.config.TNGS_READ_SUPPORT_BOUNDARIES,
-                                    self.config.TNGS_FREQUENCY_BOUNDARIES, self.config.TNGS_SPECIFIC_QC_OPTIONS)
+                                    GENE_TO_LOCUS_TAG, TNGS_REGIONS, GENE_TO_TIER, PROMOTER_REGIONS, self.TNGS, 
+                                    self.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY, self.TNGS_READ_SUPPORT_BOUNDARIES,
+                                    self.TNGS_FREQUENCY_BOUNDARIES, self.TNGS_SPECIFIC_QC_OPTIONS)
         DF_LABORATORIAN = laboratorian.create_laboratorian_report()
 
-        logger.info("Creating LIMS report")
-        lims = LIMS(logger, self.config.input_json, self.config.OUTPUT_PREFIX, LOW_DEPTH_OF_COVERAGE_LIST, 
+        self.logger.info("PARSER:run:Creating LIMS report")
+        lims = LIMS(self.logger, self.input_json, self.OUTPUT_PREFIX, LOW_DEPTH_OF_COVERAGE_LIST, 
                     laboratorian.SAMPLE_NAME, DF_LABORATORIAN, laboratorian.positional_qc_fails,
                     laboratorian.genes_with_valid_deletions)
-        DF_LIMS = lims.create_lims_report(self.config.TNGS, self.config.MIN_PERCENT_LOCI_COVERED, self.config.OPERATOR)
+        lims.create_lims_report(self.TNGS, self.MIN_PERCENT_LOCI_COVERED, self.OPERATOR)
 
-        logger.info("Creating Looker report")
-        looker = Looker(logger, self.config.OUTPUT_PREFIX, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.genes_with_valid_deletions, GENE_TO_ANTIMICROBIAL_DRUG_NAME)
-        DF_LOOKER = looker.create_looker_report(laboratorian.SAMPLE_NAME, self.config.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.config.OPERATOR)
+        self.logger.info("PARSER:run:Creating Looker report")
+        looker = Looker(self.logger, self.OUTPUT_PREFIX, DF_LABORATORIAN, LOW_DEPTH_OF_COVERAGE_LIST, laboratorian.genes_with_valid_deletions, GENE_TO_ANTIMICROBIAL_DRUG_NAME)
+        looker.create_looker_report(laboratorian.SAMPLE_NAME, self.SEQUENCING_METHOD, lims.LINEAGE, lims.LINEAGE_ENGLISH, self.OPERATOR)
 
-        logger.info("Creating coverage report")
-        DF_COVERAGE = coverage.create_coverage_report(laboratorian.SAMPLE_NAME, laboratorian.genes_with_valid_deletions)
+        self.logger.info("PARSER:run:Creating coverage report")
+        coverage.create_coverage_report(laboratorian.SAMPLE_NAME, laboratorian.genes_with_valid_deletions)
 
         if len(globals_.OUTPUT_RENAMING) > 0:
-            logger.info("Renaming output columns as specified in globals.OUTPUT_RENAMING")
+            self.logger.info("PARSER:run:Renaming output columns as specified in globals.OUTPUT_RENAMING")
             
             # only rename the fields in the final output files
             file_suffixes = [".lims_report.csv", ".laboratorian_report.csv", ".looker_report.csv", ".coverage_report.csv"]
             for output_suffix in file_suffixes:
-                for line in fileinput.input(self.config.OUTPUT_PREFIX + output_suffix, inplace=True):
+                for line in fileinput.input(self.OUTPUT_PREFIX + output_suffix, inplace=True):
                     # match full words to prevent partial replacements
                     print(re.sub('|'.join(r'\b%s\b' % re.escape(original) for original in globals_.OUTPUT_RENAMING.keys()),
                                  lambda match: globals_.OUTPUT_RENAMING[match.group(0)], line), end="")
-
-        Validator(
-            DF_LABORATORIAN,
-            DF_COVERAGE,
-            DF_LOOKER,
-            DF_LIMS,
-        ).compare()
                     
-        logger.info("Parsing completed")
+        self.logger.info("PARSER:run:Parsing completed")

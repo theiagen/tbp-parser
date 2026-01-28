@@ -223,4 +223,3 @@ class Coverage:
 
         DF_COVERAGE = pd.DataFrame(coverage_report)
         DF_COVERAGE.to_csv(self.OUTPUT_PREFIX + ".coverage_report.csv", float_format="%.2f", index=False)
-        return DF_COVERAGE
