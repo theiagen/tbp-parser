@@ -1,8 +1,13 @@
 import logging
 import sys
+from pathlib import Path
 
-def setup_logger(level: int = logging.INFO):
+def setup_logger(
+    output_prefix: Path,
+    level: int,
+    ):
     """Configure logging for the entire application."""
+
 
     logging.basicConfig(
         encoding='utf-8',
@@ -11,6 +16,6 @@ def setup_logger(level: int = logging.INFO):
         datefmt='%Y-%m-%d %H:%M:%S',
         handlers=[
             logging.StreamHandler(sys.stderr),
-            logging.FileHandler(f"tbp_parser.log", mode='a', encoding='utf-8'),
+            logging.FileHandler(f"{output_prefix}.log", mode='a', encoding='utf-8'),
         ]
       )

@@ -18,7 +18,10 @@ from reporters.reporter import Reporter
 
 def main():
     options = parse_arguments()
-    setup_logger(logging.DEBUG if options.debug else logging.INFO)
+    setup_logger(
+        output_prefix=options.output_prefix,
+        level=logging.DEBUG if options.debug else logging.INFO,
+    )
 
     check_dependency_exists()
 

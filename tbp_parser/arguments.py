@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-import importlib_resources
+from pathlib import Path
 from utils import __VERSION__
 from utils.check_inputs import (
   is_boundary_valid,
@@ -10,12 +10,27 @@ from utils.check_inputs import (
   is_optional_file_valid,
 )
 
+
+def resolve_output_prefix(output_prefix: str) -> Path:
+    """
+    Resolve the output prefix to handle directories and file names.
+    Give default file name if only a directory is provided.
+    """
+    output_path = Path(output_prefix)
+    if output_prefix.endswith('/'):
+        output_path.mkdir(parents=True, exist_ok=True)
+        output_path = output_path / "tbp_parser"
+    else:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+    return output_path
+
+
 def parse_arguments():
-    home_dir = importlib_resources.files("tbp_parser")
-    default_tbdb_bed = home_dir.joinpath("..", "data", "tbdb.bed")
-    default_gene_tier_tsv = home_dir.joinpath("..", "data", "gene-to-tier_2025-12-10.tsv")
-    default_promoter_regions = home_dir.joinpath("..", "data", "who-v2-promoters_2025-12-10.tsv")
-    default_lims_report_format = home_dir.joinpath("..", "data", "default-lims-report-format.yml")
+    data_dir = Path(__file__).parent.parent / "data"
+    default_tbdb_bed = data_dir / "tbdb.bed"
+    default_gene_tier_tsv = data_dir / "gene-to-tier_2025-12-10.tsv"
+    default_promoter_regions = data_dir / "who-v2-promoters_2025-12-10.tsv"
+    default_lims_report_format = data_dir / "default-lims-report-format.yml"
 
     parser = argparse.ArgumentParser(
         prog = "tbp-parser",
@@ -68,7 +83,7 @@ def parse_arguments():
     general_arguments.add_argument("-t", "--operator",
                         help="the operator who ran the sequencing; used in the LIMS & Looker reports\n** Enclose in quotes if includes a space\ndefault=\"Operator not provided\"", default="Operator not provided", metavar="\b")
     general_arguments.add_argument("-o", "--output_prefix",
-                        help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b")
+                        help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b", type=resolve_output_prefix)
     ### TO-DO: create dict format validation function
     general_arguments.add_argument("-fr", "--find_and_replace",
                         help="a dictionary (in string format) used to find and replace text in the LIMS report\nExample: '--find_and_replace \"{'old_text1': 'new_text1', 'old_text2': 'new_text2'}\"'", default="{}", metavar="\b")
