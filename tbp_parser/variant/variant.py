@@ -1,6 +1,3 @@
-import copy
-import globals as globals_
-from Row import Row
 from typing import Optional
 import logging
 
@@ -52,10 +49,16 @@ class Variant:
         # private attribute to access via property
         self._protein_change: str = protein_change
 
-        # QC and interpretation-related attributes to be populated later
+        # VariantInterpreter will assign these attributes later
         self.rationale: Optional[str] = None
         self.looker_interpretation: Optional[str] = None
         self.mdl_interpretation: Optional[str] = None
+
+        # assigned during parsing, but probably a better way to assign this
+        self.sample_id: Optional[str] = None
+
+        # VariantQC will assign these attributes later
+        self.fails_qc: Optional[bool] = False
         self.warning: set[str] = set()
 
     @property
@@ -68,7 +71,6 @@ class Variant:
     @property
     def read_support(self) -> float:
         return self.freq * self.depth
-
 
     @classmethod
     def from_thin_air(cls, gene_id: str, gene_name: str, drug: str) -> 'Variant':
@@ -130,8 +132,8 @@ class Variant:
           "Assoc w R": 5,
           "Assoc w R - Interim": 4,
           "Uncertain significance": 3,
-          "Not assoc w R - Interim": 2,
-          "Not assoc w R": 1,
+          "Not assoc w R - Interim": 2, # should these be flipped?
+          "Not assoc w R": 1, # should these be flipped?
           "No WHO annotation": 0,
         }
         new_variant_rank = annotation_rank[self.confidence]

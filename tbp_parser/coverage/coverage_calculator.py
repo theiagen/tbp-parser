@@ -6,8 +6,8 @@ from typing import Dict, Optional, List
 from collections import defaultdict
 
 from utils.config import Configuration
-from models.bed_record import BedRecord
-from models.coverage_data import GeneCoverage, LocusCoverage
+from coverage.bed_record import BedRecord
+from coverage.coverage_data import GeneCoverage, LocusCoverage
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ class CoverageCalculator:
         return bed_records
 
 
-    def generate_gene_coverage_list(self, bed_records: List[BedRecord]) -> List[GeneCoverage]:
+    def generate_gene_coverage_map(self, bed_records: List[BedRecord]) -> Dict[str,GeneCoverage]:
         """
         Calculates gene-level coverage statistics for the provided BedRecords.
         One GeneCoverage object is created per BedRecord.
@@ -132,9 +132,9 @@ class CoverageCalculator:
         Args:
             bed_records (List[BedRecord]): A list of BedRecords to calculate gene coverage for.
         Returns:
-            List[GeneCoverage]: A list of GeneCoverage objects representing coverage statistics for each gene.
+            Dict[str,GeneCoverage]: A dictionary of GeneCoverage objects representing coverage statistics for each gene.
         """
-        gene_coverage_list = []
+        gene_coverage_map = {}
         for bed_record in bed_records:
             total_length = bed_record.length
             breadth_of_coverage = self._calculate_breadth_of_coverage(bed_record.reads_by_position, total_length)
@@ -147,11 +147,11 @@ class CoverageCalculator:
                 breadth_of_coverage=breadth_of_coverage,
                 average_depth=average_depth,
             )
-            gene_coverage_list.append(gene_coverage)
-        return gene_coverage_list
+            gene_coverage_map[bed_record.gene_name] = gene_coverage
+        return gene_coverage_map
 
 
-    def generate_locus_coverage_list(self, bed_records: List[BedRecord]) -> List[LocusCoverage]:
+    def generate_locus_coverage_map(self, bed_records: List[BedRecord]) -> Dict[str,LocusCoverage]:
         """
         Calculates locus-level coverage statistics for the provided BedRecords.
         Aggregates multiple BedRecords with the same locus tag into a single LocusCoverage object.
@@ -159,7 +159,7 @@ class CoverageCalculator:
         Args:
             bed_records (List[BedRecord]): A list of BedRecords to calculate locus coverage for.
         Returns:
-            List[LocusCoverage]: A list of LocusCoverage objects representing coverage statistics for each locus tag.
+            Dict[str,LocusCoverage]: A dictionary of LocusCoverage objects representing coverage statistics for each locus tag.
         """
 
         locus_groups = defaultdict(list)
@@ -167,7 +167,7 @@ class CoverageCalculator:
             locus_groups[bed_record.locus_tag].append(bed_record)
 
         # at this point, overlaps should be resolved, so we can just aggregate reads_by_position
-        locus_coverage_list = []
+        locus_coverage_map = {}
         for locus_tag, bed_records in locus_groups.items():
             all_reads_by_position = defaultdict(list)
             for bed_record in bed_records:
@@ -185,5 +185,5 @@ class CoverageCalculator:
                 breadth_of_coverage=breadth_of_coverage,
                 average_depth=average_depth,
             )
-            locus_coverage_list.append(locus_coverage)
-        return locus_coverage_list
+            locus_coverage_map[locus_tag] = locus_coverage
+        return locus_coverage_map

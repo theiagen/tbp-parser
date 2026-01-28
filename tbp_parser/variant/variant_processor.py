@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from models.variant import Variant
+from variant import Variant
 from utils.gene_database import GeneDatabase
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from models.bed_record import BedRecord
+from coverage.bed_record import BedRecord
 
 logger = logging.getLogger(__name__)
 

@@ -63,3 +63,26 @@ class LocusCoverage:
     @property
     def length(self) -> int:
         return sum(end - start for start, end in self.coords)
+
+    def contains_position(self, position: int) -> bool:
+        """Check if a specific position exists within locus coverage.
+
+        Args:
+            position (int): The position to check.
+        Returns:
+            bool: True if the position is within any of the coordinate ranges, False otherwise.
+        """
+        for start, end in self.coords:
+            if start <= position <= end:
+                return True
+        return False
+
+    def has_breadth_below(self, threshold: float) -> bool:
+        """Check if the locus coverage has low breadth of coverage.
+
+        Args:
+            threshold (float): The breadth of coverage threshold.
+        Returns:
+            bool: True if the breadth of coverage is below the threshold, False otherwise.
+        """
+        return self.breadth_of_coverage < threshold * 100

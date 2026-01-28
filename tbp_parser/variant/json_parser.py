@@ -3,7 +3,7 @@ import logging
 from typing import List
 from copy import deepcopy
 
-from models.variant import Variant
+from variant import Variant
 from utils.gene_database import GeneDatabase
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ def parse_tbprofiler_json(json_path: str) -> List[Variant]:
         data = json.load(f)
 
     logger.debug(f"Parsing `dr_variants` and `other_variants` from JSON")
-    logger.debug(f"Found {len(data.get('dr_variants', []))} dr_variants and {len(data.get('other_variants', []))} other_variants")
+    logger.debug(f"Found {len(data.get('dr_variants', []))} `dr_variants` and {len(data.get('other_variants', []))} `other_variants`")
 
     # process both dr_variants and other_variants
     all_variant_records = []
@@ -43,6 +43,9 @@ def parse_tbprofiler_json(json_path: str) -> List[Variant]:
     for variant_record in all_variant_records:
         variants = _extract_variant_annotations(variant_record)
         all_variants.extend(variants)
+
+    # this probably should be assigned somewhere else
+    [setattr(v, "sample_id", data.get("id")) for v in all_variants]
 
     logger.debug(f"Total Variant objects from JSON: {len(all_variants)}")
     return all_variants
