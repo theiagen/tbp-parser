@@ -1,4 +1,6 @@
 from typing import Optional
+from utils import GeneDatabase, Helper
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,11 +24,11 @@ class Variant:
         gene_name: str,
         type: str,
         nucleotide_change: str,
+        protein_change: str,
         confidence: str,
         drug: str,
         source: str,
         comment: str,
-        protein_change: str = "",
     ) -> None:
         """Initializes the Variant class
 
@@ -34,70 +36,37 @@ class Variant:
             variant_data (dict): a dictionary of attributes about the variant.
         """
 
-        # initialize the variant attributes from variant_data dictionary. purposely error if key is missing
+        # initialize the variant attributes from input JSON dictionary. purposely error if key is missing
+        self.sample_id: str = sample_id
         self.pos: int = pos
         self.depth: int = depth
         self.freq: float = freq
+        self.read_support: float = self.freq * self.depth
         self.gene_id: str = gene_id
         self.gene_name: str = gene_name
         self.type: str = type
         self.nucleotide_change: str = nucleotide_change
+        self.protein_change: str = protein_change
+
         # annotation-related attributes
-        self.confidence = confidence
-        self.drug = drug
-        self.source = source
-        self.comment = comment
-        # private attribute to access via property
-        self._protein_change: str = protein_change
+        self.confidence: str = confidence
+        self.drug: str = drug
+        self.source: str = source
+        self.comment: str = comment
 
         # VariantInterpreter will assign these attributes later
         self.rationale: Optional[str] = None
         self.looker_interpretation: Optional[str] = None
         self.mdl_interpretation: Optional[str] = None
 
-        # assigned during parsing, but probably a better way to assign this
-        self.sample_id: Optional[str] = None
-
         # VariantQC will assign these attributes later
         self.fails_qc: Optional[bool] = False
         self.warning: set[str] = set()
 
-    @property
-    def protein_change(self) -> str:
-        """Helper method to get the `change` attribute based on variant type"""
-        if self.type == "synonymous_variant" or not self._protein_change:
-            return self.nucleotide_change
-        return self._protein_change
-
-    @property
-    def read_support(self) -> float:
-        return self.freq * self.depth
-
-    @classmethod
-    def from_thin_air(cls, gene_id: str, gene_name: str, drug: str) -> 'Variant':
-        """Creates a Variant object with minimal information for unreported/WT variants.
-
-        Args:
-            gene_id (str): The gene ID of the variant.
-            gene_name (str): The gene name of the variant.
-            drug (str): The drug associated with the variant.
-        Returns:
-            Variant: A Variant object with minimal information.
-        """
-        return cls(
-            pos=-1,
-            depth=-1,
-            freq=-1.0,
-            gene_id=gene_id,
-            gene_name=gene_name,
-            type="NA",
-            nucleotide_change="NA",
-            protein_change="NA",
-            confidence="NA",
-            drug=drug,
-            source="",
-            comment="",
-        )
+        # derive these attributes from various functions
+        self.gene_tier: str = GeneDatabase.get_tier(self.gene_name) if self.gene_name in GeneDatabase._GENE_NAME_TO_LOCUS else "NA"
+        self.absolute_start: int = Helper.get_mutation_genomic_positions(self.pos, self.nucleotide_change)[0]
+        self.absolute_end: int = Helper.get_mutation_genomic_positions(self.pos, self.nucleotide_change)[1]
 
     def __str__(self) -> str:
         return f"Variant([{self.gene_name}][{self.gene_id}][{self.type}][{self.nucleotide_change}][{self.drug}][{self.confidence}])"
@@ -131,6 +100,7 @@ class Variant:
     def is_better_annotation_than(self, other: 'Variant') -> bool:
         annotation_rank = {
           "Assoc w R": 5,
+          "Assoc w R - interim": 4,
           "Assoc w R - Interim": 4,
           "Uncertain significance": 3,
           "Not assoc w R - Interim": 2, # should these be flipped?
@@ -152,4 +122,3 @@ class Variant:
                 return True
 
         return False
-
