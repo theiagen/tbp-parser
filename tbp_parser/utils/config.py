@@ -20,7 +20,6 @@ class Configuration:
         SEQUENCING_METHOD (str): the sequencing method used to generate the data
 
         tbdb_bed (str): the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations
-        gene_tier_tsv (str): the TSV file mapping genes to their tier
         promoter_regions_tsv (str): the TSV file containing the promoter regions to include in interpretation designations
 
         MIN_PERCENT_COVERAGE (float): the minimum percentage of a region that has depth above the threshold set by MIN_DEPTH to pass QC
@@ -85,7 +84,6 @@ class Configuration:
         # files to be parsed once and used across multiple classes
         self.tbdb_bed = options.tbdb_bed
         self.err_bed = options.err_bed
-        self.gene_tier_tsv = options.gene_tier_tsv
         self.promoter_regions_tsv = options.promoter_regions_tsv
         self.lims_report_format_yml = options.lims_report_format_yml
 
