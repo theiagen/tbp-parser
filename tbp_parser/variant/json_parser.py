@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List
+from typing import List, Tuple
 from copy import deepcopy
 
 from variant import Variant
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def json_entry_str(json_entry):
     return f"[{json_entry['gene_name']}][{json_entry['pos']}][{json_entry['type']}][{json_entry['nucleotide_change']}]"
 
-def parse_tbprofiler_json(json_path: str) -> List[Variant]:
+def parse_tbprofiler_json(json_path: str) -> Tuple[List[Variant], str]:
     """Parse TBProfiler JSON file into Variant objects.
 
     Reads the JSON, expands consequences for each variant entry,
@@ -21,14 +21,16 @@ def parse_tbprofiler_json(json_path: str) -> List[Variant]:
         json_path: Path to TBProfiler JSON output file
 
     Returns:
-        List of Variant objects extracted from the JSON
+        List of Variant objects extracted from the JSON and the sample ID
     """
     logger.debug(f"Parsing TBProfiler JSON: {json_path}")
 
     with open(json_path) as f:
         data = json.load(f)
 
-    logger.debug(f"Parsing `dr_variants` and `other_variants` from JSON")
+    sample_id = data.get("id", "NA")
+
+    logger.debug(f"Parsing `dr_variants` and `other_variants` JSON entries for sample ID: {sample_id}")
     logger.debug(f"Found {len(data.get('dr_variants', []))} `dr_variants` and {len(data.get('other_variants', []))} `other_variants`")
 
     # process both dr_variants and other_variants
@@ -41,14 +43,11 @@ def parse_tbprofiler_json(json_path: str) -> List[Variant]:
     # extract variant annotations from each expanded entry
     all_variants = []
     for variant_record in all_variant_records:
-        variants = _extract_variant_annotations(variant_record)
+        variants = _extract_variant_annotations(variant_record, sample_id)
         all_variants.extend(variants)
 
-    # this probably should be assigned somewhere else
-    [setattr(v, "sample_id", data.get("id")) for v in all_variants]
-
     logger.debug(f"Total Variant objects from JSON: {len(all_variants)}")
-    return all_variants
+    return all_variants, sample_id
 
 
 def _expand_consequences(variant_record: dict) -> List[dict]:
@@ -93,7 +92,7 @@ def _expand_consequences(variant_record: dict) -> List[dict]:
     return all_variant_records
 
 
-def _extract_variant_annotations(variant_record: dict) -> List[Variant]:
+def _extract_variant_annotations(variant_record: dict, sample_id: str) -> List[Variant]:
     """Extract Variant objects from a single variant entry.
 
     Creates one Variant per drug annotation, plus additional Variants
@@ -101,6 +100,7 @@ def _extract_variant_annotations(variant_record: dict) -> List[Variant]:
 
     Args:
         variant_record: Single variant entry (possibly expanded from consequences)
+        sample_id: The sample ID to assign to each Variant
 
     Returns:
         List of Variant objects
@@ -117,6 +117,7 @@ def _extract_variant_annotations(variant_record: dict) -> List[Variant]:
             confidence = "No WHO annotation"
 
         variant = Variant(
+            sample_id=sample_id,
             pos=variant_record['pos'],
             depth=variant_record['depth'],
             freq=variant_record['freq'],
@@ -138,6 +139,7 @@ def _extract_variant_annotations(variant_record: dict) -> List[Variant]:
     for drug in gene_associated_drug_list:
         source = "Mutation effect for given drug is not in TBDB"
         variants_list.append(Variant(
+            sample_id=sample_id,
             pos=variant_record['pos'],
             depth=variant_record['depth'],
             freq=variant_record['freq'],
@@ -157,6 +159,7 @@ def _extract_variant_annotations(variant_record: dict) -> List[Variant]:
     remaining_drug_list = set(GeneDatabase.get_drugs(variant_record['gene_id'])) - seen_drugs
     for drug in remaining_drug_list:
         variants_list.append(Variant(
+            sample_id=sample_id,
             pos=variant_record['pos'],
             depth=variant_record['depth'],
             freq=variant_record['freq'],

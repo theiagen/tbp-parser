@@ -49,7 +49,9 @@ class VariantProcessor:
 
     @staticmethod
     def generate_unreported_variants(
-        variants: List[Variant]
+        variants: List[Variant],
+        sample_id: str,
+        wildtype_candidates: List[str],
     ) -> List[Variant]:
         """Generate placeholder Variants for genes with no reported variants.
 
@@ -57,22 +59,46 @@ class VariantProcessor:
         had no mutations detected.
 
         Args:
-            variants: List of Variant objects (may contain duplicates)
+            variants: List of Variant objects
         Returns:
-            List of placeholder Variants for unreported genes
+            List of Variants for unreported genes
         """
+        # function to determine WT/NA status. wildtype_candidates is a list of locus tags
+        # found in the coverage map based on the user input BED file.
+        wildtype_status = lambda gene_id: "WT" if gene_id in wildtype_candidates else "NA"
+
         all_unreported_variants = []
         unique_variants = set([variant.gene_id for variant in variants])
         unreported_variants = [v for v in GeneDatabase.GENE_DATABASE.keys() if v not in unique_variants]
         for var in unreported_variants:
-            for drug in GeneDatabase.get_drugs(var):
-                variant = Variant.from_thin_air(
-                    gene_id=GeneDatabase.get_locus_tag(var),
-                    gene_name=GeneDatabase.get_gene_name(var),
+            drug_list = GeneDatabase.get_drugs(var)
+            for drug in drug_list:
+                # setting attributes for a WT/NA (unreported) Variant
+                gene_id = GeneDatabase.get_locus_tag(var)
+                gene_name = GeneDatabase.get_gene_name(var)
+
+                variant = Variant(
+                    sample_id=sample_id,
+                    pos=-1, # see `report_fmt` method in Variant class for handling of values during report writing
+                    depth=-1,
+                    freq=-1.0,
+                    gene_id=gene_id,
+                    gene_name=gene_name,
+                    type=wildtype_status(gene_id),
+                    nucleotide_change=wildtype_status(gene_id),
+                    protein_change=wildtype_status(gene_id),
+                    confidence="NA",
                     drug=drug,
+                    source="",
+                    comment="",
                 )
+                # there's probably a better way of doing this. trying to keep the typing always consistent.
+                # since read_support is freq * depth, to get it to report as NA in the lab report,
+                # we need it to be negative. see `get_report_fmt` in lab_report.py
+                variant.read_support = -1.0
+
                 all_unreported_variants.append(variant)
         logger.debug(f"Generated {len(all_unreported_variants)} unreported variant-drug combinations for WT reporting")
 
-        return variants + all_unreported_variants
+        return all_unreported_variants
 

@@ -14,6 +14,7 @@ class Variant:
     """
     def __init__(
         self,
+        sample_id: str,
         pos: int,
         depth: int,
         freq: float,
