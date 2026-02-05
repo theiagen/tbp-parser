@@ -1,16 +1,174 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from variant import Variant
+from variant.variant_record import VariantRecord, Annotation
 from utils.gene_database import GeneDatabase
 
 logger = logging.getLogger(__name__)
 
 class VariantProcessor:
-    """Process and analyze variants."""
+    """Process VariantRecords into Variant objects."""
 
-    @staticmethod
-    def deduplicate_variants(variants: List[Variant]) -> List[Variant]:
+    def process_variant_records(self, variant_records: List[VariantRecord]) -> List[Variant]:
+        """Process VariantRecords into Variant objects.
+
+        Expands consequences for each variant entry,
+        and extracts individual Variant objects (one per drug annotation).
+
+        Args:
+            variant_records: List of VariantRecord objects
+        Returns:
+            List of Variant objects extracted from the VariantRecords
+        """
+        all_variants = []
+        for variant_record in variant_records:
+            # expand consequences in VariantRecords if applicable -> will always return list of VariantRecords
+            expanded_variant_records = self._expand_consequences(variant_record)
+
+            # extract Variant objects from each expanded VariantRecord based on annotations -> will always return list of Variant objects
+            for record in expanded_variant_records:
+                variants = self._get_variants_from_annotations(record)
+                all_variants.extend(variants)
+
+        logger.debug(f"Total Variant objects from VariantRecords: {len(all_variants)}")
+        return all_variants
+
+    def _expand_consequences(self, variant_record: VariantRecord) -> List[VariantRecord]:
+        """Expand a VariantRecord into multiple entries based on consequences.
+
+        Some variants affect multiple genes (e.g., a mutation in mmpR5 that
+        also affects mmpL5 and mmpS5). This creates separate entries for each
+        affected gene.
+
+        Args:
+            variant_record: Single VariantRecord entry from TBProfiler JSON
+        Returns:
+            List of VariantRecords (original + consequences)
+        """
+        # Only expand if consequences exist and gene is one of mmpR5/mmpL5/mmpS5 otherwise return original
+        if (
+            not variant_record.consequences or
+            variant_record.gene_id not in ['Rv0676c', 'Rv0677c', 'Rv0678']
+        ):
+            return [variant_record]
+
+        logger.debug(f"Expanding {len(variant_record.consequences)} consequences for VariantRecord entry: {str(variant_record)}")
+
+        all_variant_records = []
+        for consequence in variant_record.consequences:
+            # Create a copy and update with consequence-specific data
+            new_vr = VariantRecord.from_consequences(variant_record, consequence)
+            all_variant_records.append(new_vr)
+
+        return all_variant_records
+
+    def _get_variants_from_annotations(self, variant_record: 'VariantRecord') -> List['Variant']:
+        """Creates Variants from a VariantRecord, expanding to all relevant drug associations
+        Args:
+            variant_record: A dictionary representing a single variant record from the tbp-profiler JSON output.
+        Returns:
+            A list of Variant instances.
+        """
+        if not variant_record.annotation:
+            return []
+
+        # Build complete set of annotations (original + synthetic)
+        all_annotations = self._expand_annotations_for_all_drugs(
+            variant_record.annotation,
+            variant_record.gene_associated_drugs,
+            variant_record.gene_id
+        )
+        # Convert each annotation to a Variant
+        variants = [
+            Variant(**variant_record.model_dump(), **anno.model_dump())
+            for anno in all_annotations
+        ]
+
+        logger.debug(
+            f"Created {len(variants)} Variant objects from {len(variant_record.annotation)} "
+            f"original annotations for gene {variant_record.gene_id}"
+        )
+        return variants
+
+    def _expand_annotations_for_all_drugs(
+        self,
+        original_annotations: List['Annotation'],
+        gene_associated_drugs: List[str],
+        gene_id: str
+    ) -> set['Annotation']:
+        """Expands annotations to include all relevant drug associations.
+
+        Creates synthetic annotations for:
+        1. Gene-associated drugs not in original annotations
+        2. All known drugs from GeneDatabase
+
+        Args:
+            original_annotations: Original annotations from TBProfiler
+            gene_associated_drugs: Drugs associated with this variant's gene
+            gene_id: Gene identifier for database lookup
+        Returns:
+            Set of all annotations (original + synthetic)
+        """
+        annotation_set = set(original_annotations)
+        seen_drugs = {anno.drug for anno in original_annotations}
+
+        # Add gene-associated drugs
+        annotation_set.update(
+            self._create_synthetic_annotations(
+                base_annotations=original_annotations,
+                new_drugs=set(gene_associated_drugs) - seen_drugs,
+                confidence="No WHO annotation",
+            )
+        )
+        seen_drugs.update(gene_associated_drugs)
+
+        # Add all drugs from GeneDatabase
+        annotation_set.update(
+            self._create_synthetic_annotations(
+                base_annotations=original_annotations,
+                new_drugs=set(GeneDatabase.get_drugs(gene_id)) - seen_drugs,
+                confidence="No WHO annotation",
+                source="Mutation effect for given drug is not in TBDB"
+            )
+        )
+
+        return annotation_set
+
+    def _create_synthetic_annotations(
+        self,
+        base_annotations: List['Annotation'],
+        new_drugs: set[str],
+        confidence: Optional[str] = None,
+        source: Optional[str] = None,
+        comment: Optional[str] = None,
+    ) -> List['Annotation']:
+        """Creates synthetic annotations for new drugs based on existing annotation patterns.
+
+        Args:
+            base_annotations: Existing annotations to use as templates
+            new_drugs: Drugs to create annotations for
+            confidence: Confidence level for synthetic annotations
+            source: Source information for synthetic annotations
+            comment: Comment for synthetic annotations (None = use template's value)
+        Returns:
+            List of synthetic annotations
+        """
+        synthetic = []
+        for drug in new_drugs:
+            for template in base_annotations:
+                # Only override non-None values
+                overrides = {
+                    'drug': drug,
+                    'confidence': confidence,
+                    'source': source,
+                    'comment': comment
+                }
+                updates = {k: v for k, v in overrides.items() if v is not None}
+                synthetic.append(template.model_copy(update=updates))
+        return synthetic
+
+    def deduplicate_variants(self, variants: List[Variant]) -> List[Variant]:
         """Deduplicate variants, keeping the one with best annotation.
 
         When multiple identical variants exist (same gene, position, drug),
@@ -18,7 +176,6 @@ class VariantProcessor:
 
         Args:
             variants: List of Variant objects (may contain duplicates)
-
         Returns:
             List of deduplicated Variants
         """
@@ -44,61 +201,34 @@ class VariantProcessor:
         logger.debug(
             f"Deduplicated {len(variants)} variants to {len(result)} unique variants"
         )
-
         return result
 
-    @staticmethod
     def generate_unreported_variants(
+        self,
         variants: List[Variant],
         sample_id: str,
-        wildtype_candidates: List[str],
     ) -> List[Variant]:
-        """Generate placeholder Variants for genes with no reported variants.
-
-        Used for wild-type reporting - creates Variants for genes that
-        had no mutations detected.
+        """Generate Variant objects for unreported gene/drug associations.
 
         Args:
             variants: List of Variant objects
+            sample_id: The sample ID associated with the variants.
         Returns:
             List of Variants for unreported genes
         """
-        # function to determine WT/NA status. wildtype_candidates is a list of locus tags
-        # found in the coverage map based on the user input BED file.
-        wildtype_status = lambda gene_id: "WT" if gene_id in wildtype_candidates else "NA"
-
         all_unreported_variants = []
         unique_variants = set([variant.gene_id for variant in variants])
         unreported_variants = [v for v in GeneDatabase.GENE_DATABASE.keys() if v not in unique_variants]
         for var in unreported_variants:
             drug_list = GeneDatabase.get_drugs(var)
             for drug in drug_list:
-                # setting attributes for a WT/NA (unreported) Variant
-                gene_id = GeneDatabase.get_locus_tag(var)
-                gene_name = GeneDatabase.get_gene_name(var)
-
-                variant = Variant(
+                variant = Variant.from_thin_air(
                     sample_id=sample_id,
-                    pos=-1, # see `report_fmt` method in Variant class for handling of values during report writing
-                    depth=-1,
-                    freq=-1.0,
-                    gene_id=gene_id,
-                    gene_name=gene_name,
-                    type=wildtype_status(gene_id),
-                    nucleotide_change=wildtype_status(gene_id),
-                    protein_change=wildtype_status(gene_id),
-                    confidence="NA",
-                    drug=drug,
-                    source="",
-                    comment="",
+                    gene_id=GeneDatabase.get_locus_tag(var),
+                    gene_name=GeneDatabase.get_gene_name(var),
+                    drug=drug
                 )
-                # there's probably a better way of doing this. trying to keep the typing always consistent.
-                # since read_support is freq * depth, to get it to report as NA in the lab report,
-                # we need it to be negative. see `get_report_fmt` in lab_report.py
-                variant.read_support = -1.0
-
                 all_unreported_variants.append(variant)
-        logger.debug(f"Generated {len(all_unreported_variants)} unreported variant-drug combinations for WT reporting")
 
+        logger.debug(f"Generated {len(all_unreported_variants)} unreported gene-drug combinations")
         return all_unreported_variants
-
