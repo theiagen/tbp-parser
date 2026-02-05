@@ -1,12 +1,14 @@
-from typing import Optional
+from typing import List, Optional, Any
 from utils import GeneDatabase, Helper
-
 import logging
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-class Variant:
-    """This class represents a single expanded variant reported by TBProfiler.
+class Variant(BaseModel):
+    """This class represents a single genetic variant that can be found in the Laboratorian report.
+
+    Core attributes include fields expanded from the TBProfiler output JSON.
 
     This class assumes that the variant has already been expanded such that
     each Variant instance represents a single gene-drug association. These
@@ -14,59 +16,47 @@ class Variant:
     in the tbp-profiler output JSON.
 
     """
-    def __init__(
-        self,
-        sample_id: str,
-        pos: int,
-        depth: int,
-        freq: float,
-        gene_id: str,
-        gene_name: str,
-        type: str,
-        nucleotide_change: str,
-        protein_change: str,
-        confidence: str,
-        drug: str,
-        source: str,
-        comment: str,
-    ) -> None:
-        """Initializes the Variant class
+    # Core attributes from TBProfiler necessary to define a Variant
+    sample_id: str
+    pos: int
+    depth: int
+    freq: float
+    gene_id: str
+    gene_name: str
+    type: str
+    nucleotide_change: str
+    protein_change: str
+    drug: str
+    confidence: str
+    source: str
+    comment: str
 
-        Args:
-            variant_data (dict): a dictionary of attributes about the variant.
-        """
+    # Derived fields (computed during init, excluded from serialization)
+    read_support: Optional[float] = Field(default=None, exclude=True)
+    gene_tier: Optional[str] = Field(default=None, exclude=True)
+    absolute_start: Optional[int] = Field(default=None, exclude=True)
+    absolute_end: Optional[int] = Field(default=None, exclude=True)
 
-        # initialize the variant attributes from input JSON dictionary. purposely error if key is missing
-        self.sample_id: str = sample_id
-        self.pos: int = pos
-        self.depth: int = depth
-        self.freq: float = freq
-        self.read_support: float = self.freq * self.depth
-        self.gene_id: str = gene_id
-        self.gene_name: str = gene_name
-        self.type: str = type
-        self.nucleotide_change: str = nucleotide_change
-        self.protein_change: str = protein_change
+    # Fields set by VariantInterpreter (excluded from serialization)
+    rationale: Optional[str] = Field(default=None, exclude=True)
+    looker_interpretation: Optional[str] = Field(default=None, exclude=True)
+    mdl_interpretation: Optional[str] = Field(default=None, exclude=True)
 
-        # annotation-related attributes
-        self.confidence: str = confidence
-        self.drug: str = drug
-        self.source: str = source
-        self.comment: str = comment
+    # Fields set by VariantQC (excluded from serialization)
+    fails_qc: Optional[bool] = Field(default=None, exclude=True)
+    warning: set[str] = Field(default_factory=set, exclude=True)
 
-        # VariantInterpreter will assign these attributes later
-        self.rationale: Optional[str] = None
-        self.looker_interpretation: Optional[str] = None
-        self.mdl_interpretation: Optional[str] = None
+    model_config = {"extra": "ignore"}
 
-        # VariantQC will assign these attributes later
-        self.fails_qc: Optional[bool] = False
-        self.warning: set[str] = set()
+    # Post-init processing to compute derived attributes
+    def model_post_init(self, __context: Any = None):
+        # Calculate read_support if not provided
+        if self.read_support is None:
+            self.read_support = self.freq * self.depth
 
-        # derive these attributes from various functions
-        self.gene_tier: str = GeneDatabase.get_tier(self.gene_name) if self.gene_name in GeneDatabase._GENE_NAME_TO_LOCUS else "NA"
-        self.absolute_start: int = Helper.get_mutation_genomic_positions(self.pos, self.nucleotide_change)[0]
-        self.absolute_end: int = Helper.get_mutation_genomic_positions(self.pos, self.nucleotide_change)[1]
+        # Derive computed attributes
+        self.gene_tier = GeneDatabase.get_tier(self.gene_name)
+        self.absolute_start, self.absolute_end = Helper.get_mutation_genomic_positions(self.pos, self.nucleotide_change)
 
     def __str__(self) -> str:
         return f"Variant([{self.gene_name}][{self.gene_id}][{self.type}][{self.nucleotide_change}][{self.drug}][{self.confidence}])"
@@ -97,6 +87,36 @@ class Variant:
             self.drug
         ))
 
+    @classmethod
+    def from_thin_air(cls, sample_id: str, gene_id: str, gene_name: str, drug: str) -> 'Variant':
+        """Create a Variant object from thin air.
+
+        Args:
+            sample_id (str): The sample ID.
+            gene_id (str): The locus tag of the gene.
+            gene_name (str): The name of the gene.
+            drug (str): The drug associated with the variant.
+
+        Returns:
+            Variant: A Variant object with appropriate fields set for WT/NA.
+        """
+        return cls(
+            sample_id=sample_id,
+            pos=-1,
+            depth=-1,
+            freq=-1.0,
+            read_support=-1.0,
+            gene_id=gene_id,
+            gene_name=gene_name,
+            drug=drug,
+            type="NA",
+            nucleotide_change="NA",
+            protein_change="NA",
+            confidence="NA",
+            source="",
+            comment="",
+        )
+
     def is_better_annotation_than(self, other: 'Variant') -> bool:
         annotation_rank = {
           "Assoc w R": 5,
@@ -105,7 +125,8 @@ class Variant:
           "Uncertain significance": 3,
           "Not assoc w R - Interim": 2, # should these be flipped?
           "Not assoc w R": 1, # should these be flipped?
-          "No WHO annotation": 0,
+          "Not found in WHO catalogue": 0, # this might be redundant with "No WHO annotation"
+          "No WHO annotation": -1, # given to synthetic variants
         }
         new_variant_rank = annotation_rank[self.confidence]
         existing_variant_rank = annotation_rank[other.confidence]
