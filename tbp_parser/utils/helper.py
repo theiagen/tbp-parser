@@ -1,5 +1,5 @@
 import re
-
+from typing import Any
 
 class Helper:
     """
@@ -72,3 +72,40 @@ class Helper:
             return False
         except:
             return False
+
+    @staticmethod
+    def normalize_field_values(obj: Any) -> None:
+        """Normalize field values in-place for all string attributes of a given object based on
+        predefined normalization rules. This function can be used in a post-init processor
+        for Pydantic models to ensure consistent formatting of specific fields.
+
+        Args:
+            obj: The object whose attributes will be normalized.
+
+        Returns:
+            None: The function modifies the object in-place
+        """
+        # Define normalization rules for specific fields: Format is {old_value}: {new_value}
+        DRUG_NAME_MAP = {
+            "rifampicin": "rifampin",
+        }
+        GENE_NAME_MAP = {
+            "fbiD": "Rv2983",
+            "mmpR5": "Rv0678",
+        }
+
+        # Normalize drug
+        if hasattr(obj, 'drug'):
+            obj.drug = DRUG_NAME_MAP.get(obj.drug.lower(), obj.drug)
+
+        # Normalize drug lists
+        if hasattr(obj, 'gene_associated_drugs'):
+            obj.gene_associated_drugs = [DRUG_NAME_MAP.get(d.lower(), d) for d in obj.gene_associated_drugs]
+
+        # Normalize gene_name
+        if hasattr(obj, 'gene_name'):
+            obj.gene_name = GENE_NAME_MAP.get(obj.gene_name, obj.gene_name)
+
+        # Set confidence from comment
+        if hasattr(obj, 'comment') and obj.comment == "Not found in WHO catalogue":
+            obj.confidence = "No WHO annotation"

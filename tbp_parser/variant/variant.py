@@ -58,6 +58,9 @@ class Variant(BaseModel):
         self.gene_tier = GeneDatabase.get_tier(self.gene_name)
         self.absolute_start, self.absolute_end = Helper.get_mutation_genomic_positions(self.pos, self.nucleotide_change)
 
+        # Normalize field values based on predefined rules
+        Helper.normalize_field_values(self)
+
     def __str__(self) -> str:
         return f"Variant([{self.gene_name}][{self.gene_id}][{self.type}][{self.nucleotide_change}][{self.drug}][{self.confidence}])"
 
