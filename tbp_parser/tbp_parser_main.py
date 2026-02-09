@@ -6,7 +6,14 @@ from utils.config import Configuration
 from utils.logger_setup import setup_logger
 
 from coverage import parse_bed_file, CoverageCalculator
-from variant import parse_tbprofiler_json, VariantProcessor, VariantInterpreter, VariantQC
+from variant import (
+    Variant,
+    VariantRecord,
+    VariantProcessor,
+    VariantInterpreter,
+    VariantQC,
+    parse_tbprofiler_json,
+)
 
 from reporters import (
     write_laboratorian_report,
@@ -38,20 +45,27 @@ def main():
     LOCUS_COVERAGE_MAP = coverage_calculator.generate_locus_coverage_map(bed_records)
     WILDTYPE_CANDIDATES = [_ for _ in LOCUS_COVERAGE_MAP.keys()]
 
-    # Variant parsing, deduplication, and unreported variant generation
-    all_variants, SAMPLE_ID = parse_tbprofiler_json(config.input_json)
-    all_variants = VariantProcessor.deduplicate_variants(all_variants)
-    unreported_variants = VariantProcessor.generate_unreported_variants(all_variants, SAMPLE_ID, WILDTYPE_CANDIDATES)
+    # VariantRecord parsing
+    variant_records, SAMPLE_ID = parse_tbprofiler_json(config.input_json)
+
+    # Variant processing: expansion, extraction, deduplication, unreported variant generation
+    variant_processor = VariantProcessor()
+    all_variants = variant_processor.process_variant_records(variant_records)
+    all_variants = variant_processor.deduplicate_variants(all_variants)
+    unreported_variants = variant_processor.generate_unreported_variants(all_variants, SAMPLE_ID)
 
     # Interpretation for all_variants and unreported_variants (defining WT/NA interpretations)
     variant_interpreter = VariantInterpreter()
     all_variants = variant_interpreter.determine_interpretation(all_variants)
-    unreported_variants = variant_interpreter.determine_interpretation(unreported_variants)
+    #unreported_variants = variant_interpreter.determine_interpretation(unreported_variants)
 
     # QC for all_variants (not necessary for unreported_variants)
     variant_qc = VariantQC(config)
-    variant_qc.add_qc_warning(all_variants, LOCUS_COVERAGE_MAP)
-    genes_with_valid_deletions = VariantQC.get_genes_with_valid_deletions(all_variants)
+    all_variants = variant_qc.apply_qc(all_variants, LOCUS_COVERAGE_MAP)
+    unreported_variants = variant_qc.apply_wildtype_qc(unreported_variants, LOCUS_COVERAGE_MAP)
+
+    # merge all_varaints and unreported variants for reporting
+    all_variants = all_variants + unreported_variants
 
     # Determine which genes have low depth of coverage
     low_depth_genes = [
@@ -59,16 +73,22 @@ def main():
         if coverage.has_breadth_below(config.MIN_PERCENT_COVERAGE)
     ]
 
-    reporter = Reporter(config)
-    reporter.write_laboratorian_report(all_variants)
+    GENES_WITH_VALID_DELETIONS = [str(variant.gene_name) for variant in all_variants if variant.is_valid_deletion]
 
     # Write reports
     write_laboratorian_report(config, all_variants)
 
-    # use err option here if applicable
+    _, raw_lineage, lineage_english = write_lims_report(
+        config, all_variants, low_depth_genes, GENES_WITH_VALID_DELETIONS
+    )
 
-    # laboratorian = Laboratorian(config, coverage.bed_records)
-    #laboratorian.run()
+    write_looker_report(
+        config, all_variants, low_depth_genes, GENES_WITH_VALID_DELETIONS,
+        raw_lineage, lineage_english
+    )
+
+    write_gene_coverage_report(config, SAMPLE_ID, GENE_COVERAGE_MAP)
+    write_locus_coverage_report(config, SAMPLE_ID, LOCUS_COVERAGE_MAP)
 
 
 if __name__ == "__main__":
