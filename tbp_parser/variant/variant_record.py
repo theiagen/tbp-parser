@@ -103,4 +103,5 @@ class VariantRecord(BaseModel):
             VariantRecord: A copy of the original VariantRecord instance, but populated with the new `consequences` attributes where applicable.
         """
         consequences_dict = consequences.model_dump()
+        consequences_dict.pop("annotation", None)  # Remove annotation to avoid overwriting
         return variant_record.model_copy(update=consequences_dict)

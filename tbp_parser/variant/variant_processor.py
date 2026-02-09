@@ -122,6 +122,7 @@ class VariantProcessor:
                 base_annotations=original_annotations,
                 new_drugs=set(gene_associated_drugs) - seen_drugs,
                 confidence="No WHO annotation",
+                comment=""
             )
         )
         seen_drugs.update(gene_associated_drugs)
@@ -132,7 +133,8 @@ class VariantProcessor:
                 base_annotations=original_annotations,
                 new_drugs=set(GeneDatabase.get_drugs(gene_id)) - seen_drugs,
                 confidence="No WHO annotation",
-                source="Mutation effect for given drug is not in TBDB"
+                source="Mutation effect for given drug is not in TBDB",
+                comment=""
             )
         )
 
