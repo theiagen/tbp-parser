@@ -28,23 +28,25 @@ class Variant(BaseModel):
     protein_change: str
     drug: str
     confidence: str
-    source: str
-    comment: str
+    rationale: str = "NA"
+    source: str = ""
+    comment: str = ""
 
     # Derived fields (computed during init, excluded from serialization)
+    # read_support: float = Field(default=0.0, exclude=True)
     read_support: Optional[float] = Field(default=None, exclude=True)
     gene_tier: Optional[str] = Field(default=None, exclude=True)
     absolute_start: Optional[int] = Field(default=None, exclude=True)
     absolute_end: Optional[int] = Field(default=None, exclude=True)
 
     # Fields set by VariantInterpreter (excluded from serialization)
-    rationale: Optional[str] = Field(default=None, exclude=True)
     looker_interpretation: Optional[str] = Field(default=None, exclude=True)
     mdl_interpretation: Optional[str] = Field(default=None, exclude=True)
 
     # Fields set by VariantQC (excluded from serialization)
     fails_qc: Optional[bool] = Field(default=None, exclude=True)
     warning: set[str] = Field(default_factory=set, exclude=True)
+    is_valid_deletion: bool = Field(default=False, exclude=True)
 
     model_config = {"extra": "ignore"}
 
@@ -93,6 +95,7 @@ class Variant(BaseModel):
     @classmethod
     def from_thin_air(cls, sample_id: str, gene_id: str, gene_name: str, drug: str) -> 'Variant':
         """Create a Variant object from thin air.
+        Will be converted to a WT/NA type Variant in VariantQC.
 
         Args:
             sample_id (str): The sample ID.
@@ -103,22 +106,30 @@ class Variant(BaseModel):
         Returns:
             Variant: A Variant object with appropriate fields set for WT/NA.
         """
-        return cls(
+        synthetic_variant = Variant(
             sample_id=sample_id,
             pos=-1,
             depth=-1,
             freq=-1.0,
-            read_support=-1.0,
             gene_id=gene_id,
             gene_name=gene_name,
-            drug=drug,
             type="NA",
             nucleotide_change="NA",
             protein_change="NA",
+            drug=drug,
             confidence="NA",
-            source="",
-            comment="",
+            read_support=-1.0,
         )
+        # Break pydantic typing for several fields to indicate unreported status
+        synthetic_variant = synthetic_variant.model_copy(
+            update={
+                "pos": "NA",
+                "depth": "NA",
+                "freq": "NA",
+                "read_support": "NA",
+            }
+        )
+        return synthetic_variant
 
     def is_better_annotation_than(self, other: 'Variant') -> bool:
         annotation_rank = {
