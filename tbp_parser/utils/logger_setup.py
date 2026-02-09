@@ -16,6 +16,6 @@ def setup_logger(
         datefmt='%Y-%m-%d %H:%M:%S',
         handlers=[
             logging.StreamHandler(sys.stderr),
-            logging.FileHandler(f"{output_prefix}.log", mode='a', encoding='utf-8'),
+            logging.FileHandler(f"{output_prefix}.log", mode='w', encoding='utf-8'),
         ]
       )
