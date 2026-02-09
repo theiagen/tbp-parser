@@ -48,15 +48,12 @@ def get_report_fmt(variant: Variant, attribute: str) -> Optional[str]:
         # conditions for reporting "NA"
         if attribute == "protein_change":
             return "NA"
-        # conditions for reporting empty strings ""
-        elif attribute in ["source", "comment", "rationale"]:
-            return ""
     # special reporting for non-empty attributes
-    elif attribute == "warning":
+    if attribute == "warning":
         return "; ".join(sorted(value))
-    # report negative numeric values as "NA" (used for depth, pos, freq, read_support in `unreported_variants``)
-    elif isinstance(value, (int, float)) and value < 0:
-        return "NA"
+    # # report negative numeric values as "NA" (used for depth, pos, freq, read_support in `unreported_variants``)
+    # elif isinstance(value, (int, float)) and value < 0:
+    #     return "NA"
     else:
         return str(value)
 
@@ -75,9 +72,9 @@ def sort_lab_df(df: pd.DataFrame) -> pd.DataFrame:
     df_na = df[df["tbprofiler_variant_substitution_nt"] == "NA"]
 
     # then sort each DataFrame by gene name (case insensitive)
-    df_other = df_other.sort_values(by="tbprofiler_gene_name", key=lambda col: col.str.lower()) # type: ignore
-    df_wt = df_wt.sort_values(by="tbprofiler_gene_name", key=lambda col: col.str.lower()) # type: ignore
-    df_na = df_na.sort_values(by="tbprofiler_gene_name", key=lambda col: col.str.lower()) # type: ignore
+    df_other = df_other.sort_values(by=["tbprofiler_gene_name", "tbprofiler_variant_substitution_nt", "antimicrobial"], key=lambda col: col.str.lower()) # type: ignore
+    df_wt = df_wt.sort_values(by=["tbprofiler_gene_name", "tbprofiler_variant_substitution_nt", "antimicrobial"], key=lambda col: col.str.lower()) # type: ignore
+    df_na = df_na.sort_values(by=["tbprofiler_gene_name", "tbprofiler_variant_substitution_nt", "antimicrobial"], key=lambda col: col.str.lower()) # type: ignore
 
     # concatenate them back together
     df_all = pd.concat([df_other, df_wt, df_na], ignore_index=True)
@@ -99,9 +96,12 @@ def write_laboratorian_report(config: Configuration, variants: list[Variant]) ->
         for col, attr in COLUMNS.items():
             row[col] = get_report_fmt(variant, attr)
 
-            # remove this!!! just for comparing to old reports right now
-            if row[col] == "mmpR5":
-                row[col] = "Rv0678"
+            # # remove this!!! just for comparing to old reports right now
+            # if row[col] == "mmpR5":
+            #     row[col] = "Rv0678"
+            # if row[col] == "fbiD":
+            #     row[col] = "Rv2983"
+
 
         rows.append(row)
 
