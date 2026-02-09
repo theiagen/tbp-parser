@@ -69,13 +69,19 @@ class CoverageCalculator:
     def _calculate_breadth_of_coverage(self, reads_by_position: dict[int, list[str]], length: int) -> float:
         # Calculates breadth of coverage for a given BedRecord.
         positions_above_min_depth = sum(1 for reads in reads_by_position.values() if len(reads) >= self.config.MIN_DEPTH)
-        return (positions_above_min_depth / length) * 100
+        try:
+            return (positions_above_min_depth / length) * 100
+        except ZeroDivisionError:
+            return 0.0
 
 
     def _calculate_average_depth(self, reads_by_position: dict[int, list[str]], length: int) -> float:
         # Calculates average depth of coverage for a given BedRecord.
         depth_sum = sum(len(reads) for reads in reads_by_position.values())
-        return depth_sum / length
+        try:
+            return depth_sum / length
+        except ZeroDivisionError:
+            return 0.0
 
 
     def resolve_overlapping_regions(self, bed_records: List[BedRecord]) -> List[BedRecord]:
