@@ -18,13 +18,13 @@ class InterpretationResult:
         looker_interpretation: Interpretation for Looker report (R, R-Interim, U, S, S-Interim)
         mdl_interpretation: Interpretation for MDL report (R, U, S, WT)
         rule_id: Document rule number for traceability (e.g., "1.1", "2.2.1.1")
-        rule_description: Human-readable description of the rule applied
+        rationale: Human-readable description of the rule applied
     """
     confidence: str
     looker_interpretation: str
     mdl_interpretation: str
     rule_id: str
-    rule_description: str
+    rationale: str
 
 
 class VariantInterpreter:
@@ -43,35 +43,31 @@ class VariantInterpreter:
     }
 
     def determine_interpretation(self, variants: List[Variant]) -> List[Variant]:
-        """Updated interpretation method using new rule-based structure.
-
-        This version uses the new interpret() method which provides:
-        - Detailed rule_id for audit trail
-        - Consistent InterpretationResult objects
-        - Clear traceability to interpretation document
+        """Updated interpretation method using rule-based structure.
+        We only care about determining the interpretation for Variants of interest/sequenced with a nucleotide change.
 
         Args:
             variants: List of Variant objects to interpret
+        Returns:
+            List of Variant objects with updated interpretation fields            
         """
         for variant in variants:
-
-            # Handle WT/NA unreported variants
-            if variant.nucleotide_change in ["WT", "NA"]:
-                variant.looker_interpretation = "S"
-                variant.mdl_interpretation = "WT"
+            # Handle synthetic unreported variants
+            if not variant.nucleotide_change:
+                variant.confidence = "NA"
+                variant.looker_interpretation = "NA"
+                variant.mdl_interpretation = "NA"
+                variant.rationale = "NA"
                 continue
-                # Note confidence already set to "NA" in `generate_unreported_variants`
-                # Note rationale already set to "" in `generate_unreported_variants`
-
 
             # Use interpret() method for all other cases
             result = self.interpret(variant)
 
-            # Update variant with interpretation results
+            # Update Variant object with InterpretationResult attributes
             variant.confidence = result.confidence
             variant.looker_interpretation = result.looker_interpretation
             variant.mdl_interpretation = result.mdl_interpretation
-            variant.rationale = result.rule_description
+            variant.rationale = result.rationale
 
             logger.debug(f"Variant {variant.gene_name} interpreted: rule={result.rule_id}, "
                         f"looker={result.looker_interpretation}, mdl={result.mdl_interpretation}")
@@ -118,11 +114,12 @@ class VariantInterpreter:
     def _has_who_confidence(self, variant: Variant) -> bool:
         """Check if variant has WHO confidence annotation.
 
-        Returns True if confidence is not empty, not "No WHO annotation", and not "NA".
+        Returns True if confidence is not empty, not "Not found in WHO catalogue", and not "NA".
         """
         return (
             variant.confidence is not None and
             variant.confidence != "" and
+            variant.confidence != "Not found in WHO catalogue" and
             variant.confidence != "No WHO annotation" and
             variant.confidence != "NA"
         )
@@ -162,7 +159,7 @@ class VariantInterpreter:
             looker_interpretation=looker,
             mdl_interpretation=mdl,
             rule_id=rule_id,
-            rule_description="WHO classification"
+            rationale="WHO classification"
         )
 
     def _interpret_without_who_confidence(self, variant: Variant, rule_id: str) -> InterpretationResult:
@@ -178,7 +175,7 @@ class VariantInterpreter:
             InterpretationResult based on mutation location and type
         """
         position_nt = Helper.get_position(variant.nucleotide_change)
-        rule_description = self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
+        rationale = self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
 
         if self._is_in_target_promoter(variant, position_nt):
             return InterpretationResult(
@@ -186,7 +183,7 @@ class VariantInterpreter:
                 looker_interpretation="U",
                 mdl_interpretation="U",
                 rule_id=rule_id,
-                rule_description=rule_description
+                rationale=rationale
             )
         # Note: rpoB upstream variants outside RRDR -> U (rule 2.2.2.2) (different from other genes)
         elif self._is_upstream_gene_variant(variant):
@@ -195,7 +192,7 @@ class VariantInterpreter:
                 looker_interpretation="U" if rule_id == "2.2.2.2" else "S",
                 mdl_interpretation="S",
                 rule_id=rule_id,
-                rule_description=rule_description
+                rationale=rationale
             )
         elif self._is_in_orf(variant) and self._is_synonymous(variant):
             return InterpretationResult(
@@ -203,7 +200,7 @@ class VariantInterpreter:
                 looker_interpretation="S",
                 mdl_interpretation="S",
                 rule_id=rule_id,
-                rule_description=rule_description
+                rationale=rationale
             )
         elif self._is_in_orf(variant) and not self._is_synonymous(variant):
             return InterpretationResult(
@@ -211,7 +208,7 @@ class VariantInterpreter:
                 looker_interpretation="U",
                 mdl_interpretation="U",
                 rule_id=rule_id,
-                rule_description=rule_description
+                rationale=rationale
             )
         # not sure if this case is possible, but just in case
         else:
@@ -220,7 +217,7 @@ class VariantInterpreter:
                 looker_interpretation="X",
                 mdl_interpretation="X",
                 rule_id=rule_id,
-                rule_description=rule_description
+                rationale=rationale
             )
 
     def _is_synonymous(self, variant: Variant) -> bool:
@@ -332,7 +329,7 @@ class VariantInterpreter:
                 looker_interpretation="U",
                 mdl_interpretation="U",
                 rule_id="whov2",
-                rule_description=self.RULE_TO_RATIONALE['1.2']
+                rationale=self.RULE_TO_RATIONALE['1.2']
             )
         # Check if in critical regions (nt positions 2003-2367 and 2449-3056)
         if Helper.is_mutation_within_range(position_nt, SPECIAL_POSITIONS["rrl"]):
@@ -342,7 +339,7 @@ class VariantInterpreter:
                 looker_interpretation="U",
                 mdl_interpretation="U",
                 rule_id="1.2",
-                rule_description=self.RULE_TO_RATIONALE['1.2']
+                rationale=self.RULE_TO_RATIONALE['1.2']
 
             )
         # Outside critical regions and promoter
@@ -352,7 +349,7 @@ class VariantInterpreter:
             looker_interpretation="S",
             mdl_interpretation="S",
             rule_id="1.2",
-            rule_description=self.RULE_TO_RATIONALE['1.2']
+            rationale=self.RULE_TO_RATIONALE['1.2']
         )
 
     # =========================================================================
@@ -415,7 +412,7 @@ class VariantInterpreter:
                 looker_interpretation="R",
                 mdl_interpretation="R",
                 rule_id="2.2.1.1",
-                rule_description=self.RULE_TO_RATIONALE['2.2.1.1']
+                rationale=self.RULE_TO_RATIONALE['2.2.1.1']
             )
 
         # Fall through to default no-WHO interpretation - checks promoter, upstream, then ORF
@@ -453,7 +450,7 @@ class VariantInterpreter:
                 looker_interpretation="S",
                 mdl_interpretation="S",
                 rule_id="2.2.2.1",
-                rule_description=self.RULE_TO_RATIONALE['2.2.2.1']
+                rationale=self.RULE_TO_RATIONALE['2.2.2.1']
             )
         else:
             logger.debug("Nonsynonymous mutation in RRDR; interpretation is 'R'")
@@ -462,7 +459,7 @@ class VariantInterpreter:
                 looker_interpretation="R",
                 mdl_interpretation="R",
                 rule_id="2.2.2.1",
-                rule_description=self.RULE_TO_RATIONALE['2.2.2.1']
+                rationale=self.RULE_TO_RATIONALE['2.2.2.1']
             )
 
     def _apply_rule_2_2_2_2(self, variant: Variant) -> InterpretationResult:
@@ -540,7 +537,7 @@ class VariantInterpreter:
                 looker_interpretation="U",
                 mdl_interpretation="U",
                 rule_id="3.2.1",
-                rule_description=self.RULE_TO_RATIONALE['3.2.1']
+                rationale=self.RULE_TO_RATIONALE['3.2.1']
             )
         # Other rrs positions
         else:
@@ -550,7 +547,7 @@ class VariantInterpreter:
                 looker_interpretation="S",
                 mdl_interpretation="S",
                 rule_id="3.2.1",
-                rule_description=self.RULE_TO_RATIONALE['3.2.1']
+                rationale=self.RULE_TO_RATIONALE['3.2.1']
             )
 
     def _apply_rule_3_2_2(self, variant: Variant) -> InterpretationResult:
@@ -574,7 +571,7 @@ class VariantInterpreter:
                     looker_interpretation="U",
                     mdl_interpretation="U",
                     rule_id="3.2.2",
-                    rule_description="gyrA nonsynonymous mutation in QRDR (codons 88-94)"
+                    rationale="gyrA nonsynonymous mutation in QRDR (codons 88-94)"
                 )
 
         # Fall through to default
@@ -602,7 +599,7 @@ class VariantInterpreter:
                     looker_interpretation="U",
                     mdl_interpretation="U",
                     rule_id="3.2.3",
-                    rule_description="gyrB nonsynonymous mutation in QRDR (codons 446-507)"
+                    rationale="gyrB nonsynonymous mutation in QRDR (codons 446-507)"
                 )
 
         # Fall through to default
