@@ -39,7 +39,7 @@ class VariantProcessor:
 
         Some variants affect multiple genes (e.g., a mutation in mmpR5 that
         also affects mmpL5 and mmpS5). This creates separate entries for each
-        affected gene.
+        affected gene. Always returns at least the original VariantRecord, even if no valid consequences exist.
 
         Args:
             variant_record: Single VariantRecord entry from TBProfiler JSON
@@ -47,16 +47,19 @@ class VariantProcessor:
             List of VariantRecords (original + consequences)
         """
         # Only expand if consequences exist and gene is one of mmpR5/mmpL5/mmpS5 otherwise return original
+        all_variant_records = [variant_record]
         if (
             not variant_record.consequences or
             variant_record.gene_id not in ['Rv0676c', 'Rv0677c', 'Rv0678']
         ):
-            return [variant_record]
+            return all_variant_records
 
         logger.debug(f"Expanding {len(variant_record.consequences)} consequences for VariantRecord entry: {str(variant_record)}")
 
-        all_variant_records = []
         for consequence in variant_record.consequences:
+            # skip and do not expand consequence if it's for the same gene as the original VariantRecord
+            if consequence.gene_id == variant_record.gene_id:
+                continue
             # Create a copy and update with consequence-specific data
             new_vr = VariantRecord.from_consequences(variant_record, consequence)
             all_variant_records.append(new_vr)
