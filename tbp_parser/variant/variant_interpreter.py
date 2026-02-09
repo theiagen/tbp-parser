@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List
 
 from variant import Variant
 from utils.helper import Helper
 from utils.gene_database import GeneDatabase
-
+from coverage import LocusCoverage
 import logging
 
 logger = logging.getLogger(__name__)

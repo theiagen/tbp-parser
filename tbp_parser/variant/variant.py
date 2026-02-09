@@ -1,7 +1,7 @@
-from typing import List, Optional, Any
+from pydantic import BaseModel, Field
+from typing import Optional, Any
 from utils import GeneDatabase, Helper
 import logging
-from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 

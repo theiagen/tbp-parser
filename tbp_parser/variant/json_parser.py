@@ -2,7 +2,7 @@ import logging
 import json
 
 from typing import List, Tuple
-from variant import VariantRecord
+from variant.variant_record import VariantRecord
 
 logger = logging.getLogger(__name__)
 
