@@ -1,31 +1,312 @@
 
 import logging
-
-from typing import Dict
+from pydantic import BaseModel, Field
+from typing import Dict, Optional
 from utils.config import Configuration
 from utils.helper import Helper
 from variant import Variant
 from coverage import LocusCoverage
 
 logger = logging.getLogger(__name__)
+class QCResult(BaseModel):
+    """Result of a QC check on a variant. Includes Variant attributes to update/overwrite based on the QC outcome."""
+    type: Optional[str] = None
+    nucleotide_change: Optional[str] = None
+    protein_change: Optional[str] = None
+    looker_interpretation: Optional[str] = None
+    mdl_interpretation: Optional[str] = None
+    fails_qc: bool = False
+    warning: set[str] = Field(default_factory=set)
+
+    def repr_filtered(self, attr_list: list[str]) -> str:
+        """Return a string representation of the QCResult, filtered to only include specified attributes."""
+        attrs = {k: v for k, v in self.model_dump(exclude_none=True).items() if k in attr_list}
+        return f"QCResult({', '.join([f'{k}={v}' for k, v in attrs.items()])})"
 
 class VariantQC:
 
-    def __init__(self, config: Configuration, ):
+    POSITIONAL_QC_WARNING = "Failed quality in the mutation position"
+    LOCUS_QC_WARNING = "Insufficient coverage in locus"
+
+    def __init__(self, config: Configuration):
         self.config = config
 
-    @staticmethod
-    def is_deletion(variant: Variant) -> bool:
-        return "del" in variant.nucleotide_change
 
-    def fails_tngs_specific_qc(self, variant: Variant) -> bool:
-        """Checks if a mutation (tNGS only) fails the tNGS-specific QC checks
+    def apply_qc(self, variants: list[Variant], locus_coverage_map: Dict[str, LocusCoverage]) -> list[Variant]:
+        """Apply all QC checks to a list of variants.
+
+        Iterates through variants and applies positional QC, locus QC,
+        and tNGS-specific QC rules as appropriate.
 
         Args:
-            TNGS_SPECIFIC_QC_OPTIONS (dict[str, float]): a dictionary containing tNGS specific QC options
+            variants: List of Variant objects to check
+            locus_coverage_map: Mapping of gene_id to LocusCoverage objects
 
         Returns:
-            bool: true if the mutation fails QC, false if the mutation passes QC
+            The list of Variant objects with QC warnings applied
+        """
+        for variant in variants:
+            # Rule 4.2.1: Positional QC
+            pos_qc_result = self._check_positional_qc(variant)
+            self._update_variant_qc(variant, pos_qc_result)
+
+            # Rule 4.2.2: Locus QC
+            locus_qc_result = self._check_locus_qc(variant, locus_coverage_map)
+            self._update_variant_qc(variant, locus_qc_result)
+
+            # tNGS-specific QC (separate from rule structure)
+            if self.config.TNGS:
+                self._apply_tngs_qc(variant, locus_coverage_map)
+
+            # Track valid deletions (passed all QC, is a deletion)
+            if not variant.fails_qc and self._is_deletion(variant):
+                setattr(variant, "is_valid_deletion", True)
+
+        return variants
+
+
+    def apply_wildtype_qc(self, variants: list[Variant], locus_coverage_map: Dict[str, LocusCoverage]) -> list[Variant]:
+        """Rule 4.1: Applies QC to variants with no nucleotide change.
+
+        Handles synthetic variants that represent unreported gene-drug associations.
+        Also includes rule 4.2.2.3.1 (WT with insufficient coverage).
+
+        Args:
+            variants: List of Variant objects to check
+            locus_coverage_map: Mapping of gene_id to LocusCoverage objects
+
+        Returns:
+            The list of Variant objects with WT/NA QC applied
+        """
+        # initialize QC result with default None values
+
+        for variant in variants:
+            qc_result = QCResult()
+
+            locus_coverage = locus_coverage_map.get(variant.gene_id, None)
+
+            # Handle NA/synthetic unreported variants
+            if variant.nucleotide_change == "NA":
+                qc_result.looker_interpretation="NA"
+                qc_result.mdl_interpretation="NA"
+
+                # WT Variant - if no nucleotide change, but exists in locus coverage map
+                if locus_coverage:
+                    qc_result.type = "WT"
+                    qc_result.nucleotide_change = "WT"
+                    qc_result.protein_change = "WT"
+
+                    # if locus coverage is above threshold, set to WT interpretations
+                    if not locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE):
+                        qc_result.looker_interpretation = "S"
+                        qc_result.mdl_interpretation = "WT"
+
+                    # Rule 4.2.2.3.1: if locus coverage is below threshold, set to insufficient coverage
+                    else:
+                        qc_result.type = "Insufficient Coverage"
+                        qc_result.looker_interpretation = "Insufficient Coverage"
+                        qc_result.mdl_interpretation = "Insufficient Coverage"
+                        qc_result.warning.add(self.LOCUS_QC_WARNING)
+                        qc_result.fails_qc = True
+
+            self._update_variant_qc(variant, qc_result)
+        return variants
+
+
+    def _update_variant_qc(self, variant: Variant, qc_result: QCResult) -> None:
+        """Apply a QCResult to a Variant object.
+
+        Always sets:
+            - `fails_qc`
+            - `warning` (adds any warnings from the QCResult)
+
+        Optionally, if set (not None), will overwrite:
+            - `type`
+            - `nucleotide_change`
+            - `protein_change`
+            - `looker_interpretation`
+            - `mdl_interpretation`
+
+        Args:
+            variant: The variant to update
+            qc_result: The QCResult to apply
+        """
+        # update/append any warnings and set/overwrite attributes if indicated by the QCResult
+        qc_result.warning.update(variant.warning)
+        updated_variant = variant.model_copy(
+            update=qc_result.model_dump(exclude_none=True)
+        )
+        changes = [
+            attr for attr in qc_result.model_dump(exclude_none=True).keys()
+            if (
+                getattr(variant, attr) != getattr(updated_variant, attr) and
+                getattr(variant, attr) is not None
+            )
+        ]
+        qc_result_str = qc_result.repr_filtered([attr for attr in changes])
+        if changes:
+            logger.debug(f"Updating {variant} with QCResult: {qc_result_str}")
+
+        for key, value in qc_result.model_dump(exclude_none=True).items():
+            setattr(variant, key, value)
+
+
+
+    def _is_deletion(self, variant: Variant) -> bool:
+        """Check if a variant represents a deletion.
+
+        Args:
+            variant: The variant to check
+
+        Returns:
+            True if the nucleotide_change contains 'del'
+        """
+        return "del" in variant.nucleotide_change
+
+
+    def _check_positional_qc(self, variant: Variant) -> QCResult:
+        """Rule 4.2.1 dispatcher: Route to deletion vs non-deletion positional QC.
+
+        Args:
+            variant: The variant to check
+
+        Returns:
+            QCResult with positional QC outcome
+        """
+        qc_result = QCResult(fails_qc=False)
+
+        if not self._is_deletion(variant):
+            # rule 4.2.1.1 - Non-deletion positional QC
+            if (
+                variant.depth < self.config.MIN_DEPTH or
+                variant.freq < self.config.MIN_FREQUENCY or
+                variant.read_support < self.config.MIN_READ_SUPPORT
+            ):
+                logger.debug(f"{variant} fails positional QC (rule 4.2.1.1): depth={variant.depth}, freq={variant.freq}, RS={variant.read_support}")
+                qc_result.fails_qc = True
+                qc_result.warning.add(self.POSITIONAL_QC_WARNING)
+                return qc_result
+
+        # rule 4.2.1.2 - Deletion with some depth but below threshold
+        elif variant.depth > 0 and variant.depth < self.config.MIN_DEPTH:
+            logger.debug(f"{variant} deletion fails positional QC (rule 4.2.1.2): depth={variant.depth} > 0 but < {self.config.MIN_DEPTH}")
+            qc_result.fails_qc = True
+            qc_result.warning.add(self.POSITIONAL_QC_WARNING)
+            return qc_result
+
+        # rule 4.2.1.3 - Deletion with zero depth but passing frequency - TB Profiler quirk
+        elif variant.depth == 0 and variant.freq >= self.config.MIN_FREQUENCY:
+            logger.debug(f"{variant} deletion passes positional QC (rule 4.2.1.3): depth=0, freq={variant.freq} >= {self.config.MIN_FREQUENCY}")
+            return qc_result
+
+        # Deletion passes positional QC (sufficient depth and frequency)
+        return qc_result
+
+
+    def _check_locus_qc(self, variant: Variant, locus_coverage_map: Dict[str, LocusCoverage]) -> QCResult:
+        """Rule 4.2.2 dispatcher: Check locus-level coverage QC.
+
+        Args:
+            variant: The variant to check
+            locus_coverage_map: Mapping of gene_id to LocusCoverage objects
+
+        Returns:
+            QCResult with locus QC outcome
+        """
+
+        qc_result = QCResult(fails_qc=False)
+        locus_coverage = locus_coverage_map.get(variant.gene_id, None)
+
+        if locus_coverage and locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE):
+            # Rule 4.2.2.2: Low breadth of coverage with deletion present - PASS
+            if self._is_deletion(variant):
+
+                # NOTE: this conditional is in previous versions but NOT in the interpretation documentation. Not sure if intentional
+                #  If this deletion also previously failed positional QC, add insufficient coverage warning?
+                if variant.fails_qc:
+                    logger.debug(f"{variant} deletion with low breadth AND positional fail. Adding insufficient coverage warning.")
+                    qc_result.fails_qc = True
+                    qc_result.warning.add(self.LOCUS_QC_WARNING)
+                    return qc_result
+
+                # Rule 4.2.2.2: Low breadth of coverage with deletion present - PASS
+                else:
+                    logger.debug(f"{variant} deletion with low breadth but no positional fail. Passes locus QC.")
+                    return qc_result
+
+            # Rule 4.2.2.3: Low breadth of coverage, no deletion
+            # Note that Rule 4.2.2.3.1: WT/NA with low breadth of coverage is handled by `apply_wildtype_qc` function
+            else:
+                # Rule 4.2.2.3.2: S/U or R (QC_RESISTANT_MUTATIONS) with low breadth of coverage - FAIL
+                if (
+                    (variant.mdl_interpretation == "S") or
+                    (variant.mdl_interpretation == "U") or
+                    (variant.mdl_interpretation == "R" and self.config.QC_RESISTANT_MUTATIONS) or
+                    (variant.mdl_interpretation == "R" and not self.config.QC_RESISTANT_MUTATIONS and variant.fails_qc)
+                ):
+                    logger.debug(f"{variant} non-deletion with low breadth of coverage. Adding insufficient coverage warning and overwriting interpretations.")
+                    qc_result.fails_qc = True
+                    qc_result.looker_interpretation = "Insufficient Coverage"
+                    qc_result.mdl_interpretation = "Insufficient Coverage"
+                    qc_result.warning.add(self.LOCUS_QC_WARNING)
+                    return qc_result
+
+
+                elif variant.looker_interpretation == "R" and not self.config.QC_RESISTANT_MUTATIONS and not variant.fails_qc:
+                    logger.debug(f"{variant} non-deletion with low breadth of coverage but R interpretation did NOT fail positional QC. Only adding insufficient coverage warning.")
+                    qc_result.warning.add(self.LOCUS_QC_WARNING)
+                    return qc_result
+
+                else:
+                    logger.debug("WARNING: This shouldn't be possible!!!")
+                    return qc_result
+        else:
+            return qc_result
+
+    def _apply_tngs_qc(self, variant: Variant, locus_coverage_map: Dict[str, LocusCoverage]) -> None:
+        """Apply all tNGS-specific QC checks to a variant.
+
+        Consolidates tNGS-specific QC, boundary checks, and outside-region checks.
+        Modifies variant directly (does not use QCResult pattern).
+
+        Args:
+            variant: The variant to check
+            locus_coverage_map: Mapping of gene_id to LocusCoverage objects
+        """
+        # tNGS-specific gene/position checks
+        if self._fails_tngs_specific_qc(variant):
+            variant.fails_qc = True
+            variant.warning.add(self.POSITIONAL_QC_WARNING)
+
+        # tNGS boundary QC (read support vs frequency boundaries)
+        if self._fails_tngs_boundary_qc(variant):
+            variant.fails_qc = True
+            variant.warning.add(self.POSITIONAL_QC_WARNING)
+
+        # Check if mutation is outside tNGS primer regions
+        locus_coverage = locus_coverage_map.get(variant.gene_id, None)
+        if (
+            not locus_coverage or
+            not locus_coverage.contains_position(variant.pos)
+        ):
+            variant.fails_qc = True
+            variant.warning.add("This mutation is outside the expected region")
+            variant.rationale = "NA"
+            variant.confidence = "NA"
+            variant.looker_interpretation = "NA"
+            variant.mdl_interpretation = "NA"
+
+    def _fails_tngs_specific_qc(self, variant: Variant) -> bool:
+        """Check if a mutation (tNGS only) fails the tNGS-specific QC checks.
+
+        Applies gene-specific frequency and read support thresholds for
+        rrs, rrl, ethA (position 237), and rpoB (position 449).
+
+        Args:
+            variant: The variant to check
+
+        Returns:
+            True if the mutation fails QC, False if it passes
         """
         RRS_FREQUENCY = self.config.TNGS_SPECIFIC_QC_OPTIONS["RRS_FREQUENCY"]
         RRS_READ_SUPPORT = self.config.TNGS_SPECIFIC_QC_OPTIONS["RRS_READ_SUPPORT"]
@@ -48,15 +329,17 @@ class VariantQC:
                 return True
         return False
 
-    def fails_tngs_boundary_qc(self, variant: Variant) -> bool:
-        """Checks if a mutation (tNGS only) fails the boundary QC checks
+    def _fails_tngs_boundary_qc(self, variant: Variant) -> bool:
+        """Check if a mutation (tNGS only) fails the boundary QC checks.
+
+        Applies read support and frequency boundary thresholds to determine
+        if a variant passes tNGS QC.
 
         Args:
-            TNGS_READ_SUPPORT_BOUNDARIES (list[int]): the lower and upper read support boundaries
-            TNGS_FREQUENCY_BOUNDARIES (list[float]): the lower and upper frequency boundaries
+            variant: The variant to check
 
         Returns:
-            bool: true if the mutation fails QC, false if the mutation passes QC
+            True if the mutation fails QC, False if it passes
         """
         lower_rs = self.config.TNGS_READ_SUPPORT_BOUNDARIES[0]
         upper_rs = self.config.TNGS_READ_SUPPORT_BOUNDARIES[1]
@@ -78,118 +361,3 @@ class VariantQC:
             logger.debug(f"{variant} at [RS:{variant.read_support}, F:{variant.freq}] fails tNGS boundary QC: [RS:({lower_rs},{upper_rs}), F:({lower_f},{upper_f})]")
 
         return FAILS_QC
-
-    def add_qc_warning(self, variants: list[Variant], locus_coverage_map: Dict[str, LocusCoverage]) -> None:
-        """Adds QC warnings if a mutation either has poor positional quality or locus quality
-          Assigns `fails_qc` and `warning` attributes to each Variant object if applicable.
-        
-          Args:
-            variants (list[Variant]): List of Variant objects to check for QC warnings
-
-          Returns:
-            None
-        """
-        for variant in variants:
-            locus_coverage = locus_coverage_map.get(variant.gene_id, None)
-            if (
-                variant.depth < self.config.MIN_DEPTH or
-                variant.freq < self.config.MIN_FREQUENCY or
-                variant.read_support < self.config.MIN_READ_SUPPORT or
-                self.config.TNGS and self.fails_tngs_specific_qc(variant)
-            ):
-                variant.fails_qc = True
-                variant.warning.add("Failed quality in the mutation position")
-
-            elif VariantQC.is_deletion(variant):
-                if (
-                    variant.depth > 0 and
-                    variant.depth < self.config.MIN_DEPTH
-                ):
-                    # 4.2.1.2 - postiional qc fail, deletion with some depth but not enough
-                    variant.fails_qc = True
-                    variant.warning.add("Failed quality in the mutation position")
-
-                elif (
-                    variant.depth == 0 and
-                    variant.freq >= self.config.MIN_FREQUENCY
-                ):
-                    # 4.2.1.3 - deletion with zero depth but good frequency
-                    pass
-
-                elif (variant.freq < self.config.MIN_FREQUENCY):
-                    # frequency is poor -- positional qc fail
-                    variant.fails_qc = True
-                    variant.warning.add("Failed quality in the mutation position")
-
-            if self.config.TNGS:
-                if self.fails_tngs_boundary_qc(variant):
-                    variant.fails_qc = True
-                    variant.warning.add("Failed quality in the mutation position")
-
-                # is mutation outside of tNGS primer regions?
-                if (
-                  not locus_coverage or
-                  not locus_coverage.contains_position(variant.pos)
-                ):
-                    variant.fails_qc = True
-                    variant.warning.add("This mutation is outside the expected region")
-                    # i feel like this should be moved somewhere else...
-                    variant.rationale = "NA"
-                    variant.confidence = "NA"
-                    variant.looker_interpretation = "NA"
-                    variant.mdl_interpretation = "NA"
-
-            # checking locus qc now
-            if (
-                locus_coverage and
-                locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
-            ):
-                if (
-                    VariantQC.is_deletion(variant) and # 4.2.2.2 - locus qc fail and a deletion
-                    variant.fails_qc
-                ):
-                    # this mutation also failed positional qc, so we need to add the locus warning
-                    variant.warning.add("Insufficient coverage in locus")
-
-                else: # 4.2.2.3 - locus qc fail but not a deletion
-                    if variant.mdl_interpretation == "R" and not self.config.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY:
-                        if not variant.fails_qc:
-                            # 4.2.2.3.3 - R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
-                            variant.warning.add("Insufficient coverage in locus")
-                        else:
-                            # 4.2.2.3.4 - R mutation with BOTH positional and locus qc fail; add warning and overwrite interpretation
-                            variant.warning.add("Insufficient coverage in locus")
-                            variant.looker_interpretation = "Insufficient Coverage"
-                            variant.mdl_interpretation = "Insufficient Coverage"
-
-                    elif variant.mdl_interpretation == "U" or variant.mdl_interpretation == "S":
-                        # 4.2.2.3.2 - non-R mutation with locus qc fail; add warning and overwrite interpretation (or if indicated that r mutations should be treated the same as s/u)
-                        variant.warning.add("Insufficient coverage in locus")
-                        variant.looker_interpretation = "Insufficient Coverage"
-                        variant.mdl_interpretation = "Insufficient Coverage"
-
-            if (
-                not variant.fails_qc and
-                VariantQC.is_deletion(variant)
-            ):
-                variant.is_valid_deletion = True
-
-    @staticmethod
-    def get_genes_with_valid_deletions(variants: list[Variant]) -> dict:
-        """Returns a dict of gene names to lists of genomic positions for deletions
-        that passed QC checks.
-
-        Args:
-            variants: List of Variant objects (after QC warnings have been applied)
-
-        Returns:
-            dict[str, list[int]]: gene_name -> list of genomic positions with valid deletions
-        """
-        genes_with_valid_deletions = {}
-        for variant in variants:
-            if getattr(variant, 'is_valid_deletion', False):
-                positions = Helper.get_mutation_genomic_positions(variant.pos, variant.nucleotide_change)
-                if variant.gene_name not in genes_with_valid_deletions:
-                    genes_with_valid_deletions[variant.gene_name] = []
-                genes_with_valid_deletions[variant.gene_name].extend(positions if isinstance(positions, list) else [positions])
-        return genes_with_valid_deletions
