@@ -58,6 +58,10 @@ class VariantInterpreter:
                 variant.looker_interpretation = "NA"
                 variant.mdl_interpretation = "NA"
                 variant.rationale = "NA"
+                logger.debug(
+                    f"{variant} has no mutation; marked as unreported variant; "
+                    f"setting ['confidence', 'looker_interpretation', 'mdl_interpretation', 'rationale'] to 'NA'"
+                )
                 continue
 
             # Use interpret() method for all other cases
@@ -69,8 +73,7 @@ class VariantInterpreter:
             variant.mdl_interpretation = result.mdl_interpretation
             variant.rationale = result.rationale
 
-            logger.debug(f"Variant {variant.gene_name} interpreted: rule={result.rule_id}, "
-                        f"looker={result.looker_interpretation}, mdl={result.mdl_interpretation}")
+            logger.debug(f"Final interpretation for {variant.gene_name} is: {result}")
         return variants
 
     def interpret(self, variant: Variant) -> InterpretationResult:
@@ -90,7 +93,7 @@ class VariantInterpreter:
         WHO_EXPERT_GENES = {"katG", "pncA", "ethA", "gid", "rpoB"}
 
         gene = variant.gene_name
-        logger.debug(f"Interpreting variant in gene: {gene}")
+        logger.debug(f"Interpreting {variant}")
 
         # Section 1: CDC expert rule genes (mmpR5/Rv0678, atpE, pepQ, mmpL5, mmpS5, rrl, rplC)
         if gene in CDC_EXPERT_GENES:
@@ -183,7 +186,7 @@ class VariantInterpreter:
                 looker_interpretation="U",
                 mdl_interpretation="U",
                 rule_id=rule_id,
-                rationale=rationale
+                rationale=self.RULE_TO_RATIONALE.get('whov2', "MISSING RATIONALE") # proximal promoter rationale
             )
         # Note: rpoB upstream variants outside RRDR -> U (rule 2.2.2.2) (different from other genes)
         elif self._is_upstream_gene_variant(variant):
@@ -238,9 +241,11 @@ class VariantInterpreter:
         Returns:
             True if variant is within the target promoter region
         """
-        if variant.gene_name not in GeneDatabase.GENE_DATABASE:
+        logger.debug(f"Checking if {variant.gene_name} is in target promoter region using GeneDatabase")
+        if variant.gene_id not in GeneDatabase.GENE_DATABASE:
+            logger.warning(f"Gene {variant.gene_id} not found in GeneDatabase; cannot check promoter region")
             return False
-        promoter_region = GeneDatabase.get_promoter_region(variant.gene_name)
+        promoter_region = GeneDatabase.get_promoter_region(variant.gene_id)
         return Helper.is_mutation_within_range(position_nt, promoter_region)
 
     def _is_loss_of_function(self, variant: Variant) -> bool:
@@ -311,6 +316,7 @@ class VariantInterpreter:
             return self._apply_rule_1_2_rrl(variant, position_nt)
 
         # For other CDC genes: check promoter, upstream, then ORF
+        logger.debug(f"Applying default interpretaion without WHO confidence for {variant.gene_name}")
         return self._interpret_without_who_confidence(variant, rule_id="1.2")
 
     def _apply_rule_1_2_rrl(self, variant: Variant, position_nt: list[int]) -> InterpretationResult:
@@ -328,8 +334,8 @@ class VariantInterpreter:
                 confidence="No WHO annotation",
                 looker_interpretation="U",
                 mdl_interpretation="U",
-                rule_id="whov2",
-                rationale=self.RULE_TO_RATIONALE['1.2']
+                rule_id="1.2",
+                rationale=self.RULE_TO_RATIONALE.get('whov2', "MISSING RATIONALE") # proximal promoter rationale
             )
         # Check if in critical regions (nt positions 2003-2367 and 2449-3056)
         if Helper.is_mutation_within_range(position_nt, SPECIAL_POSITIONS["rrl"]):
@@ -339,7 +345,7 @@ class VariantInterpreter:
                 looker_interpretation="U",
                 mdl_interpretation="U",
                 rule_id="1.2",
-                rationale=self.RULE_TO_RATIONALE['1.2']
+                rationale=self.RULE_TO_RATIONALE.get('1.2', "MISSING RATIONALE")
 
             )
         # Outside critical regions and promoter
@@ -349,7 +355,7 @@ class VariantInterpreter:
             looker_interpretation="S",
             mdl_interpretation="S",
             rule_id="1.2",
-            rationale=self.RULE_TO_RATIONALE['1.2']
+            rationale=self.RULE_TO_RATIONALE.get('1.2', "MISSING RATIONALE")
         )
 
     # =========================================================================
@@ -412,11 +418,12 @@ class VariantInterpreter:
                 looker_interpretation="R",
                 mdl_interpretation="R",
                 rule_id="2.2.1.1",
-                rationale=self.RULE_TO_RATIONALE['2.2.1.1']
+                rationale=self.RULE_TO_RATIONALE.get('2.2.1.1', "MISSING RATIONALE")
             )
 
         # Fall through to default no-WHO interpretation - checks promoter, upstream, then ORF
-        logger.debug("Not a qualifying LOF mutation; using default no-WHO interpretation")
+        logger.debug(f"Not a qualifying LOF mutation for {variant.gene_name}")
+        logger.debug(f"Applying default interpretaion without WHO confidence for {variant.gene_name}")
         return self._interpret_without_who_confidence(variant, rule_id="2.2.1.1")
 
     def _apply_rule_2_2_2(self, variant: Variant) -> InterpretationResult:
@@ -450,7 +457,7 @@ class VariantInterpreter:
                 looker_interpretation="S",
                 mdl_interpretation="S",
                 rule_id="2.2.2.1",
-                rationale=self.RULE_TO_RATIONALE['2.2.2.1']
+                rationale=self.RULE_TO_RATIONALE.get('2.2.2.1', "MISSING RATIONALE")
             )
         else:
             logger.debug("Nonsynonymous mutation in RRDR; interpretation is 'R'")
@@ -459,7 +466,7 @@ class VariantInterpreter:
                 looker_interpretation="R",
                 mdl_interpretation="R",
                 rule_id="2.2.2.1",
-                rationale=self.RULE_TO_RATIONALE['2.2.2.1']
+                rationale=self.RULE_TO_RATIONALE.get('2.2.2.1', "MISSING RATIONALE")
             )
 
     def _apply_rule_2_2_2_2(self, variant: Variant) -> InterpretationResult:
@@ -467,7 +474,7 @@ class VariantInterpreter:
 
         Uses default no-WHO interpretation, but upstream variants → U (not S).
         """
-        logger.debug("Applying rule 2.2.2.2 for rpoB outside RRDR")
+        logger.debug("Applying rule 2.2.2.2 for rpoB outside RRDR; special interpretaion without WHO confidence")
         return self._interpret_without_who_confidence(variant, rule_id="2.2.2.2")
 
     # =========================================================================
@@ -537,7 +544,7 @@ class VariantInterpreter:
                 looker_interpretation="U",
                 mdl_interpretation="U",
                 rule_id="3.2.1",
-                rationale=self.RULE_TO_RATIONALE['3.2.1']
+                rationale=self.RULE_TO_RATIONALE.get('3.2.1', "MISSING RATIONALE")
             )
         # Other rrs positions
         else:
@@ -547,7 +554,7 @@ class VariantInterpreter:
                 looker_interpretation="S",
                 mdl_interpretation="S",
                 rule_id="3.2.1",
-                rationale=self.RULE_TO_RATIONALE['3.2.1']
+                rationale=self.RULE_TO_RATIONALE.get('3.2.1', "MISSING RATIONALE")
             )
 
     def _apply_rule_3_2_2(self, variant: Variant) -> InterpretationResult:
@@ -610,5 +617,5 @@ class VariantInterpreter:
 
         Uses standard no-WHO interpretation based on mutation type and location.
         """
-        logger.debug(f"Applying rule 3.2.4 (default) for {variant.gene_name}")
+        logger.debug(f"Applying default interpretaion without WHO confidence for {variant.gene_name}")
         return self._interpret_without_who_confidence(variant, rule_id="3.2.4")

@@ -90,7 +90,7 @@ class VariantProcessor:
 
         logger.debug(
             f"Created {len(variants)} Variant objects from {len(variant_record.annotation)} "
-            f"original annotations for gene {variant_record.gene_id}"
+            f"original annotations for {variant_record}"
         )
         return variants
 
@@ -186,7 +186,7 @@ class VariantProcessor:
         """
         unique_variants = {}
 
-        logger.debug(f"Deduplicating Variant objects based on `gene_id`, `gene_name`, `type`, `nucleotide_change`, and `drug`")
+        logger.debug(f"Deduplicating Variant objects based on `gene_id`, `gene_name`, `type`, `nucleotide_change`, and `drug` attributes")
         for variant in variants:
             # create unique key based on identifying attributes
             key = (
@@ -203,9 +203,12 @@ class VariantProcessor:
                 unique_variants[key] = variant
 
         result = list(unique_variants.values())
-        logger.debug(
-            f"Deduplicated {len(variants)} variants to {len(result)} unique variants"
-        )
+        if len(variants) != len(result):
+            logger.debug(
+                f"Deduplicated {len(variants)} Variants to {len(result)} unique Variants"
+            )
+        else:
+            logger.debug("No duplicate Variants found during deduplication step")
         return result
 
     def generate_unreported_variants(
@@ -235,5 +238,5 @@ class VariantProcessor:
                 )
                 all_unreported_variants.append(variant)
 
-        logger.debug(f"Generated {len(all_unreported_variants)} unreported gene-drug combinations")
+        logger.debug(f"Generated {len(all_unreported_variants)} Variants from unreported gene-drug combinations")
         return all_unreported_variants
