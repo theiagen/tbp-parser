@@ -41,8 +41,7 @@ def main():
     bed_records = coverage_calculator.populate_reads_by_position(bed_records)
     bed_records = coverage_calculator.resolve_overlapping_regions(bed_records)
 
-    GENE_COVERAGE_MAP = coverage_calculator.generate_gene_coverage_map(bed_records)
-    LOCUS_COVERAGE_MAP = coverage_calculator.generate_locus_coverage_map(bed_records)
+    GENE_COVERAGE_MAP, LOCUS_COVERAGE_MAP = coverage_calculator.generate_coverage_maps(bed_records)
     WILDTYPE_CANDIDATES = [_ for _ in LOCUS_COVERAGE_MAP.keys()]
 
     # VariantRecord parsing
