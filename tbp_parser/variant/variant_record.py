@@ -60,22 +60,12 @@ class VariantRecord(BaseModel):
     - `gene_associated_drugs` field (may create additional Variants for drugs with no annotations)
     """
     sample_id: str
-    chrom: str
     pos: int
-    ref: str
-    alt: str
     depth: int
     freq: float
-    sv: bool
-    filter: str
-    forward_reads: int
-    reverse_reads: int
-    sv_len: Optional[int]
     gene_id: str
     gene_name: str
-    feature_id: str
     type: str
-    change: str
     nucleotide_change: str
     protein_change: str
     annotation: List[Annotation]

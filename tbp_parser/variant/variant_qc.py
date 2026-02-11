@@ -31,7 +31,6 @@ class VariantQC:
     def __init__(self, config: Configuration):
         self.config = config
 
-
     def apply_qc(self, variants: list[Variant], locus_coverage_map: Dict[str, LocusCoverage]) -> list[Variant]:
         """Apply all QC checks to a list of variants.
 
@@ -63,7 +62,6 @@ class VariantQC:
                 setattr(variant, "is_valid_deletion", True)
 
         return variants
-
 
     def apply_wildtype_qc(self, variants: list[Variant], locus_coverage_map: Dict[str, LocusCoverage]) -> list[Variant]:
         """Rule 4.1: Applies QC to variants with no nucleotide change.
@@ -112,7 +110,6 @@ class VariantQC:
             self._update_variant_qc(variant, qc_result)
         return variants
 
-
     def _update_variant_qc(self, variant: Variant, qc_result: QCResult) -> None:
         """Apply a QCResult to a Variant object.
 
@@ -150,8 +147,6 @@ class VariantQC:
         for key, value in qc_result.model_dump(exclude_none=True).items():
             setattr(variant, key, value)
 
-
-
     def _is_deletion(self, variant: Variant) -> bool:
         """Check if a variant represents a deletion.
 
@@ -162,7 +157,6 @@ class VariantQC:
             True if the nucleotide_change contains 'del'
         """
         return "del" in variant.nucleotide_change
-
 
     def _check_positional_qc(self, variant: Variant) -> QCResult:
         """Rule 4.2.1 dispatcher: Route to deletion vs non-deletion positional QC.

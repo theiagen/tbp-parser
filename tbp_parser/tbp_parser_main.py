@@ -7,8 +7,6 @@ from utils.logger_setup import setup_logger
 
 from coverage import parse_bed_file, CoverageCalculator
 from variant import (
-    Variant,
-    VariantRecord,
     VariantProcessor,
     VariantInterpreter,
     VariantQC,
