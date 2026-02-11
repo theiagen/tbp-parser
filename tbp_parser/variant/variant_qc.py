@@ -50,7 +50,7 @@ class VariantQC:
             self._update_variant_qc(variant, pos_qc_result)
 
             # Rule 4.2.2: Locus QC
-            locus_qc_result = self._check_locus_qc(variant, locus_coverage_map)
+            locus_qc_result = self._check_locus_qc(variant, pos_qc_result, locus_coverage_map)
             self._update_variant_qc(variant, locus_qc_result)
 
             # tNGS-specific QC (separate from rule structure)
@@ -196,19 +196,17 @@ class VariantQC:
         # Deletion passes positional QC (sufficient depth and frequency)
         return qc_result
 
-
-    def _check_locus_qc(self, variant: Variant, locus_coverage_map: Dict[str, LocusCoverage]) -> QCResult:
+    def _check_locus_qc(self, variant: Variant, qc_result: QCResult, locus_coverage_map: Dict[str, LocusCoverage]) -> QCResult:
         """Rule 4.2.2 dispatcher: Check locus-level coverage QC.
 
         Args:
             variant: The variant to check
+              qc_result: The result of the positional QC to inform locus QC decisions
             locus_coverage_map: Mapping of gene_id to LocusCoverage objects
 
         Returns:
             QCResult with locus QC outcome
         """
-
-        qc_result = QCResult(fails_qc=False)
         locus_coverage = locus_coverage_map.get(variant.gene_id, None)
 
         if locus_coverage and locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE):
@@ -232,11 +230,15 @@ class VariantQC:
             # Note that Rule 4.2.2.3.1: WT/NA with low breadth of coverage is handled by `apply_wildtype_qc` function
             else:
                 # Rule 4.2.2.3.2: S/U or R (QC_RESISTANT_MUTATIONS) with low breadth of coverage - FAIL
-                if (
+                if variant.looker_interpretation == "R" and self.config.QC_RESISTANT_MUTATIONS and not variant.fails_qc:
+                    logger.debug(f"{variant} non-deletion with low breadth of coverage but R interpretation did NOT fail positional QC. Only adding insufficient coverage warning.")
+                    qc_result.warning.add(self.LOCUS_QC_WARNING)
+                    return qc_result
+
+                elif (
                     (variant.mdl_interpretation == "S") or
                     (variant.mdl_interpretation == "U") or
-                    (variant.mdl_interpretation == "R" and self.config.QC_RESISTANT_MUTATIONS) or
-                    (variant.mdl_interpretation == "R" and not self.config.QC_RESISTANT_MUTATIONS and variant.fails_qc)
+                    (variant.mdl_interpretation == "R" and self.config.QC_RESISTANT_MUTATIONS and variant.fails_qc)
                 ):
                     logger.debug(f"{variant} non-deletion with low breadth of coverage. Adding insufficient coverage warning and overwriting interpretations.")
                     qc_result.fails_qc = True
@@ -245,14 +247,7 @@ class VariantQC:
                     qc_result.warning.add(self.LOCUS_QC_WARNING)
                     return qc_result
 
-
-                elif variant.looker_interpretation == "R" and not self.config.QC_RESISTANT_MUTATIONS and not variant.fails_qc:
-                    logger.debug(f"{variant} non-deletion with low breadth of coverage but R interpretation did NOT fail positional QC. Only adding insufficient coverage warning.")
-                    qc_result.warning.add(self.LOCUS_QC_WARNING)
-                    return qc_result
-
                 else:
-                    logger.debug("WARNING: This shouldn't be possible!!!")
                     return qc_result
         else:
             return qc_result
