@@ -35,21 +35,25 @@ def main():
         level=logging.DEBUG if options.debug else logging.INFO,
     )
 
+    config = Configuration(options)
+
+    # Perform necessary input checks before processing
     check_dependency_exists()
 
-    config = Configuration(options)
+    # Check entries match between LIMS and BED input files before processing
+    lims_records = parse_lims_yml_file(config.lims_report_format_yml)
+    bed_records = parse_bed_file(config.tbdb_bed)
+    check_bed_for_lims_genes(bed_records, lims_records)
 
     # Coverage calculation
     coverage_calculator = CoverageCalculator(config)
-    bed_records = parse_bed_file(config.tbdb_bed)
     bed_records = coverage_calculator.populate_reads_by_position(bed_records)
     bed_records = coverage_calculator.resolve_overlapping_regions(bed_records)
 
-    GENE_COVERAGE_MAP, LOCUS_COVERAGE_MAP = coverage_calculator.generate_coverage_maps(bed_records)
-    WILDTYPE_CANDIDATES = [_ for _ in LOCUS_COVERAGE_MAP.keys()]
+    TARGET_COVERAGE_MAP, LOCUS_COVERAGE_MAP = coverage_calculator.generate_coverage_maps(bed_records)
 
     # VariantRecord parsing
-    variant_records, SAMPLE_ID = parse_tbprofiler_json(config.input_json)
+    variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
 
     # Variant processing: expansion, extraction, deduplication, unreported variant generation
     variant_processor = VariantProcessor()

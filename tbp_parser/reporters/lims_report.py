@@ -19,7 +19,7 @@ def write_lims_report(
     lims_records: list[LIMSRecord],
     lims_lineage: str,
     sample_id: str,
-    lineage_id: str,
+    detected_lineage: str,
 ) -> None:
     """Write the LIMS report from processed Variant objects.
 
@@ -28,7 +28,7 @@ def write_lims_report(
         lims_records: List of LIMSRecord objects
         lims_lineage: Lineage information for the LIMS report
         sample_id: Sample identifier
-        lineage_id: Lineage identifier
+        detected_lineage: Detected lineage identifier
 
     Returns:
         None
@@ -47,7 +47,7 @@ def write_lims_report(
     # Add metadata
     lims_report["Analysis date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
     lims_report["Operator"] = config.OPERATOR
-    lims_report["M_DST_O01_Lineage"] = lineage_id
+    lims_report["M_DST_O01_Lineage"] = detected_lineage
 
     # Write CSV and transposed CSV
     df = pd.DataFrame([lims_report])
