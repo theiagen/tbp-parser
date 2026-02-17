@@ -64,21 +64,16 @@ class Helper:
             if len(position) > 1:
                 # if the value is a list of two items, check if the position is within the range
                 if any([x in range(range_positions[0], range_positions[1]) for x in position]):
-                    logger.debug(f"Position {position} is within range {range_positions}")
                     return True
                 if any([x in range(position[0], position[1]) for x in range_positions]):
-                    logger.debug(f"Position {position} is within range {range_positions}")
                     return True
 
             # the position is a single item
             elif range_positions[0] <= position[0] <= range_positions[1]:
-                logger.debug(f"Position {position} is within range {range_positions}")
                 return True
 
-            logger.debug(f"Position {position} is NOT within range {range_positions}")
             return False
         except:
-            logger.debug(f"Position {position} is NOT within range {range_positions}")
             return False
 
     @staticmethod
