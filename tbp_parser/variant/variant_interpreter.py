@@ -178,7 +178,7 @@ class VariantInterpreter:
         position_nt = Helper.get_position(variant.nucleotide_change)
         rationale = self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
 
-        if self._is_in_target_promoter(variant, position_nt):
+        if variant._is_in_target_promoter(position_nt):
             return InterpretationResult(
                 confidence="No WHO annotation",
                 looker_interpretation="U",
@@ -187,7 +187,7 @@ class VariantInterpreter:
                 rationale=self.RULE_TO_RATIONALE.get('whov2', "MISSING RATIONALE") # proximal promoter rationale
             )
         # Note: rpoB upstream variants outside RRDR -> U (rule 2.2.2.2) (different from other genes)
-        elif self._is_upstream_gene_variant(variant):
+        elif variant._is_upstream_gene_variant():
             return InterpretationResult(
                 confidence="No WHO annotation",
                 looker_interpretation="U" if rule_id == "2.2.2.2" else "S",
@@ -195,7 +195,7 @@ class VariantInterpreter:
                 rule_id=rule_id,
                 rationale=rationale
             )
-        elif self._is_in_orf(variant) and self._is_synonymous(variant):
+        elif variant._is_in_orf() and variant._is_synonymous():
             return InterpretationResult(
                 confidence="No WHO annotation",
                 looker_interpretation="S",
@@ -203,7 +203,7 @@ class VariantInterpreter:
                 rule_id=rule_id,
                 rationale=rationale
             )
-        elif self._is_in_orf(variant) and not self._is_synonymous(variant):
+        elif variant._is_in_orf() and not variant._is_synonymous():
             return InterpretationResult(
                 confidence="No WHO annotation",
                 looker_interpretation="U",
@@ -220,62 +220,6 @@ class VariantInterpreter:
                 rule_id=rule_id,
                 rationale=rationale
             )
-
-    def _is_synonymous(self, variant: Variant) -> bool:
-        """Check if mutation is synonymous."""
-        return variant.type == "synonymous_variant"
-
-    def _is_upstream_gene_variant(self, variant: Variant) -> bool:
-        """Check if mutation is an upstream gene variant."""
-        return "upstream_gene_variant" in variant.type
-
-    def _is_in_target_promoter(self, variant: Variant, position_nt: list[int]) -> bool:
-        """Check if variant is in target promoter region using GeneDatabase.
-
-        Args:
-            variant: The variant being checked
-            position_nt: List of nucleotide positions
-
-        Returns:
-            True if variant is within the target promoter region
-        """
-        logger.debug(f"Checking if {variant.gene_name} is in target promoter region using GeneDatabase")
-        if variant.gene_id not in GeneDatabase.GENE_DATABASE:
-            logger.warning(f"Gene {variant.gene_id} not found in GeneDatabase; cannot check promoter region")
-            return False
-        promoter_region = GeneDatabase.get_promoter_region(variant.gene_id)
-        return Helper.is_mutation_within_range(position_nt, promoter_region)
-
-    def _is_loss_of_function(self, variant: Variant) -> bool:
-        """Check if mutation represents loss-of-function per rule 2.2.1.1.
-
-        Loss-of-function mutations contain: del, ins, fs, delins, _ or ends with *
-        """
-        lof_indicators = ["del", "ins", "fs", "delins", "_"]
-        mutation_type = [variant.nucleotide_change, variant.protein_change]
-
-        # Check both nucleotide and protein changes for LOF indicators
-        for mutation in mutation_type:
-            if any(indicator in mutation for indicator in lof_indicators) or mutation.endswith("*"):
-                return True
-        return False
-
-    def _is_in_orf(self, variant: Variant) -> bool:
-        """Check if mutation is in the ORF.
-
-        Used for rule 2.2.1.1 (LOF expert rule).
-        """
-        non_orf_indicators = ["+", "-"]
-        # If mutation contains + or -, it's not in the ORF, return False
-        return not any(indicator in variant.nucleotide_change for indicator in non_orf_indicators)
-
-    def _is_upstream_30_bp(self, variant: Variant) -> bool:
-        """Check if mutation is in ORF or within first 30 nucleotides upstream of start codon.
-
-        Used for rule 2.2.1.1 (LOF expert rule).
-        """
-        position_nt = Helper.get_position(variant.nucleotide_change)
-        return any(int(position) > -30 for position in position_nt)
 
     # =========================================================================
     # SECTION 1 RULE METHODS - CDC Expert Rule Genes
@@ -326,7 +270,7 @@ class VariantInterpreter:
             "rrl": [[2003, 2367], [2449, 3056]], #nt position ranges
         }
         # Check target promoter
-        if self._is_in_target_promoter(variant, position_nt):
+        if variant._is_in_target_promoter(position_nt):
             logger.debug("rrl mutation in target promoter; interpretation is 'U'")
             return InterpretationResult(
                 confidence="No WHO annotation",
@@ -407,8 +351,8 @@ class VariantInterpreter:
         logger.debug(f"Applying rule 2.2.1.1 (LOF check) for {variant.gene_name}")
 
         if (
-            (self._is_loss_of_function(variant)) and
-            (self._is_in_orf(variant) or self._is_upstream_30_bp(variant))
+            (variant._is_loss_of_function()) and
+            (variant._is_in_orf() or variant._is_upstream_30_bp())
         ):
             logger.debug("Loss-of-function mutation in ORF or within 30nt upstream; interpretation is 'R'")
             return InterpretationResult(
@@ -448,7 +392,7 @@ class VariantInterpreter:
         """
         logger.debug("Applying rule 2.2.2.1 for rpoB in RRDR region")
 
-        if self._is_synonymous(variant):
+        if variant._is_synonymous():
             logger.debug("Synonymous mutation in RRDR; interpretation is 'S'")
             return InterpretationResult(
                 confidence="No WHO annotation",
@@ -506,15 +450,15 @@ class VariantInterpreter:
         gene = variant.gene_name
 
         # rrs has specific position rules
-        if gene == "rrs" and self._is_in_orf(variant):
+        if gene == "rrs" and variant._is_in_orf():
             return self._apply_rule_3_2_1(variant)
 
         # gyrA has QRDR rules
-        if gene == "gyrA" and self._is_in_orf(variant):
+        if gene == "gyrA" and variant._is_in_orf():
             return self._apply_rule_3_2_2(variant)
 
         # gyrB has QRDR rules
-        if gene == "gyrB" and self._is_in_orf(variant):
+        if gene == "gyrB" and variant._is_in_orf():
             return self._apply_rule_3_2_3(variant)
 
         # Default fallback for all other genes `interpret_without_who_confidence`
@@ -569,7 +513,7 @@ class VariantInterpreter:
 
         # Check if in QRDR (codons 88-94) and nonsynonymous
         if Helper.is_mutation_within_range(position_aa, SPECIAL_POSITIONS["gyrA"]):
-            if not self._is_synonymous(variant):
+            if not variant._is_synonymous():
                 logger.debug("gyrA nonsynonymous mutation in QRDR; interpretation is 'U'")
                 return InterpretationResult(
                     confidence="No WHO annotation",
@@ -597,7 +541,7 @@ class VariantInterpreter:
 
         # Check if in QRDR (codons 446-507) and nonsynonymous
         if Helper.is_mutation_within_range(position_aa, SPECIAL_POSITIONS["gyrB"]):
-            if not self._is_synonymous(variant):
+            if not variant._is_synonymous():
                 logger.debug("gyrB nonsynonymous mutation in QRDR; interpretation is 'U'")
                 return InterpretationResult(
                     confidence="No WHO annotation",

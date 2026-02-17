@@ -147,3 +147,65 @@ class Variant(BaseModel):
                 return True
 
         return False
+
+    def _is_synonymous(self) -> bool:
+        """Check if mutation is synonymous."""
+        return self.type == "synonymous_variant"
+
+    def _is_upstream_gene_variant(self) -> bool:
+        """Check if mutation is an upstream gene variant."""
+        return "upstream_gene_variant" in self.type
+
+    def _is_in_target_promoter(self, position_nt: list[int]) -> bool:
+        """Check if variant is in target promoter region using GeneDatabase.
+
+        Args:
+            position_nt: List of nucleotide positions
+
+        Returns:
+            True if variant is within the target promoter region
+        """
+        if self.gene_id not in GeneDatabase.GENE_DATABASE:
+            logger.warning(f"Gene {self.gene_id} not found in GeneDatabase; cannot check promoter region")
+            return False
+        promoter_region = GeneDatabase.get_promoter_region(self.gene_id)
+        return Helper.is_mutation_within_range(position_nt, promoter_region)
+
+    def _is_loss_of_function(self) -> bool:
+        """Check if mutation represents loss-of-function per rule 2.2.1.1.
+
+        Loss-of-function mutations contain: del, ins, fs, delins, _ or ends with *
+        """
+        lof_indicators = ["del", "ins", "fs", "delins", "_"]
+        mutation_type = [self.nucleotide_change, self.protein_change]
+
+        # Check both nucleotide and protein changes for LOF indicators
+        for mutation in mutation_type:
+            if any(indicator in mutation for indicator in lof_indicators) or mutation.endswith("*"):
+                return True
+        return False
+
+    def _is_in_orf(self) -> bool:
+        """Check if mutation is in the ORF.
+
+        Used for rule 2.2.1.1 (LOF expert rule).
+        """
+        non_orf_indicators = ["+", "-"]
+        # If mutation contains + or -, it's not in the ORF, return False
+        return not any(indicator in self.nucleotide_change for indicator in non_orf_indicators)
+
+    def _is_upstream_30_bp(self) -> bool:
+        """Check if mutation is in ORF or within first 30 nucleotides upstream of start codon.
+
+        Used for rule 2.2.1.1 (LOF expert rule).
+        """
+        position_nt = Helper.get_position(self.nucleotide_change)
+        return any(int(position) > -30 for position in position_nt)
+
+    def _is_valid_deletion(self) -> bool:
+        """Check if a variant represents a deletion.
+
+        Returns:
+            True if the nucleotide_change contains 'del'
+        """
+        return "del" in self.nucleotide_change and self._is_in_orf()
