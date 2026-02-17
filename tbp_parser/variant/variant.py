@@ -33,7 +33,6 @@ class Variant(BaseModel):
     comment: str = ""
 
     # Derived fields (computed during init, excluded from serialization)
-    # read_support: float = Field(default=0.0, exclude=True)
     read_support: Optional[float] = Field(default=None, exclude=True)
     gene_tier: Optional[str] = Field(default=None, exclude=True)
     absolute_start: Optional[int] = Field(default=None, exclude=True)
@@ -46,7 +45,6 @@ class Variant(BaseModel):
     # Fields set by VariantQC (excluded from serialization)
     fails_qc: Optional[bool] = Field(default=None, exclude=True)
     warning: set[str] = Field(default_factory=set, exclude=True)
-    is_valid_deletion: bool = Field(default=False, exclude=True)
 
     model_config = {"extra": "ignore"}
 
@@ -106,11 +104,13 @@ class Variant(BaseModel):
         Returns:
             Variant: A Variant object with appropriate fields set for WT/NA.
         """
-        synthetic_variant = Variant(
+        # model_construct will bypass validation and post-init processing,
+        # allowing us to create a Variant with missing/NA fields that would normally fail validation
+        return cls.model_construct(
             sample_id=sample_id,
-            pos=-1,
-            depth=-1,
-            freq=-1.0,
+            pos="NA",
+            depth="NA",
+            freq="NA",
             gene_id=gene_id,
             gene_name=gene_name,
             type="NA",
@@ -118,18 +118,8 @@ class Variant(BaseModel):
             protein_change="NA",
             drug=drug,
             confidence="NA",
-            read_support=-1.0,
+            read_support="NA",
         )
-        # Break pydantic typing for several fields to indicate unreported status
-        synthetic_variant = synthetic_variant.model_copy(
-            update={
-                "pos": "NA",
-                "depth": "NA",
-                "freq": "NA",
-                "read_support": "NA",
-            }
-        )
-        return synthetic_variant
 
     def is_better_annotation_than(self, other: 'Variant') -> bool:
         annotation_rank = {
