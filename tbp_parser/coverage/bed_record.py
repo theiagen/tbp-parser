@@ -1,16 +1,30 @@
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, Field
+from utils.helper import Helper
 
-class BedRecord:
+class BedRecord(BaseModel):
     """A class representing a record or entry from a BED file."""
+    chrom: str
+    start: int
+    end: int
+    locus_tag: str
+    gene_name: str
 
-    def __init__(self, chrom: str, start: int, end: int, name: str, locus_tag: str, drug: list[str]) -> None:
-        self.chrom = chrom
-        self.start = start
-        self.end = end
-        self.locus_tag = locus_tag
-        self.gene_name = name
-        self.drug = drug
-        self.reads_by_position: Dict[int, List[str]] = {} # to be populated in Coverage class (0-based)
+    # Derived fields (computed during init, excluded from serialization)
+    length: Optional[int] = Field(default=None, exclude=True)
+    coords: Optional[tuple[int, int]] = Field(default=None, exclude=True)
+
+    # To be populated in Coverage class after parsing the BAM file, excluded from serialization
+    reads_by_position: Dict[int, List[str]] = Field(default_factory=dict, exclude=True) # (0-based)
+
+    # Post-init processing to compute derived attributes
+    def model_post_init(self, __context: Any = None):
+        # Calculate length and coords
+        self.length = self.end - self.start + 1  # assuming 1-based indexing
+        self.coords = (self.start, self.end)
+
+        # Normalize gene_name
+        Helper.normalize_field_values(self)
 
     def __str__(self):
         return f"BedRecord([{self.gene_name}][{self.locus_tag}]{self.coords})"
@@ -18,16 +32,27 @@ class BedRecord:
     def __repr__(self):
         return f"BedRecord([{self.gene_name}][{self.locus_tag}]{self.coords})"
 
-    def __len__(self) -> int:
-        return self.length
+    def __eq__(self, other):
+        """Define equality based on some attributes"""
+        if not isinstance(other, BedRecord):
+            return False
+        return (
+            self.chrom == other.chrom and
+            self.start == other.start and
+            self.end == other.end and
+            self.locus_tag == other.locus_tag and
+            self.gene_name == other.gene_name
+        )
 
-    @property
-    def length(self) -> int:
-        return self.end - self.start + 1  # assuming 1-based indexing
-
-    @property
-    def coords(self) -> tuple[int, int]:
-        return (self.start, self.end)
+    def __hash__(self):
+        """Make the object hashable using some attributes"""
+        return hash((
+            self.chrom,
+            self.start,
+            self.end,
+            self.locus_tag,
+            self.gene_name
+        ))
 
     @classmethod
     def from_bed_line(cls, bed_line: str) -> 'BedRecord':
@@ -44,16 +69,8 @@ class BedRecord:
             start=int(cols[1]),
             end=int(cols[2]),
             locus_tag=cols[3],
-            name=cols[4],
-            drug=cols[5].strip().split(',')
+            gene_name=cols[4],
         )
-
-    def get_unique_reads(self) -> set[str]:
-        """Get a set of unique read names covering this BedRecord."""
-        unique_reads = set()
-        for read_list in self.reads_by_position.values():
-            unique_reads.update(read_list)
-        return unique_reads
 
     def overlaps_with(self, other: 'BedRecord') -> bool:
         """Check if this BedRecord overlaps with another BedRecord.
