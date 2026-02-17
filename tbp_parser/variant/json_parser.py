@@ -6,17 +6,23 @@ from variant import VariantRecord
 
 logger = logging.getLogger(__name__)
 
-def parse_tbprofiler_json(input_json) -> Tuple[List[VariantRecord], str]:
+def parse_tbprofiler_json(input_json) -> Tuple[List[VariantRecord], str, str, str]:
     """Parses TBProfiler JSON output and returns a list of VariantRecord objects
     which will ultimately be converted to Variant objects.
 
     Returns:
-        Tuple[List[VariantRecord], str]: A tuple containing a list of VariantRecord objects parsed from the TBProfiler JSON output and the sample ID
+        Tuple[List[VariantRecord], str, str, str]: A tuple containing
+            - list of VariantRecord objects parsed from the TBProfiler JSON output
+            - the sample ID
+            - the lineage ID
+            - the sublineage ID
     """
     with open(input_json) as f:
         json_data = json.load(f)
 
-    SAMPLE_ID = json_data.get("id", "NA")
+    SAMPLE_ID = json_data.get("id")
+    LINEAGE_ID = json_data.get("main_lineage")
+    SUBLINEAGE_ID = json_data.get("sub_lineage")
 
     logger.debug(f"Parsing TBProfiler JSON: {input_json}")
     logger.debug(f"Parsing `dr_variants` and `other_variants` JSON entries for sample ID: {SAMPLE_ID}")
@@ -30,4 +36,4 @@ def parse_tbprofiler_json(input_json) -> Tuple[List[VariantRecord], str]:
         all_variant_records.append(
             variant_record
         )
-    return all_variant_records, SAMPLE_ID
+    return all_variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID
