@@ -1,0 +1,347 @@
+import logging
+from typing import Dict
+from coverage import LocusCoverage
+from lims import LIMSRecord, LIMSGeneCode
+from utils import Configuration, GeneDatabase, Helper
+from variant import Variant
+
+logger = logging.getLogger(__name__)
+
+# LIMS uses a simplified ranking (no interim designations)
+
+class LIMSProcessor:
+    """Processor for all decision logic for LIMS report generation (Section 5 rules).
+    LIMS report fields based on TBProfiler results and QC data."""
+
+    def __init__(self, config: Configuration):
+        self.config = config
+
+    RESISTANCE_RANKING = {
+        "R": 4,
+        "U": 3,
+        "S": 2,
+        "WT": 1,
+        "Insufficient Coverage": 0,
+        "NA": -1,
+    }
+
+    def process_lims_records(
+        self,
+        lims_records: list[LIMSRecord],
+        variants: list[Variant],
+    ) -> list[LIMSRecord]:
+        """Process LIMSRecord objects to prepare for LIMS report generation.
+
+        Args:
+            lims_records: List of LIMSRecord objects with populated drug/gene codes but empty interpretations
+
+        Returns:
+            List of LIMSRecord objects with all interpretations populated
+        """
+
+        for lims_record in lims_records:
+            for gene, gene_code in lims_record.gene_codes.items():
+                # get candidate/qc_filtered variants for this drug/gene to determine max MDL interpretation
+                candidate_variants = [
+                    v for v in variants
+                    if v.drug == lims_record.drug
+                    if v.gene_id in GeneDatabase.get_locus_tag(gene)
+                ]
+                logger.debug(f"Processing LIMS result for [{lims_record.drug}|{gene}] with {len(candidate_variants)} candidate variants")
+                qc_filtered_variants = [
+                    v for v in candidate_variants
+                    if not v.fails_qc or v._is_valid_deletion()
+                ]
+                logger.debug(f"After QC filtering, {len(qc_filtered_variants)}/{len(candidate_variants)} variants remain for [{lims_record.drug}|{gene}]")
+
+                # get max mdl based on filtered variants
+                self.set_gene_code_max_mdl(gene_code, qc_filtered_variants)
+                logger.debug(f"Max MDL for [{lims_record.drug}|{gene}] is {gene_code.max_mdl_interpretation} from {len(gene_code.max_mdl_variants)} variant(s)")
+
+                # get gene_target_value based on max_mdl interpretation
+                self.resolve_gene_target(gene_code)
+                logger.debug(f"Resolved gene target value for [{lims_record.drug}|{gene}] as {gene_code.gene_target_value}")
+
+            self.resolve_drug_target(lims_record)
+        return lims_records
+
+
+    def resolve_drug_target(self, lims_record: LIMSRecord) -> None:
+        """Resolve drug target value for a given LIMSRecord based on its gene codes.
+
+        Args:
+            lims_record: A LIMSRecord object with populated gene codes and their interpretations
+
+        Returns:
+            None
+        """
+        # rpoB mutations indicating low-level resistance
+        RPOB_MUTATIONS = [
+            "p.Leu430Pro", "p.Asp435Tyr", "p.His445Asn", "p.His445Cys",
+            "p.His445Leu", "p.His445Ser", "p.Leu452Pro", "p.Ile491Phe",
+        ]
+
+        all_gene_codes = [
+            gene_code for gene_code in lims_record.gene_codes.values()
+            if gene_code.max_mdl_interpretation
+        ]
+
+        max_gene_code = max(
+            all_gene_codes,
+            key=lambda gc: self.RESISTANCE_RANKING.get(gc.max_mdl_interpretation or "NA", -1),
+        )
+
+        _all_rpob_variants = all([
+            lims_record.drug == "rifampin" and
+            v.gene_name == "rpoB"
+            for v in max_gene_code.max_mdl_variants
+        ])
+
+        # rifampin specific drug target logic
+        if _all_rpob_variants:
+            if max_gene_code.max_mdl_interpretation in ["R"]:
+                if all([v in RPOB_MUTATIONS for v in max_gene_code.max_mdl_variants]):
+                    setattr(lims_record, "drug_target_value", "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods")
+                else:
+                    setattr(lims_record, "drug_target_value", "Predicted resistance to rifampin")
+                return
+
+            # elif max_gene_code.max_mdl_interpretation in ["S"]:
+            # This is incorrect according to interpretation documentation. But leaving it for consistency with previous version of tbp_parser
+            elif max_gene_code.max_mdl_interpretation in ["S", "WT"]:
+                if all([self._is_synonymous_rpob_rrdr(v) for v in max_gene_code.max_mdl_variants]):
+                    setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampin. The detected synonymous mutation(s) do not confer resistance")
+                else:
+                    setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampin")
+                return
+
+        # all other drug target logic
+        if max_gene_code.max_mdl_interpretation in ["R"]:
+            setattr(lims_record, "drug_target_value", f"Mutation(s) associated with resistance to {lims_record.drug} detected")
+
+        elif max_gene_code.max_mdl_interpretation in ["U"]:
+            setattr(lims_record, "drug_target_value", f"The detected mutation(s) have uncertain significance. Resistance to {lims_record.drug} cannot be ruled out")
+
+        elif max_gene_code.max_mdl_interpretation in ["S", "WT"]:
+            setattr(lims_record, "drug_target_value", f"No mutations associated with resistance to {lims_record.drug} detected")
+
+        elif max_gene_code.max_mdl_interpretation in ["NA", "Insufficient Coverage"]:
+            setattr(lims_record, "drug_target_value", f"Pending Retest")
+        return
+
+
+    def set_gene_code_max_mdl(self, gene_code: LIMSGeneCode, variants: list[Variant]) -> None:
+        """Set and assign the highest MDL interpretation from a list of Variants to a LIMSGeneCode object
+
+        Args:
+            variants: List of Variant objects
+
+        Returns:
+            - The highest-ranked MDL interpretation string, or "NA" if no variants have an interpretation.
+            - List of Variants that have this highest MDL interpretation (could be multiple if tied)
+        """
+        all_mdl_interpretations = [v.mdl_interpretation for v in variants if v.mdl_interpretation]
+        max_mdl_interpretation = max(
+            all_mdl_interpretations,
+            key=lambda x: self.RESISTANCE_RANKING.get(x, -1),
+            default="NA"
+        )
+        max_mdl_variants = [v for v in variants if v.mdl_interpretation == max_mdl_interpretation]
+
+        # assigning max_mdl_variants/interpretation to LIMSGeneCode object
+        setattr(gene_code, "max_mdl_interpretation", max_mdl_interpretation)
+        setattr(gene_code, "max_mdl_variants", max_mdl_variants)
+        return
+
+
+    def _is_synonymous_rpob_rrdr(self, variant: Variant) -> bool:
+        # Codon/nucleotide positions for genes requiring special LIMS handling
+        SPECIAL_POSITIONS = {
+            "rpoB": [426, 452],
+        }
+
+        return (
+            variant.gene_name == "rpoB" and
+            variant.drug == "rifampin" and
+            variant.type == "synonymous_variant" and
+            Helper.is_mutation_within_range(
+                Helper.get_position(variant.protein_change),
+                SPECIAL_POSITIONS["rpoB"]
+            )
+        )
+
+    def resolve_gene_target(
+        self,
+        gene_code: LIMSGeneCode,
+    ) -> None:
+        """Resolve gene text for S max MDL interpretation.
+
+        For rpoB + rifampin: checks for RRDR synonymous variants.
+        For other genes: checks if gene itself has S interpretation.
+
+        Args:
+            gene_code: LIMSGeneCode object for this specific gene
+
+        Returns:
+            String of gene_target_value to be assigned for given LIMSGeneCode object
+        """
+        # setting default
+        gene_target_value = "No sequence"
+
+        if any([self._is_synonymous_rpob_rrdr(v) for v in gene_code.max_mdl_variants]):
+            # never report "NA" protein_changes; this is different behavior than lab report
+            gene_target_value = "; ".join(
+                f"{v.protein_change if v.protein_change != 'NA' else v.nucleotide_change} [synonymous]"
+                for v in gene_code.max_mdl_variants
+            )
+            setattr(gene_code, "gene_target_value", gene_target_value)
+
+        elif gene_code.max_mdl_interpretation in ["R", "U"]:
+            # never report "NA" protein_changes; this is different behavior than lab report
+            gene_target_value = "; ".join(
+                f"{v.protein_change if v.protein_change != 'NA' else v.nucleotide_change}"
+                for v in gene_code.max_mdl_variants
+            )
+            setattr(gene_code, "gene_target_value", gene_target_value)
+
+        elif gene_code.max_mdl_interpretation in ["S"]:
+            setattr(gene_code, "gene_target_value", "No high confidence mutations detected")
+
+        elif gene_code.max_mdl_interpretation in ["WT"]:
+            setattr(gene_code, "gene_target_value", "No mutations detected")
+
+        elif gene_code.max_mdl_interpretation in ["NA", "Insufficient Coverage"]:
+            setattr(gene_code, "gene_target_value", "No sequence")
+        return
+
+    def _passes_lims_coverage_fraction(
+        self,
+        lims_records: list[LIMSRecord],
+        locus_coverage_map: Dict[str, LocusCoverage],
+        genes_with_valid_deletions: dict[str, list[Variant]],
+    ) -> bool:
+        """Compute fraction of LIMS genes passing coverage QC.
+
+        Args:
+            locus_coverage_map: Mapping of locus_tag names to their coverage percentages
+            genes_with_valid_deletions: Dictionary mapping locus tags to lists of QC-passing deletion variants in that locus
+
+        Returns:
+            bool: True if fraction of LIMS genes passing coverage QC is above threshold, False otherwise
+        """
+        lims_genes = [
+            gene
+            for rec in lims_records
+            for gene in rec.gene_codes.keys()
+        ]
+
+        # Only count/check coverage for the locus tag corresponding to the genes found in the LIMS format
+        passing_genes = 0
+        for lims_gene in lims_genes:
+            lims_locus_tag = GeneDatabase.get_locus_tag(lims_gene)
+
+            # Should always find a locus tag see check_bed_for_lims_genes in check_inputs.py
+            locus_coverage = locus_coverage_map[lims_locus_tag]
+
+            if (
+                locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE) and
+                lims_locus_tag not in genes_with_valid_deletions
+            ):
+
+                logger.debug(
+                    f"LIMS coverage QC FAILED for gene {lims_gene}|{lims_locus_tag}): "
+                    f"coverage {(locus_coverage.breadth_of_coverage * 100):.2f}% BELOW threshold {self.config.MIN_PERCENT_COVERAGE * 100:.2f}%"
+                )
+            else:
+                logger.debug(
+                    f"LIMS coverage QC PASSED for gene {lims_gene}|{lims_locus_tag}): "
+                    f"coverage {(locus_coverage.breadth_of_coverage * 100):.2f}% ABOVE threshold {self.config.MIN_PERCENT_COVERAGE * 100:.2f}%"
+                )
+                passing_genes += 1
+
+        if (passing_genes / len(lims_genes) < self.config.MIN_PERCENT_LOCI_COVERED):
+            logger.debug(
+                f"LIMS coverage fraction {passing_genes}/{len(lims_genes)} = {(passing_genes / len(lims_genes)):.2f} "
+                f"BELOW threshold {self.config.MIN_PERCENT_LOCI_COVERED:.2f}"
+            )
+            return False
+        else:
+            logger.debug(
+                f"LIMS coverage fraction {passing_genes}/{len(lims_genes)} = {(passing_genes / len(lims_genes)):.2f} "
+                f"ABOVE threshold {self.config.MIN_PERCENT_LOCI_COVERED:.2f}"
+            )
+            return True
+
+    def _get_pnca_his57asp_variants(self, variants: list[Variant]) -> list[Variant]:
+        """Check if any pncA His57Asp variants are present in the list of variants.
+
+        Args:
+            variants: List of Variant objects
+        Returns:
+            list[Variant]: List of pncA His57Asp variants
+        """
+        pnca_variants = []
+        for variant in variants:
+            if variant.gene_name == "pncA" and variant.protein_change == "p.His57Asp":
+                pnca_variants.append(variant)
+        return pnca_variants
+
+
+    # should happen last after setting all other fields
+    def process_lims_mtbc_id(
+        self,
+        lims_records: list[LIMSRecord],
+        variants: list[Variant],
+        locus_coverage_map: Dict[str, LocusCoverage],
+        genes_with_valid_deletions: dict[str, list[Variant]],
+        detected_lineage: str,
+        detected_sublineage: str,
+    ) -> str:
+        """Determine the lineage for the LIMS report.
+
+        Args:
+            lims_records: List of LIMSRecord objects
+            variants: List of all Variant objects (including WT)
+            locus_coverage_map: Mapping of locus_tag names to their coverage percentages
+            genes_with_valid_deletions: Dictionary mapping locus tags to lists of QC-passing deletion variants in that locus
+            detected_lineage: Raw lineage string from TBProfiler JSON
+            detected_sublineage: Raw sublineage string from TBProfiler JSON
+
+        Returns:
+            str: detected lineage for LIMS report
+        """
+        lineage = set()
+
+        pnca_his57asp_variants = self._get_pnca_his57asp_variants(variants)
+
+        # Can't determine lineage unless sufficient coverage of LIMS genes
+        if self._passes_lims_coverage_fraction(lims_records, locus_coverage_map, genes_with_valid_deletions):
+            if self.config.TNGS:
+                # Section 5.5: tNGS lineage based on pncA His57Asp
+                if pnca_his57asp_variants:
+                    if any(["Failed quality in the mutation position" in v.warning for v in pnca_his57asp_variants]):
+                        lineage.add("DNA of Mycobacterium tuberculosis complex detected (M. bovis not ruled out)")
+                    else:
+                        lineage.add("DNA of Mycobacterium bovis detected")
+                else:
+                    lineage.add("DNA of Mycobacterium tuberculosis complex detected (not M. bovis)")
+            else:
+                # Section 5.4: WGS lineage
+                sublineages = detected_sublineage.split(";")
+                if "lineage" in detected_lineage:
+                    lineage.add("DNA of Mycobacterium tuberculosis species detected")
+
+                for sublineage in sublineages:
+                    if "BCG" in detected_lineage or "BCG" in sublineage:
+                        lineage.add("DNA of Mycobacterium bovis BCG detected")
+                    elif ("La1" in detected_lineage or "La1" in sublineage) or \
+                        ("bovis" in detected_lineage or "bovis" in sublineage):
+                        lineage.add("DNA of Mycobacterium bovis (not BCG) detected")
+
+                if detected_lineage == "" or detected_lineage == "NA" or len(lineage) == 0:
+                    logger.debug("No lineage detected by TBProfiler; assuming M.tb")
+                    lineage.add("DNA of Mycobacterium tuberculosis complex detected")
+        else:
+            lineage.add("DNA of Mycobacterium tuberculosis complex NOT detected")
+
+        return "; ".join(lineage)
