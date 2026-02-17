@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, List
 from utils import Helper
 from pydantic import BaseModel
 import logging

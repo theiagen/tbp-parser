@@ -1,26 +1,32 @@
 import logging
 from arguments import parse_arguments
-
-from utils.check_inputs import check_dependency_exists
-from utils.config import Configuration
-from utils.logger_setup import setup_logger
-
-from coverage import parse_bed_file, CoverageCalculator
+from utils import (
+    Configuration,
+    setup_logger,
+    check_dependency_exists,
+    check_bed_for_lims_genes,
+)
+from coverage import (
+    CoverageCalculator,
+    parse_bed_file,
+)
 from variant import (
     VariantProcessor,
     VariantInterpreter,
     VariantQC,
     parse_tbprofiler_json,
 )
-
+from lims import (
+    LIMSProcessor,
+    parse_lims_yml_file,
+)
 from reporters import (
     write_laboratorian_report,
     write_lims_report,
     write_looker_report,
-    write_gene_coverage_report,
+    write_target_coverage_report,
     write_locus_coverage_report,
 )
-
 
 def main():
     options = parse_arguments()

@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from utils.config import Configuration
 from coverage.bed_record import BedRecord
-from coverage.coverage_data import GeneCoverage, LocusCoverage
+from coverage.coverage_data import TargetCoverage, LocusCoverage
 
 logger = logging.getLogger(__name__)
 

@@ -2,11 +2,9 @@
 import logging
 from pydantic import BaseModel, Field
 from typing import Dict, Optional
-from utils.config import Configuration
-from utils.helper import Helper
+from utils import Configuration, Helper
 from variant import Variant
-from coverage import LocusCoverage
-
+from coverage import LocusCoverage, TargetCoverage
 logger = logging.getLogger(__name__)
 class QCResult(BaseModel):
     """Result of a QC check on a variant. Includes Variant attributes to update/overwrite based on the QC outcome."""

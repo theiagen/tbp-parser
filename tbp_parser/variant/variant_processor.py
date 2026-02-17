@@ -1,9 +1,8 @@
 import logging
 from typing import List, Optional
 
-from variant import Variant
-from variant.variant_record import VariantRecord, Annotation
-from utils.gene_database import GeneDatabase
+from variant import Variant, VariantRecord, Annotation
+from utils import GeneDatabase
 
 logger = logging.getLogger(__name__)
 

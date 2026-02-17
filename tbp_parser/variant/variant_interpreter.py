@@ -1,10 +1,8 @@
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import List
 
 from variant import Variant
-from utils.helper import Helper
-from utils.gene_database import GeneDatabase
-from coverage import LocusCoverage
+from utils import Helper
 import logging
 
 logger = logging.getLogger(__name__)

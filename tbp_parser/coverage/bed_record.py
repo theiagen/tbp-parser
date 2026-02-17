@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from pydantic import BaseModel, Field
-from utils.helper import Helper
+from utils import Helper
 
 class BedRecord(BaseModel):
     """A class representing a record or entry from a BED file."""

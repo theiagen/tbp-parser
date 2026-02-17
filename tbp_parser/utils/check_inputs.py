@@ -4,6 +4,10 @@ import subprocess
 import sys
 import logging
 
+from coverage import BedRecord
+from lims import LIMSRecord
+from utils import GeneDatabase
+
 logger = logging.getLogger(__name__)
 
 def is_file_valid(filename: str) -> str:

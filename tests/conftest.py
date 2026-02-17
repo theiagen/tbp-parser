@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from variant import Variant
-from coverage import LocusCoverage, GeneCoverage
+from coverage import LocusCoverage, TargetCoverage
 
 
 @pytest.fixture
