@@ -44,16 +44,8 @@ def get_report_fmt(variant: Variant, attribute: str) -> Optional[str]:
         The formatted attribute value as a string.
     """
     value = getattr(variant, attribute)
-    if not value:
-        # conditions for reporting "NA"
-        if attribute == "protein_change":
-            return "NA"
-    # special reporting for non-empty attributes
     if attribute == "warning":
         return "; ".join(sorted(value))
-    # # report negative numeric values as "NA" (used for depth, pos, freq, read_support in `unreported_variants``)
-    # elif isinstance(value, (int, float)) and value < 0:
-    #     return "NA"
     else:
         return str(value)
 

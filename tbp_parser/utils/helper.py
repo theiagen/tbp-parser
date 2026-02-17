@@ -101,19 +101,37 @@ class Helper:
             "fbiD": "Rv2983",
             "mmpR5": "Rv0678",
         }
+        PROTEIN_CHANGE_LIST = [
+            "p.0?",
+        ]
 
-        # Normalize drug
+        # Normalize drug: Impacts: Variant, Annotation
         if hasattr(obj, 'drug'):
             obj.drug = DRUG_NAME_MAP.get(obj.drug.lower(), obj.drug)
 
-        # Normalize drug lists
+        # Normalize drug lists: Impacts: VariantRecord
         if hasattr(obj, 'gene_associated_drugs'):
             obj.gene_associated_drugs = [DRUG_NAME_MAP.get(d.lower(), d) for d in obj.gene_associated_drugs]
 
-        # Normalize gene_name
+        # Normalize gene_name: Impacts: VariantRecord, Consequences, Variant, BedRecord, GeneCoverage, LocusCoverage
         if hasattr(obj, 'gene_name'):
             obj.gene_name = GENE_NAME_MAP.get(obj.gene_name, obj.gene_name)
 
-        # Set confidence from comment
+        # Set confidence from comment: Impacts: Annotation, Variant
         if hasattr(obj, 'comment') and obj.comment == "Not found in WHO catalogue":
             obj.confidence = "No WHO annotation"
+
+        # Normalize protein_change: Impacts: Variant
+        if hasattr(obj, 'protein_change'):
+            # if the protein change is empty, set it to NA (consistent with current implemntation of tbp_parser)
+            if not getattr(obj, 'protein_change'):
+                obj.protein_change = "NA"
+            else:
+                obj.protein_change = obj.protein_change if obj.protein_change not in PROTEIN_CHANGE_LIST else obj.nucleotide_change
+
+        # Normalize gene_codes: Impacts: LIMSRecord
+        if hasattr(obj, 'gene_codes'):
+            obj.gene_codes = {
+                GENE_NAME_MAP.get(gene, gene): gene_code
+                for gene, gene_code in obj.gene_codes.items()
+            }
