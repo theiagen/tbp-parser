@@ -11,8 +11,8 @@ class BedRecord(BaseModel):
     gene_name: str
 
     # Derived fields (computed during init, excluded from serialization)
-    length: Optional[int] = Field(default=None, exclude=True)
-    coords: Optional[tuple[int, int]] = Field(default=None, exclude=True)
+    length: int = Field(default=0, exclude=True)
+    coords: tuple[int, int] = Field(default=(0, 0), exclude=True)
 
     # To be populated in Coverage class after parsing the BAM file, excluded from serialization
     reads_by_position: Dict[int, List[str]] = Field(default_factory=dict, exclude=True) # (0-based)
