@@ -130,3 +130,28 @@ def check_dependency_exists() -> None:
         # samtools found but failed to execute properly
         logger.error(f"samtools found but failed to run properly: {e.stderr.strip()}")
         sys.exit(1)
+
+def check_bed_for_lims_genes(bed_records: list[BedRecord], lims_records: list[LIMSRecord]) -> None:
+    """Checks that the provided LIMS format yml file has an associated BedRecord for LIMS report coverage calculations.
+
+    Args:
+        bed_records: List of BedRecord objects to check
+        lims_records: List of LIMSRecord objects to check
+    """
+
+    # It's typical for the lims yaml input file to contain gene names, but the BED file might have irregular
+    # gene names representing partial regions. Look for locus tags in the BED file and convert those to gene names to compare with LIMS genes.
+    unique_bed_genes = set(record.locus_tag for record in bed_records)
+    unique_lims_genes = set([
+        GeneDatabase.get_locus_tag(gene)
+        for rec in lims_records
+        for gene in rec.gene_codes.keys()
+    ])
+
+    if not unique_lims_genes.issubset(unique_bed_genes):
+        missing_locus_tags = unique_lims_genes - unique_bed_genes
+        missing_genes_list = [f"{GeneDatabase.get_gene_name(locus_tag)}|{GeneDatabase.get_locus_tag(locus_tag)}" for locus_tag in missing_locus_tags]
+        logger.error(f"The following genes from the LIMS report format yaml file are missing in the BED file: {', '.join(missing_genes_list)}")
+        raise ValueError(f"The following genes from the LIMS report format yaml file are missing in the BED file: {', '.join(missing_genes_list)}")
+    else:
+        logger.info("All genes from the LIMS report format yaml file are present in the BED file")

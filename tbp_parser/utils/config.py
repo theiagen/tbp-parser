@@ -126,17 +126,6 @@ class Configuration:
         # but will be populated later on and used across multiple classes
         # self._GENE_TO_ANTIMICROBIAL_DRUG_NAME = {}
 
-    def load_lims_report_format(self) -> dict:
-        """Load the LIMS report format from the YAML file.
-
-        Returns:
-            dict: drug -> {LIMS_code -> {gene_name -> column_name}}
-        """
-        with open(self.lims_report_format_yml, "r") as f:
-            lims_format = yaml.safe_load(f)
-        logger.debug(f"Loaded LIMS report format with {len(lims_format)} drugs")
-        return lims_format
-
     def overwrite_variables(self) -> None:
         """This function overwrites the input variables provided at runtime with those
         from the config file
