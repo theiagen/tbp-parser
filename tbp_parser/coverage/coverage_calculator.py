@@ -46,9 +46,9 @@ class CoverageCalculator:
                 read_list = [read for read in read_list if read in whitelisted_reads]
                 # reads_removed = len(rec.get_query_names()) - len(read_list)
                 # if reads_removed > 0:
-                #     logger.debug(f"{bed_record} | Position: {rec.pos + 1} | Total Reads: {len(rec.get_query_names())} | Non-overlapping Reads: {len(read_list)} | Reads Removed: {reads_removed}")
+                #     logger.debug(f"{bed_record} | Position: {rec.reference_pos + 1} | Total Reads: {len(rec.get_query_names())} | Non-overlapping Reads: {len(read_list)} | Reads Removed: {reads_removed}")
 
-            reads_by_position[rec.pos + 1] = read_list # convert to 1-based indexing
+            reads_by_position[rec.reference_pos + 1] = read_list # convert to 1-based indexing
         return reads_by_position
 
 
