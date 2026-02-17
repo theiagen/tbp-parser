@@ -12,7 +12,7 @@ def write_target_coverage_report(
     config: Configuration,
     sample_name: str,
     target_coverage_map: dict[str, TargetCoverage],
-) -> Path:
+) -> None:
     """Write a coverage report at the target level.
 
     Args:
@@ -21,7 +21,7 @@ def write_target_coverage_report(
         target_coverage_map: dict of target_name -> TargetCoverage objects
 
     Returns:
-        Path to the written CSV file
+        None
     """
     rows = []
     for gene_name, coverage in target_coverage_map.items():
@@ -37,14 +37,12 @@ def write_target_coverage_report(
     df.to_csv(output_path, index=False)
 
     logger.info(f"Target coverage report written to {output_path}")
-    return output_path
-
 
 def write_locus_coverage_report(
     config: Configuration,
     sample_name: str,
     locus_coverage_map: dict[str, LocusCoverage],
-) -> Path:
+) -> None:
     """Write a coverage report at the locus level.
 
     Args:
@@ -53,7 +51,7 @@ def write_locus_coverage_report(
         locus_coverage_map: dict of locus_tag -> LocusCoverage objects
 
     Returns:
-        Path to the written CSV file
+        None
     """
     rows = []
     for locus_tag, coverage in locus_coverage_map.items():
@@ -69,4 +67,3 @@ def write_locus_coverage_report(
     df.to_csv(output_path, index=False)
 
     logger.info(f"Locus coverage report written to {output_path}")
-    return output_path

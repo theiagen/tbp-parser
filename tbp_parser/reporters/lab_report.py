@@ -36,7 +36,7 @@ COLUMNS = {
 def get_report_fmt(variant: Variant, attribute: str) -> Optional[str]:
     """Format attribute for report output, converting missing/special attributes to specific values.
     Can be used for standardizing unreported variants (WT/NA) in reports.
-    
+
     Args:
         attribute: The attribute name to format.
 
@@ -72,7 +72,7 @@ def sort_lab_df(df: pd.DataFrame) -> pd.DataFrame:
     df_all = pd.concat([df_other, df_wt, df_na], ignore_index=True)
     return df_all
 
-def write_laboratorian_report(config: Configuration, variants: list[Variant]) -> Path:
+def write_laboratorian_report(config: Configuration, variants: list[Variant]) -> None:
     """Write the laboratorian report from processed Variant objects.
 
     Args:
@@ -80,7 +80,7 @@ def write_laboratorian_report(config: Configuration, variants: list[Variant]) ->
         variants: List of Variant objects with interpretation and QC applied
 
     Returns:
-        Path to the written CSV file
+        None
     """
     rows = []
     for variant in variants:
@@ -97,10 +97,9 @@ def write_laboratorian_report(config: Configuration, variants: list[Variant]) ->
 
         rows.append(row)
 
-    df = pd.DataFrame(rows, columns=COLUMNS.keys())
+    df = pd.DataFrame(rows, columns=list(COLUMNS.keys()))
     df = sort_lab_df(df)
     output_path = Path(f"{config.OUTPUT_PREFIX}.laboratorian_report.csv")
     df.to_csv(output_path, index=False)
 
     logger.info(f"Laboratorian report written to {output_path}")
-    return output_path
