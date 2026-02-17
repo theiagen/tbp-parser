@@ -93,5 +93,15 @@ class VariantRecord(BaseModel):
             VariantRecord: A copy of the original VariantRecord instance, but populated with the new `consequences` attributes where applicable.
         """
         consequences_dict = consequences.model_dump()
-        consequences_dict.pop("annotation", None)  # Remove annotation to avoid overwriting
+        # preserve original consequence annotations if they exist and are not empty
+        # otherwise, create a default annotation based on the gene_associated drugs
+        # https://github.com/theiagen/tbp-parser/blob/0dae65710a0f14e0796cb1b7a3a1dc390e2aeb0f/tbp_parser/Variant.py#L64
+        if not hasattr(consequences, "annotation") or not consequences.annotation:
+            consequences_dict["annotation"] = [Annotation(
+                drug=drug,
+                confidence="No WHO annotation",
+                source="",
+                comment="",
+            ) for drug in variant_record.gene_associated_drugs]
+
         return variant_record.model_copy(update=consequences_dict)
