@@ -11,10 +11,32 @@ class GeneCoverage(BaseModel):
     average_depth: float
 
     def __str__(self):
-        return f"GeneCoverage([{self.gene_name}][{self.locus_tag}][{self.coords}] BC:{self.breadth_of_coverage} AD:{self.average_depth})"
+        return f"GeneCoverage([{self.gene_name}][{self.locus_tag}][{self.coords}] BC:{(self.breadth_of_coverage * 100):.2f}% AD:{self.average_depth:.2f})"
 
     def __repr__(self):
-        return f"GeneCoverage([{self.gene_name}][{self.locus_tag}][{self.coords}] BC:{self.breadth_of_coverage} AD:{self.average_depth})"
+        return f"GeneCoverage([{self.gene_name}][{self.locus_tag}][{self.coords}] BC:{(self.breadth_of_coverage * 100):.2f}% AD:{self.average_depth:.2f})"
+
+    def contains_position(self, position: int) -> bool:
+        """Check if a specific position exists within gene coverage.
+
+        Args:
+            position (int): The position to check.
+        Returns:
+            bool: True if the position is within any of the coordinate ranges, False otherwise.
+        """
+        if self.coords[0] <= position <= self.coords[1]:
+            return True
+        return False
+
+    def has_breadth_below(self, threshold: float) -> bool:
+        """Check if the gene coverage has low breadth of coverage.
+
+        Args:
+            threshold (float): The breadth of coverage threshold.
+        Returns:
+            bool: True if the breadth of coverage is below the threshold, False otherwise.
+        """
+        return self.breadth_of_coverage < threshold
 
 class LocusCoverage(BaseModel):
     """
@@ -27,10 +49,10 @@ class LocusCoverage(BaseModel):
     average_depth: float
 
     def __str__(self):
-        return f"LocusCoverage([{self.gene_names}][{self.locus_tag}][{self.coords}] BC:{self.breadth_of_coverage} AD:{self.average_depth})"
+        return f"LocusCoverage([{self.gene_names}][{self.locus_tag}][{self.coords}] BC:{(self.breadth_of_coverage * 100):.2f}% AD:{self.average_depth:.2f})"
 
     def __repr__(self):
-        return f"LocusCoverage([{self.gene_names}][{self.locus_tag}][{self.coords}] BC:{self.breadth_of_coverage} AD:{self.average_depth})"
+        return f"LocusCoverage([{self.gene_names}][{self.locus_tag}][{self.coords}] BC:{(self.breadth_of_coverage * 100):.2f}% AD:{self.average_depth:.2f})"
 
     def contains_position(self, position: int) -> bool:
         """Check if a specific position exists within locus coverage.
@@ -53,4 +75,4 @@ class LocusCoverage(BaseModel):
         Returns:
             bool: True if the breadth of coverage is below the threshold, False otherwise.
         """
-        return self.breadth_of_coverage < threshold * 100
+        return self.breadth_of_coverage < threshold

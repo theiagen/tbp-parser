@@ -71,8 +71,8 @@ class CoverageCalculator:
         # Calculates breadth of coverage for a given BedRecord.
         positions_above_min_depth = sum(1 for reads in reads_by_position.values() if len(reads) >= self.config.MIN_DEPTH)
         try:
-            breadth_of_coverage = (positions_above_min_depth / len(reads_by_position)) * 100
-            logger.debug(f"Total positions above MIN_DEPTH: {positions_above_min_depth}/{len(reads_by_position)} | Breadth of coverage: {breadth_of_coverage:.2f}%")
+            breadth_of_coverage = positions_above_min_depth / len(reads_by_position)
+            logger.debug(f"Total positions above MIN_DEPTH: {positions_above_min_depth}/{len(reads_by_position)} | Breadth of coverage: {(breadth_of_coverage * 100):.2f}%")
             return breadth_of_coverage
         except ZeroDivisionError:
             logger.debug("Length of BedRecord is 0, returning breadth of coverage as 0.0%")
