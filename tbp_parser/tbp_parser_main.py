@@ -68,33 +68,56 @@ def main():
 
     # QC for all_variants (not necessary for unreported_variants)
     variant_qc = VariantQC(config)
-    all_variants = variant_qc.apply_qc(all_variants, LOCUS_COVERAGE_MAP)
-    unreported_variants = variant_qc.apply_wildtype_qc(unreported_variants, LOCUS_COVERAGE_MAP)
+    GENES_WITH_VALID_DELETIONS = variant_qc.get_genes_with_valid_deletions(all_variants)
+    all_variants = variant_qc.apply_qc(
+        variants=all_variants,
+        locus_coverage_map=LOCUS_COVERAGE_MAP,
+        target_coverage_map=TARGET_COVERAGE_MAP,
+        genes_with_valid_deletions=GENES_WITH_VALID_DELETIONS
+    )
+    unreported_variants = variant_qc.apply_wildtype_qc(
+        variants=unreported_variants,
+        locus_coverage_map=LOCUS_COVERAGE_MAP
+    )
 
     # merge all_varaints and unreported variants for reporting
     all_variants = all_variants + unreported_variants
 
-    # Determine which genes have low depth of coverage
-    low_depth_genes = [
-        locus_tag for locus_tag, coverage in LOCUS_COVERAGE_MAP.items()
-        if coverage.has_breadth_below(config.MIN_PERCENT_COVERAGE)
-    ]
-
-    GENES_WITH_VALID_DELETIONS = [str(variant.gene_name) for variant in all_variants if variant.is_valid_deletion]
-
-    # Write reports
+    # Write lab report
     write_laboratorian_report(config, all_variants)
 
-    _, raw_lineage, lineage_english = write_lims_report(
-        config, all_variants, low_depth_genes, GENES_WITH_VALID_DELETIONS
+    # Process all LIMS records and lineage information for final report
+    lims_processor = LIMSProcessor(config)
+    lims_records = lims_processor.process_lims_records(lims_records, all_variants)
+    lims_lineage = lims_processor.process_lims_mtbc_id(
+        lims_records=lims_records,
+        variants=all_variants,
+        locus_coverage_map=LOCUS_COVERAGE_MAP,
+        genes_with_valid_deletions=GENES_WITH_VALID_DELETIONS,
+        detected_lineage=LINEAGE_ID,
+        detected_sublineage=SUBLINEAGE_ID,
     )
 
+    # Write LIMS report
+    write_lims_report(
+        config=config,
+        lims_records=lims_records,
+        lims_lineage=lims_lineage,
+        sample_id=SAMPLE_ID,
+        detected_lineage=LINEAGE_ID,
+    )
+
+    # Write Looker report
     write_looker_report(
-        config, all_variants, low_depth_genes, GENES_WITH_VALID_DELETIONS,
-        raw_lineage, lineage_english
+        config=config,
+        variants=all_variants,
+        lims_lineage=lims_lineage,
+        sample_id=SAMPLE_ID,
+        detected_lineage=LINEAGE_ID,
     )
 
-    write_gene_coverage_report(config, SAMPLE_ID, GENE_COVERAGE_MAP)
+    # Write coverage reports
+    write_target_coverage_report(config, SAMPLE_ID, TARGET_COVERAGE_MAP)
     write_locus_coverage_report(config, SAMPLE_ID, LOCUS_COVERAGE_MAP)
 
 
