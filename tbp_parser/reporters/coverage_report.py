@@ -2,29 +2,29 @@ import logging
 import pandas as pd
 from pathlib import Path
 
-from coverage import GeneCoverage, LocusCoverage
-from utils.config import Configuration
+from coverage import TargetCoverage, LocusCoverage
+from utils import Configuration
 
 logger = logging.getLogger(__name__)
 
 
-def write_gene_coverage_report(
+def write_target_coverage_report(
     config: Configuration,
     sample_name: str,
-    gene_coverage_map: dict[str, GeneCoverage],
+    target_coverage_map: dict[str, TargetCoverage],
 ) -> Path:
-    """Write a coverage report at the gene level.
+    """Write a coverage report at the target level.
 
     Args:
         config: Configuration object
         sample_name: Sample identifier
-        gene_coverage_map: dict of gene_name -> GeneCoverage objects
+        target_coverage_map: dict of target_name -> TargetCoverage objects
 
     Returns:
         Path to the written CSV file
     """
     rows = []
-    for gene_name, coverage in gene_coverage_map.items():
+    for gene_name, coverage in target_coverage_map.items():
         rows.append({
             "sample_name": sample_name,
             "gene_name": gene_name,
@@ -33,10 +33,10 @@ def write_gene_coverage_report(
         })
 
     df = pd.DataFrame(rows)
-    output_path = Path(f"{config.OUTPUT_PREFIX}.gene_coverage_report.csv")
+    output_path = Path(f"{config.OUTPUT_PREFIX}.target_coverage_report.csv")
     df.to_csv(output_path, index=False)
 
-    logger.info(f"Gene coverage report written to {output_path}")
+    logger.info(f"Target coverage report written to {output_path}")
     return output_path
 
 

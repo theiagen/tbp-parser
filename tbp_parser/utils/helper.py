@@ -113,7 +113,7 @@ class Helper:
         if hasattr(obj, 'gene_associated_drugs'):
             obj.gene_associated_drugs = [DRUG_NAME_MAP.get(d.lower(), d) for d in obj.gene_associated_drugs]
 
-        # Normalize gene_name: Impacts: VariantRecord, Consequences, Variant, BedRecord, GeneCoverage, LocusCoverage
+        # Normalize gene_name: Impacts: VariantRecord, Consequences, Variant, BedRecord, TargetCoverage, LocusCoverage
         if hasattr(obj, 'gene_name'):
             obj.gene_name = GENE_NAME_MAP.get(obj.gene_name, obj.gene_name)
 

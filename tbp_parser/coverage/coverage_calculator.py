@@ -137,20 +137,20 @@ class CoverageCalculator:
         return bed_records
 
 
-    def generate_coverage_maps(self, bed_records: List[BedRecord]) -> Tuple[Dict[str, GeneCoverage], Dict[str, LocusCoverage]]:
+    def generate_coverage_maps(self, bed_records: List[BedRecord]) -> Tuple[Dict[str, TargetCoverage], Dict[str, LocusCoverage]]:
       """
-      Calculates both gene-level and locus-level coverage statistics for the provided BedRecords.
-      For gene-level coverage, one GeneCoverage object is created per BedRecord.
+      Calculates both target-level and locus-level coverage statistics for the provided BedRecords.
+      For target-level coverage, one TargetCoverage object is created per BedRecord.
       For locus-level coverage (if applicable), multiple BedRecords with the same locus tag are aggregated into a single LocusCoverage object.
 
       Args:
           bed_records (List[BedRecord]): A list of BedRecords to calculate coverage for.
       Returns:
-          Tuple[Dict[str, GeneCoverage], Dict[str, LocusCoverage]]: A tuple containing:
-              - Dictionary of GeneCoverage objects (one per gene name)
+          Tuple[Dict[str, TargetCoverage], Dict[str, LocusCoverage]]: A tuple containing:
+              - Dictionary of TargetCoverage objects (one per gene name)
               - Dictionary of LocusCoverage objects (one per locus tag)
       """
-      gene_coverage_map = {}
+      target_coverage_map = {}
       locus_coverage_map = {}
       breadth_of_coverage = -1
       average_depth = -1
@@ -172,7 +172,7 @@ class CoverageCalculator:
                   bed_record.reads_by_position,
               )
 
-              gene_coverage_map[bed_record.gene_name] = GeneCoverage(
+              target_coverage_map[bed_record.gene_name] = TargetCoverage(
                   locus_tag=bed_record.locus_tag,
                   gene_name=bed_record.gene_name,
                   coords=bed_record.coords,
@@ -212,4 +212,4 @@ class CoverageCalculator:
           )
           locus_coverage_map[locus_tag] = locus_coverage
 
-      return gene_coverage_map, locus_coverage_map
+      return target_coverage_map, locus_coverage_map
