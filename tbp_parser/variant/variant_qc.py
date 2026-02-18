@@ -11,6 +11,8 @@ class QCResult(BaseModel):
     type: Optional[str] = None
     nucleotide_change: Optional[str] = None
     protein_change: Optional[str] = None
+    rationale: Optional[str] = None
+    confidence: Optional[str] = None
     looker_interpretation: Optional[str] = None
     mdl_interpretation: Optional[str] = None
     fails_qc: bool = False
@@ -62,7 +64,8 @@ class VariantQC:
 
             # tNGS-specific QC (separate from rule structure)
             if self.config.TNGS:
-                self._apply_tngs_qc(variant, target_coverage_map)
+                tngs_qc_result = self._check_tngs_qc(variant, locus_qc_result, target_coverage_map)
+                self._update_variant_qc(variant, tngs_qc_result)
         return variants
 
     def apply_wildtype_qc(self, variants: list[Variant], locus_coverage_map: Dict[str, LocusCoverage]) -> list[Variant]:
@@ -140,6 +143,8 @@ class VariantQC:
             - `type`
             - `nucleotide_change`
             - `protein_change`
+            - `rationale`
+            - `confidence`
             - `looker_interpretation`
             - `mdl_interpretation`
 
@@ -281,43 +286,51 @@ class VariantQC:
                 else:
                     return qc_result
         else:
-            logger.debug(f"{variant.gene_name}|{variant.gene_id} has sufficient breadth of coverage; PASSES locus QC")
+            logger.debug(f"{variant.gene_name}|{variant.gene_id} has sufficient breadth of coverage [BC:{(locus_coverage.breadth_of_coverage):.3f}]; PASSES locus QC")
             return qc_result
 
-    def _apply_tngs_qc(self, variant: Variant, target_coverage_map: Dict[str, TargetCoverage]) -> None:
+    def _check_tngs_qc(
+        self,
+        variant: Variant,
+        qc_result: QCResult,
+        target_coverage_map: Dict[str, TargetCoverage]
+    ) -> QCResult:
         """Apply all tNGS-specific QC checks to a variant.
 
         Consolidates tNGS-specific QC, boundary checks, and outside-region checks.
-        Modifies variant directly (does not use QCResult pattern).
 
         Args:
             variant: The variant to check
             target_coverage_map: Mapping of gene_id to TargetCoverage objects
+        Returns:
+            QCResult with tNGS QC outcome
         """
-        # tNGS-specific gene/position checks
-        if self._fails_tngs_specific_qc(variant):
-            variant.fails_qc = True
-            variant.warning.add(self.POSITIONAL_QC_WARNING)
-
-        # tNGS boundary QC (read support vs frequency boundaries)
-        if self._fails_tngs_boundary_qc(variant):
-            variant.fails_qc = True
-            variant.warning.add(self.POSITIONAL_QC_WARNING)
-
         # Check if mutation is outside tNGS primer regions
         target_coverage = next(
             (tc for tc in target_coverage_map.values()
             if variant.gene_id == tc.locus_tag and tc.contains_position(variant.pos)),
             None
         )
-
         if not target_coverage:
-            variant.fails_qc = True
-            variant.warning.add("This mutation is outside the expected region")
-            variant.rationale = "NA"
-            variant.confidence = "NA"
-            variant.looker_interpretation = "NA"
-            variant.mdl_interpretation = "NA"
+            logger.debug(f"No tNGS target coverage found for {variant.gene_name}|{variant.gene_id} at position {variant.pos}; FAILS tNGS QC; Adding warning: `This mutation is outside the expected region`")
+            qc_result.fails_qc = True
+            qc_result.warning.add("This mutation is outside the expected region")
+            qc_result.rationale = "NA"
+            qc_result.confidence = "NA"
+            qc_result.looker_interpretation = "NA"
+            qc_result.mdl_interpretation = "NA"
+
+        # tNGS-specific gene/position checks
+        if self._fails_tngs_specific_qc(variant):
+            qc_result.fails_qc = True
+            qc_result.warning.add(self.POSITIONAL_QC_WARNING)
+
+        # tNGS boundary QC (read support vs frequency boundaries)
+        if self._fails_tngs_boundary_qc(variant):
+            qc_result.fails_qc = True
+            qc_result.warning.add(self.POSITIONAL_QC_WARNING)
+
+        return qc_result
 
     def _fails_tngs_specific_qc(self, variant: Variant) -> bool:
         """Check if a mutation (tNGS only) fails the tNGS-specific QC checks.
