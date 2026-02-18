@@ -266,7 +266,7 @@ class VariantQC:
             # Note that Rule 4.2.2.3.1: WT/NA with low breadth of coverage is handled by `apply_wildtype_qc` function
             else:
                 # Rule 4.2.2.3.2: S/U or R (QC_RESISTANT_MUTATIONS) with low breadth of coverage - FAIL
-                if variant.looker_interpretation == "R" and self.config.QC_RESISTANT_MUTATIONS and not variant.fails_qc:
+                if variant.mdl_interpretation == "R" and self.config.QC_RESISTANT_MUTATIONS and not variant.fails_qc:
                     logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(locus_coverage.breadth_of_coverage):.3f}] and PASSES positional QC; R interpretation automatically PASSES locus QC because QC_RESISTANT_MUTATIONS is currently enabled; Adding `Insufficient Coverage` warning")
                     qc_result.warning.add(self.LOCUS_QC_WARNING)
                     return qc_result
@@ -276,7 +276,7 @@ class VariantQC:
                     (variant.mdl_interpretation == "U") or
                     (variant.mdl_interpretation == "R" and self.config.QC_RESISTANT_MUTATIONS and variant.fails_qc)
                 ):
-                    logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(locus_coverage.breadth_of_coverage):.3f}] and FAILS positional QC; FAILS locus QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage`.")
+                    logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(locus_coverage.breadth_of_coverage):.3f}]; FAILS locus QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage`.")
                     qc_result.fails_qc = True
                     qc_result.looker_interpretation = "Insufficient Coverage"
                     qc_result.mdl_interpretation = "Insufficient Coverage"

@@ -47,7 +47,7 @@ class VariantInterpreter:
         Args:
             variants: List of Variant objects to interpret
         Returns:
-            List of Variant objects with updated interpretation fields            
+            List of Variant objects with updated interpretation fields
         """
         for variant in variants:
             # Handle synthetic unreported variants
@@ -179,6 +179,7 @@ class VariantInterpreter:
         rationale = self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
 
         if variant._is_in_target_promoter(position_nt):
+            logger.debug("Mutation in target promoter region")
             return InterpretationResult(
                 confidence="No WHO annotation",
                 looker_interpretation="U",
@@ -188,6 +189,7 @@ class VariantInterpreter:
             )
         # Note: rpoB upstream variants outside RRDR -> U (rule 2.2.2.2) (different from other genes)
         elif variant._is_upstream_gene_variant():
+            logger.debug("Mutation in upstream gene region")
             return InterpretationResult(
                 confidence="No WHO annotation",
                 looker_interpretation="U" if rule_id == "2.2.2.2" else "S",
@@ -196,6 +198,7 @@ class VariantInterpreter:
                 rationale=rationale
             )
         elif variant._is_in_orf() and variant._is_synonymous():
+            logger.debug("Synonymous mutation in ORF")
             return InterpretationResult(
                 confidence="No WHO annotation",
                 looker_interpretation="S",
@@ -204,6 +207,7 @@ class VariantInterpreter:
                 rationale=rationale
             )
         elif variant._is_in_orf() and not variant._is_synonymous():
+            logger.debug("Nonsynonymous mutation in ORF")
             return InterpretationResult(
                 confidence="No WHO annotation",
                 looker_interpretation="U",
