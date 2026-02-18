@@ -47,20 +47,19 @@ class LIMSProcessor:
                     if v.drug == lims_record.drug
                     if v.gene_id in GeneDatabase.get_locus_tag(gene)
                 ]
-                logger.debug(f"Processing LIMS result for [{lims_record.drug}|{gene}] with {len(candidate_variants)} candidate variants")
                 qc_filtered_variants = [
                     v for v in candidate_variants
                     if not v.fails_qc or v._is_valid_deletion()
                 ]
-                logger.debug(f"After QC filtering, {len(qc_filtered_variants)}/{len(candidate_variants)} variants remain for [{lims_record.drug}|{gene}]")
+                logger.debug(f"Generating LIMS result - GENE_TARGET - [{lims_record.drug}|{gene}]; {len(qc_filtered_variants)}/{len(candidate_variants)} candidate variants after QC filtering")
 
                 # get max mdl based on filtered variants
                 self.set_gene_code_max_mdl(gene_code, qc_filtered_variants)
-                logger.debug(f"Max MDL for [{lims_record.drug}|{gene}] is {gene_code.max_mdl_interpretation} from {len(gene_code.max_mdl_variants)} variant(s)")
 
                 # get gene_target_value based on max_mdl interpretation
                 self.resolve_gene_target(gene_code)
-                logger.debug(f"Resolved gene target value for [{lims_record.drug}|{gene}] as {gene_code.gene_target_value}")
+
+                logger.debug(f"{gene_code}")
 
             self.resolve_drug_target(lims_record)
         return lims_records
@@ -97,6 +96,8 @@ class LIMSProcessor:
             for v in max_gene_code.max_mdl_variants
         ])
 
+        logger.debug(f"Generating LIMS result - DRUG_TARGET - [{lims_record.drug}|{lims_record.drug_code}] based on results from max gene code: `{max_gene_code.gene_code}`")
+
         # rifampin specific drug target logic
         if _all_rpob_variants:
             if max_gene_code.max_mdl_interpretation in ["R"]:
@@ -104,6 +105,8 @@ class LIMSProcessor:
                     setattr(lims_record, "drug_target_value", "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods")
                 else:
                     setattr(lims_record, "drug_target_value", "Predicted resistance to rifampin")
+
+                logger.debug(f"{lims_record}")
                 return
 
             # elif max_gene_code.max_mdl_interpretation in ["S"]:
@@ -113,6 +116,7 @@ class LIMSProcessor:
                     setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampin. The detected synonymous mutation(s) do not confer resistance")
                 else:
                     setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampin")
+                logger.debug(f"{lims_record}")
                 return
 
         # all other drug target logic
@@ -127,6 +131,8 @@ class LIMSProcessor:
 
         elif max_gene_code.max_mdl_interpretation in ["NA", "Insufficient Coverage"]:
             setattr(lims_record, "drug_target_value", f"Pending Retest")
+
+        logger.debug(f"{lims_record}")
         return
 
 

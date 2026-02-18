@@ -51,6 +51,7 @@ class VariantQC:
             The list of Variant objects with QC warnings applied
         """
         for variant in variants:
+            logger.debug(f"Applying QC to {variant}")
             # Rule 4.2.1: Positional QC
             pos_qc_result = self._check_positional_qc(variant)
             self._update_variant_qc(variant, pos_qc_result)
@@ -77,9 +78,9 @@ class VariantQC:
         Returns:
             The list of Variant objects with WT/NA QC applied
         """
-        # initialize QC result with default None values
-
+        logger.debug(f"Applying WT QC results to {len(variants)} variants")
         for variant in variants:
+            # initialize QC result with default None values
             qc_result = QCResult()
 
             locus_coverage = locus_coverage_map.get(variant.gene_id, None)
@@ -184,24 +185,30 @@ class VariantQC:
                 variant.freq < self.config.MIN_FREQUENCY or
                 variant.read_support < self.config.MIN_READ_SUPPORT
             ):
-                logger.debug(f"{variant} fails positional QC (rule 4.2.1.1): depth={variant.depth}, freq={variant.freq}, RS={variant.read_support}")
+                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS positional QC (rule 4.2.1.1)")
+
                 qc_result.fails_qc = True
                 qc_result.warning.add(self.POSITIONAL_QC_WARNING)
                 return qc_result
 
+            else:
+                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; PASSES positional QC")
+                return qc_result
+
         # rule 4.2.1.2 - Deletion with some depth but below threshold
         elif variant.depth > 0 and variant.depth < self.config.MIN_DEPTH:
-            logger.debug(f"{variant} deletion fails positional QC (rule 4.2.1.2): depth={variant.depth} > 0 but < {self.config.MIN_DEPTH}")
+            logger.debug(f"{variant.gene_name}|{variant.gene_id} is a valid deletion with [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS positional QC (rule 4.2.1.2): Non-zero depth, but depth < {self.config.MIN_DEPTH}")
             qc_result.fails_qc = True
             qc_result.warning.add(self.POSITIONAL_QC_WARNING)
             return qc_result
 
-        # rule 4.2.1.3 - Deletion with zero depth but passing frequency - TB Profiler quirk
+        # rule 4.2.1.3 - Deletion with zero depth but passing frequency - TB Profiler quirk?
         elif variant.depth == 0 and variant.freq >= self.config.MIN_FREQUENCY:
-            logger.debug(f"{variant} deletion passes positional QC (rule 4.2.1.3): depth=0, freq={variant.freq} >= {self.config.MIN_FREQUENCY}")
+            logger.debug(f"{variant.gene_name}|{variant.gene_id} is a valid deletion with [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; PASSES positional QC (rule 4.2.1.3): Zero depth, but freq >= {self.config.MIN_FREQUENCY}")
             return qc_result
 
         # Deletion passes positional QC (sufficient depth and frequency)
+        logger.debug(f"{variant.gene_name}|{variant.gene_id} is a valid deletion with [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; PASSES positional QC")
         return qc_result
 
     def _check_locus_qc(
@@ -222,12 +229,9 @@ class VariantQC:
         Returns:
             QCResult with locus QC outcome
         """
-        logger.debug(f"Checking locus QC for {variant} with positional QC result: {qc_result.repr_filtered(['fails_qc', 'warning'])}")
 
         locus_coverage = locus_coverage_map.get(variant.gene_id, None)
-        if locus_coverage:
-            logger.debug(f"Found locus coverage for {variant.gene_name}|{variant.gene_id} at position {variant.pos} in {locus_coverage}")
-        else:
+        if not locus_coverage:
             logger.debug(f"No locus coverage found for {variant.gene_name}|{variant.gene_id} at position {variant.pos}. Locus QC rules cannot be applied.")
             return qc_result
 
@@ -243,14 +247,14 @@ class VariantQC:
                 # NOTE: this conditional is in previous versions but NOT in the interpretation documentation. Not sure if intentional
                 #  If this deletion also previously failed positional QC, add insufficient coverage warning?
                 if variant.fails_qc:
-                    logger.debug(f"{variant.gene_name}|{variant.gene_id} contains valid deletion(s) with low breadth of coverage and FAILS positional QC; FAILS locus QC; Adding `Insufficient Coverage` warning")
+                    logger.debug(f"{variant.gene_name}|{variant.gene_id} contains valid deletion(s) with low breadth of coverage [BC:{(locus_coverage.breadth_of_coverage):.3f}] and FAILS positional QC; FAILS locus QC; Adding `Insufficient Coverage` warning")
                     qc_result.fails_qc = True
                     qc_result.warning.add(self.LOCUS_QC_WARNING)
                     return qc_result
 
                 # Rule 4.2.2.2: Low breadth of coverage with deletion present - PASS
                 else:
-                    logger.debug(f"{variant.gene_name}|{variant.gene_id} contains valid deletion(s) with low breadth of coverage and PASSES positional QC; PASSES locus QC")
+                    logger.debug(f"{variant.gene_name}|{variant.gene_id} contains valid deletion(s) with low breadth of coverage [BC:{(locus_coverage.breadth_of_coverage):.3f}] and PASSES positional QC; PASSES locus QC")
                     return qc_result
 
             # Rule 4.2.2.3: Low breadth of coverage, no deletion
@@ -258,7 +262,7 @@ class VariantQC:
             else:
                 # Rule 4.2.2.3.2: S/U or R (QC_RESISTANT_MUTATIONS) with low breadth of coverage - FAIL
                 if variant.looker_interpretation == "R" and self.config.QC_RESISTANT_MUTATIONS and not variant.fails_qc:
-                    logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage and PASSES positional QC; R interpretation automatically PASSES locus QC because QC_RESISTANT_MUTATIONS is currently enabled; Adding `Insufficient Coverage` warning")
+                    logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(locus_coverage.breadth_of_coverage):.3f}] and PASSES positional QC; R interpretation automatically PASSES locus QC because QC_RESISTANT_MUTATIONS is currently enabled; Adding `Insufficient Coverage` warning")
                     qc_result.warning.add(self.LOCUS_QC_WARNING)
                     return qc_result
 
@@ -267,7 +271,7 @@ class VariantQC:
                     (variant.mdl_interpretation == "U") or
                     (variant.mdl_interpretation == "R" and self.config.QC_RESISTANT_MUTATIONS and variant.fails_qc)
                 ):
-                    logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage and FAILS positional QC; FAILS locus QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage`.")
+                    logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(locus_coverage.breadth_of_coverage):.3f}] and FAILS positional QC; FAILS locus QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage`.")
                     qc_result.fails_qc = True
                     qc_result.looker_interpretation = "Insufficient Coverage"
                     qc_result.mdl_interpretation = "Insufficient Coverage"
@@ -336,16 +340,21 @@ class VariantQC:
 
         if variant.gene_name == "rrs":
             if variant.freq < RRS_FREQUENCY or variant.read_support < RRS_READ_SUPPORT:
+                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS tNGS-specific QC (rrs): freq < {RRS_FREQUENCY} or RS < {RRS_READ_SUPPORT}")
                 return True
         elif variant.gene_name == "rrl":
             if variant.freq < RRL_FREQUENCY or variant.read_support < RRL_READ_SUPPORT:
+                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS tNGS-specific QC (rrl): freq < {RRL_FREQUENCY} or RS < {RRL_READ_SUPPORT}")
                 return True
         elif variant.gene_name == "ethA" and Helper.get_position(variant.protein_change) == 237:
             if variant.freq < ETHA237_FREQUENCY:
+                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS tNGS-specific QC (ethA237): freq < {ETHA237_FREQUENCY}")
                 return True
         elif variant.gene_name == "rpoB" and Helper.get_position(variant.protein_change) == 449:
             if variant.freq < RPOB449_FREQUENCY:
+                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS tNGS-specific QC (rpoB449): freq < {RPOB449_FREQUENCY}")
                 return True
+        logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; PASSES tNGS-specific QC")
         return False
 
     def _fails_tngs_boundary_qc(self, variant: Variant) -> bool:
@@ -367,7 +376,7 @@ class VariantQC:
 
         FAILS_QC = False
         if variant.read_support is None:
-            logger.debug(f"Variant {variant} is missing read support value, cannot apply tNGS boundary QC.")
+            logger.debug(f"{variant.gene_name}|{variant.gene_id} is missing read support value; FAILS tNGS boundary QC: [RS:({lower_rs},{upper_rs}), F:({lower_f},{upper_f})]")
             return False
 
         if (lower_rs <= variant.read_support and variant.read_support < upper_rs):
@@ -380,6 +389,7 @@ class VariantQC:
             FAILS_QC = True
 
         if FAILS_QC:
-            logger.debug(f"{variant} at [RS:{variant.read_support}, F:{variant.freq}] fails tNGS boundary QC: [RS:({lower_rs},{upper_rs}), F:({lower_f},{upper_f})]")
-
+            logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS tNGS boundary QC: [RS:({lower_rs},{upper_rs}), F:({lower_f},{upper_f})]")
+        else:
+            logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; PASSES tNGS boundary QC: [RS:({lower_rs},{upper_rs}), F:({lower_f},{upper_f})]")
         return FAILS_QC
