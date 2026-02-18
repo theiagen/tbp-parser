@@ -190,9 +190,10 @@ class Variant(BaseModel):
 
         Used for rule 2.2.1.1 (LOF expert rule).
         """
-        non_orf_indicators = ["+", "-"]
-        # If mutation contains + or -, it's not in the ORF, return False
-        return not any(indicator in self.nucleotide_change for indicator in non_orf_indicators)
+        position_nt = Helper.get_position(self.nucleotide_change)
+        if position_nt == [None]:
+            return False
+        return any(p >= 1 for p in position_nt)
 
     def _is_upstream_30_bp(self) -> bool:
         """Check if mutation is in ORF or within first 30 nucleotides upstream of start codon.
