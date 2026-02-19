@@ -176,7 +176,6 @@ class VariantInterpreter:
             InterpretationResult based on mutation location and type
         """
         position_nt = Helper.get_position(variant.nucleotide_change)
-        rationale = self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
 
         if variant._is_in_target_promoter(position_nt):
             logger.debug("Mutation in target promoter region")
@@ -195,7 +194,7 @@ class VariantInterpreter:
                 looker_interpretation="U" if rule_id == "2.2.2.2" else "S",
                 mdl_interpretation="S",
                 rule_id=rule_id,
-                rationale=rationale
+                rationale=self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
             )
         elif variant._is_in_orf() and variant._is_synonymous():
             logger.debug("Synonymous mutation in ORF")
@@ -204,7 +203,7 @@ class VariantInterpreter:
                 looker_interpretation="S",
                 mdl_interpretation="S",
                 rule_id=rule_id,
-                rationale=rationale
+                rationale=self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
             )
         elif variant._is_in_orf() and not variant._is_synonymous():
             logger.debug("Nonsynonymous mutation in ORF")
@@ -213,7 +212,7 @@ class VariantInterpreter:
                 looker_interpretation="U",
                 mdl_interpretation="U",
                 rule_id=rule_id,
-                rationale=rationale
+                rationale=self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
             )
         # not sure if this case is possible, but just in case
         else:
@@ -222,7 +221,7 @@ class VariantInterpreter:
                 looker_interpretation="X",
                 mdl_interpretation="X",
                 rule_id=rule_id,
-                rationale=rationale
+                rationale=self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
             )
 
     # =========================================================================
@@ -524,7 +523,7 @@ class VariantInterpreter:
                     looker_interpretation="U",
                     mdl_interpretation="U",
                     rule_id="3.2.2",
-                    rationale="gyrA nonsynonymous mutation in QRDR (codons 88-94)"
+                    rationale=self.RULE_TO_RATIONALE.get('3.2.2', "MISSING RATIONALE")
                 )
 
         # Fall through to default
@@ -552,7 +551,7 @@ class VariantInterpreter:
                     looker_interpretation="U",
                     mdl_interpretation="U",
                     rule_id="3.2.3",
-                    rationale="gyrB nonsynonymous mutation in QRDR (codons 446-507)"
+                    rationale=self.RULE_TO_RATIONALE.get('3.2.3', "MISSING RATIONALE")
                 )
 
         # Fall through to default
