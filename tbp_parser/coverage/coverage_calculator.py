@@ -26,6 +26,20 @@ class CoverageCalculator:
         """
         Calculate coverage for a single BedRecord.
 
+        Notes and comparisons with samtools depth:
+        See https://www.htslib.org/doc/samtools-depth.html#CAVEATS.
+        See https://pysam.readthedocs.io/en/latest/api.html#pysam.AlignmentFile.pileup.
+
+        The following commands should produce identical read counts for each position:
+        - samtools depth -a -J -s -r "Chromosome:100-200" input.bam
+        - samtools mpileup --count-orphans --no-BAQ -a -r "Chromosome:100-200" input.bam
+        - pysam AlignmentFile.pileup with stepper="nofilter", truncate=True, and the same region
+
+        Note that previously we were not using `samtools depth -s` flag which counts the
+        overlapping section of a read pair once. If desired, we can mimic old behavior by using the following flags:
+        - samtools mpileup: -x, --ignore-overlaps-removal (Overlap detection and removal is enabled by default. This option turns it off.)
+        - pysam: ignore_overlaps=True (If set to True, detect if read pairs overlap and only take the higher quality base. This is the default.)
+
         Args:
             bed_record: The BedRecord to calculate coverage for
             whitelisted_reads: Optional set of read names to filter by (for overlap handling)
