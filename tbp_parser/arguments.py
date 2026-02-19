@@ -70,8 +70,9 @@ def parse_arguments():
     qc_arguments.add_argument("-l", "--min_percent_loci_covered", default=0.7, metavar="\b", type=float,
                         help="the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%%)\ndefault=0.7")
 
-    qc_arguments.add_argument("-q", "--qc_resistant_mutations", default=False, action="store_true",
-                        help="treat R mutations the same as S or U mutations in that if locus coverage is poor, they will not be reported\ndefault=False")
+    # I don't think this is ever actually used by our partners and it adds unnecessary complexity to the QC logic, so I'm disabling it for now; can re-enable in the future if needed
+    # qc_arguments.add_argument("-q", "--qc_resistant_mutations", default=False, action="store_true",
+    #                     help="treat R mutations the same as S or U mutations in that if locus coverage is poor, they will not be reported\ndefault=False")
 
     general_arguments = parser.add_argument_group("text arguments",
                                                   "arguments that are used verbatim in the reports or to name the output files")

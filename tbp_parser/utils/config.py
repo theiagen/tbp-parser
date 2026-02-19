@@ -29,7 +29,7 @@ class Configuration:
         MIN_READ_SUPPORT (int): the minimum read support for a mutation to pass QC
 
         TNGS (bool): whether tNGS mode is enabled
-        QC_RESISTANT_MUTATIONS (bool): whether R mutations should be treated the same as S/U mutations for locus QC
+        # QC_RESISTANT_MUTATIONS (bool): whether R mutations should be treated the same as S/U mutations for locus QC
         TNGS_READ_SUPPORT_BOUNDARIES (list[int]): the read support boundaries for tNGS QC reporting
         TNGS_FREQUENCY_BOUNDARIES (list[float]): the frequency boundaries for tNGS QC reporting
         err_bed (str | None): an optional BED file containing ranges that are essential for resistance [tNGS only]
@@ -94,7 +94,7 @@ class Configuration:
         self.MIN_READ_SUPPORT = options.min_read_support
         self.MIN_FREQUENCY = options.min_frequency
         self.MIN_PERCENT_LOCI_COVERED = options.min_percent_loci_covered
-        self.QC_RESISTANT_MUTATIONS = options.qc_resistant_mutations
+        # self.QC_RESISTANT_MUTATIONS = options.qc_resistant_mutations
         # text inputs
         self.SEQUENCING_METHOD = options.sequencing_method
         self.OUTPUT_PREFIX = options.output_prefix
