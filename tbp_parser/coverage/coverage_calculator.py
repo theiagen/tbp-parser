@@ -178,7 +178,7 @@ class CoverageCalculator:
       for locus_tag, bed_records in locus_groups.items():
           # Gene-level coverage (one per BedRecord)
           for bed_record in bed_records:
-              logger.debug(f"Calculating breadth of coverage and average depth of coverage for gene: `{bed_record.gene_name}`")
+              logger.debug(f"Calculating breadth of coverage and average depth of coverage for gene: '{bed_record.gene_name}'")
               breadth_of_coverage = self._calculate_breadth_of_coverage(
                   bed_record.reads_by_position,
               )

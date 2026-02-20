@@ -64,7 +64,7 @@ class VariantQC:
 
             # tNGS-specific QC (separate from rule structure)
             if self.config.TNGS:
-                tngs_qc_result = self._check_tngs_qc(variant, locus_qc_result, target_coverage_map)
+                tngs_qc_result = self._check_tngs_qc(variant, locus_qc_result, locus_coverage_map)
                 self._update_variant_qc(variant, tngs_qc_result)
         return variants
 
@@ -304,7 +304,7 @@ class VariantQC:
         self,
         variant: Variant,
         qc_result: QCResult,
-        target_coverage_map: Dict[str, TargetCoverage]
+        locus_coverage_map: Dict[str, LocusCoverage]
     ) -> QCResult:
         """Apply all tNGS-specific QC checks to a variant.
 
@@ -312,18 +312,18 @@ class VariantQC:
 
         Args:
             variant: The variant to check
-            target_coverage_map: Mapping of gene_id to TargetCoverage objects
+            locus_coverage_map: Mapping of gene_id to LocusCoverage objects
         Returns:
             QCResult with tNGS QC outcome
         """
         # Check if mutation is outside tNGS primer regions
-        target_coverage = next(
-            (tc for tc in target_coverage_map.values()
-            if variant.gene_id == tc.locus_tag and tc.contains_position(variant.pos)),
+        locus_coverage = next(
+            (lc for lc in locus_coverage_map.values()
+            if variant.gene_id == lc.locus_tag and lc.contains_position(variant.pos)),
             None
         )
-        if not target_coverage:
-            logger.debug(f"No tNGS target coverage found for {variant.gene_name}|{variant.gene_id} at position {variant.pos}; FAILS tNGS QC; Adding warning: `This mutation is outside the expected region`")
+        if not locus_coverage:
+            logger.debug(f"No tNGS locus coverage found for {variant.gene_name}|{variant.gene_id} at position {variant.pos}; FAILS tNGS QC; Adding warning: `This mutation is outside the expected region`")
             qc_result.fails_qc = True
             qc_result.warning.add("This mutation is outside the expected region")
             qc_result.rationale = "NA"
