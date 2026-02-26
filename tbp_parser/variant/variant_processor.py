@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from variant import Variant, VariantRecord, Annotation
 from utils import GeneDatabase
@@ -8,6 +8,25 @@ logger = logging.getLogger(__name__)
 
 class VariantProcessor:
     """Process VariantRecords into Variant objects."""
+
+    def process(self, variant_records: List[VariantRecord], sample_id: str) -> Tuple[List[Variant], List[Variant]]:
+        """Main method for processing VariantRecords into Variant objects.
+
+        Args:
+            variant_records: List of VariantRecord objects
+            sample_id: Sample identifier for generating unreported variants
+        Returns:
+            Tuple of (processed Variants, unreported Variants)
+        """
+        # Step 1: Process VariantRecords into Variants (expansion + extraction)
+        all_variants = self.process_variant_records(variant_records)
+
+        # Step 2: Deduplicate Variants, keeping the one with best annotation
+        all_variants = self.deduplicate_variants(all_variants)
+
+        # Step 3: Generate unreported Variants for gene/drug associations not in original set
+        unreported_variants = self.generate_unreported_variants(all_variants, sample_id)
+        return all_variants, unreported_variants
 
     def process_variant_records(self, variant_records: List[VariantRecord]) -> List[Variant]:
         """Process VariantRecords into Variant objects.

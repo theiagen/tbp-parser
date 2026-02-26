@@ -54,14 +54,11 @@ def main():
 
     # Variant processing: expansion, extraction, deduplication, unreported variant generation
     variant_processor = VariantProcessor()
-    all_variants = variant_processor.process_variant_records(variant_records)
-    all_variants = variant_processor.deduplicate_variants(all_variants)
-    unreported_variants = variant_processor.generate_unreported_variants(all_variants, SAMPLE_ID)
+    all_variants, unreported_variants = variant_processor.process(variant_records, SAMPLE_ID)
 
-    # Interpretation for all_variants and unreported_variants (defining WT/NA interpretations)
+    # Interpretation for all_variants (not needed for unreported variants)
     variant_interpreter = VariantInterpreter()
     all_variants = variant_interpreter.determine_interpretation(all_variants)
-    #unreported_variants = variant_interpreter.determine_interpretation(unreported_variants)
 
     # QC for all_variants (not necessary for unreported_variants)
     variant_qc = VariantQC(config)
