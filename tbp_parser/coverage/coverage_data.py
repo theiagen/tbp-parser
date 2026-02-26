@@ -1,4 +1,4 @@
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, computed_field, field_validator
 
 class TargetCoverage(BaseModel):
     """
@@ -17,6 +17,13 @@ class TargetCoverage(BaseModel):
 
     def __repr__(self):
         return f"TargetCoverage([{self.gene_name}][{self.locus_tag}][{self.coords}] BC:{(self.breadth_of_coverage * 100):.2f}% AD:{self.average_depth:.2f})"
+
+    @field_validator('breadth_of_coverage')
+    @classmethod
+    def check_breadth(cls, v):
+        if v > 1.0:
+            raise ValueError(f"breadth_of_coverage cannot exceed 1.0, got {v}")
+        return v
 
     def contains_position(self, position: int) -> bool:
         """Check if a specific position exists within target coverage.
@@ -55,6 +62,13 @@ class LocusCoverage(BaseModel):
 
     def __repr__(self):
         return f"LocusCoverage([{self.gene_names}][{self.locus_tag}][{self.coords}] BC:{(self.breadth_of_coverage * 100):.2f}% AD:{self.average_depth:.2f})"
+
+    @field_validator('breadth_of_coverage')
+    @classmethod
+    def check_breadth(cls, v):
+        if v > 1.0:
+            raise ValueError(f"breadth_of_coverage cannot exceed 1.0, got {v}")
+        return v
 
     def contains_position(self, position: int) -> bool:
         """Check if a specific position exists within locus coverage.
