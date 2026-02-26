@@ -47,10 +47,7 @@ def main():
 
     # Coverage calculation
     coverage_calculator = CoverageCalculator(config)
-    bed_records = coverage_calculator.populate_reads_by_position(bed_records)
-    bed_records = coverage_calculator.resolve_overlapping_regions(bed_records)
-
-    TARGET_COVERAGE_MAP, LOCUS_COVERAGE_MAP = coverage_calculator.generate_coverage_maps(bed_records)
+    TARGET_COVERAGE_MAP, LOCUS_COVERAGE_MAP = coverage_calculator.calculate(bed_records)
 
     # VariantRecord parsing
     variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
@@ -72,7 +69,6 @@ def main():
     all_variants = variant_qc.apply_qc(
         variants=all_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
-        target_coverage_map=TARGET_COVERAGE_MAP,
         genes_with_valid_deletions=GENES_WITH_VALID_DELETIONS
     )
     unreported_variants = variant_qc.apply_wildtype_qc(
