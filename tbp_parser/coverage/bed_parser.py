@@ -21,5 +21,31 @@ def parse_bed_file(bed_file: str) -> List[BedRecord]:
             bed_record = BedRecord.from_bed_line(entry)
             bed_records.append(bed_record)
 
+    _validate_unique_bed_records(bed_records)
     logger.debug(f"Parsed {len(bed_records)} records from {bed_file}")
     return bed_records
+
+
+def _validate_unique_bed_records(bed_records: List[BedRecord]) -> None:
+    """Validates that no two BedRecords share the same locus_tag and gene_name.
+
+    Args:
+        bed_records: List of BedRecord instances to validate.
+    Raises:
+        ValueError: If duplicate locus_tag + gene_name combinations are found.
+    """
+    seen = {}
+    duplicates = []
+
+    for record in bed_records:
+        key = (record.locus_tag, record.gene_name)
+        if key in seen:
+            duplicates.append(key)
+        else:
+            seen[key] = record
+
+    if duplicates:
+        raise ValueError(
+            f"Duplicate BedRecords found with identical locus_tag and gene_name: "
+            f"Records should either be combined into a single entry or split into unique entries."
+        )
