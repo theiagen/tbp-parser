@@ -101,7 +101,7 @@ class LIMSProcessor:
         # rifampin specific drug target logic
         if _all_rpob_variants:
             if max_gene_code.max_mdl_interpretation in ["R"]:
-                if all([v in RPOB_MUTATIONS for v in max_gene_code.max_mdl_variants]):
+                if all([v.protein_change in RPOB_MUTATIONS for v in max_gene_code.max_mdl_variants]):
                     setattr(lims_record, "drug_target_value", "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods")
                 else:
                     setattr(lims_record, "drug_target_value", "Predicted resistance to rifampin")
