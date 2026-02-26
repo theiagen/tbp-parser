@@ -1,9 +1,4 @@
 from collections import defaultdict
-from itertools import combinations
-
-import pytest
-from coverage import CoverageCalculator, TargetCoverage, LocusCoverage
-
 
 class TestPopulateReadsByPosition:
     def test_populate_reads_by_position(self, make_cov_calc, make_bed_record):

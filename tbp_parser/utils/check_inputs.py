@@ -4,8 +4,6 @@ import subprocess
 import sys
 import logging
 
-from coverage import BedRecord
-from lims import LIMSRecord
 from utils import GeneDatabase
 
 logger = logging.getLogger(__name__)
@@ -131,7 +129,7 @@ def check_dependency_exists() -> None:
         logger.error(f"samtools found but failed to run properly: {e.stderr.strip()}")
         sys.exit(1)
 
-def check_bed_for_lims_genes(bed_records: list[BedRecord], lims_records: list[LIMSRecord]) -> None:
+def check_bed_for_lims_genes(bed_records, lims_records) -> None:
     """Checks that the provided LIMS format yml file has an associated BedRecord for LIMS report coverage calculations.
 
     Args:

@@ -1,10 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
-tbp_parser/__pycache__/
-tbp_parser/coverage/__pycache__/
-tbp_parser/reporters/__pycache__/
-tbp_parser/utils/__pycache__/
-tbp_parser/variant/__pycache__/
+*__pycache__*
 
 # IDE
 .vscode/
