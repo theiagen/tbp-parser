@@ -35,7 +35,6 @@ class VariantQC:
         self,
         variants: list[Variant],
         locus_coverage_map: Dict[str, LocusCoverage],
-        target_coverage_map: Dict[str, TargetCoverage],
         genes_with_valid_deletions: dict[str, list[Variant]],
     ) -> list[Variant]:
         """Apply all QC checks to a list of variants.
@@ -46,7 +45,6 @@ class VariantQC:
         Args:
             variants: List of Variant objects to check
             locus_coverage_map: Mapping of gene_id to LocusCoverage objects
-            target_coverage_map: Mapping of gene_id to TargetCoverage objects
             genes_with_valid_deletions: Mapping of gene_id to list of Variant objects with valid deletions
 
         Returns:
