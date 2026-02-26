@@ -15,7 +15,7 @@ class BedRecord(BaseModel):
     coords: tuple[int, int] = Field(default=(0, 0), exclude=True)
 
     # To be populated in Coverage class after parsing the BAM file, excluded from serialization
-    reads_by_position: Dict[int, List[str]] = Field(default_factory=dict, exclude=True) # (0-based)
+    reads_by_position: Dict[int, List[str]] = Field(default_factory=dict, exclude=True) # (1-based)
 
     # Post-init processing to compute derived attributes
     def model_post_init(self, __context: Any = None):
@@ -99,26 +99,6 @@ class BedRecord(BaseModel):
         overlap_end = min(self.end, other.end)
         return (overlap_start, overlap_end)
 
-    def _get_non_overlapping_positions(self, others: list['BedRecord']) -> set[int]:
-        """Get the non-overlapping positions between this BedRecord and another BedRecord.
-
-        Args:
-            others (list['BedRecord']): A list of BedRecord instances that overlap with this BedRecord.
-        Returns:
-            set[int]: A set of non-overlapping positions.
-        """
-        # collect all positions from this BedRecord
-        non_overlapping_positions = set(range(self.start, self.end + 1))
-
-        # remove positions that overlap with `other` bed_records
-        for other in others:
-            if self.overlaps_with(other):
-                overlap_start, overlap_end = self.overlapping_coords(other)
-                # remove overlapping positions from the set
-                non_overlapping_positions -= set(range(overlap_start, overlap_end + 1))
-
-        return non_overlapping_positions
-
     def get_non_overlapping_coords(self, others: list['BedRecord']) -> list[tuple[int, int]]:
         """Get the non-overlapping coordinates between this BedRecord and another BedRecord.
         Args:
@@ -171,3 +151,23 @@ class BedRecord(BaseModel):
             if pos in self.reads_by_position:
                 unique_reads.update(self.reads_by_position[pos])
         return unique_reads
+
+    def _get_non_overlapping_positions(self, others: list['BedRecord']) -> set[int]:
+        """Get the non-overlapping positions between this BedRecord and another BedRecord.
+
+        Args:
+            others (list['BedRecord']): A list of BedRecord instances that overlap with this BedRecord.
+        Returns:
+            set[int]: A set of non-overlapping positions.
+        """
+        # collect all positions from this BedRecord
+        non_overlapping_positions = set(range(self.start, self.end + 1))
+
+        # remove positions that overlap with `other` bed_records
+        for other in others:
+            if self.overlaps_with(other):
+                overlap_start, overlap_end = self.overlapping_coords(other)
+                # remove overlapping positions from the set
+                non_overlapping_positions -= set(range(overlap_start, overlap_end + 1))
+
+        return non_overlapping_positions
