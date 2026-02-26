@@ -1,7 +1,20 @@
 import pytest
+import pysam
+from pathlib import Path
+from copy import deepcopy
 from unittest.mock import MagicMock
 from variant import Variant
-from coverage import LocusCoverage, TargetCoverage
+from coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
+
+@pytest.fixture
+def make_bed_record():
+    """Module-level helper to construct BedRecord objects with sensible defaults."""
+    def _make(start, end, **kwargs):
+        params = {"chrom": "Chromosome", "locus_tag": "Rv0000", "gene_name": "geneA"}
+        params.update(kwargs)
+        bed_record = BedRecord(start=start, end=end, **params)  # type: ignore
+        return bed_record
+    return _make
 
 
 @pytest.fixture
@@ -54,19 +67,32 @@ def make_wt_variant():
 
 
 @pytest.fixture
+def make_interpreted_variant(make_variant):
+    """Factory fixture to create Variant objects with pre-set interpretation fields."""
+    def _make(interpretation="R", looker_interpretation=None, rationale=None, **kwargs):
+        v = make_variant(**kwargs)
+        v.mdl_interpretation = interpretation
+        v.looker_interpretation = looker_interpretation if looker_interpretation is not None else interpretation
+        if rationale is not None:
+            v.rationale = rationale
+        return v
+    return _make
+
+
+@pytest.fixture
 def make_locus_coverage():
     """Factory fixture to create LocusCoverage objects."""
     def _make(
-        locus_tag="Rv0667",
-        gene_names=None,
-        coords=None,
-        breadth_of_coverage=100.0,
-        average_depth=200.0,
+        locus_tag="Rv0000",
+        gene_names=["geneA", "geneB"],
+        coords=[(100, 150), (250, 350)],
+        breadth_of_coverage=1.0,
+        average_depth=100.0,
     ):
         return LocusCoverage(
             locus_tag=locus_tag,
-            gene_names=gene_names or ["rpoB"],
-            coords=coords or [(759807, 763325)],
+            gene_names=gene_names,
+            coords=coords,
             breadth_of_coverage=breadth_of_coverage,
             average_depth=average_depth,
         )
@@ -74,16 +100,16 @@ def make_locus_coverage():
 
 
 @pytest.fixture
-def make_gene_coverage():
-    """Factory fixture to create GeneCoverage objects."""
+def make_target_coverage():
+    """Factory fixture to create TargetCoverage objects."""
     def _make(
-        locus_tag="Rv0667",
-        gene_name="rpoB",
-        coords=(759807, 763325),
-        breadth_of_coverage=100.0,
-        average_depth=200.0,
+        locus_tag="Rv0000",
+        gene_name="geneA",
+        coords=(100, 150),
+        breadth_of_coverage=1.0,
+        average_depth=100.0,
     ):
-        return GeneCoverage(
+        return TargetCoverage(
             locus_tag=locus_tag,
             gene_name=gene_name,
             coords=coords,
@@ -118,3 +144,67 @@ def mock_config():
         "RPOB449_FREQUENCY": 0.10,
     }
     return config
+
+
+@pytest.fixture
+def make_bam_file():
+    """Factory fixture to create a BAM file for testing."""
+    def _make(
+        cov_start=0,
+        cov_end=100,
+        read_length=10,
+    ):
+        bam_file = str(Path(__file__).parent / "test.bam")
+        # random 100 bases that I will repeat in this order to use as a reference.
+        # reference base [0:10] 'GACAAGGACA' will be the same as [100:110] 'GACAAGGACA', etc
+        ref_seq = "GACAAGGACATGACGTACGCGGCCCCGCTGTTCGTCACGGCCGAGTTCATCAACAACAACACCGGTGAGATCAAGAGCCAGACGGTGTTCATGGGATCGG"
+        header = pysam.AlignmentHeader.from_dict({
+            'HD': {'VN': '1.5', 'SO': 'coordinate'},
+            'SQ': [{'SN': 'Chromosome', 'LN': int(cov_end - cov_start)}]
+        })
+        reads = []
+        read_counter = 1
+
+        for pos in range(cov_start, cov_end):
+            read_name = f"read{read_counter}"
+            read_counter += 1
+
+            # R1
+            r1 = pysam.AlignedSegment()
+            r1.query_name = read_name
+            r1.query_sequence = ''.join(ref_seq[(pos + i) % len(ref_seq)] for i in range(read_length))
+            r1.flag = 99   # paired, proper pair, mate reverse strand, first in pair
+            r1.reference_id = 0
+            r1.reference_start = pos
+            r1.mapping_quality = 60
+            r1.cigartuples = [(0, read_length)]
+            r1.next_reference_id = 0
+            r1.next_reference_start = pos
+            r1.template_length = read_length
+            r1.query_qualities = pysam.qualitystring_to_array("?" * read_length)
+            reads.append(r1)
+
+            # R2 (mate)
+            r2 = deepcopy(r1)
+            r2.flag = 147  # paired, proper pair, self reverse strand, second in pair
+            r2.template_length = -read_length
+            reads.append(r2)
+
+        reads.sort(key=lambda r: r.reference_start)
+        with pysam.AlignmentFile(bam_file, "wb", header=header) as bam:
+            for r in reads:
+                bam.write(r)
+
+        pysam.sort("-o", bam_file, bam_file)
+        pysam.index(bam_file)
+        return bam_file
+    return _make
+
+
+@pytest.fixture
+def make_cov_calc(mock_config, make_bam_file):
+    """Factory fixture to create a CoverageCalculator instance with a mock config."""
+    def _make(cov_start=0, cov_end=100, read_length=10):
+        mock_config.input_bam = make_bam_file(cov_start=cov_start, cov_end=cov_end, read_length=read_length) # bams are 0-based
+        return CoverageCalculator(mock_config)
+    return _make
