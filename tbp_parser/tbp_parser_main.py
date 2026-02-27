@@ -60,21 +60,13 @@ def main():
     variant_interpreter = VariantInterpreter()
     all_variants = variant_interpreter.determine_interpretation(all_variants)
 
-    # QC for all_variants (not necessary for unreported_variants)
+    # QC for all_variants and unreported variants
     variant_qc = VariantQC(config)
-    GENES_WITH_VALID_DELETIONS = variant_qc.get_genes_with_valid_deletions(all_variants)
-    all_variants = variant_qc.apply_qc(
+    all_variants, GENES_WITH_VALID_DELETIONS = variant_qc.qc(
         variants=all_variants,
+        unreported_variants=unreported_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
-        genes_with_valid_deletions=GENES_WITH_VALID_DELETIONS
     )
-    unreported_variants = variant_qc.apply_wildtype_qc(
-        variants=unreported_variants,
-        locus_coverage_map=LOCUS_COVERAGE_MAP
-    )
-
-    # merge all_varaints and unreported variants for reporting
-    all_variants = all_variants + unreported_variants
 
     # Write lab report
     write_laboratorian_report(config, all_variants)

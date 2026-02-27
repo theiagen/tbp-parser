@@ -1,10 +1,11 @@
 
 import logging
 from pydantic import BaseModel, Field
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 from utils import Configuration, Helper
 from variant import Variant
-from coverage import LocusCoverage, TargetCoverage
+from coverage import LocusCoverage
+
 logger = logging.getLogger(__name__)
 class QCResult(BaseModel):
     """Result of a QC check on a variant. Includes Variant attributes to update/overwrite based on the QC outcome."""
@@ -30,6 +31,38 @@ class VariantQC:
 
     def __init__(self, config: Configuration):
         self.config = config
+
+    def qc(
+        self,
+        variants: list[Variant],
+        unreported_variants: list[Variant],
+        locus_coverage_map: Dict[str, LocusCoverage],
+    ) -> Tuple[list[Variant], dict[str, list[Variant]]]:
+        """
+        Main method for performing QC on a list of Variant objects.
+        Applies positional QC, locus QC, and tNGS-specific QC rules to all variants.
+        Also applies WT/NA QC to unreported variants and identifies genes with valid deletions.
+        Args:
+            variants: List of Variant objects to QC
+            unreported_variants: List of unreported Variant objects to QC (WT/NA QC only)
+            locus_coverage_map: Mapping of gene_id to LocusCoverage objects for locus QC
+        Returns:
+            Tuple containing:
+                - List of all Variant objects with QC applied
+                - Dictionary mapping gene_ids to lists of Variant objects with valid deletions
+        """
+        # Get genes with valid deletions for locus QC rules
+        genes_with_valid_deletions = self.get_genes_with_valid_deletions(variants)
+
+        # Apply QC to all variants
+        variants = self.apply_qc(variants, locus_coverage_map, genes_with_valid_deletions)
+
+        # Apply WT/NA QC to unreported variants
+        unreported_variants = self.apply_wildtype_qc(unreported_variants, locus_coverage_map)
+
+        # merge all_varaints and unreported variants for reporting
+        all_variants = variants + unreported_variants
+        return all_variants, genes_with_valid_deletions
 
     def apply_qc(
         self,
