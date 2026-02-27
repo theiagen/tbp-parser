@@ -1,9 +1,6 @@
-from unittest import result
-
 import pytest
-from variant import Variant, VariantRecord, Annotation, VariantProcessor, Consequences
+from variant import Variant, VariantRecord, VariantProcessor
 from utils import GeneDatabase
-
 
 class TestExpandConsequences:
     """Tests for VariantProcessor._expand_consequences"""
@@ -16,7 +13,7 @@ class TestExpandConsequences:
         assert len(result) == 1
         assert result[0] is vr
 
-    def test_valid_empty_consequences_returns_original(self, make_variant_record, make_annotation):
+    def test_valid_empty_consequences_returns_original(self, make_variant_record):
         """Rv0678 with empty consequences should return only original."""
         vr = make_variant_record(gene_id="Rv0678", consequences=[])
         processor = VariantProcessor()
