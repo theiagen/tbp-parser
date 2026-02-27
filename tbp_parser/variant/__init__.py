@@ -1,5 +1,5 @@
 from variant.variant import Variant
-from variant.variant_record import VariantRecord, Annotation
+from variant.variant_record import VariantRecord, Annotation, Consequences
 from variant.variant_processor import VariantProcessor
 from variant.variant_interpreter import VariantInterpreter, InterpretationResult
 from variant.variant_qc import VariantQC, QCResult
@@ -9,6 +9,7 @@ __all__ = [
     'Variant',
     'VariantRecord',
     'Annotation',
+    'Consequences',
     'VariantProcessor',
     'VariantInterpreter',
     'InterpretationResult',

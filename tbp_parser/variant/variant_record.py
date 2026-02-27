@@ -37,7 +37,6 @@ class Consequences(BaseModel):
     """
     gene_id: str
     gene_name: str
-    feature_id: str
     type: str
     nucleotide_change: str
     protein_change: str
@@ -103,5 +102,9 @@ class VariantRecord(BaseModel):
                 source="",
                 comment="",
             ) for drug in variant_record.gene_associated_drugs]
+        else:
+            # model_dump() serializes Annotation objects to dicts; preserve the
+            # actual Annotation instances so downstream code can hash/compare them.
+            consequences_dict["annotation"] = list(consequences.annotation)
 
         return variant_record.model_copy(update=consequences_dict)

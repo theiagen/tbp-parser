@@ -250,8 +250,8 @@ class VariantProcessor:
             for drug in drug_list:
                 variant = Variant.from_thin_air(
                     sample_id=sample_id,
-                    gene_id=GeneDatabase.get_locus_tag(var),
-                    gene_name=GeneDatabase.get_gene_name(var),
+                    gene_id=GeneDatabase.get_locus_tag(var),  # type: ignore
+                    gene_name=GeneDatabase.get_gene_name(var), # type: ignore
                     drug=drug
                 )
                 all_unreported_variants.append(variant)

@@ -55,7 +55,7 @@ class Variant(BaseModel):
             self.read_support = self.freq * self.depth
 
         # Derive computed attributes
-        self.gene_tier = GeneDatabase.get_tier(self.gene_name)
+        self.gene_tier = GeneDatabase.get_tier(self.gene_id)
         self.absolute_start, self.absolute_end = Helper.get_mutation_genomic_positions(self.pos, self.nucleotide_change)
 
         # Normalize field values based on predefined rules

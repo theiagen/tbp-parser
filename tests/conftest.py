@@ -3,7 +3,7 @@ import pysam
 from pathlib import Path
 from copy import deepcopy
 from unittest.mock import MagicMock
-from variant import Variant
+from variant import Variant, VariantRecord, Annotation, Consequences
 from coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
 
 @pytest.fixture
@@ -144,6 +144,81 @@ def mock_config():
         "RPOB449_FREQUENCY": 0.10,
     }
     return config
+
+
+@pytest.fixture
+def make_annotation():
+    """Factory fixture to create Annotation objects with sensible defaults."""
+    def _make(
+        drug="rifampin",
+        confidence="No WHO annotation",
+        source="",
+        comment="",
+    ):
+        return Annotation(drug=drug, confidence=confidence, source=source, comment=comment)
+    return _make
+
+
+@pytest.fixture
+def make_consequences(make_annotation):
+    """Factory fixture to create Consequences objects with sensible defaults."""
+    def _make(
+        gene_id="Rv0678",
+        gene_name="mmpR5",
+        type="missense_variant",
+        nucleotide_change="c.200C>T",
+        protein_change="p.Val67Ile",
+        annotation=[],
+    ):
+        return Consequences(
+            gene_id=gene_id,
+            gene_name=gene_name,
+            type=type,
+            nucleotide_change=nucleotide_change,
+            protein_change=protein_change,
+            annotation=annotation,
+        )
+    return _make
+
+
+@pytest.fixture
+def make_variant_record(make_annotation):
+    """Factory fixture to create VariantRecord objects with sensible defaults."""
+    def _make(
+        sample_id="test_sample",
+        pos=200,
+        depth=100,
+        freq=0.95,
+        gene_id="Rv0005",
+        gene_name="gyrB",
+        type="missense_variant",
+        nucleotide_change="c.100C>T",
+        protein_change="p.Ser34Leu",
+        annotation=None,
+        consequences=None,
+        gene_associated_drugs=None,
+    ):
+        if annotation is None:
+            annotation = [make_annotation()]
+        if consequences is None:
+            consequences = []
+        if gene_associated_drugs is None:
+            gene_associated_drugs = [annotation.drug for annotation in annotation]
+        return VariantRecord(
+            sample_id=sample_id,
+            pos=pos,
+            depth=depth,
+            freq=freq,
+            gene_id=gene_id,
+            gene_name=gene_name,
+            type=type,
+            nucleotide_change=nucleotide_change,
+            protein_change=protein_change,
+            annotation=annotation,
+            consequences=consequences,
+            gene_associated_drugs=gene_associated_drugs,
+        )
+    return _make
 
 
 @pytest.fixture
