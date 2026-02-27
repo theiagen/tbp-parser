@@ -88,13 +88,6 @@ def write_laboratorian_report(config: Configuration, variants: list[Variant]) ->
         for col, attr in COLUMNS.items():
             row[col] = get_report_fmt(variant, attr)
 
-            # # remove this!!! just for comparing to old reports right now
-            # if row[col] == "mmpR5":
-            #     row[col] = "Rv0678"
-            # if row[col] == "fbiD":
-            #     row[col] = "Rv2983"
-
-
         rows.append(row)
 
     df = pd.DataFrame(rows, columns=list(COLUMNS.keys()))

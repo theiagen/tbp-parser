@@ -102,8 +102,18 @@ def main():
     )
 
     # Write coverage reports
-    write_target_coverage_report(config, SAMPLE_ID, TARGET_COVERAGE_MAP)
-    write_locus_coverage_report(config, SAMPLE_ID, LOCUS_COVERAGE_MAP)
+    write_target_coverage_report(
+        config,
+        sample_name=SAMPLE_ID,
+        target_coverage_map=TARGET_COVERAGE_MAP,
+        genes_with_valid_deletions=GENES_WITH_VALID_DELETIONS,
+    )
+    write_locus_coverage_report(
+        config,
+        sample_name=SAMPLE_ID,
+        locus_coverage_map=LOCUS_COVERAGE_MAP,
+        genes_with_valid_deletions=GENES_WITH_VALID_DELETIONS,
+    )
 
 
 if __name__ == "__main__":
