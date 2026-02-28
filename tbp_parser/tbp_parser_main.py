@@ -77,9 +77,6 @@ def main():
         locus_coverage_map=LOCUS_COVERAGE_MAP,
     )
 
-    # Write lab report
-    write_laboratorian_report(config, all_variants)
-
     # Process all LIMS records and lineage information for final report
     lims_processor = LIMSProcessor(config)
     lims_records = lims_processor.process_lims_records(lims_records, all_variants)
@@ -99,6 +96,9 @@ def main():
         sample_id=SAMPLE_ID,
         detected_lineage=LINEAGE_ID,
     )
+
+    # Write lab report
+    write_laboratorian_report(config, all_variants)
 
     # Write Looker report
     write_looker_report(

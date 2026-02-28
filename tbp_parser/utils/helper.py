@@ -43,7 +43,7 @@ class Helper:
             return (position, position)
         elif len(match) == 2:
             return (position, position + (abs(int(match[0]) - int(match[1]))))
-        return (None, None)
+        return ("NA", "NA")
 
     @staticmethod
     def is_mutation_within_range(position, range_positions) -> bool:
