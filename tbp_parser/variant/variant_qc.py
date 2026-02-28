@@ -1,10 +1,13 @@
-
-import logging
+from __future__ import annotations
 from pydantic import BaseModel, Field
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, TYPE_CHECKING
 from utils import Configuration, Helper
-from variant import Variant
-from coverage import LocusCoverage
+import logging
+
+if TYPE_CHECKING:
+    from coverage import LocusCoverage, TargetCoverage
+    from variant import Variant
+
 
 logger = logging.getLogger(__name__)
 class QCResult(BaseModel):

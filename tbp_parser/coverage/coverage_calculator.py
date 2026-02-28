@@ -5,7 +5,7 @@ from itertools import permutations
 from typing import Dict, List, Tuple
 from collections import defaultdict
 
-from utils.config import Configuration
+from utils import Configuration
 from coverage.bed_record import BedRecord
 from coverage.coverage_data import TargetCoverage, LocusCoverage
 

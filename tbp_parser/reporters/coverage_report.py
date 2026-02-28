@@ -2,9 +2,8 @@ import logging
 import pandas as pd
 from pathlib import Path
 
-from coverage import TargetCoverage, LocusCoverage
+from coverage.coverage_data import TargetCoverage, LocusCoverage
 from utils import Configuration, GeneDatabase
-from variant import Variant
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 
 from variant import Variant
-from utils.config import Configuration
+from utils import Configuration
 
 logger = logging.getLogger(__name__)
 

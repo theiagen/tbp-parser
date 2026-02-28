@@ -1,6 +1,6 @@
 import logging
 from typing import Dict
-from coverage import LocusCoverage
+from coverage.coverage_data import LocusCoverage
 from lims import LIMSRecord, LIMSGeneCode
 from utils import Configuration, GeneDatabase, Helper
 from variant import Variant
