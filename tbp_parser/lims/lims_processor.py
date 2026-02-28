@@ -45,11 +45,15 @@ class LIMSProcessor:
                 candidate_variants = [
                     v for v in variants
                     if v.drug == lims_record.drug
-                    if v.gene_id in GeneDatabase.get_locus_tag(gene)
+                    if v.gene_id == GeneDatabase.get_locus_tag(gene)
                 ]
                 qc_filtered_variants = [
                     v for v in candidate_variants
-                    if not v.fails_qc or v._is_valid_deletion()
+                    if (
+                      not v.fails_qc or
+                      v._is_valid_deletion() or
+                      v.err_enabled
+                    )
                 ]
                 logger.debug(f"Generating LIMS result - GENE_TARGET - [{lims_record.drug}|{gene}]; {len(qc_filtered_variants)}/{len(candidate_variants)} candidate variants after QC filtering")
 
@@ -224,57 +228,75 @@ class LIMSProcessor:
         self,
         lims_records: list[LIMSRecord],
         locus_coverage_map: Dict[str, LocusCoverage],
-        genes_with_valid_deletions: dict[str, list[Variant]],
     ) -> bool:
         """Compute fraction of LIMS genes passing coverage QC.
 
         Args:
+            lims_records: List of LIMSRecord objects to check
             locus_coverage_map: Mapping of locus_tag names to their coverage percentages
-            genes_with_valid_deletions: Dictionary mapping locus tags to lists of QC-passing deletion variants in that locus
 
         Returns:
             bool: True if fraction of LIMS genes passing coverage QC is above threshold, False otherwise
         """
-        lims_genes = [
-            gene
-            for rec in lims_records
-            for gene in rec.gene_codes.keys()
-        ]
+        lims_genes = []
+        for rec in lims_records:
+            for gene, lims_gene_code in rec.gene_codes.items():
+                lims_genes.append(gene)
 
         # Only count/check coverage for the locus tag corresponding to the genes found in the LIMS format
         passing_genes = 0
         for lims_gene in lims_genes:
+
+            # These should never happen, we should always find a locus tag; see check_bed_for_lims_genes in check_inputs.py
             lims_locus_tag = GeneDatabase.get_locus_tag(lims_gene)
+            if not lims_locus_tag:
+                raise ValueError(f"Could not find locus tag for LIMS gene {lims_gene} in GeneDatabase. Check that the input bed file contains the correct locus tags for LIMS genes")
+            locus_coverage = locus_coverage_map.get(lims_locus_tag)
+            if not locus_coverage:
+                raise ValueError(f"Could not find locus tag for LIMS gene {lims_gene} in locus coverage map. Check that the input bed file contains the correct locus tags for LIMS genes")
 
-            # Should always find a locus tag see check_bed_for_lims_genes in check_inputs.py
-            locus_coverage = locus_coverage_map[lims_locus_tag]
+            # Determine if locus coverage is below threshold for LIMS QC fail and check if gene contains variants with valid deletions
 
-            if (
-                locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE) and
-                lims_locus_tag not in genes_with_valid_deletions
-            ):
+            has_low_boc = locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
+            boc = locus_coverage.breadth_of_coverage
+            has_valid_deletion = (
+                lims_locus_tag in [
+                    v.gene_id for v in locus_coverage.valid_deletions
+                ]
+            )
 
+            # if ERR coverage exists, use ERR coverage for LIMS QC instead of overall locus coverage
+            if locus_coverage.err_coverage:
+                has_low_boc = locus_coverage.err_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
+                boc = locus_coverage.err_coverage.breadth_of_coverage
+                has_valid_deletion = (
+                    lims_locus_tag in [
+                        v.gene_id for v in locus_coverage.err_coverage.valid_deletions
+                    ]
+                )
+
+            if has_low_boc and not has_valid_deletion:
                 logger.debug(
                     f"LIMS coverage QC FAILED for gene {lims_gene}|{lims_locus_tag}): "
-                    f"coverage {(locus_coverage.breadth_of_coverage * 100):.2f}% BELOW threshold {self.config.MIN_PERCENT_COVERAGE * 100:.2f}%"
+                    f"BOC: {(boc):.3f} BELOW threshold {self.config.MIN_PERCENT_COVERAGE:.3f}"
                 )
             else:
                 logger.debug(
                     f"LIMS coverage QC PASSED for gene {lims_gene}|{lims_locus_tag}): "
-                    f"coverage {(locus_coverage.breadth_of_coverage * 100):.2f}% ABOVE threshold {self.config.MIN_PERCENT_COVERAGE * 100:.2f}%"
+                    f"BOC: {(boc):.3f} ABOVE threshold {self.config.MIN_PERCENT_COVERAGE:.3f}"
                 )
                 passing_genes += 1
 
         if (passing_genes / len(lims_genes) < self.config.MIN_PERCENT_LOCI_COVERED):
             logger.debug(
-                f"LIMS coverage fraction {passing_genes}/{len(lims_genes)} = {(passing_genes / len(lims_genes)):.2f} "
-                f"BELOW threshold {self.config.MIN_PERCENT_LOCI_COVERED:.2f}"
+                f"LIMS coverage fraction {passing_genes}/{len(lims_genes)} = {(passing_genes / len(lims_genes)):.3f} "
+                f"BELOW threshold {self.config.MIN_PERCENT_LOCI_COVERED:.3f}"
             )
             return False
         else:
             logger.debug(
-                f"LIMS coverage fraction {passing_genes}/{len(lims_genes)} = {(passing_genes / len(lims_genes)):.2f} "
-                f"ABOVE threshold {self.config.MIN_PERCENT_LOCI_COVERED:.2f}"
+                f"LIMS coverage fraction {passing_genes}/{len(lims_genes)} = {(passing_genes / len(lims_genes)):.3f} "
+                f"ABOVE threshold {self.config.MIN_PERCENT_LOCI_COVERED:.3f}"
             )
             return True
 
@@ -299,7 +321,6 @@ class LIMSProcessor:
         lims_records: list[LIMSRecord],
         variants: list[Variant],
         locus_coverage_map: Dict[str, LocusCoverage],
-        genes_with_valid_deletions: dict[str, list[Variant]],
         detected_lineage: str,
         detected_sublineage: str,
     ) -> str:
@@ -309,7 +330,6 @@ class LIMSProcessor:
             lims_records: List of LIMSRecord objects
             variants: List of all Variant objects (including WT)
             locus_coverage_map: Mapping of locus_tag names to their coverage percentages
-            genes_with_valid_deletions: Dictionary mapping locus tags to lists of QC-passing deletion variants in that locus
             detected_lineage: Raw lineage string from TBProfiler JSON
             detected_sublineage: Raw sublineage string from TBProfiler JSON
 
@@ -321,7 +341,7 @@ class LIMSProcessor:
         pnca_his57asp_variants = self._get_pnca_his57asp_variants(variants)
 
         # Can't determine lineage unless sufficient coverage of LIMS genes
-        if self._passes_lims_coverage_fraction(lims_records, locus_coverage_map, genes_with_valid_deletions):
+        if self._passes_lims_coverage_fraction(lims_records, locus_coverage_map):
             if self.config.TNGS:
                 # Section 5.5: tNGS lineage based on pncA His57Asp
                 if pnca_his57asp_variants:

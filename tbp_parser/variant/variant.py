@@ -45,6 +45,7 @@ class Variant(BaseModel):
     # Fields set by VariantQC (excluded from serialization)
     fails_qc: Optional[bool] = Field(default=None, exclude=True)
     warning: set[str] = Field(default_factory=set, exclude=True)
+    err_enabled: Optional[bool] = Field(default=False, exclude=True)
 
     model_config = {"extra": "ignore"}
 

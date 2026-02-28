@@ -18,11 +18,12 @@ class CoverageCalculator:
         self.config = config
 
 
-    def calculate(self, bed_records: List[BedRecord]) -> Tuple[Dict[str, TargetCoverage], Dict[str, LocusCoverage]]:
+    def calculate(self, bed_records: List[BedRecord], err_records: List[BedRecord]) -> Tuple[Dict[str, TargetCoverage], Dict[str, LocusCoverage]]:
         """Main method to calculate coverage statistics for the provided BedRecords.
 
           Args:
-              bed_records (List[BedRecord]): A list of BedRecords to calculate coverage for.
+              bed_records (List[BedRecord]): A list of BRR BedRecords to calculate coverage for.
+              err_records (List[BedRecord]): A list of ERR BedRecords to calculate coverage for.
           Returns:
               Tuple[Dict[str, TargetCoverage], Dict[str, LocusCoverage]]: A tuple containing:
                   - Dictionary of TargetCoverage objects (one per gene name)
@@ -38,6 +39,20 @@ class CoverageCalculator:
 
         # Generate coverage maps
         target_coverage_map, locus_coverage_map = self.generate_coverage_maps(bed_records)
+
+        # Call this function again with just err_records to populate reads, resolve overlaps, and generate coverage maps for ERR regions only
+        # and set ERR coverage to each target and locus coverage record if applicable
+        if err_records:
+            logger.debug("Calculating ERR coverage and assigning to TargetCoverage and LocusCoverage records")
+            err_target_coverage_map, err_locus_coverage_map = self.calculate(err_records, [])
+
+            for gene_name, target_coverage in target_coverage_map.items():
+                if gene_name in err_target_coverage_map:
+                    setattr(target_coverage, "err_coverage", err_target_coverage_map[gene_name])
+
+            for locus_tag, locus_coverage in locus_coverage_map.items():
+                if locus_tag in err_locus_coverage_map:
+                    setattr(locus_coverage, "err_coverage", err_locus_coverage_map[locus_tag])
         return target_coverage_map, locus_coverage_map
 
 

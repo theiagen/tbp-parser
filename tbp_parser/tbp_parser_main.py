@@ -48,7 +48,7 @@ def main():
 
     # Coverage calculation
     coverage_calculator = CoverageCalculator(config)
-    TARGET_COVERAGE_MAP, LOCUS_COVERAGE_MAP = coverage_calculator.calculate(bed_records)
+    TARGET_COVERAGE_MAP, LOCUS_COVERAGE_MAP = coverage_calculator.calculate(bed_records, err_records)
 
     # VariantRecord parsing
     variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
@@ -63,7 +63,15 @@ def main():
 
     # QC for all_variants and unreported variants
     variant_qc = VariantQC(config)
-    all_variants, GENES_WITH_VALID_DELETIONS = variant_qc.qc(
+
+    # Assign variants with valid deletions to coverage objects for reporting and LIMS processing
+    variant_qc.assign_variants_with_valid_deletions(
+        variants=all_variants,
+        target_coverage_map=TARGET_COVERAGE_MAP,
+        locus_coverage_map=LOCUS_COVERAGE_MAP,
+    )
+
+    all_variants = variant_qc.qc(
         variants=all_variants,
         unreported_variants=unreported_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
@@ -79,7 +87,6 @@ def main():
         lims_records=lims_records,
         variants=all_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
-        genes_with_valid_deletions=GENES_WITH_VALID_DELETIONS,
         detected_lineage=LINEAGE_ID,
         detected_sublineage=SUBLINEAGE_ID,
     )
@@ -107,13 +114,11 @@ def main():
         config,
         sample_name=SAMPLE_ID,
         target_coverage_map=TARGET_COVERAGE_MAP,
-        genes_with_valid_deletions=GENES_WITH_VALID_DELETIONS,
     )
     write_locus_coverage_report(
         config,
         sample_name=SAMPLE_ID,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
-        genes_with_valid_deletions=GENES_WITH_VALID_DELETIONS,
     )
 
 

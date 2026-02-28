@@ -12,7 +12,6 @@ def write_target_coverage_report(
     config: Configuration,
     sample_name: str,
     target_coverage_map: dict[str, TargetCoverage],
-    genes_with_valid_deletions: dict[str, list[Variant]],
 ) -> None:
     """Write a coverage report at the target level.
 
@@ -26,19 +25,19 @@ def write_target_coverage_report(
         None
     """
     rows = []
-    for gene_name, coverage in target_coverage_map.items():
-        locus_tag = coverage.locus_tag
+    for gene_name, target_coverage in target_coverage_map.items():
 
-        qc_warning = (
-            f"Contains valid deletion(s): {'; '.join([str(v.nucleotide_change) for v in genes_with_valid_deletions[locus_tag] if coverage.contains_position(v.pos)])}"
-            if locus_tag in genes_with_valid_deletions else ""
-        )
+        # if ERR coverage exists, only report deletions if they are within the ERR region
+        deletions = target_coverage.err_coverage.valid_deletions if target_coverage.err_coverage else target_coverage.valid_deletions
+        qc_warning = f"Contains valid deletion(s): {'; '.join(str(v.nucleotide_change) for v in deletions)}" if deletions else ""
+
+        # Even if ERR coverage exists, still report the breadth and depth for the full target region (not just the ERR)
         rows.append({
             "sample_name": sample_name,
-            "locus_tag": coverage.locus_tag,
+            "locus_tag": target_coverage.locus_tag,
             "gene_name": gene_name,
-            "percent_coverage": f"{coverage.breadth_of_coverage*100:.2f}",
-            "average_depth": f"{coverage.average_depth:.2f}",
+            "percent_coverage": f"{target_coverage.breadth_of_coverage*100:.3f}",
+            "average_depth": f"{target_coverage.average_depth:.3f}",
             "qc_warning": qc_warning,
         })
 
@@ -52,7 +51,6 @@ def write_locus_coverage_report(
     config: Configuration,
     sample_name: str,
     locus_coverage_map: dict[str, LocusCoverage],
-    genes_with_valid_deletions: dict[str, list[Variant]],
 ) -> None:
     """Write a coverage report at the locus level.
 
@@ -66,17 +64,18 @@ def write_locus_coverage_report(
         None
     """
     rows = []
-    for locus_tag, coverage in locus_coverage_map.items():
-        qc_warning = (
-            f"Contains valid deletion(s): {'; '.join([str(v.nucleotide_change) for v in genes_with_valid_deletions[locus_tag]])}"
-            if locus_tag in genes_with_valid_deletions else ""
-        )
+    for locus_tag, locus_coverage in locus_coverage_map.items():
+
+        # if ERR coverage exists, only report deletions if they are within the ERR region
+        deletions = locus_coverage.err_coverage.valid_deletions if locus_coverage.err_coverage else locus_coverage.valid_deletions
+        qc_warning = f"Contains valid deletion(s): {'; '.join(str(v.nucleotide_change) for v in deletions)}" if deletions else ""
+
         rows.append({
             "sample_name": sample_name,
             "locus_tag": locus_tag,
             "gene_name": GeneDatabase.get_gene_name(locus_tag),
-            "percent_coverage": f"{coverage.breadth_of_coverage*100:.2f}",
-            "average_depth": f"{coverage.average_depth:.2f}",
+            "percent_coverage": f"{locus_coverage.breadth_of_coverage*100:.3f}",
+            "average_depth": f"{locus_coverage.average_depth:.3f}",
             "qc_warning": qc_warning,
         })
 
