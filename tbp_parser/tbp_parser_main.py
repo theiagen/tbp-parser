@@ -43,6 +43,7 @@ def main():
     # Check entries match between LIMS and BED input files before processing
     lims_records = parse_lims_yml_file(config.lims_report_format_yml)
     bed_records = parse_bed_file(config.tbdb_bed)
+    err_records = parse_bed_file(config.err_bed)
     check_bed_for_lims_genes(bed_records, lims_records)
 
     # Coverage calculation

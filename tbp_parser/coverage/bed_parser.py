@@ -14,6 +14,9 @@ def parse_bed_file(bed_file: str) -> List[BedRecord]:
             representing the columns in the BED file.
     """
     bed_records = []
+    if not bed_file:
+        return bed_records
+
     logger.debug(f"Parsing BED file: {bed_file}")
 
     with open(bed_file, 'r') as bf:
