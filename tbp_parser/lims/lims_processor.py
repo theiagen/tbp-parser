@@ -94,7 +94,7 @@ class LIMSProcessor:
             key=lambda gc: self.RESISTANCE_RANKING.get(gc.max_mdl_interpretation or "NA", -1),
         )
 
-        _all_rpob_variants = all([
+        all_rpob_variants = all([
             lims_record.drug == "rifampin" and
             v.gene_name == "rpoB"
             for v in max_gene_code.max_mdl_variants
@@ -103,7 +103,7 @@ class LIMSProcessor:
         logger.debug(f"Generating LIMS result - DRUG_TARGET - [{lims_record.drug}|{lims_record.drug_code}] based on results from max gene code: `{max_gene_code.gene_code}`")
 
         # rifampin specific drug target logic
-        if _all_rpob_variants:
+        if all_rpob_variants:
             if max_gene_code.max_mdl_interpretation in ["R"]:
                 if all([v.protein_change in RPOB_MUTATIONS for v in max_gene_code.max_mdl_variants]):
                     setattr(lims_record, "drug_target_value", "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods")
@@ -195,8 +195,8 @@ class LIMSProcessor:
         Returns:
             String of gene_target_value to be assigned for given LIMSGeneCode object
         """
-        # setting default
-        gene_target_value = "No sequence"
+        # initializing default
+        gene_target_value = ""
 
         if any([self._is_synonymous_rpob_rrdr(v) for v in gene_code.max_mdl_variants]):
             # never report "NA" protein_changes; this is different behavior than lab report
