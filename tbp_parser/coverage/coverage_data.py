@@ -21,9 +21,6 @@ class BaseCoverage(BaseModel, ABC):
     def __repr__(self):
         return self.__str__()
 
-    @abstractmethod
-    def contains_position(self, position: int) -> bool: ...
-
     @field_validator('breadth_of_coverage')
     @classmethod
     def check_breadth(cls, v):
@@ -33,6 +30,13 @@ class BaseCoverage(BaseModel, ABC):
 
     def has_breadth_below(self, threshold: float) -> bool:
         return self.breadth_of_coverage < threshold
+
+    def contains_valid_deletion(self, variant: Variant) -> bool:
+        """Check if a given Variant with a deletion is in the list of valid deletions for this coverage region."""
+        return any(v == variant for v in self.valid_deletions)
+
+    @abstractmethod
+    def contains_position(self, position: int) -> bool: ...
 
 class ERRCoverage(BaseCoverage):
     """

@@ -61,20 +61,13 @@ def main():
     variant_interpreter = VariantInterpreter()
     all_variants = variant_interpreter.determine_interpretation(all_variants)
 
-    # QC for all_variants and unreported variants
+    # QC for all_variants and unreported_variants
     variant_qc = VariantQC(config)
-
-    # Assign variants with valid deletions to coverage objects for reporting and LIMS processing
-    variant_qc.assign_variants_with_valid_deletions(
-        variants=all_variants,
-        target_coverage_map=TARGET_COVERAGE_MAP,
-        locus_coverage_map=LOCUS_COVERAGE_MAP,
-    )
-
     all_variants = variant_qc.qc(
         variants=all_variants,
         unreported_variants=unreported_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
+        target_coverage_map=TARGET_COVERAGE_MAP,
     )
 
     # Process all LIMS records and lineage information for final report

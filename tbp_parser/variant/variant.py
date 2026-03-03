@@ -204,7 +204,7 @@ class Variant(BaseModel):
         position_nt = Helper.get_position(self.nucleotide_change)
         return any(int(position) > -30 for position in position_nt)
 
-    def _is_valid_deletion(self) -> bool:
+    def _is_deletion_in_orf(self) -> bool:
         """Check if a variant represents a deletion.
 
         Returns:

@@ -40,6 +40,7 @@ class VariantQC:
         variants: list[Variant],
         unreported_variants: list[Variant],
         locus_coverage_map: Dict[str, LocusCoverage],
+        target_coverage_map: Dict[str, TargetCoverage],
     ) -> list[Variant]:
         """
         Main method for performing QC on a list of Variant objects.
@@ -49,9 +50,17 @@ class VariantQC:
             variants: List of Variant objects to QC
             unreported_variants: List of unreported Variant objects to QC (WT/NA QC only)
             locus_coverage_map: Mapping of gene_id to LocusCoverage objects for locus QC
+            target_coverage_map: Mapping of gene_name to TargetCoverage objects for assigning valid deletions
         Returns:
             List of all Variant objects with QC applied
         """
+        # First, assign variants with valid deletions to the both coverage objects. Note only LocusCoverage is used for this QC
+        self.assign_variants_with_valid_deletions(
+            variants=variants,
+            locus_coverage_map=locus_coverage_map,
+            target_coverage_map=target_coverage_map,
+        )
+
         # Apply QC to all variants
         variants = self.apply_qc(variants, locus_coverage_map)
 
@@ -62,11 +71,11 @@ class VariantQC:
         all_variants = variants + unreported_variants
         return all_variants
 
-    @staticmethod
     def assign_variants_with_valid_deletions(
+        self,
         variants: list[Variant],
-        target_coverage_map: Dict[str, TargetCoverage],
         locus_coverage_map: Dict[str, LocusCoverage],
+        target_coverage_map: Dict[str, TargetCoverage],
     ) -> None:
         """Helper function to assign list of Variants with valid deletions that fall within a specific coverage region.
 
@@ -78,18 +87,17 @@ class VariantQC:
         def _add_valid_deletion(variant, key_attr, coverage_map):
             coverage = coverage_map.get(getattr(variant, key_attr))
             # Check if the variant is a valid deletion and falls within the coverage region
-            if coverage and coverage.contains_position(variant.pos):
+            if coverage and coverage.contains_position(variant.pos) and variant._is_deletion_in_orf():
                 coverage.valid_deletions.append(variant)
                 # Check if ERR coverage exists and assign Variants to valid_deletions if position falls within ERR region
-                if coverage.err_coverage and coverage.err_coverage.contains_position(variant.pos):
+                if coverage.err_coverage and coverage.err_coverage.contains_position(variant.pos) and variant._is_deletion_in_orf():
                     coverage.err_coverage.valid_deletions.append(variant)
 
         logger.debug(f"Assigning variants with valid deletions to coverage objects for {len(variants)} variants")
 
         for variant in variants:
-            if variant._is_valid_deletion():
-                _add_valid_deletion(variant, "gene_name", target_coverage_map)
-                _add_valid_deletion(variant, "gene_id", locus_coverage_map)
+            _add_valid_deletion(variant, "gene_name", target_coverage_map)
+            _add_valid_deletion(variant, "gene_id", locus_coverage_map)
         return
 
     def apply_qc(
@@ -225,7 +233,7 @@ class VariantQC:
         """
         qc_result = QCResult(fails_qc=False)
 
-        if not variant._is_valid_deletion():
+        if not variant._is_deletion_in_orf():
             # rule 4.2.1.1 - Non-deletion positional QC
             if (
                 variant.depth < self.config.MIN_DEPTH or
@@ -282,13 +290,7 @@ class VariantQC:
         # Determine if locus coverage is below threshold for QC fail and check if variant is a valid deletion
         has_low_boc = locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
         boc = locus_coverage.breadth_of_coverage
-        has_valid_deletion = variant in locus_coverage.valid_deletions
-
-        # if ERR coverage exists AND the Variant is ERR-enabled, use ERR coverage for locus QC instead of overall locus coverage
-        if variant.err_enabled and locus_coverage.err_coverage:
-            has_low_boc = locus_coverage.err_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
-            boc = locus_coverage.err_coverage.breadth_of_coverage
-            has_valid_deletion = variant in locus_coverage.err_coverage.valid_deletions
+        has_valid_deletion = locus_coverage.contains_valid_deletion(variant)
 
         if has_valid_deletion:
             logger.debug(f"{variant.gene_name}|{variant.gene_id} contains valid deletion(s)")
@@ -296,7 +298,6 @@ class VariantQC:
         if has_low_boc:
             # Rule 4.2.2.2: Low breadth of coverage with deletion present - PASS
             if has_valid_deletion:
-
                 # NOTE: this conditional is in previous versions but NOT in the interpretation documentation. Not sure if intentional
                 #  If this deletion also previously failed positional QC, add insufficient coverage warning?
                 if variant.fails_qc:

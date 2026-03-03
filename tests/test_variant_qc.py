@@ -1,17 +1,16 @@
-from variant import VariantQC, QCResult
-from coverage import LocusCoverage
+from variant import VariantQC
 
 
 class TestIsDeletion:
     def test_deletion_detected(self, mock_config, make_variant):
         qc = VariantQC(mock_config)
         v = make_variant(nucleotide_change="c.1_100del")
-        assert qc._is_deletion(v) is True
+        assert v._is_deletion_in_orf() is True
 
     def test_non_deletion(self, mock_config, make_variant):
         qc = VariantQC(mock_config)
         v = make_variant(nucleotide_change="c.1349C>T")
-        assert qc._is_deletion(v) is False
+        assert v._is_deletion_in_orf() is False
 
 
 class TestFailsTngsSpecificQc:
@@ -133,7 +132,7 @@ class TestApplyQc:
         locus = make_locus_coverage(locus_tag="Rv0667")
         qc.apply_qc([v], {"Rv0667": locus})
 
-        assert v.is_valid_deletion is True
+        assert v._is_deletion_in_orf() is True
         assert v.fails_qc is not True
 
     def test_deletion_with_zero_depth_good_freq_passes(self, mock_config, make_variant, make_locus_coverage):
@@ -144,7 +143,7 @@ class TestApplyQc:
         qc.apply_qc([v], {"Rv0667": locus})
 
         assert v.fails_qc is not True
-        assert v.is_valid_deletion is True
+        assert v._is_deletion_in_orf() is True
 
     def test_deletion_with_low_depth_fails(self, mock_config, make_variant, make_locus_coverage):
         """Rule 4.2.1.2: deletion with some depth but below threshold fails."""
@@ -152,10 +151,9 @@ class TestApplyQc:
         v = make_variant(nucleotide_change="c.1_100del", depth=5, freq=0.95)
         locus = make_locus_coverage(locus_tag="Rv0667")
         qc.apply_qc([v], {"Rv0667": locus})
-
         assert v.fails_qc is True
         assert "Failed quality in the mutation position" in v.warning
-        assert v.is_valid_deletion is False
+        assert v._is_deletion_in_orf() is False
 
     def test_r_mutation_both_positional_and_locus_fail_overwrite(
         self, mock_config, make_variant, make_locus_coverage
@@ -174,8 +172,8 @@ class TestApplyQc:
         assert v.looker_interpretation == "Insufficient Coverage"
 
 
-class TestGetGenesWithValidDeletions:
-    def test_valid_deletion_tracked(self, mock_config, make_variant, make_locus_coverage):
+class TestGetGenesWithDeletionsInORF:
+    def test_deletion_in_orf_tracked(self, mock_config, make_variant, make_locus_coverage):
         qc = VariantQC(mock_config)
         v = make_variant(
             nucleotide_change="c.1_100del",
@@ -184,7 +182,7 @@ class TestGetGenesWithValidDeletions:
         locus = make_locus_coverage(locus_tag="Rv0667")
         qc.apply_qc([v], {"Rv0667": locus})
 
-        assert v.is_valid_deletion is True
+        assert v._is_deletion_in_orf() is True
 
     def test_failed_deletion_not_tracked(self, mock_config, make_variant, make_locus_coverage):
         qc = VariantQC(mock_config)
@@ -195,7 +193,7 @@ class TestGetGenesWithValidDeletions:
         locus = make_locus_coverage(locus_tag="Rv0667")
         qc.apply_qc([v], {"Rv0667": locus})
 
-        assert v.is_valid_deletion is False
+        assert v._is_deletion_in_orf() is False
 
     def test_non_deletion_not_tracked(self, mock_config, make_variant, make_locus_coverage):
         qc = VariantQC(mock_config)
@@ -203,4 +201,4 @@ class TestGetGenesWithValidDeletions:
         locus = make_locus_coverage(locus_tag="Rv0667")
         qc.apply_qc([v], {"Rv0667": locus})
 
-        assert v.is_valid_deletion is False
+        assert v._is_deletion_in_orf() is False
