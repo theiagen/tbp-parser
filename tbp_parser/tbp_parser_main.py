@@ -72,8 +72,7 @@ def main():
 
     # Process all LIMS records and lineage information for final report
     lims_processor = LIMSProcessor(config)
-    lims_records = lims_processor.process_lims_records(lims_records, all_variants)
-    lims_lineage = lims_processor.process_lims_mtbc_id(
+    lims_records, lims_lineage = lims_processor.process(
         lims_records=lims_records,
         variants=all_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,

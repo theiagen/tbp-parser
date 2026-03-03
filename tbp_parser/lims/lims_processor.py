@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, Tuple
 from coverage.coverage_data import LocusCoverage
 from lims import LIMSRecord, LIMSGeneCode
 from utils import Configuration, GeneDatabase, Helper
@@ -25,15 +25,53 @@ class LIMSProcessor:
         "NA": -1,
     }
 
+    def process(
+        self,
+        lims_records: list[LIMSRecord],
+        variants: list[Variant],
+        locus_coverage_map: Dict[str, LocusCoverage],
+        detected_lineage: str,
+        detected_sublineage: str,
+    ) -> Tuple[list[LIMSRecord], str]:
+        """
+        Orchestrator function to process LIMS records and determine lineage for LIMS report.
+        Args:
+            lims_records: List of LIMSRecord objects with populated drug/gene codes but empty interpretations
+            variants: List of all Variant objects (including WT)
+            locus_coverage_map: Mapping of locus_tag names to their coverage percentages
+            detected_lineage: Raw lineage string from TBProfiler JSON
+            detected_sublineage: Raw sublineage string from TBProfiler JSON
+        Returns:
+            - List of LIMSRecord objects with all interpretations populated,
+            - Detected lineage for LIMS report
+        """
+        lims_records = self.process_lims_records(
+            lims_records=lims_records,
+            locus_coverage_map=locus_coverage_map,
+            variants=variants,
+        )
+
+        lims_lineage = self.process_lims_mtbc_id(
+            lims_records=lims_records,
+            variants=variants,
+            locus_coverage_map=locus_coverage_map,
+            detected_lineage=detected_lineage,
+            detected_sublineage=detected_sublineage,
+        )
+        return lims_records, lims_lineage
+
     def process_lims_records(
         self,
         lims_records: list[LIMSRecord],
+        locus_coverage_map: Dict[str, LocusCoverage],
         variants: list[Variant],
     ) -> list[LIMSRecord]:
         """Process LIMSRecord objects to prepare for LIMS report generation.
 
         Args:
             lims_records: List of LIMSRecord objects with populated drug/gene codes but empty interpretations
+            locus_coverage_map: Mapping of locus_tag names to their coverage percentages
+            variants: List of all Variant objects
 
         Returns:
             List of LIMSRecord objects with all interpretations populated
@@ -47,14 +85,21 @@ class LIMSProcessor:
                     if v.drug == lims_record.drug
                     if v.gene_id == GeneDatabase.get_locus_tag(gene)
                 ]
-                qc_filtered_variants = [
-                    v for v in candidate_variants
+
+                qc_filtered_variants = []
+                for v in candidate_variants:
+                    locus_coverage = locus_coverage_map.get(v.gene_id, None)
+                    if not locus_coverage:
+                        logger.debug(f"No locus coverage found for {v.gene_name}|{v.gene_id} at position {v.pos}")
+                        continue
+
+                    # if variant fails QC but is a valid deletion, we want to keep it and assign it to the LIMSRecord for interpretation/reporting purposes; otherwise, we filter out variants that fail QC
                     if (
-                      not v.fails_qc or
-                      v._is_valid_deletion() or
-                      v.err_enabled
-                    )
-                ]
+                        not v.fails_qc or
+                        locus_coverage.contains_valid_deletion(v)
+                    ):
+                        qc_filtered_variants.append(v)
+
                 logger.debug(f"Generating LIMS result - GENE_TARGET - [{lims_record.drug}|{gene}]; {len(qc_filtered_variants)}/{len(candidate_variants)} candidate variants after QC filtering")
 
                 # get max mdl based on filtered variants
@@ -255,25 +300,19 @@ class LIMSProcessor:
             if not locus_coverage:
                 raise ValueError(f"Could not find locus tag for LIMS gene {lims_gene} in locus coverage map. Check that the input bed file contains the correct locus tags for LIMS genes")
 
-            # Determine if locus coverage is below threshold for LIMS QC fail and check if gene contains variants with valid deletions
+            # if ERR coverage exists AND the `--use_err_as_brr` flag is set, use ERR coverage for determining lims QC
+            if self.config.USE_ERR_AS_BRR and locus_coverage.err_coverage:
+                logger.debug(f"Using ERR coverage for LIMS QC of gene {lims_gene}|{lims_locus_tag}")
+                locus_coverage = locus_coverage.err_coverage
 
+            # Determine if locus coverage is below threshold for LIMS QC fail and check if gene contains variants with valid deletions
             has_low_boc = locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
             boc = locus_coverage.breadth_of_coverage
             has_valid_deletion = (
                 lims_locus_tag in [
-                    v.gene_id for v in locus_coverage.valid_deletions
+                    variant.gene_id for variant in locus_coverage.valid_deletions
                 ]
             )
-
-            # if ERR coverage exists, use ERR coverage for LIMS QC instead of overall locus coverage
-            if locus_coverage.err_coverage:
-                has_low_boc = locus_coverage.err_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
-                boc = locus_coverage.err_coverage.breadth_of_coverage
-                has_valid_deletion = (
-                    lims_locus_tag in [
-                        v.gene_id for v in locus_coverage.err_coverage.valid_deletions
-                    ]
-                )
 
             if has_low_boc and not has_valid_deletion:
                 logger.debug(
