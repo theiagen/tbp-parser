@@ -287,6 +287,11 @@ class VariantQC:
             logger.debug(f"No locus coverage found for {variant.gene_name}|{variant.gene_id} at position {variant.pos}. Locus QC rules cannot be applied.")
             return qc_result
 
+        # if ERR coverage exists AND the `--use_err_as_brr` flag is set, use ERR coverage for locus QC instead of overall locus coverage
+        if self.config.USE_ERR_AS_BRR and locus_coverage.err_coverage:
+            logger.debug(f"Using ERR coverage for locus QC of {variant.gene_name}|{variant.gene_id}")
+            locus_coverage = locus_coverage.err_coverage
+
         # Determine if locus coverage is below threshold for QC fail and check if variant is a valid deletion
         has_low_boc = locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
         boc = locus_coverage.breadth_of_coverage
@@ -316,18 +321,12 @@ class VariantQC:
             else:
                 # Rule 4.2.2.3.2: S/U mutations with low breadth of coverage - FAIL
                 if (variant.mdl_interpretation == "S") or (variant.mdl_interpretation == "U"):
-                    # If ERR coverage is available and the variant hasn't attempted ERR QC yet, retry function before applying locus QC fail
-                    if not variant.err_enabled and locus_coverage.err_coverage:
-                        logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(boc):.3f}]; Checking ERR coverage for potential reclassification")
-                        setattr(variant, "err_enabled", True)
-                        return self.check_locus_qc(variant, qc_result, locus_coverage_map)
-                    else:
-                        logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(boc):.3f}]; FAILS locus QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage` (rule 4.2.2.3.2)")
-                        qc_result.fails_qc = True
-                        qc_result.looker_interpretation = "Insufficient Coverage"
-                        qc_result.mdl_interpretation = "Insufficient Coverage"
-                        qc_result.warning.add(self.LOCUS_QC_WARNING)
-                        return qc_result
+                    logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(boc):.3f}]; FAILS locus QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage` (rule 4.2.2.3.2)")
+                    qc_result.fails_qc = True
+                    qc_result.looker_interpretation = "Insufficient Coverage"
+                    qc_result.mdl_interpretation = "Insufficient Coverage"
+                    qc_result.warning.add(self.LOCUS_QC_WARNING)
+                    return qc_result
 
                 elif variant.mdl_interpretation == "R":
                     # Rule 4.2.2.3.3: R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
@@ -338,18 +337,12 @@ class VariantQC:
 
                     # Rule 4.2.2.3.4: R mutation with BOTH locus qc fail AND positional qc fail; add warning AND overwrite interpretation
                     else:
-                        # If ERR coverage is available and the variant hasn't attempted ERR QC yet, retry function before applying locus QC fail
-                        if not variant.err_enabled and locus_coverage.err_coverage:
-                            logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(boc):.3f}]; Checking ERR coverage for potential reclassification")
-                            setattr(variant, "err_enabled", True)
-                            return self.check_locus_qc(variant, qc_result, locus_coverage_map)
-                        else:
-                            logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(boc):.3f}] and FAILS positional QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage` (rule 4.2.2.3.4)")
-                            qc_result.fails_qc = True
-                            qc_result.looker_interpretation = "Insufficient Coverage"
-                            qc_result.mdl_interpretation = "Insufficient Coverage"
-                            qc_result.warning.add(self.LOCUS_QC_WARNING)
-                            return qc_result
+                        logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(boc):.3f}] and FAILS positional QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage` (rule 4.2.2.3.4)")
+                        qc_result.fails_qc = True
+                        qc_result.looker_interpretation = "Insufficient Coverage"
+                        qc_result.mdl_interpretation = "Insufficient Coverage"
+                        qc_result.warning.add(self.LOCUS_QC_WARNING)
+                        return qc_result
 
                 # not sure if this can happen
                 else:
