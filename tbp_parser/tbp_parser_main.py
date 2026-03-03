@@ -55,16 +55,16 @@ def main():
 
     # Variant processing: expansion, extraction, deduplication, unreported variant generation
     variant_processor = VariantProcessor()
-    all_variants, unreported_variants = variant_processor.process(variant_records, SAMPLE_ID)
+    reported_variants, unreported_variants = variant_processor.process(variant_records, SAMPLE_ID)
 
-    # Interpretation for all_variants (not needed for unreported variants)
+    # Interpretation for reported_variants (not needed for unreported_variants)
     variant_interpreter = VariantInterpreter()
-    all_variants = variant_interpreter.determine_interpretation(all_variants)
+    reported_variants = variant_interpreter.determine_interpretation(reported_variants)
 
-    # QC for all_variants and unreported_variants
+    # QC for reported_variants and unreported_variants
     variant_qc = VariantQC(config)
-    all_variants = variant_qc.qc(
-        variants=all_variants,
+    reported_variants = variant_qc.qc(
+        variants=reported_variants,
         unreported_variants=unreported_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
         target_coverage_map=TARGET_COVERAGE_MAP,
@@ -74,7 +74,7 @@ def main():
     lims_processor = LIMSProcessor(config)
     lims_records, lims_lineage = lims_processor.process(
         lims_records=lims_records,
-        variants=all_variants,
+        variants=reported_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
         detected_lineage=LINEAGE_ID,
         detected_sublineage=SUBLINEAGE_ID,
@@ -90,12 +90,12 @@ def main():
     )
 
     # Write lab report
-    write_laboratorian_report(config, all_variants)
+    write_laboratorian_report(config, reported_variants)
 
     # Write Looker report
     write_looker_report(
         config=config,
-        variants=all_variants,
+        variants=reported_variants,
         lims_lineage=lims_lineage,
         sample_id=SAMPLE_ID,
         detected_lineage=LINEAGE_ID,

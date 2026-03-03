@@ -6,14 +6,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Variant(BaseModel):
-    """This class represents a single genetic variant that can be found in the Laboratorian report.
+    """This class represents a single genetic drug-gene-variant combination that can be found in the Laboratorian report.
 
     Core attributes include fields expanded from the TBProfiler output JSON.
 
     This class assumes that the variant has already been expanded such that
     each Variant instance represents a single gene-drug association. These
     associations can be derived from the annotation and consequence field(s)
-    in the tbp-profiler output JSON.
+    in the TBProfiler output JSON.
 
     """
     # Core attributes from TBProfiler necessary to define a Variant

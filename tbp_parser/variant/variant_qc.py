@@ -64,12 +64,12 @@ class VariantQC:
         # Apply QC to all variants
         variants = self.apply_qc(variants, locus_coverage_map)
 
-        # Apply WT/NA QC to unreported variants
+        # Apply WT/NA QC to unreported_variants
         unreported_variants = self.apply_wildtype_qc(unreported_variants, locus_coverage_map)
 
-        # merge all_varaints and unreported variants for reporting
-        all_variants = variants + unreported_variants
-        return all_variants
+        # merge variants and unreported_variants for reporting
+        reported_variants = variants + unreported_variants
+        return reported_variants
 
     def assign_variants_with_valid_deletions(
         self,

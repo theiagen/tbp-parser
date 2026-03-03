@@ -19,14 +19,14 @@ class VariantProcessor:
             Tuple of (processed Variants, unreported Variants)
         """
         # Step 1: Process VariantRecords into Variants (expansion + extraction)
-        all_variants = self.process_variant_records(variant_records)
+        reported_variants = self.process_variant_records(variant_records)
 
         # Step 2: Deduplicate Variants, keeping the one with best annotation
-        all_variants = self.deduplicate_variants(all_variants)
+        reported_variants = self.deduplicate_variants(reported_variants)
 
-        # Step 3: Generate unreported Variants for gene/drug associations not in original set
-        unreported_variants = self.generate_unreported_variants(all_variants, sample_id)
-        return all_variants, unreported_variants
+        # Step 3: Generate unreported_variants for gene/drug associations not in original set
+        unreported_variants = self.generate_unreported_variants(reported_variants, sample_id)
+        return reported_variants, unreported_variants
 
     def process_variant_records(self, variant_records: List[VariantRecord]) -> List[Variant]:
         """Process VariantRecords into Variant objects.
@@ -39,7 +39,7 @@ class VariantProcessor:
         Returns:
             List of Variant objects extracted from the VariantRecords
         """
-        all_variants = []
+        reported_variants = []
         for variant_record in variant_records:
             # expand consequences in VariantRecords if applicable -> will always return list of VariantRecords
             expanded_variant_records = self._expand_consequences(variant_record)
@@ -47,10 +47,10 @@ class VariantProcessor:
             # extract Variant objects from each expanded VariantRecord based on annotations -> will always return list of Variant objects
             for record in expanded_variant_records:
                 variants = self._get_variants_from_annotations(record)
-                all_variants.extend(variants)
+                reported_variants.extend(variants)
 
-        logger.debug(f"Total Variant objects from VariantRecords: {len(all_variants)}")
-        return all_variants
+        logger.debug(f"Total Variant objects from VariantRecords: {len(reported_variants)}")
+        return reported_variants
 
     def _expand_consequences(self, variant_record: VariantRecord) -> List[VariantRecord]:
         """Expand a VariantRecord into multiple entries based on consequences.
@@ -87,7 +87,7 @@ class VariantProcessor:
     def _get_variants_from_annotations(self, variant_record: 'VariantRecord') -> List['Variant']:
         """Creates Variants from a VariantRecord, expanding to all relevant drug associations
         Args:
-            variant_record: A dictionary representing a single variant record from the tbp-profiler JSON output.
+            variant_record: A dictionary representing a single variant record from the TBProfiler JSON output.
         Returns:
             A list of Variant instances.
         """
