@@ -34,6 +34,7 @@ def make_variant():
         source="WHO",
         comment="",
         sample_id="test_sample",
+        **kwargs,
     ):
         v = Variant(
             sample_id=sample_id,
@@ -49,6 +50,7 @@ def make_variant():
             drug=drug,
             source=source,
             comment=comment,
+            **kwargs,
         )
         return v
     return _make
@@ -67,19 +69,6 @@ def make_wt_variant():
 
 
 @pytest.fixture
-def make_interpreted_variant(make_variant):
-    """Factory fixture to create Variant objects with pre-set interpretation fields."""
-    def _make(interpretation="R", looker_interpretation=None, rationale=None, **kwargs):
-        v = make_variant(**kwargs)
-        v.mdl_interpretation = interpretation
-        v.looker_interpretation = looker_interpretation if looker_interpretation is not None else interpretation
-        if rationale is not None:
-            v.rationale = rationale
-        return v
-    return _make
-
-
-@pytest.fixture
 def make_locus_coverage():
     """Factory fixture to create LocusCoverage objects."""
     def _make(
@@ -88,6 +77,7 @@ def make_locus_coverage():
         coords=[(100, 150), (250, 350)],
         breadth_of_coverage=1.0,
         average_depth=100.0,
+        err_coverage=None,
     ):
         return LocusCoverage(
             locus_tag=locus_tag,
@@ -95,6 +85,7 @@ def make_locus_coverage():
             coords=coords,
             breadth_of_coverage=breadth_of_coverage,
             average_depth=average_depth,
+            err_coverage=err_coverage,
         )
     return _make
 
@@ -108,6 +99,7 @@ def make_target_coverage():
         coords=(100, 150),
         breadth_of_coverage=1.0,
         average_depth=100.0,
+        err_coverage=None,
     ):
         return TargetCoverage(
             locus_tag=locus_tag,
@@ -115,6 +107,7 @@ def make_target_coverage():
             coords=coords,
             breadth_of_coverage=breadth_of_coverage,
             average_depth=average_depth,
+            err_coverage=err_coverage,
         )
     return _make
 
