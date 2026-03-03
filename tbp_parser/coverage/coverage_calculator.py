@@ -18,16 +18,16 @@ class CoverageCalculator:
         self.config = config
 
 
-    def calculate(self, bed_records: List[BedRecord], err_records: List[BedRecord]) -> Tuple[Dict[str, TargetCoverage], Dict[str, LocusCoverage]]:
+    def calculate(self, bed_records: List[BedRecord], err_records: List[BedRecord]) -> Tuple[Dict[str, LocusCoverage], Dict[str, TargetCoverage]]:
         """Main method to calculate coverage statistics for the provided BedRecords.
 
           Args:
               bed_records (List[BedRecord]): A list of BRR BedRecords to calculate coverage for.
               err_records (List[BedRecord]): A list of ERR BedRecords to calculate coverage for.
           Returns:
-              Tuple[Dict[str, TargetCoverage], Dict[str, LocusCoverage]]: A tuple containing:
-                  - Dictionary of TargetCoverage objects (one per gene name)
+              Tuple[Dict[str, LocusCoverage], Dict[str, TargetCoverage]]: A tuple containing:
                   - Dictionary of LocusCoverage objects (one per locus tag)
+                  - Dictionary of TargetCoverage objects (one per gene name)
         """
 
         # Fetch and populate all reads_by_position for all BedRecords first
@@ -38,13 +38,13 @@ class CoverageCalculator:
             bed_records = self.resolve_overlapping_regions(bed_records)
 
         # Generate coverage maps
-        target_coverage_map, locus_coverage_map = self.generate_coverage_maps(bed_records)
+        locus_coverage_map, target_coverage_map = self.generate_coverage_maps(bed_records)
 
         # Call this function again with just err_records to populate reads, resolve overlaps, and generate coverage maps for ERR regions only
         # and set ERR coverage to each target and locus coverage record if applicable
         if err_records:
             logger.debug("Calculating ERR coverage and assigning to TargetCoverage and LocusCoverage records")
-            err_target_coverage_map, err_locus_coverage_map = self.calculate(err_records, [])
+            err_locus_coverage_map, err_target_coverage_map = self.calculate(err_records, [])
 
             for gene_name, target_coverage in target_coverage_map.items():
                 if gene_name in err_target_coverage_map:
@@ -53,7 +53,7 @@ class CoverageCalculator:
             for locus_tag, locus_coverage in locus_coverage_map.items():
                 if locus_tag in err_locus_coverage_map:
                     setattr(locus_coverage, "err_coverage", err_locus_coverage_map[locus_tag])
-        return target_coverage_map, locus_coverage_map
+        return locus_coverage_map, target_coverage_map
 
 
     def populate_reads_by_position(self, bed_records: List[BedRecord]) -> List[BedRecord]:
@@ -160,7 +160,7 @@ class CoverageCalculator:
         return bed_records
 
 
-    def generate_coverage_maps(self, bed_records: List[BedRecord]) -> Tuple[Dict[str, TargetCoverage], Dict[str, LocusCoverage]]:
+    def generate_coverage_maps(self, bed_records: List[BedRecord]) -> Tuple[Dict[str, LocusCoverage], Dict[str, TargetCoverage]]:
         """
         Calculates both target-level and locus-level coverage statistics for the provided BedRecords.
         For target-level coverage, one TargetCoverage object is created per BedRecord.
@@ -169,9 +169,9 @@ class CoverageCalculator:
         Args:
             bed_records (List[BedRecord]): A list of BedRecords to calculate coverage for.
         Returns:
-            Tuple[Dict[str, TargetCoverage], Dict[str, LocusCoverage]]: A tuple containing:
-                - Dictionary of TargetCoverage objects (one per gene name)
+            Tuple[Dict[str, LocusCoverage], Dict[str, TargetCoverage]]: A tuple containing:
                 - Dictionary of LocusCoverage objects (one per locus tag)
+                - Dictionary of TargetCoverage objects (one per gene name)
         """
         target_coverage_map = {}
         locus_coverage_map = {}
@@ -233,7 +233,7 @@ class CoverageCalculator:
                 average_depth=average_depth,
             )
             locus_coverage_map[locus_tag] = locus_coverage
-        return target_coverage_map, locus_coverage_map
+        return locus_coverage_map, target_coverage_map
 
 
     def _calculate_breadth_of_coverage(self, reads_by_position: dict[int, list[str]]) -> float:

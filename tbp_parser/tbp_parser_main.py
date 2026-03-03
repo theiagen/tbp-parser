@@ -48,7 +48,7 @@ def main():
 
     # Coverage calculation
     coverage_calculator = CoverageCalculator(config)
-    TARGET_COVERAGE_MAP, LOCUS_COVERAGE_MAP = coverage_calculator.calculate(bed_records, err_records)
+    LOCUS_COVERAGE_MAP, TARGET_COVERAGE_MAP  = coverage_calculator.calculate(bed_records, err_records)
 
     # VariantRecord parsing
     variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
@@ -120,7 +120,6 @@ def main():
         sample_name=SAMPLE_ID,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
     )
-
 
 if __name__ == "__main__":
     main()
