@@ -1,5 +1,5 @@
 import pytest
-from coverage import BedRecord, parse_bed_file
+from Coverage import BedRecord, parse_bed_file
 
 class TestBedRecordFromBedLine:
     def test_basic_parsing(self):

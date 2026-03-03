@@ -1,184 +1,202 @@
-"amikacin":
-    "AMK":
-        "bacA": "AMK_bacA"
-        "ccsA": "AMK_ccsA"
-        "eis": "AMK_eis"
-        "rrs": "AMK_rrs"
-        "Rv2477C": "AMK_Rv2477C"
-        "whiB6": "AMK_whiB6"
-        "whiB7": "AMK_whiB7"
+- drug: amikacin
+  drug_code: AMK
+  gene_codes:
+    bacA: AMK_bacA
+    ccsA: AMK_ccsA
+    eis: AMK_eis
+    rrs: AMK_rrs
+    Rv2477C: AMK_Rv2477C
+    whiB6: AMK_whiB6
+    whiB7: AMK_whiB7
 
-"bedaquiline":
-    "BDQ":
-        "atpE": "BDQ_atpE"
-        "lpqB": "BDQ_lpqB"
-        "mmpL5": "BDQ_mmpL5"
-        "mmpR5": "BDQ_mmpR5"
-        "mmpS5": "BDQ_mmpS5"
-        "mtrA": "BDQ_mtrA"
-        "mtrB": "BDQ_mtrB"
-        "pepQ": "BDQ_pepQ"
-        "Rv1979c": "BDQ_Rv1979c"
+- drug: bedaquiline
+  drug_code: BDQ
+  gene_codes:
+    atpE: BDQ_atpE
+    lpqB: BDQ_lpqB
+    mmpL5: BDQ_mmpL5
+    mmpR5: BDQ_mmpR5
+    mmpS5: BDQ_mmpS5
+    mtrA: BDQ_mtrA
+    mtrB: BDQ_mtrB
+    pepQ: BDQ_pepQ
+    Rv1979c: BDQ_Rv1979c
 
-"capreomycin":
-    "CAP":
-        "bacA": "CAP_bacA"
-        "ccsA": "CAP_ccsA"
-        "rrl": "CAP_rrl"
-        "rrs": "CAP_rrs"
-        "Rv2680": "CAP_Rv2680"
-        "Rv2681": "CAP_Rv2681"
-        "tlyA": "CAP_tlyA"
-        "whiB6": "CAP_whiB6"
+- drug: capreomycin
+  drug_code: CAP
+  gene_codes:
+    bacA: CAP_bacA
+    ccsA: CAP_ccsA
+    rrl: CAP_rrl
+    rrs: CAP_rrs
+    Rv2680: CAP_Rv2680
+    Rv2681: CAP_Rv2681
+    tlyA: CAP_tlyA
+    whiB6: CAP_whiB6
 
-"clofazimine":
-    "CFZ":
-        "fbiA": "CFZ_fbiA"
-        "fbiB": "CFZ_fbiB"
-        "fbiC": "CFZ_fbiC"
-        "fbiD": "CFZ_fbiD"
-        "fgd1": "CFZ_fgd1"
-        "mmpL5": "CFZ_mmpL5"
-        "mmpR5": "CFZ_mmpR5"
-        "pepQ": "CFZ_pepQ"
-        "Rv1979c": "CFZ_Rv1979c"
+- drug: clofazimine
+  drug_code: CFZ
+  gene_codes:
+    fbiA: CFZ_fbiA
+    fbiB: CFZ_fbiB
+    fbiC: CFZ_fbiC
+    fbiD: CFZ_fbiD
+    fgd1: CFZ_fgd1
+    mmpL5: CFZ_mmpL5
+    mmpR5: CFZ_mmpR5
+    pepQ: CFZ_pepQ
+    Rv1979c: CFZ_Rv1979c
 
-"cycloserine":
-    "CS":
-        "ald": "CS_ald"
-        "alr": "CS_alr"
+- drug: cycloserine
+  drug_code: CS
+  gene_codes:
+    ald: CS_ald
+    alr: CS_alr
 
-"delamanid":
-    "DLM":
-        "ddn": "DLM_ddn"
-        "fbiA": "DLM_fbiA"
-        "fbiB": "DLM_fbiB"
-        "fbiC": "DLM_fbiC"
-        "fbiD": "DLM_fbiD"
-        "fgd1": "DLM_fgd1"
-        "ndh": "DLM_ndh"
+- drug: delamanid
+  drug_code: DLM
+  gene_codes:
+    ddn: DLM_ddn
+    fbiA: DLM_fbiA
+    fbiB: DLM_fbiB
+    fbiC: DLM_fbiC
+    fbiD: DLM_fbiD
+    fgd1: DLM_fgd1
+    ndh: DLM_ndh
 
-"ethambutol":
-    "EMB":
-        "aftB": "EMB_aftB"
-        "embA": "EMB_embA"
-        "embB": "EMB_embB"
-        "embC": "EMB_embC"
-        "embR": "EMB_embR"
-        "glpK": "EMB_glpK"
-        "Rv2477c": "EMB_Rv2477c"
-        "Rv2752c": "EMB_Rv2752c"
-        "ubiA": "EMB_ubiA"
+- drug: ethambutol
+  drug_code: EMB
+  gene_codes:
+    aftB: EMB_aftB
+    embA: EMB_embA
+    embB: EMB_embB
+    embC: EMB_embC
+    embR: EMB_embR
+    glpK: EMB_glpK
+    Rv2477c: EMB_Rv2477c
+    Rv2752c: EMB_Rv2752c
+    ubiA: EMB_ubiA
 
-"ethionamide":
-    "ETO":
-        "ethA": "ETO_ethA"
-        "ethR": "ETO_ethR"
-        "inhA": "ETO_inhA"
-        "mshA": "ETO_mshA"
-        "ndh": "ETO_ndh"
-        "Rv0565c": "ETO_Rv0565c"
-        "Rv3083": "ETO_Rv3083"
+- drug: ethionamide
+  drug_code: ETO
+  gene_codes:
+    ethA: ETO_ethA
+    ethR: ETO_ethR
+    inhA: ETO_inhA
+    mshA: ETO_mshA
+    ndh: ETO_ndh
+    Rv0565c: ETO_Rv0565c
+    Rv3083: ETO_Rv3083
 
-"isoniazid":
-    "INH":
-        "ahpC": "INH_ahpC"
-        "dnaA": "INH_dnaA"
-        "glpK": "INH_glpK"
-        "hadA": "INH_hadA"
-        "inhA": "INH_inhA"
-        "kasA": "INH_kasA"
-        "katG": "INH_katG"
-        "mmaA3": "INH_mmaA3"
-        "mshA": "INH_mshA"
-        "ndh": "INH_ndh"
-        "Rv0010c": "INH_Rv0010c"
-        "Rv1129c": "INH_Rv1129c"
-        "Rv1258c": "INH_Rv1258c"
-        "Rv2752c": "INH_Rv2752c"
+- drug: isoniazid
+  drug_code: INH
+  gene_codes:
+    ahpC: INH_ahpC
+    dnaA: INH_dnaA
+    glpK: INH_glpK
+    hadA: INH_hadA
+    inhA: INH_inhA
+    kasA: INH_kasA
+    katG: INH_katG
+    mmaA3: INH_mmaA3
+    mshA: INH_mshA
+    ndh: INH_ndh
+    Rv0010c: INH_Rv0010c
+    Rv1129c: INH_Rv1129c
+    Rv1258c: INH_Rv1258c
+    Rv2752c: INH_Rv2752c
 
-"kanamycin":
-    "KAN":
-        "bacA": "KAN_bacA"
-        "ccsA": "KAN_ccsA"
-        "eis": "KAN_eis"
-        "rrs": "KAN_rrs"
-        "Rv2477c": "KAN_Rv2477c"
-        "whiB6": "KAN_whiB6"
-        "whiB7": "KAN_whiB7"
+- drug: kanamycin
+  drug_code: KAN
+  gene_codes:
+    bacA: KAN_bacA
+    ccsA: KAN_ccsA
+    eis: KAN_eis
+    rrs: KAN_rrs
+    Rv2477c: KAN_Rv2477c
+    whiB6: KAN_whiB6
+    whiB7: KAN_whiB7
 
-"levofloxacin":
-    "LFX":
-        "glpK": "LFX_glpK"
-        "gyrA": "LFX_gyrA"
-        "gyrB": "LFX_gyrB"
-        "Rv1129c": "LFX_Rv1129c"
-        "Rv2477c": "LFX_Rv2477c"
-        "Rv2752c": "LFX_Rv2752c"
+- drug: levofloxacin
+  drug_code: LFX
+  gene_codes:
+    glpK: LFX_glpK
+    gyrA: LFX_gyrA
+    gyrB: LFX_gyrB
+    Rv1129c: LFX_Rv1129c
+    Rv2477c: LFX_Rv2477c
+    Rv2752c: LFX_Rv2752c
 
-"linezolid":
-    "LZD":
-        "rplC": "LZD_rplC"
-        "rrl": "LZD_rrl"
-        "tsnR": "LZD_tsnR"
+- drug: linezolid
+  drug_code: LZD
+  gene_codes:
+    rplC: LZD_rplC
+    rrl: LZD_rrl
+    tsnR: LZD_tsnR
 
-"moxifloxacin":
-    "MFX":
-        "glpK": "MFX_glpK"
-        "gyrA": "MFX_gyrA"
-        "gyrB": "MFX_gyrB"
-        "Rv1129c": "MFX_Rv1129c"
-        "Rv2477c": "MFX_Rv2477c"
-        "Rv2752c": "MFX_Rv2752c"
+- drug: moxifloxacin
+  drug_code: MFX
+  gene_codes:
+    glpK: MFX_glpK
+    gyrA: MFX_gyrA
+    gyrB: MFX_gyrB
+    Rv1129c: MFX_Rv1129c
+    Rv2477c: MFX_Rv2477c
+    Rv2752c: MFX_Rv2752c
 
-"para-aminosalicylic_acid":
-    "PAS":
-        "folC": "PAS_folC"
-        "ribD": "PAS_ribD"
-        "thyA": "PAS_thyA"
-        "thyX": "PAS_thyX"
+- drug: para-aminosalicylic_acid
+  drug_code: PAS
+  gene_codes:
+    folC: PAS_folC
+    ribD: PAS_ribD
+    thyA: PAS_thyA
+    thyX: PAS_thyX
 
-"pretomanid":
-    "PMD":
-        "ddn": "PMD_ddn"
-        "fbiA": "PMD_fbiA"
-        "fbiB": "PMD_fbiB"
-        "fbiC": "PMD_fbiC"
-        "fbiD": "PMD_fbiD"
-        "fgd1": "PMD_fgd1"
+- drug: pretomanid
+  drug_code: PMD
+  gene_codes:
+    ddn: PMD_ddn
+    fbiA: PMD_fbiA
+    fbiB: PMD_fbiB
+    fbiC: PMD_fbiC
+    fbiD: PMD_fbiD
+    fgd1: PMD_fgd1
 
-"pyrazinamide":
-    "PZA":
-        "clpC1": "PZA_clpC1"
-        "panD": "PZA_panD"
-        "pncA": "PZA_pncA"
-        "PPE35": "PZA_PPE35"
-        "rpsA": "PZA_rpsA"
-        "Rv1258c": "PZA_Rv1258c"
-        "Rv3236c": "PZA_Rv3236c"
-        "sigE": "PZA_sigE"
+- drug: pyrazinamide
+  drug_code: PZA
+  gene_codes:
+    clpC1: PZA_clpC1
+    panD: PZA_panD
+    pncA: PZA_pncA
+    PPE35: PZA_PPE35
+    rpsA: PZA_rpsA
+    Rv1258c: PZA_Rv1258c
+    Rv3236c: PZA_Rv3236c
+    sigE: PZA_sigE
 
-"rifampicin":
-    "RIF":
-        "glpK": "RIF_glpK"
-        "lpqB": "RIF_lpqB"
-        "mtrA": "RIF_mtrA"
-        "mtrB": "RIF_mtrB"
-        "nusG": "RIF_nusG"
-        "rpoA": "RIF_rpoA"
-        "rpoB": "RIF_rpoB"
-        "rpoC": "RIF_rpoC"
-        "Rv1129c": "RIF_Rv1129c"
-        "Rv2477c": "RIF_Rv2477c"
-        "Rv2752c": "RIF_Rv2752c"
+- drug: rifampicin
+  drug_code: RIF
+  gene_codes:
+    glpK: RIF_glpK
+    lpqB: RIF_lpqB
+    mtrA: RIF_mtrA
+    mtrB: RIF_mtrB
+    nusG: RIF_nusG
+    rpoA: RIF_rpoA
+    rpoB: RIF_rpoB
+    rpoC: RIF_rpoC
+    Rv1129c: RIF_Rv1129c
+    Rv2477c: RIF_Rv2477c
+    Rv2752c: RIF_Rv2752c
 
-"streptomycin":
-    "STM":
-        "bacA": "STM_bacA"
-        "gid": "STM_gid"
-        "glpK": "STM_glpK"
-        "rpsL": "STM_rpsL"
-        "rrs": "STM_rrs"
-        "Rv1258c": "STM_Rv1258c"
-        "Rv2477c": "STM_Rv2477c"
-        "whiB7": "STM_whiB7"
+- drug: streptomycin
+  drug_code: STM
+  gene_codes:
+    bacA: STM_bacA
+    gid: STM_gid
+    glpK: STM_glpK
+    rpsL: STM_rpsL
+    rrs: STM_rrs
+    Rv1258c: STM_Rv1258c
+    Rv2477c: STM_Rv2477c
+    whiB7: STM_whiB7

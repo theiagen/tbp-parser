@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 from pathlib import Path
-from utils import (
+from Utilities import (
   __VERSION__,
   is_boundary_valid,
   is_file_valid,

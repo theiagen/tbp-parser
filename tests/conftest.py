@@ -3,8 +3,8 @@ import pysam
 from pathlib import Path
 from copy import deepcopy
 from unittest.mock import MagicMock
-from variant import Variant, VariantRecord, Annotation, Consequences
-from coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
+from Variant import Variant, VariantRecord, Annotation, Consequences
+from Coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
 
 @pytest.fixture
 def make_bed_record():

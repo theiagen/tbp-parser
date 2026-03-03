@@ -1,6 +1,6 @@
 import pytest
-from variant import Variant, VariantRecord, VariantProcessor
-from utils import GeneDatabase
+from Variant import Variant, VariantRecord, VariantProcessor
+from Utilities import GeneDatabase
 
 class TestExpandConsequences:
     """Tests for VariantProcessor._expand_consequences"""

@@ -1,4 +1,4 @@
-from variant import VariantQC
+from Variant import VariantQC
 
 
 class TestIsDeletion:

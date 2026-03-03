@@ -1,5 +1,5 @@
 import pytest
-from variant import VariantInterpreter, InterpretationResult
+from Variant import VariantInterpreter, InterpretationResult
 
 
 @pytest.fixture
