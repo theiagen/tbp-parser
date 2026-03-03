@@ -97,7 +97,7 @@ class TestApplyQc:
         # Pre-set interpretation as determine_interpretation would
         v.mdl_interpretation = "U"
         v.looker_interpretation = "U"
-        locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=50.0)
+        locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=0.50)
         qc.apply_qc([v], {"Rv0667": locus})
 
         assert "Insufficient coverage in locus" in v.warning
@@ -110,7 +110,7 @@ class TestApplyQc:
         v = make_variant(depth=100, freq=0.95, confidence="Assoc w R")
         v.mdl_interpretation = "R"
         v.looker_interpretation = "R"
-        locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=50.0)
+        locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=0.50)
         qc.apply_qc([v], {"Rv0667": locus})
 
         assert "Insufficient coverage in locus" in v.warning
@@ -165,7 +165,7 @@ class TestApplyQc:
         v = make_variant(depth=5, freq=0.50, confidence="Assoc w R")
         v.mdl_interpretation = "R"
         v.looker_interpretation = "R"
-        locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=50.0)
+        locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=0.50)
         qc.apply_qc([v], {"Rv0667": locus})
 
         assert v.fails_qc is True

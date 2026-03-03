@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import MagicMock
 from variant import VariantInterpreter, InterpretationResult
 
 
@@ -8,53 +7,7 @@ def interpreter() -> VariantInterpreter:
     """Create a VariantInterpreter"""
     return VariantInterpreter()
 
-
-# class TestGetMdlInterpretation:
-#     """Tests for _get_mdl_interpretation which drops interim designations."""
-
-#     @pytest.mark.parametrize("confidence,expected", [
-#         ("Assoc w R", "R"),
-#         ("Assoc w R - Interim", "R"),
-#         ("Uncertain significance", "U"),
-#         ("Not assoc w R", "S"),
-#         ("Not assoc w R - Interim", "S"),
-#         ("unknown_value", "NA"),
-#     ])
-#     def test_mdl_interpretation(self, confidence, expected):
-#         assert VariantInterpreter._get_mdl_interpretation(confidence) == expected
-
-
-# class TestGetLookerInterpretation:
-#     """Tests for _get_looker_interpretation which preserves interim designations."""
-
-#     @pytest.mark.parametrize("confidence,expected", [
-#         ("Assoc w R", "R"),
-#         ("Assoc w R - Interim", "R-Interim"),
-#         ("Uncertain significance", "U"),
-#         ("Not assoc w R", "S"),
-#         ("Not assoc w R - Interim", "S-Interim"),
-#         ("unknown_value", "NA"),
-#     ])
-#     def test_looker_interpretation(self, confidence, expected):
-#         assert VariantInterpreter._get_looker_interpretation(confidence) == expected
-
-
-# class TestDescribeRationale:
-#     @pytest.mark.parametrize("rule,expected_substring", [
-#         ("rule1.2", "Expert rule 1.2"),
-#         ("rule2.2.1", "Expert rule 2.2.1"),
-#         ("rule2.2.2.1", "rpoB RRDR"),
-#         ("rule2.2.2.2", "rpoB non-RRDR"),
-#         ("rule3.2.1", "rrs"),
-#         ("whov2", "proximal promoter"),
-#         ("unknown_rule", "No WHO annotation"),
-#     ])
-#     def test_rationale_description(self, rule, expected_substring):
-#         result = VariantInterpreter.describe_rationale(rule)
-#         assert expected_substring in result
-
-
-class TestDetermineInterpretationV2:
+class TestDetermineInterpretation:
     """Tests for the new determine_interpretation method."""
 
     def test_who_annotated_variant(self, interpreter, make_variant):
@@ -85,17 +38,6 @@ class TestDetermineInterpretationV2:
         assert v.mdl_interpretation == "U"
         assert v.rationale is not None
         assert "1.2" in v.rationale  # Should use rule 1.2 for CDC genes
-
-    # moved to variant_qc after interpretation
-    # def test_outside_region_gets_na(self, interpreter, make_variant):
-    #     v = make_variant()
-    #     v.warning = {"This mutation is outside the expected region"}
-    #     interpreter.determine_interpretation([v])
-
-    #     assert v.mdl_interpretation == "NA"
-    #     assert v.looker_interpretation == "NA"
-    #     assert v.rationale == "NA"
-    #     assert v.confidence == "NA"
 
 
 class TestInterpret:
