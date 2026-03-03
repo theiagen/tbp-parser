@@ -13,8 +13,8 @@ class LIMSProcessor:
     """Processor for all decision logic for LIMS report generation (Section 5 rules).
     LIMS report fields based on TBProfiler results and QC data."""
 
-    def __init__(self, config: Configuration):
-        self.config = config
+    def __init__(self):
+        self.config = Configuration.get_instance()
 
     RESISTANCE_RANKING = {
         "R": 4,

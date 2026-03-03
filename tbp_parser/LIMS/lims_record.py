@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from pydantic import BaseModel, Field
 from Variant import Variant
-from Utilities import Helper
+from Utilities import Configuration
 
 class LIMSGeneCode(BaseModel):
     """Class representing gene-specific results for the LIMS report."""
@@ -28,7 +28,7 @@ class LIMSRecord(BaseModel):
 
     # Post-init processing to compute derived attributes
     def model_post_init(self, __context: Any = None):
-        Helper.normalize_field_values(self)
+        Configuration.get_instance().normalize_field_values(self)
 
     def __str__(self):
         return f"LIMSRecord(drug={self.drug}, drug_code={self.drug_code}, drug_target_value={self.drug_target_value})"

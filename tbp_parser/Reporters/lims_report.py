@@ -15,7 +15,6 @@ from Utilities import Configuration
 logger = logging.getLogger(__name__)
 
 def write_lims_report(
-    config: Configuration,
     lims_records: list[LIMSRecord],
     lims_lineage: str,
     sample_id: str,
@@ -24,7 +23,6 @@ def write_lims_report(
     """Write the LIMS report from processed Variant objects.
 
     Args:
-        config: Configuration object
         lims_records: List of LIMSRecord objects
         lims_lineage: Lineage information for the LIMS report
         sample_id: Sample identifier
@@ -33,6 +31,8 @@ def write_lims_report(
     Returns:
         None
     """
+    config = Configuration.get_instance()
+
     # Build the report as a dictionary first, then convert to DataFrame for writing
     lims_report = {
         "MDL sample accession numbers": sample_id,

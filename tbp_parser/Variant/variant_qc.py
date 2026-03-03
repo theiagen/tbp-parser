@@ -32,8 +32,8 @@ class VariantQC:
     POSITIONAL_QC_WARNING = "Failed quality in the mutation position"
     LOCUS_QC_WARNING = "Insufficient coverage in locus"
 
-    def __init__(self, config: Configuration):
-        self.config = config
+    def __init__(self):
+        self.config = Configuration.get_instance()
 
     def qc(
         self,

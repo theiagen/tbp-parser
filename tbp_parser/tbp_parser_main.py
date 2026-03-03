@@ -47,8 +47,8 @@ def main():
     check_bed_for_lims_genes(bed_records, lims_records)
 
     # Coverage calculation
-    coverage_calculator = CoverageCalculator(config)
-    LOCUS_COVERAGE_MAP, TARGET_COVERAGE_MAP  = coverage_calculator.calculate(bed_records, err_records)
+    coverage_calculator = CoverageCalculator()
+    LOCUS_COVERAGE_MAP, TARGET_COVERAGE_MAP = coverage_calculator.calculate(bed_records, err_records)
 
     # VariantRecord parsing
     variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
@@ -62,7 +62,7 @@ def main():
     reported_variants = variant_interpreter.determine_interpretation(reported_variants)
 
     # QC for reported_variants and unreported_variants
-    variant_qc = VariantQC(config)
+    variant_qc = VariantQC()
     reported_variants = variant_qc.qc(
         variants=reported_variants,
         unreported_variants=unreported_variants,
@@ -71,7 +71,7 @@ def main():
     )
 
     # Process all LIMS records and lineage information for final report
-    lims_processor = LIMSProcessor(config)
+    lims_processor = LIMSProcessor()
     lims_records, lims_lineage = lims_processor.process(
         lims_records=lims_records,
         variants=reported_variants,
@@ -82,7 +82,6 @@ def main():
 
     # Write LIMS report
     write_lims_report(
-        config=config,
         lims_records=lims_records,
         lims_lineage=lims_lineage,
         sample_id=SAMPLE_ID,
@@ -90,11 +89,10 @@ def main():
     )
 
     # Write lab report
-    write_laboratorian_report(config, reported_variants)
+    write_laboratorian_report(reported_variants)
 
     # Write Looker report
     write_looker_report(
-        config=config,
         variants=reported_variants,
         lims_lineage=lims_lineage,
         sample_id=SAMPLE_ID,
@@ -103,12 +101,10 @@ def main():
 
     # Write coverage reports
     write_target_coverage_report(
-        config,
         sample_name=SAMPLE_ID,
         target_coverage_map=TARGET_COVERAGE_MAP,
     )
     write_locus_coverage_report(
-        config,
         sample_name=SAMPLE_ID,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
     )

@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 from pydantic import BaseModel, Field
-from Utilities import Helper
+from Utilities import Configuration
 
 class BedRecord(BaseModel):
     """A class representing a record or entry from a BED file."""
@@ -24,7 +24,7 @@ class BedRecord(BaseModel):
         self.coords = (self.start, self.end)
 
         # Normalize gene_name
-        Helper.normalize_field_values(self)
+        Configuration.get_instance().normalize_field_values(self)
 
     def __str__(self):
         return f"BedRecord([{self.gene_name}][{self.locus_tag}]{self.coords})"

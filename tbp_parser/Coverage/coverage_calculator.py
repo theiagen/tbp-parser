@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 class CoverageCalculator:
     """A class used to generage coverage statistics for BED records."""
 
-    def __init__(self, config: Configuration) -> None:
-        self.config = config
+    def __init__(self) -> None:
+        self.config = Configuration.get_instance()
 
 
     def calculate(self, bed_records: List[BedRecord], err_records: List[BedRecord]) -> Tuple[Dict[str, LocusCoverage], Dict[str, TargetCoverage]]:

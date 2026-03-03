@@ -71,16 +71,16 @@ def sort_lab_df(df: pd.DataFrame) -> pd.DataFrame:
     df_all = pd.concat([df_other, df_wt, df_na], ignore_index=True)
     return df_all
 
-def write_laboratorian_report(config: Configuration, variants: list[Variant]) -> None:
+def write_laboratorian_report(variants: list[Variant]) -> None:
     """Write the laboratorian report from processed Variant objects.
 
     Args:
-        config: Configuration object (used for OUTPUT_PREFIX)
         variants: List of Variant objects with interpretation and QC applied
 
     Returns:
         None
     """
+    config = Configuration.get_instance()
     rows = []
     for variant in variants:
         row = {}

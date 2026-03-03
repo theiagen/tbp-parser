@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import json
 from pathlib import Path
 from Utilities import (
   __VERSION__,
@@ -84,7 +85,7 @@ def parse_arguments():
                         help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b", type=resolve_output_prefix)
     ### TO-DO: create dict format validation function
     general_arguments.add_argument("-fr", "--find_and_replace",
-                        help="a dictionary (in string format) used to find and replace text in the LIMS report\nExample: '--find_and_replace \"{'old_text1': 'new_text1', 'old_text2': 'new_text2'}\"'", default="{}", metavar="\b")
+                        help="A JSON string of find-and-replace pairs applied across all fields.\nExample: --find_and_replace '{\"rifampicin\": \"rifampin\", \"fbiD\": \"Rv2983\"}'", default={}, type=json.loads)
 
     tngs_arguments = parser.add_argument_group("tNGS-specific arguments",
                                                 "options that are primarily used for tNGS data")

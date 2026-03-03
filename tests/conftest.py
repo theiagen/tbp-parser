@@ -3,8 +3,47 @@ import pysam
 from pathlib import Path
 from copy import deepcopy
 from unittest.mock import MagicMock
+from Utilities import Configuration
 from Variant import Variant, VariantRecord, Annotation, Consequences
 from Coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
+
+@pytest.fixture
+def mock_config():
+    """Create a mock Configuration object with sensible defaults."""
+    config = MagicMock()
+    config.MIN_DEPTH = 10
+    config.MIN_FREQUENCY = 0.10
+    config.MIN_READ_SUPPORT = 10
+    config.MIN_PERCENT_COVERAGE = 0.90
+    config.MIN_PERCENT_LOCI_COVERED = 0.50
+    config.TNGS = False
+    config.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = False
+    config.SEQUENCING_METHOD = "WGS"
+    config.OUTPUT_PREFIX = "/tmp/test_output"
+    config.OPERATOR = "test_operator"
+    config.TNGS_READ_SUPPORT_BOUNDARIES = [10, 100]
+    config.TNGS_FREQUENCY_BOUNDARIES = [0.10, 0.25]
+    config.TNGS_SPECIFIC_QC_OPTIONS = {
+        "RRS_FREQUENCY": 0.25,
+        "RRS_READ_SUPPORT": 10,
+        "RRL_FREQUENCY": 0.25,
+        "RRL_READ_SUPPORT": 10,
+        "ETHA237_FREQUENCY": 0.10,
+        "RPOB449_FREQUENCY": 0.10,
+    }
+    config.USE_ERR_AS_BRR = False
+    config.FIND_AND_REPLACE = {
+        "rifampicin": "rifampin",
+        "fbiD": "Rv2983",
+        "mmpR5": "Rv0678",
+        "p.0?": "",
+    }
+    config.normalize_field_values = lambda obj: Configuration.normalize_field_values(config, obj)
+    return config
+
+@pytest.fixture(autouse=True)
+def setup_config(mock_config):
+    Configuration._instance = mock_config
 
 @pytest.fixture
 def make_bed_record():
@@ -112,31 +151,6 @@ def make_target_coverage():
     return _make
 
 
-@pytest.fixture
-def mock_config():
-    """Create a mock Configuration object with sensible defaults."""
-    config = MagicMock()
-    config.MIN_DEPTH = 10
-    config.MIN_FREQUENCY = 0.10
-    config.MIN_READ_SUPPORT = 10
-    config.MIN_PERCENT_COVERAGE = 0.90
-    config.MIN_PERCENT_LOCI_COVERED = 0.50
-    config.TNGS = False
-    config.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = False
-    config.SEQUENCING_METHOD = "WGS"
-    config.OUTPUT_PREFIX = "/tmp/test_output"
-    config.OPERATOR = "test_operator"
-    config.TNGS_READ_SUPPORT_BOUNDARIES = [10, 100]
-    config.TNGS_FREQUENCY_BOUNDARIES = [0.10, 0.25]
-    config.TNGS_SPECIFIC_QC_OPTIONS = {
-        "RRS_FREQUENCY": 0.25,
-        "RRS_READ_SUPPORT": 10,
-        "RRL_FREQUENCY": 0.25,
-        "RRL_READ_SUPPORT": 10,
-        "ETHA237_FREQUENCY": 0.10,
-        "RPOB449_FREQUENCY": 0.10,
-    }
-    return config
 
 
 @pytest.fixture
@@ -274,5 +288,5 @@ def make_cov_calc(mock_config, make_bam_file):
     """Factory fixture to create a CoverageCalculator instance with a mock config."""
     def _make(cov_start=0, cov_end=100, read_length=10):
         mock_config.input_bam = make_bam_file(cov_start=cov_start, cov_end=cov_end, read_length=read_length) # bams are 0-based
-        return CoverageCalculator(mock_config)
+        return CoverageCalculator()
     return _make

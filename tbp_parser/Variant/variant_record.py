@@ -1,5 +1,5 @@
 from typing import Any, List
-from Utilities import Helper
+from Utilities import Configuration
 from pydantic import BaseModel
 import logging
 
@@ -25,7 +25,7 @@ class Annotation(BaseModel):
 
     # Post-init processing to compute derived attributes
     def model_post_init(self, __context: Any = None):
-        Helper.normalize_field_values(self)
+        Configuration.get_instance().normalize_field_values(self)
 
 class Consequences(BaseModel):
     """Data class representing a single consequence entry (dict) from a list of dicts under the `consequences` field in
@@ -45,7 +45,8 @@ class Consequences(BaseModel):
 
     # Post-init processing to compute derived attributes
     def model_post_init(self, __context: Any = None):
-        Helper.normalize_field_values(self)
+        Configuration.get_instance().normalize_field_values(self)
+
 
 class VariantRecord(BaseModel):
     """Data class representing a single variant record (aka JSON entry) from TBProfiler JSON output.
@@ -76,7 +77,7 @@ class VariantRecord(BaseModel):
 
     # Post-init processing to compute derived attributes
     def model_post_init(self, __context: Any = None):
-        Helper.normalize_field_values(self)
+        Configuration.get_instance().normalize_field_values(self)
 
     @classmethod
     def from_consequences(

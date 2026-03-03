@@ -9,21 +9,20 @@ logger = logging.getLogger(__name__)
 
 
 def write_target_coverage_report(
-    config: Configuration,
     sample_name: str,
     target_coverage_map: dict[str, TargetCoverage],
 ) -> None:
     """Write a coverage report at the target level.
 
     Args:
-        config: Configuration object
         sample_name: Sample identifier
         target_coverage_map: dict of target_name -> TargetCoverage objects
-        genes_with_valid_deletions: dict of gene_name -> list of Variant objects
 
     Returns:
         None
     """
+    config = Configuration.get_instance()
+
     rows = []
     for gene_name, target_coverage in target_coverage_map.items():
 
@@ -48,21 +47,20 @@ def write_target_coverage_report(
     logger.info(f"Target coverage report written to {output_path}")
 
 def write_locus_coverage_report(
-    config: Configuration,
     sample_name: str,
     locus_coverage_map: dict[str, LocusCoverage],
 ) -> None:
     """Write a coverage report at the locus level.
 
     Args:
-        config: Configuration object
         sample_name: Sample identifier
         locus_coverage_map: dict of locus_tag -> LocusCoverage objects
-        genes_with_valid_deletions: dict of gene_name -> list of Variant objects
 
     Returns:
         None
     """
+    config = Configuration.get_instance()
+
     rows = []
     for locus_tag, locus_coverage in locus_coverage_map.items():
 

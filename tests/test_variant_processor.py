@@ -62,7 +62,7 @@ class TestExpandConsequences:
         Consequences with same gene_id as parent should be skipped."""
         mmpL5_csq = make_consequences(gene_id="Rv0676c", gene_name="skip_same_parent")
         mmpS5_csq = make_consequences(gene_id="Rv0677c", gene_name="mmpS5")
-        mmpR5_csq = make_consequences(gene_id="Rv0678", gene_name="mmpR5") # note that mmpR5 automatically renamed to Rv0678. see helper.normalize_field_values
+        mmpR5_csq = make_consequences(gene_id="Rv0678", gene_name="mmpR5") # note that mmpR5 automatically renamed to Rv0678. see Configuration.normalize_field_values
 
         vr = make_variant_record(
             gene_id="Rv0676c",
@@ -78,7 +78,7 @@ class TestExpandConsequences:
         assert len(result) == 3
         gene_names = [r.gene_name for r in result]
         # note gene_name != "skip_same_parent"
-        # note that mmpR5 automatically renamed to Rv0678. see helper.normalize_field_values
+        # note that mmpR5 automatically renamed to Rv0678. see Configuration.normalize_field_values
         assert gene_names == ["mmpL5", "mmpS5", "Rv0678"]
 
     def test_valid_consequences_multiple_expansion_random_genes(self, make_variant_record, make_consequences):
@@ -89,7 +89,7 @@ class TestExpandConsequences:
         """
         mmpL5_csq = make_consequences(gene_id="Rv0676c", gene_name="skip_same_parent")
         mmpS5_csq = make_consequences(gene_id="Rv0677c", gene_name="mmpS5")
-        mmpR5_csq = make_consequences(gene_id="Rv0678", gene_name="mmpR5") # note that mmpR5 automatically renamed to Rv0678. see helper.normalize_field_values
+        mmpR5_csq = make_consequences(gene_id="Rv0678", gene_name="mmpR5") # note that mmpR5 automatically renamed to Rv0678. see Configuration.normalize_field_values
         random_csq = make_consequences(gene_id="Rv0000", gene_name="geneA")
 
         vr = make_variant_record(
@@ -107,7 +107,7 @@ class TestExpandConsequences:
         assert len(result) == 4
         gene_names = [r.gene_name for r in result]
         # note gene_name != "skip_same_parent"
-        # note that mmpR5 automatically renamed to Rv0678. see helper.normalize_field_values
+        # note that mmpR5 automatically renamed to Rv0678. see Configuration.normalize_field_values
         assert gene_names == ["mmpL5", "mmpS5", "Rv0678", "geneA"]
 
     def test_valid_consequences_overwrite_vr_fields(self, make_variant_record, make_annotation, make_consequences):
@@ -248,7 +248,7 @@ class TestGetVariantsFromAnnotations:
         result = sorted(result, key=lambda v: v.drug)
         assert len(result) == 4
         assert [type(v) for v in result] == [Variant, Variant, Variant, Variant]
-        assert [v.drug for v in result] == ["foo", "levofloxacin", "moxifloxacin", "rifampin"]  # note that rifampicin automatically renamed to rifampin. see helper.normalize_field_values
+        assert [v.drug for v in result] == ["foo", "levofloxacin", "moxifloxacin", "rifampin"]  # note that rifampicin automatically renamed to rifampin. see Configuration.normalize_field_values
 
     def test_gene_database_drugs_create_synthetic_variants(self, make_variant_record, make_annotation):
         """Drugs from GeneDatabase not yet seen should create synthetic variants."""

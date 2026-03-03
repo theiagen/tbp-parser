@@ -22,7 +22,6 @@ RESISTANCE_RANKING = {
 
 
 def write_looker_report(
-    config: Configuration,
     variants: list[Variant],
     lims_lineage: str,
     sample_id: str,
@@ -31,7 +30,6 @@ def write_looker_report(
     """Write the Looker report from processed Variant objects.
 
     Args:
-        config: Configuration object
         variants: All processed Variant objects
         lims_lineage: Lineage string from LIMS
         sample_id: Sample ID string
@@ -40,6 +38,8 @@ def write_looker_report(
     Returns:
         None
     """
+    config = Configuration.get_instance()
+
     drug_map = {}
     # If there are multiple variants for the same drug, we want to report the highest ranked interpretation
     for variant in variants:
