@@ -24,8 +24,7 @@ from Reporters import (
     write_laboratorian_report,
     write_lims_report,
     write_looker_report,
-    write_target_coverage_report,
-    write_locus_coverage_report,
+    write_coverage_report,
 )
 
 def main():
@@ -100,13 +99,13 @@ def main():
     )
 
     # Write coverage reports
-    write_target_coverage_report(
+    write_coverage_report(
         sample_name=SAMPLE_ID,
-        target_coverage_map=TARGET_COVERAGE_MAP,
+        coverage_map=TARGET_COVERAGE_MAP,
     )
-    write_locus_coverage_report(
+    write_coverage_report(
         sample_name=SAMPLE_ID,
-        locus_coverage_map=LOCUS_COVERAGE_MAP,
+        coverage_map=LOCUS_COVERAGE_MAP,
     )
 
 if __name__ == "__main__":
