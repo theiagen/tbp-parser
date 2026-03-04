@@ -118,7 +118,7 @@ Rv1173:
     tier: Tier 1
     promoter_region: [-127, -1]
     drugs: [delamanid]
-  Rv1221:
+Rv1221:
     locus_tag: Rv1221
     gene_name: sigE
     tier: NA
@@ -244,6 +244,12 @@ Rv2447c:
     tier: NA
     promoter_region: []
     drugs: [para-aminosalicylic_acid]
+Rv2477c:
+    locus_tag: Rv2477c
+    gene_name: Rv2477c
+    tier: NA
+    promoter_region: [-88, -1]
+    drugs: [amikacin, ethambutol, kanamycin, levofloxacin, moxifloxacin, rifampicin, streptomycin]
 Rv2535c:
     locus_tag: Rv2535c
     gene_name: pepQ
