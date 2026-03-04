@@ -14,7 +14,7 @@ def make_lims_gene_code():
 
 @pytest.fixture
 def make_lims_record():
-    def _make(drug="rifampin", drug_code="M_DST_D02", gene_codes=None):
+    def _make(drug="rifampicin", drug_code="M_DST_D02", gene_codes=None):
         if gene_codes is None:
             gene_codes = {"rpoB": LIMSGeneCode(gene_code="M_DST_D02_rpoB")}
         return LIMSRecord(drug=drug, drug_code=drug_code, gene_codes=gene_codes)
@@ -123,7 +123,7 @@ class TestResolveGeneTarget:
         gc = make_lims_gene_code()
         v = make_variant(
             mdl_interpretation="S",
-            gene_name="rpoB", drug="rifampin",
+            gene_name="rpoB", drug="rifampicin",
             protein_change="p.Phe433Phe", type="synonymous_variant",
         )
         gc.max_mdl_interpretation = "S"
@@ -159,15 +159,15 @@ class TestResolveDrugTarget:
 
     def test_r_rpob_standard_mutation(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
-        v = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampin", protein_change="p.Ser450Leu")
+        v = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
         record.gene_codes["rpoB"].max_mdl_interpretation = "R"
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
-        assert "Predicted resistance to rifampin" in record.drug_target_value
+        assert "Predicted resistance to rifampicin" in record.drug_target_value
 
     def test_r_rpob_only_low_level_mutations(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
-        v = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampin", protein_change="p.His445Asn")
+        v = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampicin", protein_change="p.His445Asn")
         record.gene_codes["rpoB"].max_mdl_interpretation = "R"
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
@@ -178,13 +178,13 @@ class TestResolveDrugTarget:
         record = make_lims_record()
         v1 = make_variant(
             mdl_interpretation="R",
-            gene_name="rpoB", drug="rifampin", protein_change="p.His445Asn", nucleotide_change="c.1333C>A",
+            gene_name="rpoB", drug="rifampicin", protein_change="p.His445Asn", nucleotide_change="c.1333C>A",
         )
-        v2 = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampin", protein_change="p.Ser450Leu")
+        v2 = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
         record.gene_codes["rpoB"].max_mdl_interpretation = "R"
         record.gene_codes["rpoB"].max_mdl_variants = [v1, v2]
         processor.resolve_drug_target(record)
-        assert "Predicted resistance to rifampin" in record.drug_target_value
+        assert "Predicted resistance to rifampicin" in record.drug_target_value
 
     def test_u_returns_uncertain_significance(self, processor, make_lims_record, make_variant):
         record = make_lims_record(
@@ -222,7 +222,7 @@ class TestResolveDrugTarget:
         record = make_lims_record()
         v = make_variant(
             mdl_interpretation="S",
-            gene_name="rpoB", drug="rifampin",
+            gene_name="rpoB", drug="rifampicin",
             protein_change="p.Phe433Phe", type="synonymous_variant",
         )
         record.gene_codes["rpoB"].max_mdl_interpretation = "S"
@@ -232,11 +232,11 @@ class TestResolveDrugTarget:
 
     def test_rpob_s_without_synonymous_rrdr(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
-        v = make_variant(mdl_interpretation="S", gene_name="rpoB", drug="rifampin", protein_change="p.Ser450Leu")
+        v = make_variant(mdl_interpretation="S", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
         record.gene_codes["rpoB"].max_mdl_interpretation = "S"
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
-        assert "Predicted susceptibility to rifampin" in record.drug_target_value
+        assert "Predicted susceptibility to rifampicin" in record.drug_target_value
         assert "synonymous" not in record.drug_target_value
 
 
