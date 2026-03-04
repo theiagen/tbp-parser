@@ -55,7 +55,7 @@ class Variant(BaseModel):
             self.read_support = self.freq * self.depth
 
         # Derive computed attributes
-        self.gene_tier = GeneDatabase.get_instance().get_tier(self.gene_id)
+        self.gene_tier = GeneDatabase.get_tier(self.gene_id)
         self.absolute_start, self.absolute_end = Helper.get_mutation_genomic_positions(self.pos, self.nucleotide_change)
 
         # Normalize field values based on predefined rules
@@ -165,10 +165,10 @@ class Variant(BaseModel):
         Returns:
             True if variant is within the target promoter region
         """
-        if self.gene_id not in GeneDatabase.get_instance().GENE_DATABASE:
+        if self.gene_id not in GeneDatabase.get_db():
             logger.warning(f"Gene {self.gene_id} not found in GeneDatabase; cannot check promoter region")
             return False
-        promoter_region = GeneDatabase.get_instance().get_promoter_region(self.gene_id)
+        promoter_region = GeneDatabase.get_promoter_region(self.gene_id)
         return Helper.is_mutation_within_range(position_nt, promoter_region)
 
     def _is_loss_of_function(self) -> bool:

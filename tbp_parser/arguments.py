@@ -31,6 +31,7 @@ def parse_arguments():
     default_tbdb_bed = data_dir / "tbdb.bed"
     default_promoter_regions = data_dir / "who-v2-promoters_2025-12-10.tsv"
     default_lims_report_format = data_dir / "default-lims-report-format.yml"
+    default_gene_database = data_dir / "gene-database_2026-03-03.yml"
 
     parser = argparse.ArgumentParser(
         prog = "tbp-parser",
@@ -58,7 +59,7 @@ def parse_arguments():
     file_arguments.add_argument("--lims_report_format_yml",
                         help="an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used", default=default_lims_report_format, metavar="\b", type=is_file_valid)
     file_arguments.add_argument("--gene_database_yml",
-                        help="an optional YAML file that specifies a custom gene database; if not provided, the default gene database will be used", default=None, metavar="\b", type=is_file_valid)
+                        help="an optional YAML file that specifies a custom gene database; if not provided, the default gene database will be used", default=default_gene_database, metavar="\b", type=is_file_valid)
 
     qc_arguments = parser.add_argument_group("quality control arguments",
                                               "options that determine what passes QC")

@@ -149,7 +149,7 @@ class VariantProcessor:
         annotation_set.update(
             self._create_synthetic_annotations(
                 base_annotations=original_annotations,
-                new_drugs=set(GeneDatabase.get_instance().get_drugs(gene_id)) - seen_drugs,
+                new_drugs=set(GeneDatabase.get_drugs(gene_id)) - seen_drugs,
                 confidence="No WHO annotation",
                 source="Mutation effect for given drug is not in TBDB",
                 comment=""
@@ -244,14 +244,14 @@ class VariantProcessor:
         """
         all_unreported_variants = []
         unique_variants = set([variant.gene_id for variant in variants])
-        unreported_variants = [v for v in GeneDatabase.get_instance().GENE_DATABASE.keys() if v not in unique_variants]
+        unreported_variants = [v for v in GeneDatabase.get_db().keys() if v not in unique_variants]
         for var in unreported_variants:
-            drug_list = GeneDatabase.get_instance().get_drugs(var)
+            drug_list = GeneDatabase.get_drugs(var)
             for drug in drug_list:
                 variant = Variant.from_thin_air(
                     sample_id=sample_id,
-                    gene_id=GeneDatabase.get_instance().get_locus_tag(var),  # type: ignore
-                    gene_name=GeneDatabase.get_instance().get_gene_name(var), # type: ignore
+                    gene_id=GeneDatabase.get_locus_tag(var),  # type: ignore
+                    gene_name=GeneDatabase.get_gene_name(var), # type: ignore
                     drug=drug
                 )
                 all_unreported_variants.append(variant)

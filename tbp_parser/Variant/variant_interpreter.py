@@ -32,7 +32,7 @@ class VariantInterpreter:
         "1.2": "Expert rule 1.2. Novel drug targets",
         "2.2.1.1": "Expert rule 2.2.1.1. Loss-of-function",
         "2.2.2.1": "Expert rule 2.2.2.1. rpoB RRDR",
-        "2.2.2.2": "Expert rule 2.2.2.2 rpoB non-RRDR",
+        "2.2.2.2": "Expert rule 2.2.2.2. rpoB non-RRDR",
         "3.2.1": "Expert rule 3.2.1. rrs",
         "3.2.2": "Expert rule 3.2.3. gyrA QRDR",
         "3.2.3": "Expert rule 3.2.3. gyrB QRDR",

@@ -27,11 +27,11 @@ def write_coverage_report(
     for key, coverage in coverage_map.items():
         if isinstance(coverage, LocusCoverage):
             locus_tag = key
-            gene_name = GeneDatabase.get_instance().get_gene_name(key)
+            gene_name = GeneDatabase.get_gene_name(key)
             output_path = Path(f"{config.OUTPUT_PREFIX}.locus_coverage_report.csv")
 
         else: # TargetCoverage
-            locus_tag = GeneDatabase.get_instance().get_locus_tag(key)
+            locus_tag = GeneDatabase.get_locus_tag(key)
             gene_name = key
             output_path = Path(f"{config.OUTPUT_PREFIX}.target_coverage_report.csv")
 

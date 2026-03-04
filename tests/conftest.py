@@ -3,7 +3,7 @@ import pysam
 from pathlib import Path
 from copy import deepcopy
 from unittest.mock import MagicMock
-from Utilities import Configuration
+from Utilities import Configuration, GeneDatabase
 from Variant import Variant, VariantRecord, Annotation, Consequences
 from Coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
 
@@ -44,6 +44,10 @@ def mock_config():
 @pytest.fixture(autouse=True)
 def setup_config(mock_config):
     Configuration._instance = mock_config
+
+@pytest.fixture(autouse=True, scope="session")
+def setup_gene_database():
+    GeneDatabase(db_path=str(Path(__file__).parent.parent / "data" / "gene-database_2026-03-03.yml"))
 
 @pytest.fixture
 def make_bed_record():
@@ -91,18 +95,6 @@ def make_variant():
             comment=comment,
             **kwargs,
         )
-        return v
-    return _make
-
-
-@pytest.fixture
-def make_wt_variant():
-    """Factory fixture to create WT (wild-type) Variant objects."""
-    def _make(gene_name="rpoB", gene_id="Rv0667", drug="rifampicin", sample_id="test_sample"):
-        v = Variant.from_thin_air(sample_id=sample_id, gene_id=gene_id, gene_name=gene_name, drug=drug)
-        v.mdl_interpretation = "WT"
-        v.looker_interpretation = "WT"
-        v.rationale = "NA"
         return v
     return _make
 

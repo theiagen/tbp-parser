@@ -36,7 +36,7 @@ def main():
     )
 
     config = Configuration(options)
-    GeneDatabase.get_instance(db_path=config.gene_database_yml) 
+    gdb = GeneDatabase(config.gene_database_yml)
     # Perform necessary input checks before processing
     check_dependency_exists()
 
