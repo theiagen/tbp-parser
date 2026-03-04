@@ -140,11 +140,20 @@ def check_bed_for_lims_genes(bed_records, lims_records) -> None:
     # It's typical for the lims yaml input file to contain gene names, but the BED file might have irregular
     # gene names representing partial regions. Look for locus tags in the BED file and convert those to gene names to compare with LIMS genes.
     unique_bed_genes = set(record.locus_tag for record in bed_records)
-    unique_lims_genes = set([
-        GeneDatabase.get_instance().get_locus_tag(gene)
-        for rec in lims_records
-        for gene in rec.gene_codes.keys()
-    ])
+    unique_lims_genes = set()
+    
+    missing_from_database = set()
+    for rec in lims_records:
+        for gene in rec.gene_codes.keys():
+            locus_tag = GeneDatabase.get_instance().get_locus_tag(gene)
+            if locus_tag is None:
+                missing_from_database.add(gene)
+            else:
+                unique_lims_genes.add(locus_tag)
+
+    if missing_from_database:
+        logger.error(f"The following genes from the LIMS report format yaml file are missing in the Gene Database: {', '.join(missing_from_database)}")
+        raise ValueError(f"The following genes from the LIMS report format yaml file are missing in the Gene Database: {', '.join(missing_from_database)}")
 
     if not unique_lims_genes.issubset(unique_bed_genes):
         missing_locus_tags = unique_lims_genes - unique_bed_genes
@@ -152,4 +161,4 @@ def check_bed_for_lims_genes(bed_records, lims_records) -> None:
         logger.error(f"The following genes from the LIMS report format yaml file are missing in the BED file: {', '.join(missing_genes_list)}")
         raise ValueError(f"The following genes from the LIMS report format yaml file are missing in the BED file: {', '.join(missing_genes_list)}")
     else:
-        logger.info("All genes from the LIMS report format yaml file are present in the BED file")
+        logger.info("All genes from the LIMS report format yaml file are present in the BED file and Gene Database.")
