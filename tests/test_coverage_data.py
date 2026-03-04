@@ -1,4 +1,5 @@
 import pytest
+from Coverage.coverage_data import ERRCoverage
 
 class TestTargetCoverage:
     @pytest.mark.parametrize("position,expected", [
@@ -10,7 +11,7 @@ class TestTargetCoverage:
         (0, False),    # completely outside
     ])
     def test_target_coverage_contains_position(self, make_target_coverage, position, expected):
-        tc = make_target_coverage(coords=(100, 150))
+        tc = make_target_coverage(coords=[(100, 150)])
         assert tc.contains_position(position) == expected
 
     @pytest.mark.parametrize("breadth,threshold,expected", [

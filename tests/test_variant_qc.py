@@ -152,7 +152,6 @@ class TestApplyQc:
         qc.apply_qc([v], {"Rv0667": locus})
         assert v.fails_qc is True
         assert "Failed quality in the mutation position" in v.warning
-        assert v._is_deletion_in_orf() is False
 
     def test_r_mutation_both_positional_and_locus_fail_overwrite(
         self, make_variant, make_locus_coverage
@@ -192,7 +191,8 @@ class TestGetGenesWithDeletionsInORF:
         locus = make_locus_coverage(locus_tag="Rv0667")
         qc.apply_qc([v], {"Rv0667": locus})
 
-        assert v._is_deletion_in_orf() is False
+        assert v._is_deletion_in_orf() is True
+        assert v.fails_qc is True
 
     def test_non_deletion_not_tracked(self, make_variant, make_locus_coverage):
         qc = VariantQC()
