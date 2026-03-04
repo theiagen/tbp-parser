@@ -6,7 +6,7 @@ The Looker report is intended for use in Google's Looker Data Studio for dashboa
 
 ## Resistance columns
 
-Each antimicrobial drug listed in the input `--tbdb_bed` file will be represented by one column in the Looker report. The column name will be the antimicrobial drug name in lowercase. This can be customized by adding content to the `OUTPUT_RENAMING` dictionary in a configuration file, though please be aware that this will change every instance of that drug name in all output reports.
+Each antimicrobial drug listed in the input `--tbdb_bed` file will be represented by one column in the Looker report. The column name will be the antimicrobial drug name in lowercase. This can be customized by adding content to the `OUTPUT_RENAMING` dictionary in a configuration file, though please be aware that this will change every instance of that drug name in **all** output reports.
 
 | Column name | Explanation | Source |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ These miscellaneous columns are also included in the Looker report to provide ad
 | sample_id | The name of the sample |
 | output_seq_method_type | The sequencing method used to generate the data; can be set with the `--sequencing_method` input parameter. If left blank, “Sequencing method not provided” is the default value |
 | lineage | The lineage of the sample (the `main_lin` field as reported by TBProfiler); for example, lineage1.2.1.2.1  |
-| ID | The lineage of the sample in human-readable language (the same as `M_DST_A01_ID` in the LIMS report) |
+| ID | The lineage of the sample in human-readable language (the same as the `Lineage_ID` column in the LIMS report) |
 | analysis_date | The date `tbp-parser` was run in YYYY-MM-DD HH:SS format |
 | operator | The name of the person who ran `tbp-parser`; can be provided with the `--operator` input parameter. If left blank, “Operator not provided” is the default value. |
 

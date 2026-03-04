@@ -14,6 +14,8 @@ Any fields from TBProfiler are from the input JSON file produced by TBProfiler.
 | tbprofiler_variant_substitution_type | The type of mutation identified, whether or not it was a frameshift, missense, or synonymous mutation | TBProfiler `"type"` field |
 | tbprofiler_variant_substitution_nt | The mutation in nucleotide format | TBProfiler `"nucleotide_change"` field |
 | tbprofiler_variant_substitution_aa | The mutation in amino acid format, if possible | TBProfiler `"protein_change"` field |
+| genomic_start_pos | The genomic start position of the mutation | The TBProfiler `"pos"` field |
+| genomic_end_pos | The genomic end position of the mutation | Calculated from the TBProfiler `"pos"` field |
 | confidence | Contains either:<br>- the WHO annotation<br>- an indication that there is no WHO annotation<br>- NA for when there is no mutation | Edited by tbp-parser, originates from the TBProfiler `"confidence"` field |
 | antimicrobial | The antimicrobial drug that may be affected by this mutation |  TBProfiler `"annotation.drug"` field, split into multiple rows if multiple annotation items are present. May also originate from the `"gene_associated_drugs"` field if not all are included in the annotation |
 | looker_interpretation | The drug resistance interpretation intended for the Looker report | Determined by tbp-parser |
