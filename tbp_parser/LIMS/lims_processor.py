@@ -103,7 +103,13 @@ class LIMSProcessor:
                 logger.debug(f"Generating LIMS result - GENE_TARGET - [{lims_record.drug}|{gene}]; {len(qc_filtered_variants)}/{len(candidate_variants)} candidate variants after QC filtering")
 
                 # get max mdl based on filtered variants
-                self.set_gene_code_max_mdl(gene_code, qc_filtered_variants)
+                if len(candidate_variants) > 0:
+                    self.set_gene_code_max_mdl(gene_code, qc_filtered_variants)
+                else:
+                    # no candidate variants at all, assign "WT" interpretation
+                    logger.debug(f"No candidate variants found for gene {gene_code.gene_code}; assigning 'WT' interpretation")
+                    setattr(gene_code, "max_mdl_interpretation", "WT")
+                    setattr(gene_code, "max_mdl_variants", [])
 
                 # get gene_target_value based on max_mdl interpretation
                 self.resolve_gene_target(gene_code)
@@ -138,6 +144,11 @@ class LIMSProcessor:
             all_gene_codes,
             key=lambda gc: self.RESISTANCE_RANKING.get(gc.max_mdl_interpretation or "NA", -1),
         )
+
+        if max_gene_code.max_mdl_interpretation not in ["R"]:
+            if "Insufficient Coverage" in [gc.max_mdl_interpretation for gc in all_gene_codes]:
+                logger.debug(f"At least one gene code has 'Insufficient Coverage' interpretation for drug {lims_record.drug} and there is no 'R' mutation; overwriting max mdl interpretation from {max_gene_code.max_mdl_interpretation} to 'Insufficient Coverage'")
+                max_gene_code.max_mdl_interpretation = "Insufficient Coverage"
 
         all_rpob_variants = all([
             lims_record.drug == "rifampin" and
@@ -196,11 +207,17 @@ class LIMSProcessor:
             - List of Variants that have this highest MDL interpretation (could be multiple if tied)
         """
         all_mdl_interpretations = [v.mdl_interpretation for v in variants if v.mdl_interpretation]
-        max_mdl_interpretation = max(
-            all_mdl_interpretations,
-            key=lambda x: self.RESISTANCE_RANKING.get(x, -1),
-            default="NA"
-        )
+        if all_mdl_interpretations:
+            max_mdl_interpretation = max(
+                all_mdl_interpretations,
+                key=lambda x: self.RESISTANCE_RANKING.get(x, -1),
+                default="NA"
+            )
+        else: 
+            # no variants passed qc, assign "Insufficient Coverage" interpretation
+            logger.debug(f"No variants with MDL interpretations passed QC found for gene {gene_code.gene_code}; assigning 'Insufficient Coverage' interpretation")
+            max_mdl_interpretation = "Insufficient Coverage"
+            
         max_mdl_variants = [v for v in variants if v.mdl_interpretation == max_mdl_interpretation]
 
         # assigning max_mdl_variants/interpretation to LIMSGeneCode object
