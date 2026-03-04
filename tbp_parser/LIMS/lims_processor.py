@@ -151,20 +151,20 @@ class LIMSProcessor:
                 max_gene_code.max_mdl_interpretation = "Insufficient Coverage"
 
         all_rpob_variants = all([
-            lims_record.drug == "rifampin" and
+            lims_record.drug == "rifampicin" and
             v.gene_name == "rpoB"
             for v in max_gene_code.max_mdl_variants
         ])
 
         logger.debug(f"Generating LIMS result - DRUG_TARGET - [{lims_record.drug}|{lims_record.drug_code}] based on results from max gene code: `{max_gene_code.gene_code}`")
 
-        # rifampin specific drug target logic
+        # rifampicin specific drug target logic
         if all_rpob_variants:
             if max_gene_code.max_mdl_interpretation in ["R"]:
                 if all([v.protein_change in RPOB_MUTATIONS for v in max_gene_code.max_mdl_variants]):
-                    setattr(lims_record, "drug_target_value", "Predicted low-level resistance to rifampin. May test susceptible by phenotypic methods")
+                    setattr(lims_record, "drug_target_value", "Predicted low-level resistance to rifampicin. May test susceptible by phenotypic methods")
                 else:
-                    setattr(lims_record, "drug_target_value", "Predicted resistance to rifampin")
+                    setattr(lims_record, "drug_target_value", "Predicted resistance to rifampicin")
 
                 logger.debug(f"{lims_record}")
                 return
@@ -173,9 +173,9 @@ class LIMSProcessor:
             # This is incorrect according to interpretation documentation. But leaving it for consistency with previous version of tbp_parser
             elif max_gene_code.max_mdl_interpretation in ["S", "WT"]:
                 if all([self._is_synonymous_rpob_rrdr(v) for v in max_gene_code.max_mdl_variants]):
-                    setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampin. The detected synonymous mutation(s) do not confer resistance")
+                    setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance")
                 else:
-                    setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampin")
+                    setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampicin")
                 logger.debug(f"{lims_record}")
                 return
 
@@ -234,7 +234,7 @@ class LIMSProcessor:
 
         return (
             variant.gene_name == "rpoB" and
-            variant.drug == "rifampin" and
+            variant.drug == "rifampicin" and
             variant.type == "synonymous_variant" and
             Helper.is_mutation_within_range(
                 Helper.get_position(variant.protein_change),
@@ -248,7 +248,7 @@ class LIMSProcessor:
     ) -> None:
         """Resolve gene text for S max MDL interpretation.
 
-        For rpoB + rifampin: checks for RRDR synonymous variants.
+        For rpoB + rifampicin: checks for RRDR synonymous variants.
         For other genes: checks if gene itself has S interpretation.
 
         Args:
