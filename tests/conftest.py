@@ -135,7 +135,7 @@ def make_target_coverage():
     def _make(
         locus_tag="Rv0000",
         gene_name="geneA",
-        coords=(100, 150),
+        coords=[(100, 150)],
         breadth_of_coverage=1.0,
         average_depth=100.0,
         err_coverage=None,

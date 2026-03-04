@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
-from abc import ABC, abstractmethod
+from abc import ABC
 from Variant import Variant
 
 class BaseCoverage(BaseModel, ABC):
@@ -8,6 +8,7 @@ class BaseCoverage(BaseModel, ABC):
     A base class to represent coverage data for a genomic region.
     This class can be extended to represent coverage for specific types of regions (e.g., locus/target/ERR).
     """
+    coords: list[tuple[int, int]]
     breadth_of_coverage: float
     average_depth: float
     valid_deletions: list[Variant] = Field(default_factory=list) # list of Variant objects with valid deletions that fall within the coverage region
@@ -35,25 +36,20 @@ class BaseCoverage(BaseModel, ABC):
         """Check if a given Variant with a deletion is in the list of valid deletions for this coverage region."""
         return any(v == variant for v in self.valid_deletions)
 
-    @abstractmethod
-    def contains_position(self, position: int) -> bool: ...
+    def contains_position(self, position: int) -> bool:
+        """Check if a specific position exists within this coverage region."""
+        return any(start <= position <= end for start, end in self.coords)
+
+    def overlaps_range(self, start: int, end: int) -> bool:
+        """Check if a genomic range [start, end] overlaps with this coverage region."""
+        return any(cs <= end and start <= ce for cs, ce in self.coords)
 
 class ERRCoverage(BaseCoverage):
     """
     A class to represent coverage data for the essential reportable range (ERR) of a single target/locus.
     """
-    coords: tuple[int, int] | list[tuple[int, int]]
+    coords: list[tuple[int, int]]
     model_config = {"extra": "ignore"}
-
-    def contains_position(self, position: int) -> bool:
-        """Check if a specific position exists within the ERR coverage.
-        Args:
-            position (int): The position to check.
-          Returns:
-              bool: True if the position is within any of the coordinate ranges, False otherwise.
-        """
-        normalized = self.coords if isinstance(self.coords, list) else [self.coords]
-        return any(start <= position <= end for start, end in normalized)
 
 class TargetCoverage(BaseCoverage):
     """
@@ -63,18 +59,13 @@ class TargetCoverage(BaseCoverage):
     """
     locus_tag: str
     gene_name: str
-    coords: tuple[int, int]
+    coords: list[tuple[int, int]]
     err_coverage: Optional[ERRCoverage] = None
 
-    def contains_position(self, position: int) -> bool:
-        """Check if a specific position exists within target coverage.
-
-        Args:
-            position (int): The position to check.
-        Returns:
-            bool: True if the position is within any of the coordinate ranges, False otherwise.
-        """
-        return self.coords[0] <= position <= self.coords[1]
+    def model_post_init(self, __context) -> None:
+        if self.err_coverage is not None:
+            if not all(self.contains_position(s) and self.contains_position(e) for s, e in self.err_coverage.coords):
+                raise ValueError(f"ERR coords {self.err_coverage.coords} fall outside target coords {self.coords}")
 
 class LocusCoverage(BaseCoverage):
     """
@@ -85,12 +76,8 @@ class LocusCoverage(BaseCoverage):
     coords: list[tuple[int, int]] # can be a list of coordinates if aggregating multiple target regions
     err_coverage: Optional[ERRCoverage] = None
 
-    def contains_position(self, position: int) -> bool:
-        """Check if a specific position exists within locus coverage.
-
-        Args:
-            position (int): The position to check.
-        Returns:
-            bool: True if the position is within any of the coordinate ranges, False otherwise.
-        """
-        return any(start <= position <= end for start, end in self.coords)
+    # Post-init validation to ensure that if ERR coverage is provided, its coordinates fall within the locus coverage coordinates
+    def model_post_init(self, __context) -> None:
+        if self.err_coverage is not None:
+            if not all(self.contains_position(s) and self.contains_position(e) for s, e in self.err_coverage.coords):
+                raise ValueError(f"ERR coords {self.err_coverage.coords} fall outside locus coords {self.coords}")

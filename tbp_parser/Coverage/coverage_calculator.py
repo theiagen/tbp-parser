@@ -197,7 +197,7 @@ class CoverageCalculator:
                 target_coverage_map[bed_record.gene_name] = TargetCoverage(
                     locus_tag=bed_record.locus_tag,
                     gene_name=bed_record.gene_name,
-                    coords=bed_record.coords,
+                    coords=[bed_record.coords],
                     breadth_of_coverage=breadth_of_coverage,
                     average_depth=average_depth,
                 )

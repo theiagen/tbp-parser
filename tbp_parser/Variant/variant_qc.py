@@ -86,11 +86,14 @@ class VariantQC:
         """
         def _add_valid_deletion(variant, key_attr, coverage_map):
             coverage = coverage_map.get(getattr(variant, key_attr))
+            var_abs_start = variant.absolute_start if isinstance(variant.absolute_start, int) else variant.pos
+            var_abs_end = variant.absolute_end if isinstance(variant.absolute_end, int) else variant.pos
+
             # Check if the variant is a valid deletion and falls within the coverage region
-            if coverage and coverage.contains_position(variant.pos) and variant._is_deletion_in_orf():
+            if coverage and coverage.overlaps_range(var_abs_start, var_abs_end) and variant._is_deletion_in_orf():
                 coverage.valid_deletions.append(variant)
                 # Check if ERR coverage exists and assign Variants to valid_deletions if position falls within ERR region
-                if coverage.err_coverage and coverage.err_coverage.contains_position(variant.pos) and variant._is_deletion_in_orf():
+                if coverage.err_coverage and coverage.err_coverage.overlaps_range(var_abs_start, var_abs_end) and variant._is_deletion_in_orf():
                     coverage.err_coverage.valid_deletions.append(variant)
 
         logger.debug(f"Assigning variants with valid deletions to coverage objects for {len(variants)} variants")
@@ -371,7 +374,10 @@ class VariantQC:
         # Check if mutation is outside tNGS primer regions
         locus_coverage = next(
             (lc for lc in locus_coverage_map.values()
-            if variant.gene_id == lc.locus_tag and lc.contains_position(variant.pos)),
+            if variant.gene_id == lc.locus_tag and lc.overlaps_range(
+                variant.absolute_start if isinstance(variant.absolute_start, int) else variant.pos,
+                variant.absolute_end if isinstance(variant.absolute_end, int) else variant.pos,
+            )),
             None
         )
         if not locus_coverage:
