@@ -69,13 +69,13 @@ Rv0667:
     gene_name: rpoB
     tier: Tier 1
     promoter_region: [-263, -1]
-    drugs: [rifampin]
+    drugs: [rifampicin]
 Rv0668:
     locus_tag: Rv0668
     gene_name: rpoC
     tier: Tier 2
     promoter_region: [-45, -1]
-    drugs: [rifampin]
+    drugs: [rifampicin]
 Rv0676c:
     locus_tag: Rv0676c
     gene_name: mmpL5
@@ -279,7 +279,7 @@ Rv2752c:
     gene_name: Rv2752c
     tier: Tier 2
     promoter_region: [[-51, -1], [-984, -934]]
-    drugs: [isoniazid, rifampin]
+    drugs: [isoniazid, rifampicin]
 Rv2754c:
     locus_tag: Rv2754c
     gene_name: thyX
@@ -375,7 +375,7 @@ Rv3457c:
     gene_name: rpoA
     tier: Tier 2
     promoter_region: [-536, -1]
-    drugs: [rifampin]
+    drugs: [rifampicin]
 Rv3547:
     locus_tag: Rv3547
     gene_name: ddn
