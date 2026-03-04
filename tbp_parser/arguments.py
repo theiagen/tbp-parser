@@ -57,6 +57,8 @@ def parse_arguments():
     ### TO-DO: make yaml format validation function
     file_arguments.add_argument("--lims_report_format_yml",
                         help="an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used", default=default_lims_report_format, metavar="\b", type=is_file_valid)
+    file_arguments.add_argument("--gene_database_yml",
+                        help="an optional YAML file that specifies a custom gene database; if not provided, the default gene database will be used", default=None, metavar="\b", type=is_file_valid)
 
     qc_arguments = parser.add_argument_group("quality control arguments",
                                               "options that determine what passes QC")

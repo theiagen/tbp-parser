@@ -141,14 +141,14 @@ def check_bed_for_lims_genes(bed_records, lims_records) -> None:
     # gene names representing partial regions. Look for locus tags in the BED file and convert those to gene names to compare with LIMS genes.
     unique_bed_genes = set(record.locus_tag for record in bed_records)
     unique_lims_genes = set([
-        GeneDatabase.get_locus_tag(gene)
+        GeneDatabase.get_instance().get_locus_tag(gene)
         for rec in lims_records
         for gene in rec.gene_codes.keys()
     ])
 
     if not unique_lims_genes.issubset(unique_bed_genes):
         missing_locus_tags = unique_lims_genes - unique_bed_genes
-        missing_genes_list = [f"{GeneDatabase.get_gene_name(locus_tag)}|{GeneDatabase.get_locus_tag(locus_tag)}" for locus_tag in missing_locus_tags]
+        missing_genes_list = [f"{GeneDatabase.get_instance().get_gene_name(locus_tag)}|{GeneDatabase.get_instance().get_locus_tag(locus_tag)}" for locus_tag in missing_locus_tags]
         logger.error(f"The following genes from the LIMS report format yaml file are missing in the BED file: {', '.join(missing_genes_list)}")
         raise ValueError(f"The following genes from the LIMS report format yaml file are missing in the BED file: {', '.join(missing_genes_list)}")
     else:

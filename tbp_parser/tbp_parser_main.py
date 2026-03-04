@@ -3,6 +3,7 @@ from arguments import parse_arguments
 from Utilities import (
     Configuration,
     setup_logger,
+    GeneDatabase,
     check_dependency_exists,
     check_bed_for_lims_genes,
 )
@@ -35,7 +36,7 @@ def main():
     )
 
     config = Configuration(options)
-
+    GeneDatabase.get_instance(db_path=config.gene_database_yml) 
     # Perform necessary input checks before processing
     check_dependency_exists()
 

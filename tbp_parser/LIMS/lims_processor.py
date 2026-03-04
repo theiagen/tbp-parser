@@ -83,7 +83,7 @@ class LIMSProcessor:
                 candidate_variants = [
                     v for v in variants
                     if v.drug == lims_record.drug
-                    if v.gene_id == GeneDatabase.get_locus_tag(gene)
+                    if v.gene_id == GeneDatabase.get_instance().get_locus_tag(gene)
                 ]
 
                 qc_filtered_variants = []
@@ -293,7 +293,7 @@ class LIMSProcessor:
         for lims_gene in lims_genes:
 
             # These should never happen, we should always find a locus tag; see check_bed_for_lims_genes in check_inputs.py
-            lims_locus_tag = GeneDatabase.get_locus_tag(lims_gene)
+            lims_locus_tag = GeneDatabase.get_instance().get_locus_tag(lims_gene)
             if not lims_locus_tag:
                 raise ValueError(f"Could not find locus tag for LIMS gene {lims_gene} in GeneDatabase. Check that the input bed file contains the correct locus tags for LIMS genes")
             locus_coverage = locus_coverage_map.get(lims_locus_tag)

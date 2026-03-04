@@ -89,7 +89,7 @@ class Configuration:
         self.err_bed = options.err_bed
         self.promoter_regions_tsv = options.promoter_regions_tsv
         self.lims_report_format_yml = options.lims_report_format_yml
-
+        self.gene_database_yml = options.gene_database_yml
         # INITIALIZE CONFIGURABLE INPUTS (always uppercase)
         # qc options
         self.MIN_DEPTH = options.min_depth

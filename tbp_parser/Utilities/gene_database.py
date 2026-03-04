@@ -5,51 +5,56 @@ import yaml
 logger = logging.getLogger(__name__)
 
 class GeneDatabase:
-    # probably should make this so that the database is loaded from an input parameter instead of hard-coding the file
-    # also probably should make this so that the database is only loaded once without needing to pass around an instance of the class
-    GENE_DATABASE = yaml.safe_load(open(Path(__file__).parent.parent.parent / "data/gene-database_2026-03-03.yml", "r"))
-    
-    # Build reverse index: gene_name -> locus_tag
-    GENE_DATABASE_INVERTED = {data["gene_name"]: data for data in GENE_DATABASE.values()}
+    _instance = None
+
+    def __init__(self, db_path=None):
+        if GeneDatabase._instance is not None:
+            raise Exception("GeneDatabase is a singleton. Use GeneDatabase.get_instance().")
+        
+        if db_path is None:
+            db_path = Path(__file__).parent.parent.parent / "data/gene-database_2026-03-03.yml"
+        self.GENE_DATABASE = yaml.safe_load(open(db_path, "r"))
+        self.GENE_DATABASE_INVERTED = {data["gene_name"]: data for data in self.GENE_DATABASE.values()}
+        GeneDatabase._instance = self
 
     @classmethod
-    def _resolve_database(cls, identifier: str) -> dict | None:
+    def get_instance(cls, db_path=None):
+        if cls._instance is None:
+            cls(db_path)
+        return cls._instance
+
+    def _resolve_database(self, identifier: str) -> dict | None:
         """Resolve an identifier (gene name or locus tag) to its full gene information."""
-        if identifier in cls.GENE_DATABASE:
-            return cls.GENE_DATABASE[identifier]
-        if identifier in cls.GENE_DATABASE_INVERTED:
-            return cls.GENE_DATABASE_INVERTED[identifier]
+        if identifier in self.GENE_DATABASE:
+            return self.GENE_DATABASE[identifier]
+        if identifier in self.GENE_DATABASE_INVERTED:
+            return self.GENE_DATABASE_INVERTED[identifier]
         logger.debug(f"'{identifier}' not found as gene name or locus tag")
         return None
 
-    @classmethod
-    def get_gene_name(cls, identifier: str) -> str | None:
+    def get_gene_name(self, identifier: str) -> str | None:
         """Get gene name from locus tag or gene name"""
-        db = cls._resolve_database(identifier)
+        db = self._resolve_database(identifier)
         return db["gene_name"] if db else None
 
-    @classmethod
-    def get_locus_tag(cls, identifier: str) -> str | None:
+    def get_locus_tag(self, identifier: str) -> str | None:
         """Get locus tag from gene name or locus tag"""
-        db = cls._resolve_database(identifier)
+        db = self._resolve_database(identifier)
         return db["locus_tag"] if db else None
 
-    @classmethod
-    def get_tier(cls, identifier: str) -> str:
+    def get_tier(self, identifier: str) -> str:
         """Get tier from gene name or locus tag"""
-        db = cls._resolve_database(identifier)
+        db = self._resolve_database(identifier)
         return db["tier"] if db else "NA"
 
-    @classmethod
-    def get_promoter_region(cls, identifier: str) -> list[int] | list[list[int]]:
+    def get_promoter_region(self, identifier: str) -> list[int] | list[list[int]]:
         """Get promoter region from gene name or locus tag"""
-        db = cls._resolve_database(identifier)
+        db = self._resolve_database(identifier)
         return db["promoter_region"] if db else []
 
-    @classmethod
-    def get_drugs(cls, identifier: str) -> list[str]:
+    def get_drugs(self, identifier: str) -> list[str]:
         """Get associated drugs from gene name or locus tag"""
-        db = cls._resolve_database(identifier)
+        db = self._resolve_database(identifier)
         return db["drugs"] if db else []
 
     @staticmethod
