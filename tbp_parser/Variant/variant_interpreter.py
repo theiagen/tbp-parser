@@ -191,7 +191,7 @@ class VariantInterpreter:
             logger.debug("Mutation in upstream gene region")
             return InterpretationResult(
                 confidence="No WHO annotation",
-                looker_interpretation="U" if rule_id == "2.2.2.2" else "S",
+                looker_interpretation="S",
                 mdl_interpretation="S",
                 rule_id=rule_id,
                 rationale=self.RULE_TO_RATIONALE.get(rule_id, "MISSING RATIONALE")
