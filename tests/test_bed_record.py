@@ -17,15 +17,6 @@ class TestBedRecordFromBedLine:
         assert record.length == 101        # end - start + 1 (1-based)
         assert record.coords == (100, 200)
 
-    @pytest.mark.parametrize("input_gene_name, expected_gene_name", [
-        ("mmpR5", "Rv0678"),
-        ("fbiD", "Rv2983"),
-    ])
-    def test_gene_name_normalization(self, input_gene_name, expected_gene_name):
-        """mmpR5 is normalized to Rv0678 by Helper.normalize_field_values."""
-        line = f"Chromosome\t100\t200\tRv0678\t{input_gene_name}"
-        record = BedRecord.from_bed_line(line)
-        assert record.gene_name == expected_gene_name
 
 
 class TestParseBedFile:

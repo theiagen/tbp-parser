@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from LIMS import LIMSRecord
-from Utilities import Configuration
+from Utilities import Configuration, apply_find_and_replace
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,7 @@ def write_lims_report(
 
     # Write CSV and transposed CSV
     df = pd.DataFrame([lims_report])
+    df = apply_find_and_replace(df, config.FIND_AND_REPLACE)
     output_path = Path(f"{config.OUTPUT_PREFIX}.lims_report.csv")
     df.to_csv(output_path, index=False)
 

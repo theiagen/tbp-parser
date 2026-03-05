@@ -32,13 +32,6 @@ def mock_config():
         "RPOB449_FREQUENCY": 0.10,
     }
     config.USE_ERR_AS_BRR = False
-    config.FIND_AND_REPLACE = {
-        "rifampicin": "rifampin",
-        "fbiD": "Rv2983",
-        "mmpR5": "Rv0678",
-        "p.0?": "",
-    }
-    config.normalize_field_values = lambda obj: Configuration.normalize_field_values(config, obj)
     return config
 
 @pytest.fixture(autouse=True)

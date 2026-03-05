@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 
 from Coverage import TargetCoverage, LocusCoverage
-from Utilities import Configuration, GeneDatabase
+from Utilities import Configuration, GeneDatabase, apply_find_and_replace
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,7 @@ def write_coverage_report(
         })
 
     df = pd.DataFrame(rows)
+    df = apply_find_and_replace(df, config.FIND_AND_REPLACE)
     df.to_csv(output_path, index=False)  # type: ignore
 
     logger.info(f"Target coverage report written to {output_path}") # type: ignore

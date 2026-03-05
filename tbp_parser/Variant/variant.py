@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Any
-from Utilities import GeneDatabase, Helper, Configuration
+from Utilities import GeneDatabase, Helper
 import logging
 
 logger = logging.getLogger(__name__)
@@ -58,8 +58,11 @@ class Variant(BaseModel):
         self.gene_tier = GeneDatabase.get_tier(self.gene_id)
         self.absolute_start, self.absolute_end = Helper.get_mutation_genomic_positions(self.pos, self.nucleotide_change)
 
-        # Normalize field values based on predefined rules
-        Configuration.get_instance().normalize_field_values(self)
+        # Structural defaults
+        if not self.protein_change:
+            self.protein_change = "NA"
+        if self.comment == "Not found in WHO catalogue":
+            self.confidence = "No WHO annotation"
 
     def __str__(self) -> str:
         return f"Variant([{self.gene_name}][{self.gene_id}][{self.type}][{self.nucleotide_change}][{self.drug}][{self.confidence}])"

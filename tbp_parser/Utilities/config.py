@@ -2,6 +2,7 @@ from typing import Any
 import argparse
 import logging
 import yaml
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -142,46 +143,31 @@ class Configuration:
                     setattr(self, key, value)
                     logger.debug(f"'{key}': {value}")
 
-    def normalize_field_values(self, obj: Any) -> None:
-        """Normalize field values in-place for all string attributes of a given object based on
-        predefined normalization rules. This function can be used in a post-init processor
-        for Pydantic models to ensure consistent formatting of specific fields.
 
-        Args:
-            obj: The object whose attributes will be normalized.
+def apply_find_and_replace(df: pd.DataFrame, override_map: dict) -> pd.DataFrame:
+    """Apply find-and-replace substitutions to every string in a DataFrame — column headers and all cell values.
 
-        Returns:
-            None: The function modifies the object in-place
-        """
-        override_map = self.FIND_AND_REPLACE or {}
+    Args:
+        df: The DataFrame to apply substitutions to.
+        override_map: A dict of {old_string: new_string} pairs.
 
-        # Normalize drug: Impacts: Variant, Annotation
-        if hasattr(obj, 'drug'):
-            obj.drug = override_map.get(obj.drug.lower(), obj.drug)
+    Returns:
+        The DataFrame with all substitutions applied.
+    """
+    if not override_map:
+        return df
+    # Replace in column headers
+    df.columns = [
+        _apply_replacements(col, override_map) if isinstance(col, str) else col
+        for col in df.columns
+    ]
+    # Replace in all cell values
+    df = df.map(lambda x: _apply_replacements(x, override_map) if isinstance(x, str) else x)
+    return df
 
-        # Normalize drug lists: Impacts: VariantRecord
-        if hasattr(obj, 'gene_associated_drugs'):
-            obj.gene_associated_drugs = [override_map.get(d.lower(), d) for d in obj.gene_associated_drugs]
 
-        # Normalize gene_name: Impacts: VariantRecord, Consequences, Variant, BedRecord, TargetCoverage, LocusCoverage
-        if hasattr(obj, 'gene_name'):
-            obj.gene_name = override_map.get(obj.gene_name, obj.gene_name)
-
-        # Set confidence from comment: Impacts: Annotation, Variant
-        if hasattr(obj, 'comment') and obj.comment == "Not found in WHO catalogue":
-            obj.confidence = "No WHO annotation"
-
-        # Normalize protein_change: Impacts: Variant
-        if hasattr(obj, 'protein_change'):
-            # if the protein change is empty, set it to NA (consistent with current implemntation of tbp_parser)
-            if not getattr(obj, 'protein_change'):
-                obj.protein_change = "NA"
-            else:
-                obj.protein_change = obj.protein_change if obj.protein_change not in override_map else obj.nucleotide_change
-
-        # Normalize gene_codes: Impacts: LIMSRecord
-        if hasattr(obj, 'gene_codes'):
-            obj.gene_codes = {
-                override_map.get(gene, gene): gene_code
-                for gene, gene_code in obj.gene_codes.items()
-            }
+def _apply_replacements(value: str, override_map: dict) -> str:
+    """Apply all replacements from override_map to a single string value."""
+    for old, new in override_map.items():
+        value = value.replace(old, str(new) if new is not None else "")
+    return value

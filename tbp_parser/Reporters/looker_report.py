@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from Variant import Variant
-from Utilities import Configuration
+from Utilities import Configuration, apply_find_and_replace
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +71,7 @@ def write_looker_report(
     data["operator"] = config.OPERATOR
 
     df = pd.DataFrame([data])
+    df = apply_find_and_replace(df, config.FIND_AND_REPLACE)
     output_path = Path(f"{config.OUTPUT_PREFIX}.looker_report.csv")
     df.to_csv(output_path, index=False)
 

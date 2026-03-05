@@ -1,6 +1,6 @@
 __VERSION__ = "v3.0.0"
 
-from Utilities.config import Configuration
+from Utilities.config import Configuration, apply_find_and_replace
 from Utilities.gene_database import GeneDatabase
 from Utilities.helper import Helper
 from Utilities.logger_setup import setup_logger
@@ -26,4 +26,5 @@ __all__ = [
     'is_optional_file_valid',
     'check_dependency_exists',
     'check_bed_for_lims_genes',
+    'apply_find_and_replace',
 ]

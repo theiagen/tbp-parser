@@ -1,7 +1,6 @@
-from typing import Any, Optional
+from typing import Optional
 from pydantic import BaseModel, Field
 from Variant import Variant
-from Utilities import Configuration
 
 class LIMSGeneCode(BaseModel):
     """Class representing gene-specific results for the LIMS report."""
@@ -25,10 +24,6 @@ class LIMSRecord(BaseModel):
 
     # Fields for storing the results populated in lims_processor.py
     drug_target_value: Optional[str] = Field(default=None, exclude=True)
-
-    # Post-init processing to compute derived attributes
-    def model_post_init(self, __context: Any = None):
-        Configuration.get_instance().normalize_field_values(self)
 
     def __str__(self):
         return f"LIMSRecord(drug={self.drug}, drug_code={self.drug_code}, drug_target_value={self.drug_target_value})"

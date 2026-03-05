@@ -20,13 +20,12 @@ def _run_report(mock_config, tmp_path, writer_fn, report_suffix, *args):
 
 class TestWriteLaboratorianReport:
     def test_writes_csv(self, mock_config, make_variant, tmp_path):
-        v = make_variant(mdl_interpretation="R", rationale="WHO classification")
+        v = make_variant(drug="rifampicin", mdl_interpretation="R", rationale="WHO classification")
         df = _run_report(mock_config, tmp_path, write_laboratorian_report, "laboratorian_report", [v])
         assert len(df) == 1
         assert df["sample_id"].iloc[0] == "test_sample"
         assert df["tbprofiler_gene_name"].iloc[0] == "rpoB"
-        # Variant normalizes "rifampicin" -> "rifampin"
-        assert df["antimicrobial"].iloc[0] == "rifampin"
+        assert df["antimicrobial"].iloc[0] == "rifampicin"
         assert df["mdl_interpretation"].iloc[0] == "R"
 
     def test_multiple_variants(self, mock_config, make_variant, tmp_path):
@@ -42,6 +41,23 @@ class TestWriteLaboratorianReport:
         warning_val = df["warning"].iloc[0]
         assert "Failed quality" in warning_val
         assert "Insufficient coverage" in warning_val
+
+    def test_find_and_replace_applied(self, mock_config, make_variant, tmp_path):
+        """FIND_AND_REPLACE should substitute strings in the final CSV output."""
+        mock_config.FIND_AND_REPLACE = {"rifampicin": "rifampin", "mmpR5": "Rv0678"}
+        v = make_variant(drug="rifampicin", gene_name="mmpR5", mdl_interpretation="R", rationale="WHO classification")
+        assert v.drug == "rifampicin"
+        assert v.gene_name == "mmpR5"
+        df = _run_report(mock_config, tmp_path, write_laboratorian_report, "laboratorian_report", [v])
+        assert df["antimicrobial"].iloc[0] == "rifampin"
+        assert df["tbprofiler_gene_name"].iloc[0] == "Rv0678"
+
+    def test_find_and_replace_not_applied_when_empty(self, mock_config, make_variant, tmp_path):
+        """When FIND_AND_REPLACE is empty, raw values appear in output."""
+        mock_config.FIND_AND_REPLACE = {}
+        v = make_variant(drug="rifampicin", mdl_interpretation="R", rationale="WHO classification")
+        df = _run_report(mock_config, tmp_path, write_laboratorian_report, "laboratorian_report", [v])
+        assert df["antimicrobial"].iloc[0] == "rifampicin"
 
 
 class TestWriteLimsReport:
@@ -92,14 +108,28 @@ class TestWriteLimsReport:
         assert df["M_DST_O01_Lineage"].iloc[0] == "lineage4"
         assert df["MDL sample accession numbers"].iloc[0] == "test_sample"
 
+    def test_find_and_replace_applied_to_drug_target_value(self, mock_config, tmp_path):
+        """FIND_AND_REPLACE should substitute embedded drug names in drug_target_value strings."""
+        mock_config.FIND_AND_REPLACE = {"rifampicin": "rifampin"}
+        gc = LIMSGeneCode(gene_code="M_DST_D02_rpoB")
+        gc.gene_target_value = "p.Ser450Leu"
+        rec = LIMSRecord(
+            drug="rifampicin", drug_code="M_DST_D02",
+            gene_codes={"rpoB": gc},
+        )
+        rec.drug_target_value = "Mutation(s) associated with resistance to rifampicin detected"
+
+        df = _run_report(mock_config, tmp_path, write_lims_report, "lims_report", [rec], "DNA of M. tuberculosis", "test_sample", "lineage4")
+        assert "rifampin" in df["M_DST_D02"].iloc[0]
+        assert "rifampicin" not in df["M_DST_D02"].iloc[0]
+
 
 class TestWriteLookerReport:
     def test_writes_looker_csv(self, mock_config, make_variant, tmp_path):
         v = make_variant(gene_name="rpoB", drug="rifampicin")
         v.looker_interpretation = "R"
         df = _run_report(mock_config, tmp_path, write_looker_report, "looker_report", [v], "DNA of Mycobacterium tuberculosis species detected", "test_sample", "lineage4")
-        # Variant normalizes "rifampicin" -> "rifampin"
-        assert df["rifampin"].iloc[0] == "R"
+        assert df["rifampicin"].iloc[0] == "R"
         assert df["lineage"].iloc[0] == "lineage4"
 
     def test_highest_interpretation_wins_for_same_drug(self, mock_config, make_variant, tmp_path):
@@ -110,7 +140,7 @@ class TestWriteLookerReport:
                           protein_change="p.Thr434Ala")
         v2.looker_interpretation = "S"
         df = _run_report(mock_config, tmp_path, write_looker_report, "looker_report", [v1, v2], "lineage", "test_sample", "lineage4")
-        assert df["rifampin"].iloc[0] == "R"
+        assert df["rifampicin"].iloc[0] == "R"
 
     def test_sample_id_and_operator_written(self, mock_config, make_variant, tmp_path):
         mock_config.OPERATOR = "my_operator"

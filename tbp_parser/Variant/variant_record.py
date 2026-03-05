@@ -1,5 +1,4 @@
 from typing import Any, List
-from Utilities import Configuration
 from pydantic import BaseModel
 import logging
 
@@ -23,9 +22,9 @@ class Annotation(BaseModel):
         # Custom hash method to allow usage in sets and define uniqueness
         return hash((self.drug, self.confidence, self.source, self.comment))
 
-    # Post-init processing to compute derived attributes
     def model_post_init(self, __context: Any = None):
-        Configuration.get_instance().normalize_field_values(self)
+        if self.comment == "Not found in WHO catalogue":
+            self.confidence = "No WHO annotation"
 
 class Consequences(BaseModel):
     """Data class representing a single consequence entry (dict) from a list of dicts under the `consequences` field in
@@ -42,10 +41,6 @@ class Consequences(BaseModel):
     protein_change: str
     annotation: List[Annotation]
     model_config = {"extra": "ignore"}
-
-    # Post-init processing to compute derived attributes
-    def model_post_init(self, __context: Any = None):
-        Configuration.get_instance().normalize_field_values(self)
 
 
 class VariantRecord(BaseModel):
@@ -74,10 +69,6 @@ class VariantRecord(BaseModel):
 
     def __str__(self) -> str:
         return f"VariantRecord([{self.gene_name}][{self.pos}][{self.type}][{self.nucleotide_change}])"
-
-    # Post-init processing to compute derived attributes
-    def model_post_init(self, __context: Any = None):
-        Configuration.get_instance().normalize_field_values(self)
 
     @classmethod
     def from_consequences(

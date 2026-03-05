@@ -1,6 +1,5 @@
-from typing import Any, Dict, List
+from typing import Dict, List
 from pydantic import BaseModel, Field
-from Utilities import Configuration
 
 class BedRecord(BaseModel):
     """A class representing a record or entry from a BED file."""
@@ -17,14 +16,9 @@ class BedRecord(BaseModel):
     # To be populated in Coverage class after parsing the BAM file, excluded from serialization
     reads_by_position: Dict[int, List[str]] = Field(default_factory=dict, exclude=True) # (1-based)
 
-    # Post-init processing to compute derived attributes
-    def model_post_init(self, __context: Any = None):
-        # Calculate length and coords
+    def model_post_init(self, __context=None):
         self.length = self.end - self.start + 1  # assuming 1-based indexing
         self.coords = (self.start, self.end)
-
-        # Normalize gene_name
-        Configuration.get_instance().normalize_field_values(self)
 
     def __str__(self):
         return f"BedRecord([{self.gene_name}][{self.locus_tag}]{self.coords})"
