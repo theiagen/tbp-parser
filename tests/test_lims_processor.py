@@ -22,11 +22,11 @@ def make_lims_record():
 
 class TestResistanceRanking:
     @pytest.mark.parametrize("higher,lower", [
-        ("R", "U"),
+        ("R", "Insufficient Coverage"),
+        ("Insufficient Coverage", "U"),
         ("U", "S"),
         ("S", "WT"),
-        ("WT", "Insufficient Coverage"),
-        ("Insufficient Coverage", "NA"),
+        ("WT", "NA"),
     ])
     def test_ranking_order(self, higher, lower):
         ranking = LIMSProcessor.RESISTANCE_RANKING
@@ -55,17 +55,17 @@ class TestSetGeneCodeMaxMdl:
         processor.set_gene_code_max_mdl(gc, [v1, v2])
         assert gc.max_mdl_interpretation == "U"
 
-    def test_empty_variants_returns_insufficient_coverage(self, processor, make_lims_gene_code):
+    def test_empty_variants_returns_na(self, processor, make_lims_gene_code):
         gc = make_lims_gene_code()
         processor.set_gene_code_max_mdl(gc, [])
-        assert gc.max_mdl_interpretation == "Insufficient Coverage"
+        assert gc.max_mdl_interpretation == "NA"
 
-    def test_no_interpretations_returns_insufficient_coverage(self, processor, make_lims_gene_code, make_variant):
+    def test_no_interpretations_returns_na(self, processor, make_lims_gene_code, make_variant):
         gc = make_lims_gene_code()
         v = make_variant()
         v.mdl_interpretation = None
         processor.set_gene_code_max_mdl(gc, [v])
-        assert gc.max_mdl_interpretation == "Insufficient Coverage"
+        assert gc.max_mdl_interpretation == "NA"
 
     def test_wt_only_returns_wt(self, processor, make_lims_gene_code, make_variant):
         gc = make_lims_gene_code()

@@ -29,9 +29,8 @@ def resolve_output_prefix(output_prefix: str) -> Path:
 def parse_arguments():
     data_dir = Path(__file__).parent.parent / "data"
     default_tbdb_bed = data_dir / "tbdb.bed"
-    default_promoter_regions = data_dir / "who-v2-promoters_2025-12-10.tsv"
     default_lims_report_format = data_dir / "default-lims-report-format.yml"
-    default_gene_database = data_dir / "gene-database_2026-03-03.yml"
+    default_gene_database = data_dir / "default-gene-database_2026-03-03.yml"
 
     parser = argparse.ArgumentParser(
         prog = "tbp-parser",
@@ -53,8 +52,6 @@ def parse_arguments():
     ### TO-DO: brainstorm better name for this argument -- regions_bed, targets_bed, genes_bed, etc.
     file_arguments.add_argument("-b", "--tbdb_bed",
                         help="the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_tbdb_bed, metavar="\b", type=is_bed_valid)
-    file_arguments.add_argument("-p", "--promoter_regions_tsv",
-                        help="the TSV file containing the promoter regions to include in interpretation designations\ndefault=data/who-v2-promoters_2025-12-10.tsv", default=default_promoter_regions, metavar="\b", type=is_file_valid)
     ### TO-DO: make yaml format validation function
     file_arguments.add_argument("--lims_report_format_yml",
                         help="an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used", default=default_lims_report_format, metavar="\b", type=is_file_valid)

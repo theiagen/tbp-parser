@@ -40,7 +40,7 @@ def setup_config(mock_config):
 
 @pytest.fixture(autouse=True, scope="session")
 def setup_gene_database():
-    GeneDatabase(db_path=str(Path(__file__).parent.parent / "data" / "gene-database_2026-03-03.yml"))
+    GeneDatabase(db_path=str(Path(__file__).parent.parent / "data" / "default-gene-database_2026-03-03.yml"))
 
 @pytest.fixture
 def make_bed_record():

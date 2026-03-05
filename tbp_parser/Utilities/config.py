@@ -21,7 +21,6 @@ class Configuration:
         SEQUENCING_METHOD (str): the sequencing method used to generate the data
 
         tbdb_bed (str): the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations
-        promoter_regions_tsv (str): the TSV file containing the promoter regions to include in interpretation designations
 
         MIN_PERCENT_COVERAGE (float): the minimum percentage of a region that has depth above the threshold set by MIN_DEPTH to pass QC
         MIN_PERCENT_LOCI_COVERED (float): the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC
@@ -88,7 +87,6 @@ class Configuration:
         # files to be parsed once and used across multiple classes
         self.tbdb_bed = options.tbdb_bed
         self.err_bed = options.err_bed
-        self.promoter_regions_tsv = options.promoter_regions_tsv
         self.lims_report_format_yml = options.lims_report_format_yml
         self.gene_database_yml = options.gene_database_yml
         # INITIALIZE CONFIGURABLE INPUTS (always uppercase)

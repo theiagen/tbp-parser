@@ -19,7 +19,8 @@ class QCResult(BaseModel):
     confidence: Optional[str] = None
     looker_interpretation: Optional[str] = None
     mdl_interpretation: Optional[str] = None
-    fails_qc: bool = False
+    fails_positional_qc: bool = False
+    fails_locus_qc: bool = False
     warning: set[str] = Field(default_factory=set)
 
     def repr_filtered(self, attr_list: list[str]) -> str:
@@ -179,7 +180,7 @@ class VariantQC:
                         qc_result.looker_interpretation = "Insufficient Coverage"
                         qc_result.mdl_interpretation = "Insufficient Coverage"
                         qc_result.warning.add(self.LOCUS_QC_WARNING)
-                        qc_result.fails_qc = True
+                        qc_result.fails_locus_qc = True
 
             variant = self.update_variant_qc_result(variant, qc_result)
         return variants
@@ -245,7 +246,7 @@ class VariantQC:
             ):
                 logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS positional QC (rule 4.2.1.1)")
 
-                qc_result.fails_qc = True
+                qc_result.fails_positional_qc = True
                 qc_result.warning.add(self.POSITIONAL_QC_WARNING)
                 return qc_result
 
@@ -256,7 +257,7 @@ class VariantQC:
         # rule 4.2.1.2 - Deletion with some depth but below threshold
         elif variant.depth > 0 and variant.depth < self.config.MIN_DEPTH:
             logger.debug(f"{variant.gene_name}|{variant.gene_id} is a valid deletion with [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS positional QC (rule 4.2.1.2): Non-zero depth, but depth < {self.config.MIN_DEPTH}")
-            qc_result.fails_qc = True
+            qc_result.fails_positional_qc = True
             qc_result.warning.add(self.POSITIONAL_QC_WARNING)
             return qc_result
 
@@ -308,9 +309,9 @@ class VariantQC:
             if has_valid_deletion:
                 # NOTE: this conditional is in previous versions but NOT in the interpretation documentation. Not sure if intentional
                 #  If this deletion also previously failed positional QC, add insufficient coverage warning?
-                if variant.fails_qc:
+                if variant.fails_positional_qc:
                     logger.debug(f"{variant.gene_name}|{variant.gene_id} contains valid deletion(s) with low breadth of coverage [BC:{(boc):.3f}] and FAILS positional QC; FAILS locus QC; Adding `Insufficient Coverage` warning")
-                    qc_result.fails_qc = True
+                    qc_result.fails_locus_qc = True
                     qc_result.warning.add(self.LOCUS_QC_WARNING)
                     return qc_result
 
@@ -325,7 +326,7 @@ class VariantQC:
                 # Rule 4.2.2.3.2: S/U mutations with low breadth of coverage - FAIL
                 if (variant.mdl_interpretation == "S") or (variant.mdl_interpretation == "U"):
                     logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(boc):.3f}]; FAILS locus QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage` (rule 4.2.2.3.2)")
-                    qc_result.fails_qc = True
+                    qc_result.fails_locus_qc = True
                     qc_result.looker_interpretation = "Insufficient Coverage"
                     qc_result.mdl_interpretation = "Insufficient Coverage"
                     qc_result.warning.add(self.LOCUS_QC_WARNING)
@@ -333,7 +334,7 @@ class VariantQC:
 
                 elif variant.mdl_interpretation == "R":
                     # Rule 4.2.2.3.3: R mutation with locus qc fail but NOT positional qc fail; add warning DO NOT not overwrite interpretation
-                    if not variant.fails_qc:
+                    if not variant.fails_positional_qc:
                         logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(boc):.3f}] and PASSES positional QC; Adding `Insufficient Coverage` warning (rule 4.2.2.3.3)")
                         qc_result.warning.add(self.LOCUS_QC_WARNING)
                         return qc_result
@@ -341,7 +342,7 @@ class VariantQC:
                     # Rule 4.2.2.3.4: R mutation with BOTH locus qc fail AND positional qc fail; add warning AND overwrite interpretation
                     else:
                         logger.debug(f"{variant.gene_name}|{variant.gene_id} has low breadth of coverage [BC:{(boc):.3f}] and FAILS positional QC; Adding `Insufficient Coverage` warning; Overwriting interpretation to `Insufficient Coverage` (rule 4.2.2.3.4)")
-                        qc_result.fails_qc = True
+                        qc_result.fails_locus_qc = True
                         qc_result.looker_interpretation = "Insufficient Coverage"
                         qc_result.mdl_interpretation = "Insufficient Coverage"
                         qc_result.warning.add(self.LOCUS_QC_WARNING)
@@ -382,7 +383,7 @@ class VariantQC:
         )
         if not locus_coverage:
             logger.debug(f"No tNGS locus coverage found for {variant.gene_name}|{variant.gene_id} at position {variant.pos}; FAILS tNGS QC; Adding warning: `This mutation is outside the expected region`")
-            qc_result.fails_qc = True
+            qc_result.fails_locus_qc = True
             qc_result.warning.add("This mutation is outside the expected region")
             qc_result.rationale = "NA"
             qc_result.confidence = "NA"
@@ -391,12 +392,12 @@ class VariantQC:
 
         # tNGS-specific gene/position checks
         if self._fails_tngs_specific_qc(variant):
-            qc_result.fails_qc = True
+            qc_result.fails_positional_qc = True
             qc_result.warning.add(self.POSITIONAL_QC_WARNING)
 
         # tNGS boundary QC (read support vs frequency boundaries)
         if self._fails_tngs_boundary_qc(variant):
-            qc_result.fails_qc = True
+            qc_result.fails_positional_qc = True
             qc_result.warning.add(self.POSITIONAL_QC_WARNING)
 
         return qc_result

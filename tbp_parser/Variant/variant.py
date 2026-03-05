@@ -43,7 +43,8 @@ class Variant(BaseModel):
     mdl_interpretation: Optional[str] = Field(default=None, exclude=True)
 
     # Fields set by VariantQC (excluded from serialization)
-    fails_qc: Optional[bool] = Field(default=None, exclude=True)
+    fails_locus_qc: Optional[bool] = Field(default=None, exclude=True)
+    fails_positional_qc: Optional[bool] = Field(default=None, exclude=True)
     warning: set[str] = Field(default_factory=set, exclude=True)
 
     model_config = {"extra": "ignore"}

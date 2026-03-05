@@ -16,29 +16,14 @@ The inputs on this page reflect the parameters that are applicable for the comma
 !!! info "BAM index file required"
     The BAM file must have the accompanying BAI file in the same directory. It must also be named exactly the same as the BAM file but ending with a `.bai` suffix.
 
-
-The following global variables are used in the `tbp-parser` algorithm. These variables are used to determine the columns in the LIMS report and to rename certain output text in all output files.
-
-These variables can be overwritten using a configuration file. For more information on how to overwrite these variables, please see the [Configuration File](#configuration-file) section.
-
-## Global Variables
-
-The content of the global variables can be found by browsing the [globals.py](https://github.com/theiagen/tbp-parser/blob/main/tbp_parser/globals.py) file on GitHub. These variables are used to determine the columns in the LIMS report and to rename certain output text in all output files.
-
-These variables can be overwritten using a configuration file. For more information on how to overwrite these variables, please see the [Configuration File](#configuration-file) section.
-
-| Variable Name | Description | Format |
-| :------------ | :---------- | :------------ |
-| DRUG_COLUMNS_TO_GENE_COLUMNS | This relatively complex dictionary is derived from the [TBProfiler `genes.bed` file](https://github.com/jodyphelan/TBProfiler/blob/master/db/tbdb/genes.bed). Used to create the LIMS report, this dictionary can be easily extended to include new drugs/genes or reduced to only the drugs/genes needed in the configuration file. | dict[str, dict[str, dict[str, str]]] |
-| OUTPUT_RENAMING | This dictionary maps existing default language to new language for output reports. For example, if the desired output language for 'rifampicin' is 'rifampin', the dictionary would contain the entry {'rifampicin': 'rifampin'}. At the end of processing, all instances of 'rifampicin' in the output reports would be replaced with 'rifampin'. | dict[str, str] |
-
 ## Optional Inputs
 
 `tbp-parser` can be customized with a number of optional input parameters. These parameters control:
 
+- files that contain information about the genes of interest and their associated antimicrobials
+- files that control the LIMS output report formatting
 - quality control thresholds
-- miscellaneous text that appears in the reports
-- the names of the output files
+- text in the output reports (column names, sequencing method, operator name, etc.)
 
 ### Configuration File
 
@@ -83,8 +68,8 @@ These options are used to create standard variables that are used throughout the
 | Short Version | Long Version | Description | Default Value |
 | :------------ | :------------ | :---------- | :------------ |
 | `-b` | `--tbdb_bed` | the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler | [/data/tbdb.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb.bed) |
-| `-g` | `--gene_tier_tsv` | a TSV file mapping genes to their tier | [/data/gene-to-tier_2025-12-10.tsv](https://github.com/theiagen/tbp-parser/blob/main/data/gene-to-tier_2025-12-10.tsv) |
-| `-p` | `--promoter_regions_tsv` | a TSV file containing the promoter regions to include in interpretation designations; created from the WHO v2 catalogue | [/data/who-v2-promoter-regions_2025-12-10.tsv](https://github.com/theiagen/tbp-parser/blob/main/data/who-v2-promoter-regions_2025-12-10.tsv) |
+| `--lims_report_format_yml` | | an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used | [/data/default-lims-report-format.yml](https://github.com/theiagen/tbp-parser/blob/main/data/default-lims-report-format.yml) |
+| `--gene_database_yml` | | an optional YAML file that specifies the gene database information for the genes of interest; if not provided, a default format will be used | [/data/default-gene-database_2026-03-03.yml](https://github.com/theiagen/tbp-parser/blob/main/data/default-gene-database_2026-03-03.yml) |
 
 ### Quality Control Arguments
 
@@ -107,6 +92,7 @@ These options are used verbatim in the reports, or are used to name the output f
 | `-m` | `--sequencing_method` | The sequencing method used to gerneate the data; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Sequencing method not provided" |
 | `-t` | `--operator` | The operator who ran the analysis; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Operator not provided" |
 | `-o` | `--output_prefix` | The prefix to use for the output files. Do not include any spaces | "tbp_parser" |
+| `-fr` | `--find_and_replace` | A JSON string that can be used to specify any text in the output files that should be find-and-replaced with other text. The keys will be the text to find, and the values will be the text to replace it with. This is useful for labs that want to customize the text in their reports (e.g. renaming drugs or genes or output columns). For example, `'{"rifampicin": "rifampin", "fbiD": "Rv2983"}'` | '{}' |
 
 ### tNGS-specific Arguments
 
@@ -115,6 +101,9 @@ These options are primarily used for tNGS data.
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
 | `--tngs` | Indicates that the input data was generated using a tNGS protocol. Turns on tNGS-specific features | false |
+| `-e` | `--err_bed` | the BED file containing the regions to use for calculating the error rate for tNGS data; should be formatted like the ERR.bed file in TBProfiler | |
+| `--rrs_frequency` | The minimum frequency for a mutation in the rrs gene to pass QC (0.1 -> 10%); this is a separate argument from `--min_frequency` because the rrs gene is known to have higher error rates in tNGS data, so a higher frequency threshold may be desired for this gene | 0.1 |
+| `--
 
 ### Logging Arguments
 
