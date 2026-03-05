@@ -66,40 +66,55 @@ class TestApplyQc:
         qc = VariantQC()
         v = make_variant(depth=5, freq=0.50)
         locus = make_locus_coverage(locus_tag="Rv0667")
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
         assert v.fails_positional_qc is True
+        assert v.fails_locus_qc is False
         assert "Failed quality in the mutation position" in v.warning
 
     def test_low_frequency_fails_positional_qc(self, make_variant, make_locus_coverage):
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.01)
         locus = make_locus_coverage(locus_tag="Rv0667")
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
         assert v.fails_positional_qc is True
+        assert v.fails_locus_qc is False
+        assert "Failed quality in the mutation position" in v.warning
+
+    def test_low_read_support_fails_positional_qc(self, make_variant, make_locus_coverage):
+        qc = VariantQC()
+        v = make_variant(depth=100, freq=0.95, read_support=5)
+        locus = make_locus_coverage(locus_tag="Rv0667")
+        qc.apply_qc([v], {"Rv0667": locus}, {})
+
+        assert v.fails_positional_qc is True
+        assert v.fails_locus_qc is False
         assert "Failed quality in the mutation position" in v.warning
 
     def test_good_variant_passes_qc(self, make_variant, make_locus_coverage):
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95)
         locus = make_locus_coverage(locus_tag="Rv0667")
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
-        assert v.fails_positional_qc is not True
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is False
         assert len(v.warning) == 0
 
-    def test_low_breadth_adds_locus_warning_for_non_r(self, make_variant, make_locus_coverage):
+    def test_low_breadth_u_mutation_overwrites_to_insufficient_coverage(self, make_variant, make_locus_coverage):
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Uncertain significance")
         # Pre-set interpretation as determine_interpretation would
         v.mdl_interpretation = "U"
         v.looker_interpretation = "U"
         locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=0.50)
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
         assert "Insufficient coverage in locus" in v.warning
         assert v.mdl_interpretation == "Insufficient Coverage"
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is True
 
     def test_low_breadth_r_mutation_no_positional_fail_keeps_interpretation(
         self, make_variant, make_locus_coverage
@@ -109,48 +124,65 @@ class TestApplyQc:
         v.mdl_interpretation = "R"
         v.looker_interpretation = "R"
         locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=0.50)
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
         assert "Insufficient coverage in locus" in v.warning
         assert v.mdl_interpretation == "R"  # preserved for R without positional fail
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is False
 
     def test_tngs_outside_region(self, mock_config, make_variant, make_locus_coverage):
         mock_config.TNGS = True
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, pos=1)  # pos outside locus coords
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(759807, 763325)])
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
+        assert v.fails_positional_qc is False
         assert v.fails_locus_qc is True
         assert "This mutation is outside the expected region" in v.warning
         assert v.mdl_interpretation == "NA"
 
-    def test_deletion_with_good_qc_is_valid(self, make_variant, make_locus_coverage):
+    def test_deletion_with_good_depth_freq_passes_positional_qc(self, make_variant, make_locus_coverage):
         qc = VariantQC()
         v = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95)
         locus = make_locus_coverage(locus_tag="Rv0667")
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
         assert v._is_deletion_in_orf() is True
-        assert v.fails_positional_qc is not True
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is False
 
     def test_deletion_with_zero_depth_good_freq_passes(self, make_variant, make_locus_coverage):
         """Rule 4.2.1.3: depth=0 with good frequency should pass (TB Profiler quirk)."""
         qc = VariantQC()
         v = make_variant(nucleotide_change="c.1_100del", depth=0, freq=0.95)
         locus = make_locus_coverage(locus_tag="Rv0667")
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
-        assert v.fails_positional_qc is not True
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is False
         assert v._is_deletion_in_orf() is True
+
+    def test_deletion_with_zero_depth_low_freq_fails(self, make_variant, make_locus_coverage):
+        """Rule 4.2.1.4: depth=0 with low frequency should fail."""
+        qc = VariantQC()
+        v = make_variant(nucleotide_change="c.1_100del", depth=0, freq=0.01)
+        locus = make_locus_coverage(locus_tag="Rv0667")
+        qc.apply_qc([v], {"Rv0667": locus}, {})
+
+        assert v.fails_positional_qc is True
+        assert v.fails_locus_qc is False
+        assert "Failed quality in the mutation position" in v.warning
 
     def test_deletion_with_low_depth_fails(self, make_variant, make_locus_coverage):
         """Rule 4.2.1.2: deletion with some depth but below threshold fails."""
         qc = VariantQC()
         v = make_variant(nucleotide_change="c.1_100del", depth=5, freq=0.95)
         locus = make_locus_coverage(locus_tag="Rv0667")
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
         assert v.fails_positional_qc is True
+        assert v.fails_locus_qc is False
         assert "Failed quality in the mutation position" in v.warning
 
     def test_r_mutation_both_positional_and_locus_fail_overwrite(
@@ -162,7 +194,7 @@ class TestApplyQc:
         v.mdl_interpretation = "R"
         v.looker_interpretation = "R"
         locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=0.50)
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
         assert v.fails_locus_qc is True
         assert v.fails_positional_qc is True
@@ -170,38 +202,76 @@ class TestApplyQc:
         assert v.mdl_interpretation == "Insufficient Coverage"
         assert v.looker_interpretation == "Insufficient Coverage"
 
-
-class TestGetGenesWithDeletionsInORF:
-    def test_deletion_in_orf_tracked(self, make_variant, make_locus_coverage):
+    def test_deletion_failing_positional_qc_not_in_valid_deletions(self, make_variant, make_locus_coverage):
+        """Deletion that fails positional QC should not be assigned to valid_deletions."""
         qc = VariantQC()
-        v = make_variant(
-            nucleotide_change="c.1_100del",
-            depth=100, freq=0.95,
-        )
-        locus = make_locus_coverage(locus_tag="Rv0667")
-        qc.apply_qc([v], {"Rv0667": locus})
+        v = make_variant(nucleotide_change="c.1_100del", depth=5, freq=0.95, pos=120)
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)])
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
-        assert v._is_deletion_in_orf() is True
-
-    def test_failed_deletion_not_tracked(self, make_variant, make_locus_coverage):
-        qc = VariantQC()
-        v = make_variant(
-            nucleotide_change="c.1_100del",
-            depth=2, freq=0.01,  # fails QC
-        )
-        locus = make_locus_coverage(locus_tag="Rv0667")
-        qc.apply_qc([v], {"Rv0667": locus})
-
-        assert v._is_deletion_in_orf() is True
         assert v.fails_positional_qc is True
+        assert v.fails_locus_qc is False
+        assert locus.contains_valid_deletion(v) is False
 
-    def test_non_deletion_not_tracked(self, make_variant, make_locus_coverage):
+    def test_deletion_failing_qc_low_breadth_r_does_not_pass_via_valid_deletion(
+        self, make_variant, make_locus_coverage
+    ):
+        """Deletion failing positional QC + low breadth + R -> Rule 4.2.2.3.4, not 4.2.2.2."""
         qc = VariantQC()
-        v = make_variant(depth=100, freq=0.95)  # SNP, not deletion
-        locus = make_locus_coverage(locus_tag="Rv0667")
-        qc.apply_qc([v], {"Rv0667": locus})
+        v = make_variant(nucleotide_change="c.1_100del", depth=5, freq=0.95, pos=120, confidence="Assoc w R")
+        v.mdl_interpretation = "R"
+        v.looker_interpretation = "R"
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], breadth_of_coverage=0.50)
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
-        assert v._is_deletion_in_orf() is False
+        assert v.fails_positional_qc is True
+        assert v.fails_locus_qc is True
+        assert locus.contains_valid_deletion(v) is False
+        assert v.mdl_interpretation == "Insufficient Coverage"
+        assert v.looker_interpretation == "Insufficient Coverage"
+
+    def test_deletion_failing_qc_low_breadth_s_does_not_pass_via_valid_deletion(
+        self, make_variant, make_locus_coverage
+    ):
+        """Deletion failing positional QC + low breadth + S -> Rule 4.2.2.3.2."""
+        qc = VariantQC()
+        v = make_variant(nucleotide_change="c.1_100del", depth=5, freq=0.95, pos=120, confidence="Uncertain significance")
+        v.mdl_interpretation = "S"
+        v.looker_interpretation = "S"
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], breadth_of_coverage=0.50)
+        qc.apply_qc([v], {"Rv0667": locus}, {})
+
+        assert v.fails_positional_qc is True
+        assert v.fails_locus_qc is True
+        assert locus.contains_valid_deletion(v) is False
+        assert v.mdl_interpretation == "Insufficient Coverage"
+        assert v.looker_interpretation == "Insufficient Coverage"
+
+    def test_multiple_deletions_only_passing_qc_assigned(self, make_variant, make_locus_coverage):
+        """Only the deletion passing positional QC should be in valid_deletions."""
+        qc = VariantQC()
+        good = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120, drug="rifampicin")
+        bad = make_variant(nucleotide_change="c.1_100del", depth=5, freq=0.95, pos=130, drug="isoniazid")
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)])
+        qc.apply_qc([good, bad], {"Rv0667": locus}, {})
+
+        assert locus.contains_valid_deletion(good) is True
+        assert locus.contains_valid_deletion(bad) is False
+        assert good.fails_positional_qc is False
+        assert good.fails_locus_qc is False
+        assert bad.fails_positional_qc is True
+        assert bad.fails_locus_qc is False
+
+    def test_valid_deletion_low_breadth_passes_locus_qc(self, make_variant, make_locus_coverage):
+        """Rule 4.2.2.2: Good deletion + low breadth -> passes locus QC."""
+        qc = VariantQC()
+        v = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], breadth_of_coverage=0.50)
+        qc.apply_qc([v], {"Rv0667": locus}, {})
+
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is False
+        assert locus.contains_valid_deletion(v) is True
 
 
 class TestLocusQcWithErrCoverage:
@@ -222,8 +292,10 @@ class TestLocusQcWithErrCoverage:
             locus_tag="Rv0667", breadth_of_coverage=0.50,
             err_coverage=self._make_err(breadth=0.95),
         )
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is False
         assert "Insufficient coverage in locus" not in v.warning
         assert v.mdl_interpretation == "S"  # preserved — ERR breadth is good
 
@@ -237,8 +309,10 @@ class TestLocusQcWithErrCoverage:
             locus_tag="Rv0667", breadth_of_coverage=0.50,
             err_coverage=self._make_err(breadth=0.50),
         )
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is True
         assert "Insufficient coverage in locus" in v.warning
         assert v.mdl_interpretation == "Insufficient Coverage"
 
@@ -252,9 +326,11 @@ class TestLocusQcWithErrCoverage:
             locus_tag="Rv0667", breadth_of_coverage=0.50,
             err_coverage=self._make_err(breadth=0.95),
         )
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
         # Flag off -> uses locus breadth (0.50) -> fails
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is True
         assert "Insufficient coverage in locus" in v.warning
         assert v.mdl_interpretation == "Insufficient Coverage"
 
@@ -268,9 +344,11 @@ class TestLocusQcWithErrCoverage:
             locus_tag="Rv0667", breadth_of_coverage=0.95,
             err_coverage=None,  # no ERR coverage
         )
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
         # Falls through to locus breadth (0.95) -> passes
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is False
         assert "Insufficient coverage in locus" not in v.warning
         assert v.mdl_interpretation == "S"
 
@@ -284,9 +362,11 @@ class TestLocusQcWithErrCoverage:
             locus_tag="Rv0667", breadth_of_coverage=0.50,
             err_coverage=self._make_err(breadth=0.50),
         )
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
         # R + locus fail only (no positional fail) -> warning added but interpretation preserved
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is False
         assert "Insufficient coverage in locus" in v.warning
         assert v.mdl_interpretation == "R"
 
@@ -300,8 +380,10 @@ class TestLocusQcWithErrCoverage:
             locus_tag="Rv0667", breadth_of_coverage=0.50,
             err_coverage=self._make_err(breadth=0.50),
         )
-        qc.apply_qc([v], {"Rv0667": locus})
+        qc.apply_qc([v], {"Rv0667": locus}, {})
 
+        assert v.fails_positional_qc is True
+        assert v.fails_locus_qc is True
         assert "Insufficient coverage in locus" in v.warning
         assert v.mdl_interpretation == "Insufficient Coverage"
         assert v.looker_interpretation == "Insufficient Coverage"
@@ -325,13 +407,13 @@ class TestLocusQcWithErrCoverage:
         )
 
         # First assign valid deletions, then apply QC
-        qc.assign_variants_with_valid_deletions([del_variant], {"Rv0667": locus}, {"rpoB": target})
-        qc.apply_qc([del_variant], {"Rv0667": locus})
+        qc.apply_qc([del_variant], {"Rv0667": locus}, {"rpoB": target})
 
-        assert del_variant.fails_locus_qc is not True
+        assert del_variant.fails_positional_qc is False
+        assert del_variant.fails_locus_qc is False
 
 
-class TestAssignValidDeletionsERR:
+class TestAssignValidDeletions:
     """Tests for assign_variants_with_valid_deletions with ERR coverage."""
 
     def test_deletion_in_err_range_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
@@ -343,7 +425,7 @@ class TestAssignValidDeletionsERR:
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err_locus)
         target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)], err_coverage=err_target)
 
-        qc.assign_variants_with_valid_deletions([del_variant], {"Rv0667": locus}, {"rpoB": target})
+        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
 
         assert err_locus.contains_valid_deletion(del_variant) is True
         assert err_target.contains_valid_deletion(del_variant) is True
@@ -359,7 +441,7 @@ class TestAssignValidDeletionsERR:
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200), (300, 400)], err_coverage=err_locus)
         target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(300, 400)], err_coverage=err_target)
 
-        qc.assign_variants_with_valid_deletions([del_variant], {"Rv0667": locus}, {"rpoB": target})
+        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
 
         # In locus and target (pos 350 is in range) but NOT in locus ERR (pos 350 outside ERR coords 100-200)
         assert locus.contains_valid_deletion(del_variant) is True
@@ -368,14 +450,14 @@ class TestAssignValidDeletionsERR:
         # Target ERR (310-390) does contain pos 350, so the variant IS assigned to target ERR
         assert err_target.contains_valid_deletion(del_variant) is True
 
-    def test_no_err_coverage_no_error(self, make_variant, make_locus_coverage, make_target_coverage):
+    def test_deletion_assigned_without_err_coverage(self, make_variant, make_locus_coverage, make_target_coverage):
         qc = VariantQC()
         del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
 
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=None)
         target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)], err_coverage=None)
 
-        qc.assign_variants_with_valid_deletions([del_variant], {"Rv0667": locus}, {"rpoB": target})
+        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
 
         assert locus.contains_valid_deletion(del_variant) is True
         assert target.contains_valid_deletion(del_variant) is True
@@ -388,8 +470,37 @@ class TestAssignValidDeletionsERR:
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err)
         target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
 
-        qc.assign_variants_with_valid_deletions([snp_variant], {"Rv0667": locus}, {"rpoB": target})
+        qc.assign_variants_with_valid_deletions(snp_variant, {"Rv0667": locus}, {"rpoB": target})
 
         assert locus.contains_valid_deletion(snp_variant) is False
         assert target.contains_valid_deletion(snp_variant) is False
         assert err.contains_valid_deletion(snp_variant) is False
+
+    def test_deletion_failing_positional_qc_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+        """Deletion with fails_positional_qc=True should be skipped by assign_variants_with_valid_deletions."""
+        qc = VariantQC()
+        del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
+        del_variant.fails_positional_qc = True
+
+        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err)
+        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
+
+        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
+
+        assert locus.contains_valid_deletion(del_variant) is False
+        assert target.contains_valid_deletion(del_variant) is False
+        assert err.contains_valid_deletion(del_variant) is False
+
+    def test_deletion_outside_coverage_coords_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+        """Good deletion at a position outside coverage coords should not be assigned."""
+        qc = VariantQC()
+        del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=500)
+
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)])
+        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
+
+        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
+
+        assert locus.contains_valid_deletion(del_variant) is False
+        assert target.contains_valid_deletion(del_variant) is False

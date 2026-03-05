@@ -55,15 +55,8 @@ class VariantQC:
         Returns:
             List of all Variant objects with QC applied
         """
-        # First, assign variants with valid deletions to the both coverage objects. Note only LocusCoverage is used for this QC
-        self.assign_variants_with_valid_deletions(
-            variants=variants,
-            locus_coverage_map=locus_coverage_map,
-            target_coverage_map=target_coverage_map,
-        )
-
-        # Apply QC to all variants
-        variants = self.apply_qc(variants, locus_coverage_map)
+        # Apply QC to all variants. Note only LocusCoverage is used for QC
+        variants = self.apply_qc(variants, locus_coverage_map, target_coverage_map)
 
         # Apply WT/NA QC to unreported_variants
         unreported_variants = self.apply_wildtype_qc(unreported_variants, locus_coverage_map)
@@ -74,40 +67,49 @@ class VariantQC:
 
     def assign_variants_with_valid_deletions(
         self,
-        variants: list[Variant],
+        variant: Variant,
         locus_coverage_map: Dict[str, LocusCoverage],
         target_coverage_map: Dict[str, TargetCoverage],
     ) -> None:
         """Helper function to assign list of Variants with valid deletions that fall within a specific coverage region.
 
         Args:
-            variants: List of Variant objects to check
+            variant: Variant object to check
             locus_coverage_map: Mapping of gene_id to LocusCoverage objects
             target_coverage_map: Mapping of gene_name to TargetCoverage objects
         """
-        def _add_valid_deletion(variant, key_attr, coverage_map):
+        # If not a deletion or the variant fails positional QC, skip it
+        if not variant._is_deletion_in_orf() or variant.fails_positional_qc:
+            return
+
+        # Determine absolute start and end positions of the variant for coverage overlap checks.
+        var_abs_start = variant.absolute_start if isinstance(variant.absolute_start, int) else variant.pos
+        var_abs_end = variant.absolute_end if isinstance(variant.absolute_end, int) else variant.pos
+
+        # Map each coverage_map to the variant attribute used as its key
+        coverage_maps = [
+            (locus_coverage_map, "gene_id"),
+            (target_coverage_map, "gene_name"),
+        ]
+
+        for coverage_map, key_attr in coverage_maps:
             coverage = coverage_map.get(getattr(variant, key_attr))
-            var_abs_start = variant.absolute_start if isinstance(variant.absolute_start, int) else variant.pos
-            var_abs_end = variant.absolute_end if isinstance(variant.absolute_end, int) else variant.pos
 
             # Check if the variant is a valid deletion and falls within the coverage region
-            if coverage and coverage.overlaps_range(var_abs_start, var_abs_end) and variant._is_deletion_in_orf():
+            if coverage and coverage.overlaps_range(var_abs_start, var_abs_end):
                 coverage.valid_deletions.append(variant)
+                logger.debug(f"Assigned {variant.gene_name}|{variant.gene_id} as a valid deletion within the coverage region of the {coverage.__class__.__name__} object")
                 # Check if ERR coverage exists and assign Variants to valid_deletions if position falls within ERR region
-                if coverage.err_coverage and coverage.err_coverage.overlaps_range(var_abs_start, var_abs_end) and variant._is_deletion_in_orf():
+                if coverage.err_coverage and coverage.err_coverage.overlaps_range(var_abs_start, var_abs_end):
                     coverage.err_coverage.valid_deletions.append(variant)
-
-        logger.debug(f"Assigning variants with valid deletions to coverage objects for {len(variants)} variants")
-
-        for variant in variants:
-            _add_valid_deletion(variant, "gene_name", target_coverage_map)
-            _add_valid_deletion(variant, "gene_id", locus_coverage_map)
+                    logger.debug(f"Assigned {variant.gene_name}|{variant.gene_id} as a valid deletion within the ERR coverage region of the {coverage.err_coverage.__class__.__name__} object")
         return
 
     def apply_qc(
         self,
         variants: list[Variant],
         locus_coverage_map: Dict[str, LocusCoverage],
+        target_coverage_map: Dict[str, TargetCoverage],
     ) -> list[Variant]:
         """Apply all QC checks to a list of variants.
 
@@ -117,6 +119,7 @@ class VariantQC:
         Args:
             variants: List of Variant objects to check
             locus_coverage_map: Mapping of gene_id to LocusCoverage objects
+            target_coverage_map: Mapping of gene_name to TargetCoverage objects
 
         Returns:
             The list of Variant objects with QC warnings applied
@@ -127,6 +130,9 @@ class VariantQC:
             # Rule 4.2.1: Positional QC
             qc_result = self.check_positional_qc(variant)
             variant = self.update_variant_qc_result(variant, qc_result)
+
+            # Find/assign valid deletions to coverage objects if the variant passes positional QC and is within the coverage region
+            self.assign_variants_with_valid_deletions(variant, locus_coverage_map, target_coverage_map)
 
             # Rule 4.2.2: Locus QC
             qc_result = self.check_locus_qc(variant, qc_result, locus_coverage_map)
@@ -235,7 +241,7 @@ class VariantQC:
         Returns:
             QCResult with positional QC outcome
         """
-        qc_result = QCResult(fails_qc=False)
+        qc_result = QCResult(fails_positional_qc=False)
 
         if not variant._is_deletion_in_orf():
             # rule 4.2.1.1 - Non-deletion positional QC
@@ -264,6 +270,13 @@ class VariantQC:
         # rule 4.2.1.3 - Deletion with zero depth but passing frequency - TB Profiler quirk?
         elif variant.depth == 0 and variant.freq >= self.config.MIN_FREQUENCY:
             logger.debug(f"{variant.gene_name}|{variant.gene_id} is a valid deletion with [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; PASSES positional QC (rule 4.2.1.3): Zero depth, but freq >= {self.config.MIN_FREQUENCY}")
+            return qc_result
+
+        # NOTE: not in interpretation document. But i think this shouldn't pass positional QC if depth is 0 and freq is below threshold
+        elif variant.depth == 0 and variant.freq < self.config.MIN_FREQUENCY:
+            logger.debug(f"{variant.gene_name}|{variant.gene_id} is a valid deletion with [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS positional QC (rule 4.2.1.4): Zero depth and freq < {self.config.MIN_FREQUENCY}")
+            qc_result.fails_positional_qc = True
+            qc_result.warning.add(self.POSITIONAL_QC_WARNING)
             return qc_result
 
         # Deletion passes positional QC (sufficient depth and frequency)
@@ -300,9 +313,6 @@ class VariantQC:
         has_low_boc = locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
         boc = locus_coverage.breadth_of_coverage
         has_valid_deletion = locus_coverage.contains_valid_deletion(variant)
-
-        if has_valid_deletion:
-            logger.debug(f"{variant.gene_name}|{variant.gene_id} contains valid deletion(s)")
 
         if has_low_boc:
             # Rule 4.2.2.2: Low breadth of coverage with deletion present - PASS
