@@ -25,6 +25,9 @@ The inputs on this page reflect the parameters that are applicable for the comma
 - quality control thresholds
 - text in the output reports (column names, sequencing method, operator name, etc.)
 
+??? caption "Click to show a diagram depicting their interaction"
+    ![Input parameter interaction](assets/tbp-parser_parameter-interaction.png)
+
 ### File Arguments
 
 These options are used to create standard variables that are used throughout the script. These files were previously global variables in earlier versions of tbp-parser, but are now defined as input arguments to allow for greater customization.
