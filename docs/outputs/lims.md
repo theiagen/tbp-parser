@@ -86,3 +86,31 @@ FIND_AND_REPLACE:
 ```
 
 Please note that this will rename every instance of that text in **all** output reports (all "Sample_Name" will be renamed to "My_Sample_Column" in all output files, etc.).
+
+## Example LIMS Report
+
+The following is an example of the default LIMS report (transposed for readability).
+
+```text
+Sample Name,sample01
+Sample ID,DNA of Mycobacterium tuberculosis species detected
+AMK,Mutation(s) associated with resistance to amikacin detected
+AMK_bacA,No sequence
+AMK_ccsA,No high confidence mutations detected
+AMK_eis,No mutations detected
+AMK_rrs,n.1401A>G
+PZA,The detected mutation(s) have uncertain significance. Resistance to pyrazinamide cannot be ruled out
+PZA_clpC1,No mutations detected
+PZA_rpsA,No high confidence mutations detected
+PZA_Rv1258c,p.Glu194fs
+RIF,Pending Retest
+RIF_rpoB,No high confidence mutations detected
+RIF_rpoC,No mutations detected
+RIF_Rv1129c,No sequence
+Analysis date,2026-03-05 19:36
+Operator,Operator not provided
+Lineage,lineage2
+```
+
+### Explanation of language used
+

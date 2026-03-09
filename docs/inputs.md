@@ -73,7 +73,7 @@ TNGS_READ_SUPPORT_BOUNDARIES:
 
 #### TBDB Bed File
 
-The TBDB Bed file is the **tab-delimited** file that contains gene regions of interest and their associated antimicrobials. This file is used for quality control calculations. The file should be formatted like the TBDB.bed file in TBProfiler, with the following columns in this order:
+The TBDB Bed file is the **tab-delimited** file that contains gene regions of interest and their associated antimicrobials. This file is used for quality control calculations. The file should be formatted like the genes.bed file in TBProfiler, with the following columns in this order:
 
 1. `chrom`: the chromosome or contig name which must match the chromosome name in the BAM file (e.g. "Chromosome")
 2. `start`: the start position of the gene (e.g. 1)
@@ -141,11 +141,11 @@ For example:
 
 tbp-parser also includes a *gene database* file that contains a dictionary of the following information for each gene:
 
-1. `locus_tag`: the locus tag of the gene (e.g. "Rv0005")
-2. `gene_name`: the gene name (e.g. "gyrB")
-3. `tier`: the tier of the gene (e.g. "Tier 1")
-4. `promoter_region`: the WHO-specified proxmial promoter region (e.g. "[-108, -1]")
-5. `drugs`: the antimicrobials associated with this gene (e.g. "[levofloxacin, moxifloxacin]")
+1. `locus_tag`: the locus tag of the gene (e.g. `Rv0005`)
+2. `gene_name`: the gene name (e.g. `gyrB`)
+3. `tier`: the tier of the gene (e.g. `Tier 1`)
+4. `promoter_region`: the WHO-specified proxmial promoter region (e.g. `[-108, -1]`)
+5. `drugs`: the antimicrobials associated with this gene (e.g. `[levofloxacin, moxifloxacin]`)
 
 By default, this database contains information for every gene in the default TBDB bed file listed above. If you would like to include a different gene, or modify the content of existing entries, you can do so by using the following format:
 
@@ -163,11 +163,29 @@ By default, this database contains information for every gene in the default TBD
 ...
 ```
 
-If information for your gene of interest is not included, please use the following values as placeholders:
+If information for your gene of interest is not available, please use the following values as placeholders:
+
 - for `tier`, use `NA`
 - for `promoter_region`, use `[]`
 
 Content for the `locus_tag`, `gene_name`, and `drugs` fields is required for proper function.
+
+For example, the following are valid entries in the gene database file:
+
+```yaml
+Rv0001:
+    locus_tag: Rv0001
+    gene_name: dnaA
+    tier: NA
+    promoter_region: [-314, -1]
+    drugs: [isoniazid]
+Rv0676c:
+    locus_tag: Rv0676c
+    gene_name: mmpL5
+    tier: Tier 1
+    promoter_region: []
+    drugs: [bedaquiline, clofazimine]
+```
 
 ### Quality Control Arguments
 
@@ -190,17 +208,19 @@ These options are used verbatim in the reports, or are used to name the output f
 | `-m` | `--sequencing_method` | The sequencing method used to gerneate the data; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Sequencing method not provided" |
 | `-t` | `--operator` | The operator who ran the analysis; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Operator not provided" |
 | `-o` | `--output_prefix` | The prefix to use for the output files. Do not include any spaces | "tbp_parser" |
-| `-fr` | `--find_and_replace` | A JSON string that can be used to specify any text in the output files that should be find-and-replaced with other text. The keys will be the text to find, and the values will be the text to replace it with. This is useful for labs that want to customize the text in their reports (e.g. renaming drugs or genes or output columns). For example, `'{"rifampicin": "rifampin", "fbiD": "Rv2983"}'` | '{}' |
+| `-fr` | `--find_and_replace` | A JSON string that can be used to specify any text in the output files that should be find-and-replaced with other text. The keys will be the text to find, and the values will be the text to replace it with. This is useful for labs that want to customize the text in their reports (e.g. renaming drugs or genes or output columns).<br>For example, `'{"rifampicin": "rifampin", "Sample Name": "sample_id", "mmpR5": "Rv0678"}'` | '{}' |
 
 ### tNGS-specific Arguments
 
 These options are primarily used for tNGS data.
 
+********UJPDATE ME*********
+
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
 | `--tngs` | Indicates that the input data was generated using a tNGS protocol. Turns on tNGS-specific features | false |
 | `-e`, `--err_bed` | the BED file containing the regions to use for calculating the error rate for tNGS data; should be formatted like the ERR.bed file in TBProfiler | |
-| `--use_err_as_brr` | if an ERR BED file is provided, use the ERR regions in place of the TBDB regions for breadth of coverage calculations\nNote: this is an experimental option | |
+| `--use_err_as_brr` | if an ERR BED file is provided, use the ERR regions in place of the TBDB regions for breadth of coverage calculations<br>Note: this is an experimental option | |
 | `--tngs_frequency_boundaries` | the frequency boundaries (comma-delimited; `lower_f,upper_f`) for tNGS QC reporting, used in conjunction with `--tngs_read_support_boundaries` | 0.1,0.1 |
 | `--tngs_read_support_boundaries` | the read support boundaries (comma-delimited; `lower_r,upper_r`) for tNGS QC reporting, used in conjunction with `--tngs_frequency_boundaries` | 10,10 |
 
