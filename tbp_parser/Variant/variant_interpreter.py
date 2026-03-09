@@ -186,7 +186,6 @@ class VariantInterpreter:
                 rule_id=rule_id,
                 rationale=self.RULE_TO_RATIONALE.get('whov2', "MISSING RATIONALE") # proximal promoter rationale
             )
-        # Note: rpoB upstream variants outside RRDR -> U (rule 2.2.2.2) (different from other genes)
         elif variant._is_upstream_gene_variant():
             logger.debug("Mutation in upstream gene region")
             return InterpretationResult(

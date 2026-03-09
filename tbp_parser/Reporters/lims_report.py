@@ -35,8 +35,8 @@ def write_lims_report(
 
     # Build the report as a dictionary first, then convert to DataFrame for writing
     lims_report = {
-        "MDL sample accession numbers": sample_id,
-        "M_DST_A01_ID": lims_lineage,
+        "Sample Name": sample_id,
+        "Lineage ID": lims_lineage,
     }
 
     for record in lims_records:
@@ -47,7 +47,7 @@ def write_lims_report(
     # Add metadata
     lims_report["Analysis date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
     lims_report["Operator"] = config.OPERATOR
-    lims_report["M_DST_O01_Lineage"] = detected_lineage
+    lims_report["Lineage"] = detected_lineage
 
     # Write CSV and transposed CSV
     df = pd.DataFrame([lims_report])
