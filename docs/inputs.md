@@ -70,9 +70,101 @@ TNGS_READ_SUPPORT_BOUNDARIES:
 
 #### TBDB Bed File
 
+The TBDB Bed file is the **tab-delimited** file that contains gene regions of interest and their associated antimicrobials. This file is used for quality control calculations. The file should be formatted like the TBDB.bed file in TBProfiler, with the following columns in this order:
+
+1. `chrom`: the chromosome or contig name which must match the chromosome name in the BAM file (e.g. "Chromosome")
+2. `start`: the start position of the gene (e.g. 1)
+3. `end`: the end position of the gene (e.g. 1524)
+4. `locus_name`: the locus name of the gene (e.g. "Rv0001")
+5. `gene_name`: the gene name (e.g. "dnaA")
+
+**Any other columns after the first 5 columns will be ignored**, but can be used to provide additional information about the gene (e.g. associated antimicrobials). For example, the following is a valid TBDB Bed file:
+
+```text
+Chromosome	1	1524	Rv0001	dnaA	isoniazid
+Chromosome	4933	7267	Rv0005	gyrB	levofloxacin,moxifloxacin
+...
+```
+
+Please note that this file *does not* have a header-line. The default file used in tbp-parser was retrieved from [the TBProfiler repository here](https://github.com/jodyphelan/TBProfiler/blob/44ce9b5d361d44b811e212f575283d0ab43da2ed/db/tbdb/genes.bed) with commit hash `44ce9b5`.
+
 #### LIMS Report Format YAML File
 
+[Please see the LIMS report section for more information on this report and its purpose](outputs/lims.md).
+
+Different LIMS systems may require different column formatting for easy import. The LIMS report format YAML file allows users to specify the output column names for the LIMS report output. If this file is not provided, [a default format will be used](https://github.com/theiagen/tbp-parser/blob/main/data/default-lims-report-format.yml). This default includes all gene-drug combinations found in the default TBDB bed file, described above.
+
+The output column names can be customized to contain any text according to your laboratory's needs by providing a custom `lims_report_format_yml` file, which should take the following format:
+
+```yaml
+# do not modify unbracketed text
+# <this text can be fully customized>
+# [this text must match TBProfiler nomenclature for drug and gene names]
+
+- drug: [drug_name]
+  drug_code: <antimicrobial_column_name_in_lims_report>
+  gene_codes:
+    [gene_name]: <column_name_for_gene_drug_combo_in_lims_report> 
+    [gene_name]: <column_name_for_gene_drug_combo_in_lims_report>
+    ...
+- drug: [drug_name]
+  drug_code: <antimicrobial_column_name_in_lims_report>
+  gene_codes: {}
+...
+```
+
+- `drug_name` is the name of the drug **as it appears in TBProfiler** (for example, "rifampicin").
+- `gene_name` is the name of the gene **as it appears in TBProfiler** (for example, "rpoB").
+- `antimicrobial_column_name_in_lims_report` is the **desired name of the output column** in the LIMS report that indicates the highest resistance interpretation for that drug (for example, "RIF").
+- `column_name_for_gene_drug_combo_in_lims_report` is the **desired name of the output column** in the LIMS report that indicates any mutations found in that gene that are responsible for the predicted resistance for that drug (for example, "RIF_rpoB").
+
+For example:
+
+```yaml
+- drug: rifampicin
+    drug_code: RIF
+    gene_codes:
+      rpoB: RIF_rpoB
+- drug: amikacin
+  drug_code: AMK
+  gene_codes:
+    bacA: AMK_bacA
+    ccsA: AMK_ccsA
+    eis: AMK_eis
+...
+```
+
 #### Gene Database File
+
+tbp-parser also includes a *gene database* file that contains a dictionary of the following information for each gene:
+
+1. `locus_tag`: the locus tag of the gene (e.g. "Rv0005")
+2. `gene_name`: the gene name (e.g. "gyrB")
+3. `tier`: the tier of the gene (e.g. "Tier 1")
+4. `promoter_region`: the WHO-specified proxmial promoter region (e.g. "[-108, -1]")
+5. `drugs`: the antimicrobials associated with this gene (e.g. "[levofloxacin, moxifloxacin]")
+
+By default, this database contains information for every gene in the default TBDB bed file listed above. If you would like to include a different gene, or modify the content of existing entries, you can do so by using the following format:
+
+```yaml
+# do not modify unbracketed text
+# text within angle brackets should be replaced with the appropriate information for the gene of interest
+<locus_tag_of_gene>:
+  locus_tag: <locus_tag_of_gene>
+  gene_name: <gene_name>
+  tier: <tier_of_gene>
+  promoter_region: [<WHO-specified_proximal_promoter_regions_start>, <WHO-specified_proximal_promoter_regions_end>]
+  drugs: [<drug_1>, <drug_2>, ...]
+<locus_tag_of_gene2>:
+  ...
+...
+```
+
+If information for your gene of interest is not included, please use the following values as placeholders:
+- for `tier`, use `NA`
+- for `promoter_region`, use `[]`
+
+Content for the `locus_tag`, `gene_name`, and `drugs` fields is required for proper function.
 
 ### Quality Control Arguments
 
@@ -109,7 +201,7 @@ These options are primarily used for tNGS data.
 | `--tngs_frequency_boundaries` | the frequency boundaries (comma-delimited; `lower_f,upper_f`) for tNGS QC reporting, used in conjunction with `--tngs_read_support_boundaries` | 0.1,0.1 |
 | `--tngs_read_support_boundaries` | the read support boundaries (comma-delimited; `lower_r,upper_r`) for tNGS QC reporting, used in conjunction with `--tngs_frequency_boundaries` | 10,10 |
 
-Other tNGS arguments are available for backwards compatibility, but they are not recommended for all analyses. See the help message for details.
+Other tNGS arguments are available for backwards compatibility, but they are not recommended for all analyses. See the help message for details regarding those additional options.
 
 ### Logging Arguments
 

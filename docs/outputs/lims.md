@@ -42,8 +42,8 @@ The output column names can be customized to contain any text according to your 
 
 - `drug_name` is the name of the drug **as it appears in TBProfiler** (for example, "rifampicin").
 - `gene_name` is the name of the gene **as it appears in TBProfiler** (for example, "rpoB").
-- `antimicrobial_column_name_in_lims_report` is the **desired name of the output column** in the LIMS report that indicates the highest resistance interpretation for that drug (for example, "RIF_RESISTANCE").
-- `column_name_for_gene_drug_combo_in_lims_report` is the **desired name of the output column** in the LIMS report that indicates any mutations found in that gene that are responsible for the predicted resistance for that drug (for example, "RIF_RPOB_MUTATIONS").
+- `antimicrobial_column_name_in_lims_report` is the **desired name of the output column** in the LIMS report that indicates the highest resistance interpretation for that drug (for example, "RIF").
+- `column_name_for_gene_drug_combo_in_lims_report` is the **desired name of the output column** in the LIMS report that indicates any mutations found in that gene that are responsible for the predicted resistance for that drug (for example, "RIF_rpoB").
 
 For example:
 
@@ -75,15 +75,14 @@ These miscellaneous columns are not set with the dictionary described above and 
 
 ### **Customizing miscellaneous column names**
 
-To customize these column names in a configuration file, use the following format:
+To customize these column names in a configuration file, either indicate the desired changes with the  `--find_and_replace` input parameter, or include a block in your configuration file with the following format:
 
 ```yaml
-OUTPUT_RENAMING:
-  Sample_Name: "My_Sample_Column"
-  Lineage_ID: "My_Lineage_ID_Column"
-  Analysis_Date: "My_Analysis_Date_Column"
-  Operator: "My_Operator_Column"
-  Lineage: "My_Lineage_Column"
+FIND_AND_REPLACE:
+  rifampicin: "rifampin"
+  fbiD: "Rv2983"
+  mmpR5: "Rv0678"
+  "Sample Name": "sample accession"
 ```
 
-Please note that this will rename every instance of that text in all output reports (all "Sample_Name" will be renamed to "My_Sample_Column" in all output files, etc.).
+Please note that this will rename every instance of that text in **all** output reports (all "Sample_Name" will be renamed to "My_Sample_Column" in all output files, etc.).

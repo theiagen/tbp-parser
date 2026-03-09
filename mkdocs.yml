@@ -19,6 +19,7 @@ theme:
     - navigation.path
     - navigation.tabs
     - navigation.top
+    - navigation.sections
     - navigation.tracking
     - search.highlight
     - search.suggest
