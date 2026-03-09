@@ -25,51 +25,54 @@ The inputs on this page reflect the parameters that are applicable for the comma
 - quality control thresholds
 - text in the output reports (column names, sequencing method, operator name, etc.)
 
-### Configuration File
-
-Instead of providing the input parameters on the command line, the ability to provide a configuration file in YAML format is available.
-
-The configuration file will **overwrite all command-line or global arguments**, except for the `--verbose` and `--debug` arguments. The configuration file can be provided using the `--config` argument. The global variables available can be found above.
-
-To overwriite a variable, please use the following format in the configuration file. The variable names are **case-sensitive**.
-
-Variables found in the `globals.py` file are written in uppercase, while variables provided as command-line arguments are written in lowercase. This is reflected in the example below.
-
-```yaml
-# My laboratory reports "rifampicin" as "rifampin", so I want to rename that text in all of the output files.
-OUTPUT_RENAMING:
-  rifampicin: "rifampin"
-
-# My laboratory only tests for a subset of drugs, so I want to reduce the output of the LIMS report to only those drugs and genes
-# Even though my lab reports rifampicin as rifampin (as indicated in the OUTPUT_RENAMING configuration value above), I need to use the original key here
-DRUG_COLUMNS_TO_GENE_COLUMNS:
-    rifampicin: 
-        MY_UNIQUE_COLUMN_NAME_FOR_RIF:
-            rpoB: MY_UNIQUE_COLUMN_NAME_FOR_RPOB
-    linezolid:
-        MY_UNIQUE_COLUMN_NAME_FOR_LZD:
-            rrl: MY_UNIQUE_COLUMN_NAME_FOR_RRL
-            rplC: MY_UNIQUE_COLUMN_NAME_FOR_RPLC
-
-# overwrite the following input parameters
-min_depth: 15
-output_prefix: "Test"
-tbdb_bed: "/path/to/file"
-
-# only variables that can be found in either globals.py or in the command-line arguments will be used
-extra_variable: "This will be ignored"
-IGNORED_FIELD: 12345  # this will also be ignored
-```
-
 ### File Arguments
 
 These options are used to create standard variables that are used throughout the script. These files were previously global variables in earlier versions of tbp-parser, but are now defined as input arguments to allow for greater customization.
 
-| Short Version | Long Version | Description | Default Value |
-| :------------ | :------------ | :---------- | :------------ |
-| `-b` | `--tbdb_bed` | the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler | [/data/tbdb.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb.bed) |
-| `--lims_report_format_yml` | | an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used | [/data/default-lims-report-format.yml](https://github.com/theiagen/tbp-parser/blob/main/data/default-lims-report-format.yml) |
-| `--gene_database_yml` | | an optional YAML file that specifies the gene database information for the genes of interest; if not provided, a default format will be used | [/data/default-gene-database_2026-03-03.yml](https://github.com/theiagen/tbp-parser/blob/main/data/default-gene-database_2026-03-03.yml) |
+| Name | Description | Default Value |
+| :------------ | :---------- | :------------ |
+| `--config` | the configuration files to use, in YAML format. This argument overrides all other arguments EXCEPT for the other file-type arguments. | |
+| `-b`, `--tbdb_bed` | the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler | [/data/tbdb.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb.bed) |
+| `--lims_report_format_yml` | an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used | [/data/default-lims-report-format.yml](https://github.com/theiagen/tbp-parser/blob/main/data/default-lims-report-format.yml) |
+| `--gene_database_yml` | an optional YAML file that specifies the gene database information for the genes of interest; if not provided, a default format will be used | [/data/default-gene-database_2026-03-03.yml](https://github.com/theiagen/tbp-parser/blob/main/data/default-gene-database_2026-03-03.yml) |
+
+#### Configuration File
+
+Instead of providing the input parameters on the command line, the ability to provide a configuration file in YAML format is available.
+
+The configuration file will **overwrite all command-line arguments**, except for other file arguments. The configuration file can be provided using the `--config` argument.
+
+To overwrite a variable, please use the find and replace variable in the configuration file. This file is **case-sensitive**.
+
+```yaml
+# My laboratory reports "rifampicin" as "rifampin", so I want to rename that text in all of the output files.
+# We also use Rv0678 instead of mmpR5 and Rv2983 instead of fbiD, so I want to rename those as well.
+# I want an output column renamed in the LIMS report from "Sample Name" to "sample accession"
+FIND_AND_REPLACE:
+  rifampicin: "rifampin"
+  fbiD: "Rv2983"
+  mmpR5: "Rv0678"
+  "Sample Name": "sample accession"
+
+# I can also overwrite any input parameters, like so. 
+# This makes it easy to rerun the same analysis on different 
+#  samples without rewriting all of the parameters each time.
+MIN_FREQUENCY: 0.1
+MIN_PERCENT_LOCI_COVERED: 0.7
+TNGS: true
+TNGS_FREQUENCY_BOUNDARIES:
+- 0.1
+- 0.95
+TNGS_READ_SUPPORT_BOUNDARIES:
+- 100
+- 500
+```
+
+#### TBDB Bed File
+
+#### LIMS Report Format YAML File
+
+#### Gene Database File
 
 ### Quality Control Arguments
 
@@ -101,9 +104,12 @@ These options are primarily used for tNGS data.
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
 | `--tngs` | Indicates that the input data was generated using a tNGS protocol. Turns on tNGS-specific features | false |
-| `-e` | `--err_bed` | the BED file containing the regions to use for calculating the error rate for tNGS data; should be formatted like the ERR.bed file in TBProfiler | |
-| `--rrs_frequency` | The minimum frequency for a mutation in the rrs gene to pass QC (0.1 -> 10%); this is a separate argument from `--min_frequency` because the rrs gene is known to have higher error rates in tNGS data, so a higher frequency threshold may be desired for this gene | 0.1 |
-| `--
+| `-e`, `--err_bed` | the BED file containing the regions to use for calculating the error rate for tNGS data; should be formatted like the ERR.bed file in TBProfiler | |
+| `--use_err_as_brr` | if an ERR BED file is provided, use the ERR regions in place of the TBDB regions for breadth of coverage calculations\nNote: this is an experimental option | |
+| `--tngs_frequency_boundaries` | the frequency boundaries (comma-delimited; `lower_f,upper_f`) for tNGS QC reporting, used in conjunction with `--tngs_read_support_boundaries` | 0.1,0.1 |
+| `--tngs_read_support_boundaries` | the read support boundaries (comma-delimited; `lower_r,upper_r`) for tNGS QC reporting, used in conjunction with `--tngs_frequency_boundaries` | 10,10 |
+
+Other tNGS arguments are available for backwards compatibility, but they are not recommended for all analyses. See the help message for details.
 
 ### Logging Arguments
 
@@ -111,5 +117,4 @@ These options change the verbosity of the `stdout` log.
 
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
-| `--verbose` | Increases the output verbosity to describe which stage of the analysis is currently running | false |
 | `--debug` | The highest level of output verbosity detailing every step of the analysis and logic implemented; overwrites --verbose | false |
