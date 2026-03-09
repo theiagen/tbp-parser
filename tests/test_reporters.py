@@ -104,9 +104,9 @@ class TestWriteLimsReport:
         rec.drug_target_value = "No mutations detected"
 
         df = _run_report(mock_config, tmp_path, write_lims_report, "lims_report", [rec], "DNA of M. tuberculosis", "test_sample", "lineage4")
-        assert df["M_DST_A01_ID"].iloc[0] == "DNA of M. tuberculosis"
-        assert df["M_DST_O01_Lineage"].iloc[0] == "lineage4"
-        assert df["MDL sample accession numbers"].iloc[0] == "test_sample"
+        assert df["Lineage ID"].iloc[0] == "DNA of M. tuberculosis"
+        assert df["Lineage"].iloc[0] == "lineage4"
+        assert df["Sample Name"].iloc[0] == "test_sample"
 
     def test_find_and_replace_applied_to_drug_target_value(self, mock_config, tmp_path):
         """FIND_AND_REPLACE should substitute embedded drug names in drug_target_value strings."""
