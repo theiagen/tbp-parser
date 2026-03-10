@@ -146,6 +146,63 @@ class TestDetermineInterpretation:
         assert v.looker_interpretation == "U"
         assert v.rationale == "Expert rule 1.2. Novel drug targets"
 
+    def test_rule1_2_rrl_in_target_promoter(self, interpreter, make_variant):
+        """rrl mutation in target promoter without WHO → U, rule 1.2"""
+        v = make_variant(
+            gene_name="rrl", gene_id="EBG00000313339",
+            confidence="No WHO annotation",
+            type="missense_variant",
+            nucleotide_change="c.-30A>G",
+            protein_change="",
+        )
+        result = interpreter.interpret(v)
+
+        assert result.mdl_interpretation == "U"
+        assert result.looker_interpretation == "U"
+        assert result.rule_id == "1.2"
+
+        interpreter.determine_interpretation([v])
+        assert v.mdl_interpretation == "U"
+        assert v.looker_interpretation == "U"
+
+    def test_rule1_2_rrl_critical_region(self, interpreter, make_variant):
+        """rrl mutation in critical region (nt 2003-2367) without WHO → U, rule 1.2"""
+        v = make_variant(
+            gene_name="rrl", gene_id="EBG00000313339",
+            confidence="No WHO annotation",
+            type="missense_variant",
+            nucleotide_change="c.2100A>G",
+            protein_change="",
+        )
+        result = interpreter.interpret(v)
+
+        assert result.mdl_interpretation == "U"
+        assert result.looker_interpretation == "U"
+        assert result.rule_id == "1.2"
+
+        interpreter.determine_interpretation([v])
+        assert v.mdl_interpretation == "U"
+        assert v.looker_interpretation == "U"
+
+    def test_rule1_2_rrl_outside_critical_region(self, interpreter, make_variant):
+        """rrl mutation outside critical regions without WHO → S, rule 1.2"""
+        v = make_variant(
+            gene_name="rrl", gene_id="EBG00000313339",
+            confidence="No WHO annotation",
+            type="missense_variant",
+            nucleotide_change="c.100A>G",
+            protein_change="",
+        )
+        result = interpreter.interpret(v)
+
+        assert result.mdl_interpretation == "S"
+        assert result.looker_interpretation == "S"
+        assert result.rule_id == "1.2"
+
+        interpreter.determine_interpretation([v])
+        assert v.mdl_interpretation == "S"
+        assert v.looker_interpretation == "S"
+
     # =========================================================================
     # Section 2: WHO Expert Rule Genes (katG, pncA, ethA, gid, rpoB)
     # =========================================================================

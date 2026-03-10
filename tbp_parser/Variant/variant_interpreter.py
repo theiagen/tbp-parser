@@ -240,13 +240,16 @@ class VariantInterpreter:
             """
             logger.debug(f"Applying rule 1.1 for {variant.gene_name} with WHO confidence")
             return self._interpret_with_who_confidence(variant, rule_id="1.1")
-        
+
         def _apply_rule_1_2_no_who_confidence(self, variant: Variant) -> InterpretationResult:
             """Rule 1.2: CDC genes WITHOUT WHO confidence.
 
             Genes: mmpR5 (Rv0678), atpE, pepQ, mmpL5, mmpS5, rrl, rplC
             Interpretation based on location and mutation type.
             """
+
+            logger.debug(f"Applying rule 1.2 for {variant.gene_name} without WHO confidence")
+
             def _apply_rule_1_2_rrl(self, variant: Variant) -> InterpretationResult:
                 """Rule 1.2 special handling for rrl gene.
 
@@ -255,7 +258,7 @@ class VariantInterpreter:
                 SPECIAL_POSITIONS = {
                     "rrl": [[2003, 2367], [2449, 3056]], # nt position ranges
                 }
-                
+
                 position_nt = Helper.get_position(variant.nucleotide_change)
 
                 # Check target promoter
@@ -268,7 +271,7 @@ class VariantInterpreter:
                         rule_id="1.2",
                         rationale=self.RULE_TO_RATIONALE.get('whov2', "MISSING RATIONALE") # proximal promoter rationale
                     )
-                    
+
                 # Check if in critical regions (nt positions 2003-2367 and 2449-3056)
                 if Helper.is_mutation_within_range(position_nt, SPECIAL_POSITIONS["rrl"]):
                     logger.debug("rrl mutation in critical region (2003-2367 or 2449-3056); interpretation is 'U'")
@@ -278,9 +281,8 @@ class VariantInterpreter:
                         mdl_interpretation="U",
                         rule_id="1.2",
                         rationale=self.RULE_TO_RATIONALE.get('1.2', "MISSING RATIONALE")
-
                     )
-                    
+
                 # Outside critical regions and promoter
                 logger.debug("rrl mutation outside critical regions and promoter; interpretation is 'S'")
                 return InterpretationResult(
@@ -291,11 +293,9 @@ class VariantInterpreter:
                     rationale=self.RULE_TO_RATIONALE.get('1.2', "MISSING RATIONALE")
                 )
 
-            logger.debug(f"Applying rule 1.2 for {variant.gene_name} without WHO confidence")
-
             # Special handling for rrl gene (has specific nucleotide position ranges)
             if variant.gene_name == "rrl":
-                return _apply_rule_1_2_rrl(variant)
+                return _apply_rule_1_2_rrl(self, variant)
 
             # For other CDC genes: check promoter, upstream, then ORF
             logger.debug(f"Applying default interpretaion without WHO confidence for {variant.gene_name}")
@@ -305,7 +305,7 @@ class VariantInterpreter:
             return _apply_rule_1_1_who_confidence(self, variant)
         else:
             return _apply_rule_1_2_no_who_confidence(self, variant)
-   
+
     # =========================================================================
     # SECTION 2 RULE METHODS - WHO Expert Rule Genes
     # =========================================================================
@@ -328,7 +328,10 @@ class VariantInterpreter:
             """Rule 2.2: WHO genes WITHOUT WHO confidence.
 
             Routes to loss-of-function (2.2.1) or rpoB (2.2.2) based on gene.
-            """               
+            """
+
+            logger.debug(f"Applying rule 2.2 for {variant.gene_name} without WHO confidence")
+
             def _apply_rule_2_2_1_1_lof_in_orf(self, variant: Variant) -> InterpretationResult:
                 """Rule 2.2.1.1: Loss-of-function expert rule for katG, pncA, ethA, gid, (NOT rpoB).
 
@@ -360,6 +363,9 @@ class VariantInterpreter:
 
                 Routes to RRDR (2.2.2.1) or non-RRDR (2.2.2.2) based on codon position.
                 """
+
+                logger.debug(f"Applying rule 2.2.2 for rpoB")
+
                 def _apply_rule_2_2_2_1_rpob_rrdr(self, variant: Variant) -> InterpretationResult:
                     """Rule 2.2.2.1: rpoB mutation within RRDR (codons 426-452).
 
@@ -393,11 +399,10 @@ class VariantInterpreter:
                     """
                     logger.debug("Applying rule 2.2.2.2 for rpoB outside RRDR; special interpretaion without WHO confidence")
                     return self._interpret_without_who_confidence(variant, rule_id="2.2.2.2")
-                
+
                 SPECIAL_POSITIONS = {
                     "rpoB": [426, 452], # RRDR codon range
                 }
-                logger.debug(f"Applying rule 2.2.2 for rpoB")
                 position_aa = Helper.get_position(variant.protein_change)
 
                 # Check if within RRDR (codons 426-452)
@@ -447,6 +452,9 @@ class VariantInterpreter:
 
             Routes to specific gene rules or default fallback.
             """
+
+            logger.debug(f"Applying rule 3.2 for {variant.gene_name}")
+
             def _apply_rule_3_2_1_rrs(self, variant: Variant) -> InterpretationResult:
                 """Rule 3.2.1: rrs gene rules.
 
@@ -545,7 +553,6 @@ class VariantInterpreter:
                 logger.debug(f"Applying default interpretaion without WHO confidence for {variant.gene_name}")
                 return self._interpret_without_who_confidence(variant, rule_id="3.2.4")
 
-            logger.debug(f"Applying rule 3.2 for {variant.gene_name}")
             gene = variant.gene_name
 
             # rrs has specific position rules
