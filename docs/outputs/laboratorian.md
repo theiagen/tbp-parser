@@ -33,8 +33,6 @@ Because of how a particular mutation may contribute resistance to different drug
 
 Any genes that do _not_ have any mutations are also included in the laboratorian report with NA or WT in the appropriate field. This results in a report with many rows and rows with very similar values.
 
-The laboratorian report contains the "complete picture" of the sample and is incredibly useful for understanding the sample’s drug resistance profile.
-
 ## Customizing column names
 
 To overwrite any of the column names, please use the following format in a configuration file or use the command-line parameter `--find_and_replace`:

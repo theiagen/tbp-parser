@@ -20,18 +20,19 @@ If the `--tngs` flag is used, the report contains the following fields:
 | Column name | Explanation |
 | :---------- | :---------- |
 | Gene | The name of the gene or locus |
-| Coverage_Breadth_reportableQC_region | The percent of the gene that is covered at a depth greater than the `--min_depth` value |
+| Coverage_Breadth_reportableQC_region | The percent of the gene that is covered at a depth greater than the `--min_depth` value; only for the region specified in the `--tbdb_bed` |
 | Average_Locus_Coverage | The average read depth across the entire gene |
 | QC_Warning | Indicates if any deletions were identified in the gene which may contribute to lower than expected coverage |
+| Coverage_Breadth_R_expert-rule_region | The percent of the gene that is covered at a depth greater than the `--min_depth` value but only for the region of the gene indicated by the `--err_bed` file |
 
 ## Customizing column names
 
 To overwrite any of the column names in a configuration file, use the following format:
 
 ```yaml
-OUTPUT_RENAMING:
-  Gene: "My_Gene_Column"
-  Percent_Coverage: "My_Percent_Coverage_Column"
+FIND_AND_REPLACE:
+  "Gene": "My_Gene_Column"
+  "Percent_Coverage": "My_Percent_Coverage_Column"
   ...
 ```
 
