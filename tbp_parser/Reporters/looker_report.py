@@ -9,7 +9,7 @@ from Utilities import Configuration, apply_find_and_replace
 logger = logging.getLogger(__name__)
 
 # Looker preserves interim designations
-RESISTANCE_RANKING = {
+LOOKER_RESISTANCE_RANKING = {
     "R": 6,
     "R-Interim": 5,
     "U": 4,
@@ -46,8 +46,8 @@ def write_looker_report(
         if variant.drug not in drug_map:
             drug_map[variant.drug] = variant.looker_interpretation
         else:
-            current_rank = RESISTANCE_RANKING.get(drug_map[variant.drug], -1)
-            new_rank = RESISTANCE_RANKING.get(variant.looker_interpretation or "NA", -1) # "NA" is redundant but pylance was complaining
+            current_rank = LOOKER_RESISTANCE_RANKING.get(drug_map[variant.drug], -1)
+            new_rank = LOOKER_RESISTANCE_RANKING.get(variant.looker_interpretation or "NA", -1) # "NA" is redundant but pylance was complaining
             if new_rank > current_rank:
                 drug_map[variant.drug] = variant.looker_interpretation
 

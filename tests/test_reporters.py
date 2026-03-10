@@ -1,9 +1,11 @@
 import pandas as pd
+import pytest
+
 from pathlib import Path
 
 from Reporters.lab_report import write_laboratorian_report
 from Reporters.lims_report import write_lims_report
-from Reporters.looker_report import write_looker_report
+from Reporters.looker_report import write_looker_report, LOOKER_RESISTANCE_RANKING
 from Reporters.coverage_report import write_coverage_report
 from Coverage.coverage_data import ERRCoverage
 from LIMS import LIMSRecord, LIMSGeneCode
@@ -125,6 +127,20 @@ class TestWriteLimsReport:
 
 
 class TestWriteLookerReport:
+
+    @pytest.mark.parametrize("higher,lower", [
+        ("R", "R-Interim"),
+        ("R-Interim", "U"),
+        ("U", "S-Interim"),
+        ("S-Interim", "S"),
+        ("S", "WT"),
+        ("WT", "Insufficient Coverage"),
+        ("Insufficient Coverage", "NA"),
+    ])
+    def test_looker_resistance_ranking_order(self, higher, lower):
+        ranking = LOOKER_RESISTANCE_RANKING
+        assert ranking[higher] > ranking[lower]
+
     def test_writes_looker_csv(self, mock_config, make_variant, tmp_path):
         v = make_variant(gene_name="rpoB", drug="rifampicin")
         v.looker_interpretation = "R"
