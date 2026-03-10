@@ -102,12 +102,16 @@ def main():
     # Write coverage reports
     write_coverage_report(
         sample_name=SAMPLE_ID,
-        coverage_map=TARGET_COVERAGE_MAP,
-    )
-    write_coverage_report(
-        sample_name=SAMPLE_ID,
         coverage_map=LOCUS_COVERAGE_MAP,
     )
+
+    # Only write target coverage report if there are more targets than loci (i.e. some genes have multiple/split targets)
+    # Otherwise the target coverage report would be redundant with the locus coverage report
+    if len(TARGET_COVERAGE_MAP) > len(LOCUS_COVERAGE_MAP):
+        write_coverage_report(
+            sample_name=SAMPLE_ID,
+            coverage_map=TARGET_COVERAGE_MAP,
+        )
 
 if __name__ == "__main__":
     main()

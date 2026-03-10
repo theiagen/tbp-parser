@@ -46,6 +46,8 @@ def write_coverage_report(
             "gene_name": gene_name,
             "percent_coverage": f"{coverage.breadth_of_coverage*100:.3f}",
             "average_depth": f"{coverage.average_depth:.3f}",
+            **({"err_percent_coverage": f"{coverage.err_coverage.breadth_of_coverage*100:.3f}"} if coverage.err_coverage else {}),
+            **({"err_average_depth": f"{coverage.err_coverage.average_depth:.3f}"} if coverage.err_coverage else {}),
             "qc_warning": qc_warning,
         })
 
@@ -53,4 +55,4 @@ def write_coverage_report(
     df = apply_find_and_replace(df, config.FIND_AND_REPLACE)
     df.to_csv(output_path, index=False)  # type: ignore
 
-    logger.info(f"Target coverage report written to {output_path}") # type: ignore
+    logger.info(f"Coverage report written to {output_path}") # type: ignore
