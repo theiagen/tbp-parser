@@ -76,9 +76,9 @@ For example:
 
 ```yaml
 - drug: rifampicin
-    drug_code: RIF
-    gene_codes:
-      rpoB: RIF_rpoB
+  drug_code: RIF
+  gene_codes:
+    rpoB: RIF_rpoB
 - drug: amikacin
   drug_code: AMK
   gene_codes:
