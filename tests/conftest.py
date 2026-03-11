@@ -32,6 +32,7 @@ def mock_config():
         "RPOB449_FREQUENCY": 0.10,
     }
     config.USE_ERR_AS_BRR = False
+    config.lims_report_format_yml = str(Path(__file__).parent.parent / "data" / "default-lims-report-format.yml")
     return config
 
 @pytest.fixture(autouse=True)

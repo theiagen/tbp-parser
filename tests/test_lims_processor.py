@@ -1,5 +1,5 @@
 import pytest
-from LIMS import LIMSProcessor, LIMSRecord, LIMSGeneCode
+from LIMS import LIMSProcessor, LIMSRecord, LIMSGeneCode, parse_lims_yml_file
 from Coverage.coverage_data import ERRCoverage
 
 @pytest.fixture
@@ -19,6 +19,13 @@ def make_lims_record():
             gene_codes = {"rpoB": LIMSGeneCode(gene_code="M_DST_D02_rpoB")}
         return LIMSRecord(drug=drug, drug_code=drug_code, gene_codes=gene_codes)
     return _make
+
+class TestParseLimsYmlFile:
+    def test_parse_lims_yml_num_records(self, mock_config):
+        """Test that the default LIMS YAML file is parsed correctly"""
+        result = parse_lims_yml_file(mock_config.lims_report_format_yml)
+        assert len(result) == 18
+        assert all(isinstance(r, LIMSRecord) for r in result)
 
 class TestResistanceRanking:
     @pytest.mark.parametrize("higher,lower", [
