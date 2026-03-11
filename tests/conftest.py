@@ -45,10 +45,10 @@ def setup_gene_database():
 @pytest.fixture
 def make_bed_record():
     """Module-level helper to construct BedRecord objects with sensible defaults."""
-    def _make(start, end, **kwargs):
-        params = {"chrom": "Chromosome", "locus_tag": "Rv0000", "gene_name": "geneA"}
+    def _make(**kwargs):
+        params = {"chrom": "Chromosome", "start": 100, "end": 200, "locus_tag": "Rv0000", "gene_name": "geneA"}
         params.update(kwargs)
-        bed_record = BedRecord(start=start, end=end, **params)  # type: ignore
+        bed_record = BedRecord(**params)  # type: ignore
         return bed_record
     return _make
 

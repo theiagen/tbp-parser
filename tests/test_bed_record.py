@@ -1,6 +1,24 @@
 import pytest
 from Coverage import BedRecord, parse_bed_file
 
+class TestBedRecordEquality:
+    @pytest.mark.parametrize("field, original_value, different_value", [
+            ("chrom", "chr1", "chr2"),
+            ("start", 100, 400),
+            ("end", 200, 500),
+            ("locus_tag", "Rv0000", "Rv9999"),
+            ("gene_name", "geneA",  "geneZ"),
+    ])
+    def test_unequal_records(self, make_bed_record, field, original_value, different_value):
+        rec1 = make_bed_record(**{field: original_value})
+        rec2 = make_bed_record(**{field: different_value})
+        assert rec1 != rec2
+
+    def test_non_bed_record_equality(self, make_bed_record):
+        rec1 = make_bed_record()
+        rec2 = {"chrom": rec1.chrom, "start": rec1.start, "end": rec1.end, "locus_tag": rec1.locus_tag, "gene_name": rec1.gene_name}
+        assert rec1 != rec2
+
 class TestBedRecordFromBedLine:
     def test_basic_parsing(self):
         line = "Chromosome\t759807\t763325\tRv0667\trpoB"
@@ -58,8 +76,8 @@ class TestBedRecordOverlaps:
         (150, 250, True),   # fully contained within rec_a
     ], ids=["left-overlap", "no-overlap", "adjacent", "full-containment"])
     def test_overlaps_with(self, make_bed_record, b_start, b_end, expected):
-        a = make_bed_record(100, 300, locus_tag="Rv0000", gene_name="geneA")
-        b = make_bed_record(b_start, b_end, locus_tag="Rv0001", gene_name="geneB")
+        a = make_bed_record(start=100, end=300, locus_tag="Rv0000", gene_name="geneA")
+        b = make_bed_record(start=b_start, end=b_end, locus_tag="Rv0001", gene_name="geneB")
         assert a.overlaps_with(b) is expected
 
 
@@ -71,13 +89,13 @@ class TestBedRecordOverlappingCoords:
         ((100, 200), (200, 300), (200, 200)), # adjacent (single-point overlap)
     ], ids=["left-overlap", "right-overlap", "full-containment", "adjacent"])
     def test_overlapping_coords(self, make_bed_record, a_coords, b_coords, expected):
-        a = make_bed_record(a_coords[0], a_coords[1], locus_tag="Rv0000", gene_name="geneA")
-        b = make_bed_record(b_coords[0], b_coords[1], locus_tag="Rv0001", gene_name="geneB")
+        a = make_bed_record(start=a_coords[0], end=a_coords[1], locus_tag="Rv0000", gene_name="geneA")
+        b = make_bed_record(start=b_coords[0], end=b_coords[1], locus_tag="Rv0001", gene_name="geneB")
         assert a.overlapping_coords(b) == expected
 
     def test_no_overlap(self, make_bed_record):
-        a = make_bed_record(100, 200, locus_tag="Rv0000", gene_name="geneA")
-        b = make_bed_record(300, 400, locus_tag="Rv0001", gene_name="geneB")
+        a = make_bed_record(start=100, end=200, locus_tag="Rv0000", gene_name="geneA")
+        b = make_bed_record(start=300, end=400, locus_tag="Rv0001", gene_name="geneB")
         with pytest.raises(Exception, match="No overlap"):
             a.overlapping_coords(b)
 
@@ -90,8 +108,8 @@ class TestBedRecordGetNonOverlappingPositions:
         ((50, 250), (100, 200), set(range(50, 100)) | set(range(201, 251))), # a fully encompasses b -> non-overlapping = [50,99] ∪ [201,250]
     ], ids=["left-overlap", "right-overlap", "full-containment", "fully-encompassing"])
     def test_get_non_overlapping_positions(self, make_bed_record, a_coords, b_coords, expected_positions):
-        a = make_bed_record(a_coords[0], a_coords[1], locus_tag="Rv0000", gene_name="geneA")
-        b = make_bed_record(b_coords[0], b_coords[1], locus_tag="Rv0001", gene_name="geneB")
+        a = make_bed_record(start=a_coords[0], end=a_coords[1], locus_tag="Rv0000", gene_name="geneA")
+        b = make_bed_record(start=b_coords[0], end=b_coords[1], locus_tag="Rv0001", gene_name="geneB")
         assert a._get_non_overlapping_positions([b]) == expected_positions
 
 
@@ -102,8 +120,8 @@ class TestBedRecordGetNonOverlappingCoords:
         ((100, 400), (200, 300), [(100, 199), (301, 400)]), # a=[100,400], b=[200,300] (b inside a) -> non-overlap = [(100,199), (301,400)]
     ], ids=["fully-overlapped", "partial", "fully-encompassing"])
     def test_get_non_overlapping_coords(self, make_bed_record, a_coords, b_coords, expected_coords):
-        a = make_bed_record(a_coords[0], a_coords[1], locus_tag="Rv0000", gene_name="geneA")
-        b = make_bed_record(b_coords[0], b_coords[1], locus_tag="Rv0001", gene_name="geneB")
+        a = make_bed_record(start=a_coords[0], end=a_coords[1], locus_tag="Rv0000", gene_name="geneA")
+        b = make_bed_record(start=b_coords[0], end=b_coords[1], locus_tag="Rv0001", gene_name="geneB")
         coords = a.get_non_overlapping_coords([b])
         assert sorted(coords) == sorted(expected_coords)
 
@@ -111,8 +129,8 @@ class TestBedRecordGetNonOverlappingCoords:
 class TestBedRecordGetNonOverlappingReads:
     def test_reads_from_non_overlapping_positions_only(self, make_bed_record):
         # a=[100,200], b=[150,250] -> non-overlapping for a is [100,149]
-        a = make_bed_record(100, 200, locus_tag="Rv0000", gene_name="geneA")
-        b = make_bed_record(150, 250, locus_tag="Rv0001", gene_name="geneB")
+        a = make_bed_record(start=100, end=200, locus_tag="Rv0000", gene_name="geneA")
+        b = make_bed_record(start=150, end=250, locus_tag="Rv0001", gene_name="geneB")
 
         a.reads_by_position = {
             110: ["read1", "read2"],  # non-overlapping

@@ -5,9 +5,8 @@ from pathlib import Path
 def setup_logger(
     output_prefix: Path,
     level: int,
-    ):
+) -> None:
     """Configure logging for the entire application."""
-
 
     logging.basicConfig(
         encoding='utf-8',

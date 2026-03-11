@@ -6,7 +6,7 @@ class TestPopulateReadsByPosition:
         calc = make_cov_calc(cov_start=0, cov_end=100, read_length=10)
         self.config = calc.config
 
-        record1 = make_bed_record(1, 50, locus_tag="Rv0000", gene_name="geneA")
+        record1 = make_bed_record(start=1, end=50, locus_tag="Rv0000", gene_name="geneA")
         calc.populate_reads_by_position([record1])
         expected = {
             1: ["read1", "read1"], # counting mates
@@ -35,8 +35,8 @@ class TestResolveOverlappingRegions:
         calc = make_cov_calc(cov_start=0, cov_end=100, read_length=10)
         self.config = calc.config
 
-        record1 = make_bed_record(10, 60, locus_tag="Rv0000", gene_name="geneA")
-        record2 = make_bed_record(40, 90, locus_tag="Rv0000", gene_name="geneB")
+        record1 = make_bed_record(start=10, end=60, locus_tag="Rv0000", gene_name="geneA")
+        record2 = make_bed_record(start=40, end=90, locus_tag="Rv0000", gene_name="geneB")
         all_records = [record1, record2]
 
         calc.populate_reads_by_position(all_records)
@@ -118,7 +118,7 @@ class TestGenerateCoverageMaps:
         self.config = calc.config
 
         # coverage only covers 50-100, so reads_by_position will be empty.
-        record = make_bed_record(5, 20, locus_tag="Rv0000", gene_name="geneA")
+        record = make_bed_record(start=5, end=20, locus_tag="Rv0000", gene_name="geneA")
         locus_map, target_map = calc.generate_coverage_maps([record])
         assert target_map["geneA"].breadth_of_coverage == 0.0
         assert target_map["geneA"].average_depth == 0.0
@@ -131,7 +131,7 @@ class TestGenerateCoverageMaps:
         self.config = calc.config
 
         # each position from 50-50 should have 10 read pairs,
-        record = make_bed_record(50, 60, locus_tag="Rv0000", gene_name="geneA")
+        record = make_bed_record(start=50, end=60, locus_tag="Rv0000", gene_name="geneA")
         calc.populate_reads_by_position([record])
 
         locus_map, target_map = calc.generate_coverage_maps([record])
@@ -146,7 +146,7 @@ class TestGenerateCoverageMaps:
         self.config = calc.config
 
         # each position from 50-50 should have 10 read pairs,
-        record = make_bed_record(50, 60, locus_tag="Rv0000", gene_name="geneA")
+        record = make_bed_record(start=50, end=60, locus_tag="Rv0000", gene_name="geneA")
         calc.populate_reads_by_position([record])
 
         locus_map, target_map = calc.generate_coverage_maps([record])
@@ -161,9 +161,9 @@ class TestComplexOverlappingRecords:
         calc = make_cov_calc(cov_start=0, cov_end=100, read_length=10)
         calc.config.MIN_DEPTH = 8
         calc.config.TNGS = True
-        record1 = make_bed_record(1, 40, locus_tag="Rv0000", gene_name="geneA")
-        record2 = make_bed_record(25, 75, locus_tag="Rv0000", gene_name="geneB")
-        record3 = make_bed_record(55, 100, locus_tag="Rv0000", gene_name="geneC")
+        record1 = make_bed_record(start=1, end=40, locus_tag="Rv0000", gene_name="geneA")
+        record2 = make_bed_record(start=25, end=75, locus_tag="Rv0000", gene_name="geneB")
+        record3 = make_bed_record(start=55, end=100, locus_tag="Rv0000", gene_name="geneC")
         calc.populate_reads_by_position([record1, record2, record3])
         return calc, record1, record2, record3
 
