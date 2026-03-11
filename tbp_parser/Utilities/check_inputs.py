@@ -103,32 +103,6 @@ def is_boundary_valid(boundary_string: str) -> str:
 
     return boundary_string
 
-def check_dependency_exists() -> None:
-    """This function confirms that samtools is installed and available; if it is
-    not, the program exits with an error message.
-    """
-    print("Checking for samtools installation...")
-    try:
-      result = subprocess.run(
-          ["samtools", "--version"],
-          stdout=subprocess.PIPE,
-          stderr=subprocess.PIPE,
-          encoding='utf-8',
-          errors='replace',
-          check=True,
-          text=True,
-      )
-      version = result.stdout.split('\n')[0]
-      logger.info(f"Found samtools: {version}")
-    except FileNotFoundError:
-        # samtools not found
-        logger.error("Error: samtools not found. Please install samtools and try again.")
-        sys.exit(1)
-    except subprocess.CalledProcessError as e:
-        # samtools found but failed to execute properly
-        logger.error(f"samtools found but failed to run properly: {e.stderr.strip()}")
-        sys.exit(1)
-
 def check_bed_for_lims_genes(bed_records, lims_records) -> None:
     """Checks that the provided LIMS format yml file has an associated BedRecord for LIMS report coverage calculations.
 

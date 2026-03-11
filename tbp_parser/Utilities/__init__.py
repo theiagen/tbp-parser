@@ -10,7 +10,6 @@ from Utilities.check_inputs import (
     is_bam_valid,
     is_bed_valid,
     is_optional_file_valid,
-    check_dependency_exists,
     check_bed_for_lims_genes,
 )
 
@@ -24,7 +23,6 @@ __all__ = [
     'is_bam_valid',
     'is_bed_valid',
     'is_optional_file_valid',
-    'check_dependency_exists',
     'check_bed_for_lims_genes',
     'apply_find_and_replace',
 ]

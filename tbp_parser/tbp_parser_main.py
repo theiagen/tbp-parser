@@ -2,9 +2,8 @@ import logging
 from arguments import parse_arguments
 from Utilities import (
     Configuration,
-    setup_logger,
     GeneDatabase,
-    check_dependency_exists,
+    setup_logger,
     check_bed_for_lims_genes,
 )
 from Coverage import (
@@ -35,10 +34,9 @@ def main():
         level=logging.DEBUG if options.debug else logging.INFO,
     )
 
+    # Set up Configuration and GeneDatabase instances to be used throughout
     config = Configuration(options)
     gdb = GeneDatabase(config.gene_database_yml)
-    # Perform necessary input checks before processing
-    check_dependency_exists()
 
     # Check entries match between LIMS and BED input files before processing
     lims_records = parse_lims_yml_file(config.lims_report_format_yml)
