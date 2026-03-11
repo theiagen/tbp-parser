@@ -121,6 +121,33 @@ class TestOverlapsRange:
         assert tc.overlaps_range(v.absolute_start, v.absolute_end) is False
 
 
+class TestERRWithinCoords:
+    """Test that Locus/TargetCoverage with an attached ERRCoverage validates that the ERR coords are within bounds."""
+    @pytest.mark.parametrize("err_coords", [
+        [(140, 160)], # fully within target/locus
+        [(100, 200)], # exactly matches target/locus (not strictly within)
+    ])
+    def test_err_within_coords_valid(self, make_target_coverage, make_locus_coverage, err_coords):
+        err = ERRCoverage(coords=err_coords, breadth_of_coverage=0.95, average_depth=50.0)
+        tc = make_target_coverage(coords=[(100, 200)], err_coverage=err)
+        lc = make_locus_coverage(coords=[(100, 200)], err_coverage=err)
+        assert tc.err_coverage == err
+        assert lc.err_coverage == err
+
+    @pytest.mark.parametrize("err_coords", [
+        [(90, 110)], # starts before target/locus
+        [(190, 210)], # ends after target/locus
+        [(200, 210)], # starts exactly at end boundary but extends beyond
+        [(90, 100)],  # ends exactly at start boundary but starts before
+        [(50, 250)] # completely encompasses target/locus
+    ])
+    def test_err_within_coords_invalid(self, make_target_coverage, make_locus_coverage, err_coords):
+        err = ERRCoverage(coords=err_coords, breadth_of_coverage=0.95, average_depth=50.0)
+        with pytest.raises(ValueError):
+            make_target_coverage(coords=[(100, 200)], err_coverage=err)
+
+        with pytest.raises(ValueError):
+            make_locus_coverage(coords=[(100, 200)], err_coverage=err)
 class TestContainsValidDeletion:
     def test_contains_valid_deletion(self, make_variant):
         del_variant = make_variant(nucleotide_change="c.1_100del", pos=150)

@@ -241,6 +241,14 @@ class TestResolveDrugTarget:
 
 
 class TestProcessLimsMtbcId:
+    def test_get_pnca_his57asp_variants(self, processor, make_variant):
+        v1 = make_variant(gene_name="pncA", drug="pyrazinamide", protein_change="p.His57Asp")
+        v2 = make_variant(gene_name="pncA", drug="pyrazinamide", protein_change="p.Ser104Arg")
+        v3 = make_variant(gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
+        variants = [v1, v2, v3]
+        pnca_variants = processor._get_pnca_his57asp_variants(variants)
+        assert pnca_variants == [v1]
+
     def test_wgs_lineage4_detected(self, processor, make_lims_record, make_locus_coverage):
         lims_records = [make_lims_record()]
         locus_coverage_map = {"Rv0667": make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=1.0)}
