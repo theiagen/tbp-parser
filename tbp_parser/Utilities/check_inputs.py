@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import logging
+import pysam
 
 from Utilities import GeneDatabase
 
@@ -46,13 +47,12 @@ def is_bam_valid(filename: str) -> str:
     Returns:
         String: The name of the file if valid and accessible
     """
-    if not os.path.exists(filename) and (filename != "-" and not filename.endswith(".bam")):
-        logger.error(f"{filename} cannot be accessed or is missing the BAM extension")
-        raise argparse.ArgumentTypeError("{0} cannot be accessed or is missing the BAM extension".format(filename))
-    bai_filename = filename + ".bai"
-    if not os.path.exists(bai_filename) and (bai_filename != "-"):
-        logger.error(f"Cannot find the BAI file for this BAM: {bai_filename}")
-        raise argparse.ArgumentTypeError("Cannot find the BAI file for this BAM")
+    try:
+        with pysam.AlignmentFile(filename, "rb") as bam:
+            bam.check_index()
+    except (OSError, AttributeError, ValueError) as e:
+        logger.error(f"Invalid BAM or missing index for '{filename}': {e}")
+        raise argparse.ArgumentTypeError(f"Invalid BAM or missing index for '{filename}': {e}")
     return filename
 
 def is_bed_valid(filename: str) -> str:

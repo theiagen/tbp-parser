@@ -39,9 +39,9 @@ def parse_arguments():
         epilog = "Please contact support@theiagen.com with any questions",
         formatter_class = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=10))
     parser.add_argument("input_json",
-                        help="the JSON file produced by TBProfiler", type=is_file_valid)
+                        help="the JSON file produced by TBProfiler", type=is_file_valid, required=True)
     parser.add_argument("input_bam",
-                        help="the BAM file produced by TBProfiler", type=is_bam_valid)
+                        help="the BAM file produced by TBProfiler", type=is_bam_valid, required=True)
     parser.add_argument("-v", "--version",
                         action='version', version=str(__VERSION__))
     parser.add_argument("--config",
