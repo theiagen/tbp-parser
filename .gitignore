@@ -6,7 +6,8 @@
 
 # output from pytest
 *.csv
-.pytest_cache/
 *.pyc
+.pytest_cache/
+.coverage
 
 secret/
