@@ -32,10 +32,6 @@ LABEL maintainer2.email="theron.james@theiagen.com"
 ENV LC_ALL=C
 WORKDIR /data
 
-# default command is to pull up help options
-ENTRYPOINT ["python3", "/tbp-parser/tbp_parser/tbp_parser_main.py"]
-CMD ["--help"]
-
 FROM base AS test
 
 WORKDIR /tbp-parser
