@@ -1,0 +1,11 @@
+# ignore everything
+*
+
+# allow only what's needed for the build
+!data/tbdb.bed
+!data/default-gene-database_2026-03-03.yml
+!data/default-lims-report-format.yml
+!tbp_parser/
+!tests/
+!pyproject.toml
+!poetry.lock
