@@ -23,14 +23,6 @@ def mock_config():
     config.OPERATOR = "test_operator"
     config.TNGS_READ_SUPPORT_BOUNDARIES = [10, 100]
     config.TNGS_FREQUENCY_BOUNDARIES = [0.10, 0.25]
-    config.TNGS_SPECIFIC_QC_OPTIONS = {
-        "RRS_FREQUENCY": 0.25,
-        "RRS_READ_SUPPORT": 10,
-        "RRL_FREQUENCY": 0.25,
-        "RRL_READ_SUPPORT": 10,
-        "ETHA237_FREQUENCY": 0.10,
-        "RPOB449_FREQUENCY": 0.10,
-    }
     config.USE_ERR_AS_BRR = False
     config.lims_report_format_yml = str(Path(__file__).parent.parent / "data" / "default-lims-report-format.yml")
     return config

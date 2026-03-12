@@ -50,8 +50,8 @@ def parse_arguments():
                                                 "arguments that specify input files used to create standard dictionaries")
 
     ### TO-DO: brainstorm better name for this argument -- regions_bed, targets_bed, genes_bed, etc.
-    file_arguments.add_argument("-b", "--tbdb_bed",
-                        help="the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_tbdb_bed, metavar="\b", type=is_bed_valid)
+    file_arguments.add_argument("-b", "--coverage_bed",
+                        help="the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the tbdb.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_tbdb_bed, metavar="\b", type=is_bed_valid)
     ### TO-DO: make yaml format validation function
     file_arguments.add_argument("--lims_report_format_yml",
                         help="an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used", default=default_lims_report_format, metavar="\b", type=is_file_valid)
@@ -91,24 +91,10 @@ def parse_arguments():
                                                 "options that are primarily used for tNGS data")
     tngs_arguments.add_argument("--tngs",
                         help="\nindicates that the input data was generated using a tNGS protocol\nTurns on tNGS-specific features", action="store_true", default=False)
-    tngs_arguments.add_argument("-e", "--err_bed",
-                                help="an optional BED file formatted similarly to the --tbdb_bed file but containing ranges that are essential for resistance", default=None, metavar="\b", type=is_optional_file_valid)
+    tngs_arguments.add_argument("-e", "--err_coverage_bed",
+                                help="an optional BED file formatted similarly to the --coverage_bed file but containing ranges that are essential for resistance", default=None, metavar="\b", type=is_optional_file_valid)
     tngs_arguments.add_argument("--use_err_as_brr",
-                                help="if an ERR BED file is provided, use the ERR regions in place of the TBDB regions for breadth of coverage calculations\nNote: this is an experimental option", action="store_true", default=False)
-
-    # tngs-specific qc arguments that are hold-overs from prior versions; retained for now
-    tngs_arguments.add_argument("--rrs_frequency",
-                        help="the minimum frequency for an rrs mutation to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
-    tngs_arguments.add_argument("--rrs_read_support",
-                        help="the minimum read support for an rrs mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
-    tngs_arguments.add_argument("--rrl_frequency",
-                        help="the minimum frequency for an rrl mutation to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
-    tngs_arguments.add_argument("--rrl_read_support",
-                        help="the minimum read support for an rrl mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
-    tngs_arguments.add_argument("--rpob449_frequency",
-                        help="the minimum frequency for an rpoB mutation at protein position 449 to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
-    tngs_arguments.add_argument("--etha237_frequency",
-                        help="the minimum frequency for an ethA mutation at protein position 237 to pass QC\ndefault=0.1", default=0.1, metavar="\b", type=float)
+                                help="if an ERR BED file is provided, use the ERR regions in place of the --coverage_bed regions for breadth of coverage calculations\nNote: this is an experimental option", action="store_true", default=False)
 
     # new arguments for qc reporting
     boundary_arguments = parser.add_argument_group("tNGS-specific QC boundary arguments (NOT compatible with WGS data)",

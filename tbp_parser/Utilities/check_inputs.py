@@ -56,7 +56,7 @@ def is_bam_valid(filename: str) -> str:
     return filename
 
 def is_bed_valid(filename: str) -> str:
-    """Checks if the TBDB BED file is accessible
+    """Checks if the coverage_bed files are accessible
 
     Args:
         filename (String): The name of file to check

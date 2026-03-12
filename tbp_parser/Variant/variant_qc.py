@@ -400,55 +400,12 @@ class VariantQC:
             qc_result.looker_interpretation = "NA"
             qc_result.mdl_interpretation = "NA"
 
-        # tNGS-specific gene/position checks
-        if self._fails_tngs_specific_qc(variant):
-            qc_result.fails_positional_qc = True
-            qc_result.warning.add(self.POSITIONAL_QC_WARNING)
-
         # tNGS boundary QC (read support vs frequency boundaries)
         if self._fails_tngs_boundary_qc(variant):
             qc_result.fails_positional_qc = True
             qc_result.warning.add(self.POSITIONAL_QC_WARNING)
 
         return qc_result
-
-    def _fails_tngs_specific_qc(self, variant: Variant) -> bool:
-        """Check if a mutation (tNGS only) fails the tNGS-specific QC checks.
-
-        Applies gene-specific frequency and read support thresholds for
-        rrs, rrl, ethA (position 237), and rpoB (position 449).
-
-        Args:
-            variant: The variant to check
-
-        Returns:
-            True if the mutation fails QC, False if it passes
-        """
-        RRS_FREQUENCY = self.config.TNGS_SPECIFIC_QC_OPTIONS["RRS_FREQUENCY"]
-        RRS_READ_SUPPORT = self.config.TNGS_SPECIFIC_QC_OPTIONS["RRS_READ_SUPPORT"]
-        RRL_FREQUENCY = self.config.TNGS_SPECIFIC_QC_OPTIONS["RRL_FREQUENCY"]
-        RRL_READ_SUPPORT = self.config.TNGS_SPECIFIC_QC_OPTIONS["RRL_READ_SUPPORT"]
-        ETHA237_FREQUENCY = self.config.TNGS_SPECIFIC_QC_OPTIONS["ETHA237_FREQUENCY"]
-        RPOB449_FREQUENCY = self.config.TNGS_SPECIFIC_QC_OPTIONS["RPOB449_FREQUENCY"]
-
-        if variant.gene_name == "rrs":
-            if variant.freq < RRS_FREQUENCY or variant.read_support < RRS_READ_SUPPORT:
-                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS tNGS-specific QC (rrs): freq < {RRS_FREQUENCY} or RS < {RRS_READ_SUPPORT}")
-                return True
-        elif variant.gene_name == "rrl":
-            if variant.freq < RRL_FREQUENCY or variant.read_support < RRL_READ_SUPPORT:
-                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS tNGS-specific QC (rrl): freq < {RRL_FREQUENCY} or RS < {RRL_READ_SUPPORT}")
-                return True
-        elif variant.gene_name == "ethA" and Helper.get_position(variant.protein_change) == 237:
-            if variant.freq < ETHA237_FREQUENCY:
-                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS tNGS-specific QC (ethA237): freq < {ETHA237_FREQUENCY}")
-                return True
-        elif variant.gene_name == "rpoB" and Helper.get_position(variant.protein_change) == 449:
-            if variant.freq < RPOB449_FREQUENCY:
-                logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; FAILS tNGS-specific QC (rpoB449): freq < {RPOB449_FREQUENCY}")
-                return True
-        logger.debug(f"{variant.gene_name}|{variant.gene_id} [D:{variant.depth}, RS:{(variant.read_support):.0f}, F:{(variant.freq):.3f}]; PASSES tNGS-specific QC")
-        return False
 
     def _fails_tngs_boundary_qc(self, variant: Variant) -> bool:
         """Check if a mutation (tNGS only) fails the boundary QC checks.

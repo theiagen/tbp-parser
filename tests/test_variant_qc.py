@@ -12,33 +12,6 @@ class TestIsDeletion:
         assert v._is_deletion_in_orf() is False
 
 
-class TestFailsTngsSpecificQc:
-    def test_rrs_low_frequency_fails(self, make_variant):
-        qc = VariantQC()
-        v = make_variant(gene_name="rrs", freq=0.05, depth=100)
-        assert qc._fails_tngs_specific_qc(v) is True
-
-    def test_rrs_low_read_support_fails(self, make_variant):
-        qc = VariantQC()
-        v = make_variant(gene_name="rrs", freq=0.50, depth=5)
-        assert qc._fails_tngs_specific_qc(v) is True
-
-    def test_rrs_good_qc_passes(self, make_variant):
-        qc = VariantQC()
-        v = make_variant(gene_name="rrs", freq=0.50, depth=100)
-        assert qc._fails_tngs_specific_qc(v) is False
-
-    def test_rrl_low_frequency_fails(self, make_variant):
-        qc = VariantQC()
-        v = make_variant(gene_name="rrl", freq=0.05, depth=100)
-        assert qc._fails_tngs_specific_qc(v) is True
-
-    def test_non_special_gene_passes(self, make_variant):
-        qc = VariantQC()
-        v = make_variant(gene_name="katG", freq=0.50, depth=100)
-        assert qc._fails_tngs_specific_qc(v) is False
-
-
 class TestFailsTngsBoundaryQc:
     def test_low_read_support_fails(self, make_variant):
         qc = VariantQC()

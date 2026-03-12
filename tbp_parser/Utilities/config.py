@@ -16,25 +16,28 @@ class Configuration:
         input_bam (str): the BAM file produced by TBProfiler
         config (str): the configuration file to use, in YAML format
 
-        OPERATOR (str): the operator who ran the sequencing
-        OUTPUT_PREFIX (str): the prefix for output files
-        SEQUENCING_METHOD (str): the sequencing method used to generate the data
+        coverage_bed (str): the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations
+        err_coverage_bed (str | None): an optional BED file containing ranges that are essential for resistance [tNGS only]
+        lims_report_format_yml (str): an optional YAML file that specifies the format of the LIMS report
+        gene_database_yml (str): an optional YAML file that specifies a custom gene database
 
-        tbdb_bed (str): the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations
 
-        MIN_PERCENT_COVERAGE (float): the minimum percentage of a region that has depth above the threshold set by MIN_DEPTH to pass QC
-        MIN_PERCENT_LOCI_COVERED (float): the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC
         MIN_DEPTH (int): the minimum depth of coverage for a site to pass QC
-        MIN_FREQUENCY (float): the minimum frequency for a mutation to pass QC
+        MIN_PERCENT_COVERAGE (float): the minimum percentage of a region that has depth above the threshold set by MIN_DEPTH to pass QC
         MIN_READ_SUPPORT (int): the minimum read support for a mutation to pass QC
+        MIN_FREQUENCY (float): the minimum frequency for a mutation to pass QC
+        MIN_PERCENT_LOCI_COVERED (float): the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC
+
+        SEQUENCING_METHOD (str): the sequencing method used to generate the data
+        OUTPUT_PREFIX (str): the prefix for output files
+        OPERATOR (str): the operator who ran the sequencing
+        FIND_AND_REPLACE (dict): a dictionary of find-and-replace substitutions to apply to all string values in the reports
 
         TNGS (bool): whether tNGS mode is enabled
         # QC_RESISTANT_MUTATIONS (bool): whether R mutations should be treated the same as S/U mutations for locus QC
         TNGS_READ_SUPPORT_BOUNDARIES (list[int]): the read support boundaries for tNGS QC reporting
         TNGS_FREQUENCY_BOUNDARIES (list[float]): the frequency boundaries for tNGS QC reporting
-        err_bed (str | None): an optional BED file containing ranges that are essential for resistance [tNGS only]
-        TNGS_SPECIFIC_QC_OPTIONS (dict): tNGS-specific QC options that are hold-overs from prior versions; retained for backwards compatibility
-        USE_ERR_AS_BRR (bool): whether to use ERR regions in place of TBDB regions for breadth of coverage calculations [tNGS only]
+        USE_ERR_AS_BRR (bool): whether to use ERR regions in place of coverage_bed regions for breadth of coverage calculations [tNGS only]
     """
     # Shared type tracking across all Configuration instances
     _CONFIGURABLE_INPUTS = {}
@@ -85,8 +88,8 @@ class Configuration:
         self.input_bam = options.input_bam
         self.config = options.config
         # files to be parsed once and used across multiple classes
-        self.tbdb_bed = options.tbdb_bed
-        self.err_bed = options.err_bed
+        self.coverage_bed = options.coverage_bed
+        self.err_coverage_bed = options.err_coverage_bed
         self.lims_report_format_yml = options.lims_report_format_yml
         self.gene_database_yml = options.gene_database_yml
         # INITIALIZE CONFIGURABLE INPUTS (always uppercase)
@@ -109,15 +112,6 @@ class Configuration:
         self.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
         # logging options
         self.DEBUG = options.debug
-        # tngs-specific qc options that are hold-overs from prior versions; retained for backwards compatibility
-        self.TNGS_SPECIFIC_QC_OPTIONS = {
-            "RRS_FREQUENCY": options.rrs_frequency,
-            "RRS_READ_SUPPORT": options.rrs_read_support,
-            "RRL_FREQUENCY": options.rrl_frequency,
-            "RRL_READ_SUPPORT": options.rrl_read_support,
-            "ETHA237_FREQUENCY": options.etha237_frequency,
-            "RPOB449_FREQUENCY": options.rpob449_frequency,
-        }
 
         # configuration file overwrite
         if self.config != "":
