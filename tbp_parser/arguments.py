@@ -28,7 +28,7 @@ def resolve_output_prefix(output_prefix: str) -> Path:
 
 def parse_arguments():
     data_dir = Path(__file__).parent.parent / "data"
-    default_tbdb_bed = data_dir / "tbdb.bed"
+    default_coverage_bed = data_dir / "tbdb.bed"
     default_lims_report_format = data_dir / "default-lims-report-format.yml"
     default_gene_database = data_dir / "default-gene-database_2026-03-03.yml"
 
@@ -51,7 +51,7 @@ def parse_arguments():
 
     ### TO-DO: brainstorm better name for this argument -- regions_bed, targets_bed, genes_bed, etc.
     file_arguments.add_argument("-b", "--coverage_bed",
-                        help="the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the tbdb.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_tbdb_bed, metavar="\b", type=is_bed_valid)
+                        help="the BED file containing the genes of interest, their locus tags, and their regions for QC calculations; should be formatted like the tbdb.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_coverage_bed, metavar="\b", type=is_bed_valid)
     ### TO-DO: make yaml format validation function
     file_arguments.add_argument("--lims_report_format_yml",
                         help="an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used", default=default_lims_report_format, metavar="\b", type=is_file_valid)
