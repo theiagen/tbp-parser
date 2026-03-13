@@ -3,8 +3,8 @@ from typing import Optional
 import pandas as pd
 from pathlib import Path
 
-from Variant import Variant
-from Utilities import Configuration, apply_find_and_replace
+from tbp_parser.Variant.variant import Variant
+from tbp_parser.Utilities.config import Configuration, apply_find_and_replace
 
 logger = logging.getLogger(__name__)
 

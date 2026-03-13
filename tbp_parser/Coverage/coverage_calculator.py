@@ -5,8 +5,9 @@ from itertools import permutations
 from typing import Dict, List, Tuple
 from collections import defaultdict
 
-from Utilities import Configuration
-from Coverage import BedRecord, TargetCoverage, LocusCoverage
+from tbp_parser.Utilities.config import Configuration
+from tbp_parser.Coverage.bed_record import BedRecord
+from tbp_parser.Coverage.coverage_data import TargetCoverage, LocusCoverage
 
 logger = logging.getLogger(__name__)
 

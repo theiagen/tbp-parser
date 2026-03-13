@@ -1,6 +1,6 @@
 import pytest
-from LIMS import LIMSProcessor, LIMSRecord, LIMSGeneCode, parse_lims_yml_file
-from Coverage.coverage_data import ERRCoverage
+from tbp_parser.LIMS import LIMSProcessor, LIMSRecord, LIMSGeneCode, parse_lims_yml_file
+from tbp_parser.Coverage.coverage_data import ERRCoverage
 
 @pytest.fixture
 def processor():

@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.poetry]
-package-mode = false
+packages = [{include = "tbp_parser"}]
 
 
 [project]
@@ -49,13 +49,16 @@ dev = [
 ]
 
 
+[project.scripts]
+tbp-parser = "tbp_parser.tbp_parser_main:main"
+
+
 [project.urls]
 Documentation = "https://theiagen.github.io/tbp-parser/"
 Changelog = "https://theiagen.github.io/tbp-parser/latest/versioning/exhaustive/"
 
 
 [tool.pytest.ini_options]
-pythonpath = ["tbp_parser"]
 testpaths = ["tests"]
 addopts = "--color=yes"
 

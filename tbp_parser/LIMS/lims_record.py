@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field
-from Variant import Variant
+from tbp_parser.Variant.variant import Variant
 
 class LIMSGeneCode(BaseModel):
     """Class representing gene-specific results for the LIMS report."""

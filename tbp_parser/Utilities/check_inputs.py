@@ -5,7 +5,7 @@ import sys
 import logging
 import pysam
 
-from Utilities import GeneDatabase
+from tbp_parser.Utilities.gene_database import GeneDatabase
 
 logger = logging.getLogger(__name__)
 

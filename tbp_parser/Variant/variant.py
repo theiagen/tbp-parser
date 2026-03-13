@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Any
-from Utilities import GeneDatabase, Helper
+from tbp_parser.Utilities.gene_database import GeneDatabase
+from tbp_parser.Utilities.helper import Helper
 import logging
 
 logger = logging.getLogger(__name__)

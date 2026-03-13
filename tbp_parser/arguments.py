@@ -2,8 +2,8 @@
 import argparse
 import json
 from pathlib import Path
-from Utilities import (
-  __VERSION__,
+from tbp_parser import __VERSION__
+from tbp_parser.Utilities import (
   is_boundary_valid,
   is_file_valid,
   is_bam_valid,
@@ -27,7 +27,7 @@ def resolve_output_prefix(output_prefix: str) -> Path:
 
 
 def parse_arguments():
-    data_dir = Path(__file__).parent.parent / "data"
+    data_dir = Path(__file__).parent / "data"
     default_coverage_bed = data_dir / "tbdb.bed"
     default_lims_report_format = data_dir / "default-lims-report-format.yml"
     default_gene_database = data_dir / "default-gene-database_2026-03-03.yml"
@@ -35,7 +35,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         prog = "tbp-parser",
         description = "Parses Jody Phelon's TBProfiler JSON output into four files:\n- a Laboratorian report,\n- a LIMS report\n- a Looker report, and\n- a coverage report",
-        usage = "python3 /tbp-parser/tbp_parser/tbp_parser.py [-h|-v] <input_json> <input_bam> [<args>]",
+        usage = "tbp-parser [-h|-v] <input_json> <input_bam> [<args>]",
         epilog = "Please contact support@theiagen.com with any questions",
         formatter_class = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=10))
     parser.add_argument("input_json",

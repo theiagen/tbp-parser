@@ -2,8 +2,9 @@ import logging
 import pandas as pd
 from pathlib import Path
 
-from Coverage import TargetCoverage, LocusCoverage
-from Utilities import Configuration, GeneDatabase, apply_find_and_replace
+from tbp_parser.Coverage.coverage_data import TargetCoverage, LocusCoverage
+from tbp_parser.Utilities.config import Configuration, apply_find_and_replace
+from tbp_parser.Utilities.gene_database import GeneDatabase
 
 logger = logging.getLogger(__name__)
 

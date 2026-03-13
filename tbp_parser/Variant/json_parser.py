@@ -2,7 +2,7 @@ import logging
 import json
 
 from typing import List, Tuple
-from Variant import VariantRecord
+from tbp_parser.Variant.variant_record import VariantRecord
 
 logger = logging.getLogger(__name__)
 

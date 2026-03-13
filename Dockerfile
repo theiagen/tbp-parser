@@ -9,7 +9,7 @@ RUN poetry export --only main -f requirements.txt -o requirements.txt
 
 FROM python:3.12-slim AS base
 
-# install runtime dependencies from exported requirements
+# install runtime dependencies from exported requirements which only rebuilds when poetry.lock changes
 COPY --from=builder /tbp-parser/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt && \
     rm /tmp/requirements.txt
@@ -18,6 +18,10 @@ WORKDIR /tbp-parser
 
 # copy everything allowed by .dockerignore
 COPY . .
+
+# install the tbp-parser package without dependencies (installed in previous step)
+# this layer is separate because it rebuilds whenever the source code changes
+RUN pip install --no-cache-dir --no-deps .
 
 LABEL base.image="python:3.12-slim"
 LABEL software="tbp-parser"
@@ -39,6 +43,6 @@ WORKDIR /tbp-parser
 # install dev deps for testing
 RUN pip install --no-cache-dir pytest pytest-cov
 
-RUN python3 /tbp-parser/tbp_parser/tbp_parser_main.py --version && \
-    python3 /tbp-parser/tbp_parser/tbp_parser_main.py --help && \
+RUN tbp-parser --version && \
+    tbp-parser --help && \
     pytest -v

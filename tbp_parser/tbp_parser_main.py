@@ -1,26 +1,26 @@
 import logging
-from arguments import parse_arguments
-from Utilities import (
+from tbp_parser.arguments import parse_arguments
+from tbp_parser.Utilities import (
     Configuration,
     GeneDatabase,
     setup_logger,
     check_bed_for_lims_genes,
 )
-from Coverage import (
+from tbp_parser.Coverage import (
     CoverageCalculator,
     parse_bed_file,
 )
-from Variant import (
+from tbp_parser.Variant import (
     VariantProcessor,
     VariantInterpreter,
     VariantQC,
     parse_tbprofiler_json,
 )
-from LIMS import (
+from tbp_parser.LIMS import (
     LIMSProcessor,
     parse_lims_yml_file,
 )
-from Reporters import (
+from tbp_parser.Reporters import (
     write_laboratorian_report,
     write_lims_report,
     write_looker_report,

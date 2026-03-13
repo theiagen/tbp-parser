@@ -1,5 +1,5 @@
 import pytest
-from Coverage import BedRecord, parse_bed_file
+from tbp_parser.Coverage import BedRecord, parse_bed_file
 
 class TestBedRecordEquality:
     @pytest.mark.parametrize("field, original_value, different_value", [

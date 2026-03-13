@@ -3,12 +3,12 @@ import pytest
 
 from pathlib import Path
 
-from Reporters.lab_report import write_laboratorian_report
-from Reporters.lims_report import write_lims_report
-from Reporters.looker_report import write_looker_report, LOOKER_RESISTANCE_RANKING
-from Reporters.coverage_report import write_coverage_report
-from Coverage.coverage_data import ERRCoverage
-from LIMS import LIMSRecord, LIMSGeneCode
+from tbp_parser.Reporters.lab_report import write_laboratorian_report
+from tbp_parser.Reporters.lims_report import write_lims_report
+from tbp_parser.Reporters.looker_report import write_looker_report, LOOKER_RESISTANCE_RANKING
+from tbp_parser.Reporters.coverage_report import write_coverage_report
+from tbp_parser.Coverage.coverage_data import ERRCoverage
+from tbp_parser.LIMS import LIMSRecord, LIMSGeneCode
 
 
 def _run_report(mock_config, tmp_path, writer_fn, report_suffix, *args):

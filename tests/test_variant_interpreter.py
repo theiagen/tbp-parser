@@ -1,5 +1,5 @@
 import pytest
-from Variant import VariantInterpreter, InterpretationResult
+from tbp_parser.Variant import VariantInterpreter, InterpretationResult
 
 
 @pytest.fixture

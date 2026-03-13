@@ -1,5 +1,5 @@
-from Variant import VariantQC
-from Coverage.coverage_data import ERRCoverage
+from tbp_parser.Variant import VariantQC
+from tbp_parser.Coverage.coverage_data import ERRCoverage
 
 
 class TestIsDeletion:

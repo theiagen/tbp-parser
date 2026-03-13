@@ -1,7 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 from abc import ABC
-from Variant import Variant
+from tbp_parser.Variant.variant import Variant
 
 class BaseCoverage(BaseModel, ABC):
     """

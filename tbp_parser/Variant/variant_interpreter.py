@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
-from Variant import Variant
-from Utilities import Helper
+from tbp_parser.Variant.variant import Variant
+from tbp_parser.Utilities.helper import Helper
 import logging
 
 logger = logging.getLogger(__name__)

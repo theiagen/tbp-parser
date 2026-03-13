@@ -1,12 +1,12 @@
 from __future__ import annotations
 from pydantic import BaseModel, Field
 from typing import Dict, Optional, TYPE_CHECKING
-from Utilities import Configuration, Helper
+from tbp_parser.Utilities.config import Configuration
 import logging
 
 if TYPE_CHECKING:
-    from Coverage import LocusCoverage, TargetCoverage
-    from Variant import Variant
+    from tbp_parser.Coverage.coverage_data import LocusCoverage, TargetCoverage
+    from tbp_parser.Variant.variant import Variant
 
 
 logger = logging.getLogger(__name__)

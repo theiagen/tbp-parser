@@ -1,8 +1,9 @@
 import logging
 from typing import List, Optional, Tuple
 
-from Variant import Variant, VariantRecord, Annotation
-from Utilities import GeneDatabase
+from tbp_parser.Variant.variant import Variant
+from tbp_parser.Variant.variant_record import VariantRecord, Annotation
+from tbp_parser.Utilities.gene_database import GeneDatabase
 
 logger = logging.getLogger(__name__)
 

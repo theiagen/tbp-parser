@@ -1,5 +1,5 @@
 import pytest
-from Coverage.coverage_data import ERRCoverage
+from tbp_parser.Coverage.coverage_data import ERRCoverage
 
 
 class TestBaseCoverage:

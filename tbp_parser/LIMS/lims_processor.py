@@ -1,9 +1,11 @@
 import logging
 from typing import Dict, Tuple
-from Coverage import LocusCoverage
-from LIMS import LIMSRecord, LIMSGeneCode
-from Utilities import Configuration, GeneDatabase, Helper
-from Variant import Variant
+from tbp_parser.Coverage.coverage_data import LocusCoverage
+from tbp_parser.LIMS.lims_record import LIMSRecord, LIMSGeneCode
+from tbp_parser.Utilities.config import Configuration
+from tbp_parser.Utilities.gene_database import GeneDatabase
+from tbp_parser.Utilities.helper import Helper
+from tbp_parser.Variant.variant import Variant
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 import yaml
 import logging
-from LIMS import LIMSRecord, LIMSGeneCode
+from tbp_parser.LIMS.lims_record import LIMSRecord, LIMSGeneCode
 
 logger = logging.getLogger(__name__)
 

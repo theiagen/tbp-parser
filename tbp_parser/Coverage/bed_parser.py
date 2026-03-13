@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from Coverage import BedRecord
+from tbp_parser.Coverage.bed_record import BedRecord
 
 logger = logging.getLogger(__name__)
 

@@ -3,9 +3,9 @@ import pysam
 from pathlib import Path
 from copy import deepcopy
 from unittest.mock import MagicMock
-from Utilities import Configuration, GeneDatabase
-from Variant import Variant, VariantRecord, Annotation, Consequences
-from Coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
+from tbp_parser.Utilities import Configuration, GeneDatabase
+from tbp_parser.Variant import Variant, VariantRecord, Annotation, Consequences
+from tbp_parser.Coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
 
 @pytest.fixture
 def mock_config():
@@ -24,7 +24,7 @@ def mock_config():
     config.TNGS_READ_SUPPORT_BOUNDARIES = [10, 100]
     config.TNGS_FREQUENCY_BOUNDARIES = [0.10, 0.25]
     config.USE_ERR_AS_BRR = False
-    config.lims_report_format_yml = str(Path(__file__).parent.parent / "data" / "default-lims-report-format.yml")
+    config.lims_report_format_yml = str(Path(__file__).parent.parent / "tbp_parser" / "data" / "default-lims-report-format.yml")
     return config
 
 @pytest.fixture(autouse=True)
@@ -33,7 +33,7 @@ def setup_config(mock_config):
 
 @pytest.fixture(autouse=True, scope="session")
 def setup_gene_database():
-    GeneDatabase(db_path=str(Path(__file__).parent.parent / "data" / "default-gene-database_2026-03-03.yml"))
+    GeneDatabase(db_path=str(Path(__file__).parent.parent / "tbp_parser" / "data" / "default-gene-database_2026-03-03.yml"))
 
 @pytest.fixture
 def make_bed_record():
