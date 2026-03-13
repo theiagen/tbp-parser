@@ -196,15 +196,15 @@ class LIMSProcessor:
             - List of Variants that have this highest MDL interpretation (could be multiple if tied)
         """
         all_mdl_interpretations = [v.mdl_interpretation for v in variants if v.mdl_interpretation]
-            
+
         max_mdl_interpretation = max(
             all_mdl_interpretations,
             key=lambda x: self.RESISTANCE_RANKING.get(x, -1),
             default="NA"
         )
-            
+
         max_mdl_variants = [v for v in variants if v.mdl_interpretation == max_mdl_interpretation]
-        
+
         # assigning max_mdl_variants/interpretation to LIMSGeneCode object
         setattr(gene_code, "max_mdl_interpretation", max_mdl_interpretation)
         setattr(gene_code, "max_mdl_variants", max_mdl_variants)
@@ -318,12 +318,12 @@ class LIMSProcessor:
 
             if has_low_boc and not has_valid_deletion:
                 logger.debug(
-                    f"LIMS coverage QC FAILED for gene {lims_gene}|{lims_locus_tag}): "
+                    f"LIMS coverage QC FAILED for gene {lims_gene}|{lims_locus_tag}: "
                     f"BOC: {(boc):.3f} BELOW threshold {self.config.MIN_PERCENT_COVERAGE:.3f}"
                 )
             else:
                 logger.debug(
-                    f"LIMS coverage QC PASSED for gene {lims_gene}|{lims_locus_tag}): "
+                    f"LIMS coverage QC PASSED for gene {lims_gene}|{lims_locus_tag}: "
                     f"BOC: {(boc):.3f} ABOVE threshold {self.config.MIN_PERCENT_COVERAGE:.3f}"
                 )
                 passing_genes += 1
