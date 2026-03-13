@@ -37,7 +37,15 @@ def write_coverage_report(
 
         # if ERR coverage exists, only report deletions if they are within the ERR region
         deletions = coverage.err_coverage.valid_deletions if coverage.err_coverage else coverage.valid_deletions
-        qc_warning = f"Contains valid deletion(s): {'; '.join(str(v.nucleotide_change) for v in deletions)}" if deletions else ""
+        if deletions:
+            qc_warning = (
+                f"Contains valid deletion(s) in " +
+                f"{'ERR ' if coverage.err_coverage else 'full '}" +
+                f"{'locus region: ' if isinstance(coverage, LocusCoverage) else 'target region: '}" +
+                f"{'; '.join(str(v.nucleotide_change) for v in deletions)}"
+            )
+        else:
+            qc_warning = ""
 
         # Even if ERR coverage exists, still report the breadth and depth for the full target region (not just the ERR)
         rows.append({

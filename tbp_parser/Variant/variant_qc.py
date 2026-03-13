@@ -87,22 +87,19 @@ class VariantQC:
         var_abs_end = variant.absolute_end if isinstance(variant.absolute_end, int) else variant.pos
 
         # Map each coverage_map to the variant attribute used as its key
-        coverage_maps = [
-            (locus_coverage_map, "gene_id"),
-            (target_coverage_map, "gene_name"),
-        ]
-
-        for coverage_map, key_attr in coverage_maps:
-            coverage = coverage_map.get(getattr(variant, key_attr))
-
-            # Check if the variant is a valid deletion and falls within the coverage region
-            if coverage and coverage.overlaps_range(var_abs_start, var_abs_end):
-                coverage.valid_deletions.append(variant)
-                logger.debug(f"Assigned {variant.gene_name}|{variant.gene_id} as a valid deletion within the coverage region of the {coverage.__class__.__name__} object")
-                # Check if ERR coverage exists and assign Variants to valid_deletions if position falls within ERR region
-                if coverage.err_coverage and coverage.err_coverage.overlaps_range(var_abs_start, var_abs_end):
-                    coverage.err_coverage.valid_deletions.append(variant)
-                    logger.debug(f"Assigned {variant.gene_name}|{variant.gene_id} as a valid deletion within the ERR coverage region of the {coverage.err_coverage.__class__.__name__} object")
+        for coverage_map in [target_coverage_map, locus_coverage_map]:
+            for coverage in coverage_map.values():
+                # Check if the variant is a valid deletion and falls within the coverage region
+                if (
+                    variant.gene_id == coverage.locus_tag and
+                    coverage.overlaps_range(var_abs_start, var_abs_end)
+                ):
+                    coverage.valid_deletions.append(variant)
+                    logger.debug(f"Assigned {variant.gene_name}|{variant.gene_id} as a valid deletion within the coverage region of the {coverage.__class__.__name__} object")
+                    # Check if ERR coverage exists and assign Variants to valid_deletions if position falls within ERR region
+                    if coverage.err_coverage and coverage.err_coverage.overlaps_range(var_abs_start, var_abs_end):
+                        coverage.err_coverage.valid_deletions.append(variant)
+                        logger.debug(f"Assigned {variant.gene_name}|{variant.gene_id} as a valid deletion within the ERR coverage region of the {coverage.err_coverage.__class__.__name__} object")
         return
 
     def apply_qc(
