@@ -6,7 +6,7 @@ The Looker report is intended for use in Google's Looker Data Studio for dashboa
 
 ## Resistance columns
 
-Each antimicrobial drug listed in the input `--tbdb_bed` file will be represented by one column in the Looker report. The column name will be the antimicrobial drug name in lowercase. This can be customized by adding content to the `OUTPUT_RENAMING` dictionary in a configuration file, though please be aware that this will change every instance of that drug name in **all** output reports.
+Each antimicrobial drug listed in the input `--coverage_bed` file will be represented by one column in the Looker report. The column name will be the antimicrobial drug name in lowercase. This can be customized by adding content to the `OUTPUT_RENAMING` dictionary in a configuration file, though please be aware that this will change every instance of that drug name in **all** output reports.
 
 | Column name | Explanation | Source |
 | --- | --- | --- |

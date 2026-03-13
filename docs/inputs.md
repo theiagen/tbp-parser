@@ -35,7 +35,7 @@ These options are used to create standard variables that are used throughout the
 | Name | Description | Default Value |
 | :------------ | :---------- | :------------ |
 | `--config` | the configuration files to use, in YAML format. This argument overrides all other arguments EXCEPT for the other file-type arguments. | |
-| `-b`, `--tbdb_bed` | the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler | [/data/tbdb.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb.bed) |
+| `-b`, `--coverage_bed` | the BED file containing the genes of interest, their locus tags, their associated antimicrobial, and their regions for QC calculations; should be formatted like the TBDB.bed file in TBProfiler | [/data/tbdb.bed](https://github.com/theiagen/tbp-parser/blob/main/data/tbdb.bed) |
 | `--lims_report_format_yml` | an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used | [/data/default-lims-report-format.yml](https://github.com/theiagen/tbp-parser/blob/main/data/default-lims-report-format.yml) |
 | `--gene_database_yml` | an optional YAML file that specifies the gene database information for the genes of interest; if not provided, a default format will be used | [/data/default-gene-database_2026-03-03.yml](https://github.com/theiagen/tbp-parser/blob/main/data/default-gene-database_2026-03-03.yml) |
 
