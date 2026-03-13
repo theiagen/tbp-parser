@@ -31,7 +31,7 @@ def write_coverage_report(
             output_path = Path(f"{config.OUTPUT_PREFIX}.locus_coverage_report.csv")
 
         else: # TargetCoverage
-            locus_tag = GeneDatabase.get_locus_tag(key)
+            locus_tag = coverage.locus_tag
             gene_name = key
             output_path = Path(f"{config.OUTPUT_PREFIX}.target_coverage_report.csv")
 
