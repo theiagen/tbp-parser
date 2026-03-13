@@ -90,8 +90,8 @@ def write_laboratorian_report(variants: list[Variant]) -> None:
         rows.append(row)
 
     df = pd.DataFrame(rows, columns=list(COLUMNS.keys()))
-    df = sort_lab_df(df)
     df = apply_find_and_replace(df, config.FIND_AND_REPLACE)
+    df = sort_lab_df(df)
     output_path = Path(f"{config.OUTPUT_PREFIX}.laboratorian_report.csv")
     df.to_csv(output_path, index=False)
 
