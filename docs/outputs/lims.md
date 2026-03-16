@@ -10,6 +10,8 @@ The report can be divided into two sections: resistance columns and miscellaneou
 
 The LIMS report will contain one column for each drug defined by the `lims_report_format_yml` file. Each drug will have one or more associated gene columns, depending on how many genes are responsible for resistance to that drug.
 
+Drug interpretation severity is ranked as follows (from high to low): **R > Insufficient Coverage > U > S > WT**. 
+
 | Column names  | Explanation | Source |
 | --- | --- | --- |
 | `antimicrobial_column_name_in_lims_report` | The highest `mdl_interpretation` identified for that drug in the Laboratorian report for the associated genes | Determined by tbp-parser |

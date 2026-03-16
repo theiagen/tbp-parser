@@ -6,6 +6,8 @@ The coverage report lists every gene and its percent gene coverage over a minimu
 
 ## Coverage report columns
 
+ERR columns only appear if an `--err_coverage_bed` input file is provided. Please see the [Inputs](../inputs.md) for more details.
+
 | Column name | Explanation |
 | :---------- | :---------- |
 | sample_name | The name of the sample |
@@ -21,19 +23,16 @@ The coverage report lists every gene and its percent gene coverage over a minimu
 
 Two coverage reports are generated: 
 
-- a **locus** coverage report, which aggregates multiple target regions if they belong to the same locus tag if neccessary (for example, during a tNGS analysis, several genes are covered by mulitple primers)
+- a **locus** coverage report, which aggregates multiple target regions if they belong to the same locus tag if neccessary (for example, if during a tNGS analysis, several genes are covered by mulitple primers, those primers will be combined into one value)
 - a **target** coverage report, which keeps each record in the provided `--coverage_bed` file separate (for example, during a tNGS analysis, each primer region is kept separate)
 
-If each locus is covered by only one target region, the two reports will be identical. 
-
+**If each locus is covered by only one target region, the two reports would be identical and so only the locus coverage report is generated.**
 
 ### Example Coverage Report
 
 In the following example, katG is covered by four different target regions (katG1, katG2, katG3, and katG4) in the `--coverage_bed` file that overlap. In the locus coverage report, these four regions are aggregated into one record for the katG gene, while in the target coverage report, each of the four regions is kept separate.
 
-For regions that do not overlap, such as rrl and rpoB, the locus report only looks at the individual regions sequenced and not the area in between.
-
-Here is an excerpt from a locus coveage report from a tNGS analysis:
+Here is an excerpt from a locus coveage report from an example tNGS analysis:
 
 ```text
 sample_name	locus_tag	gene_name	percent_coverage	average_depth	err_percent_coverage	err_average_depth	qc_warning
@@ -42,17 +41,17 @@ sample01	Rv2416c	eis	100	2290.005	100	2538.581
 sample01	Rv3795	embB	100	2376.114	100	2919.096	
 sample01	Rv0006	gyrA	100	2313.786	100	2823.435	
 sample01	Rv0005	gyrB	100	1583.527	100	1949.587	
-sample01	Rv1484	inhA	100	2326.662	100	2551.08	
+sample01	Rv1484	inhA	3.204	130.288	4.633	188.356	
 sample01	Rv1908c	katG	100.000	2194.408	100.000	2333.477	
 sample01	Rv0678	mmpR5	100	3158.585	100	3674.649	
 sample01	Rv2043c	pncA	100	1715.247	100	1829.639	
 sample01	Rv0701	rplC	100	2889.414	100	3095.667	
-sample01	Rv0667	rpoB	100	3285.271	100	2342.436	Contains valid deletion(s): c.1291_1292delAGinsCC; c.1291_1292delAGinsGC; c.1291_1292delAGinsTT; c.1327_1329delTTGinsCCC; c.1291_1292delAGinsTC; c.1327_1329delTTGinsCTC; c.1327_1329delTTGinsCTT
+sample01	Rv0667	rpoB	100	3285.271	100	2342.436	Contains valid deletion(s): c.727_728delGTinsAC; c.1291_1292delAGinsCC; c.1327_1329delTTGinsCCC
 sample01	EBG00000313339	rrl	100	2383.529	100	2952.955
-sample01	EBG00000313325	rrs	100	3128.388	100	3719.095	
+sample01	EBG00000313325	rrs	91.111	5738.913	100	7776.69	
 ```
 
-Here is a corresponding exerpt from a target coverage report:
+Here is a corresponding exerpt from a target coverage report; note how the valid deletion warning is only present in the target report for the specific regions that contain the deletions, while in the locus report, the warning is present for the entire gene:
 
 ```text
 sample_name	locus_tag	gene_name	percent_coverage	average_depth	err_percent_coverage	err_average_depth	qc_warning
@@ -61,7 +60,7 @@ sample01	Rv2416c	eis	100	2290.005	100	2538.581
 sample01	Rv3795	embB	100	2376.114	100	2919.096	
 sample01	Rv0006	gyrA	100	2313.786	100	2823.435	
 sample01	Rv0005	gyrB	100	1583.527	100	1949.587	
-sample01	Rv1484	inhA	100	2326.662	100	2551.08	
+sample01	Rv1484	inhA	3.204	130.288	4.633	188.356	
 sample01	Rv1908c	katG1	100	1840.63	100	2032.022	
 sample01	Rv1908c	katG2	100	1941.742	100	2579.653	
 sample01	Rv1908c	katG3	100	1913.291	100	2449.762	
@@ -69,11 +68,11 @@ sample01	Rv1908c	katG4	100	1922.261	100	2353.081
 sample01	Rv0678	mmpR5	100	3158.585	100	3674.649	
 sample01	Rv2043c	pncA	100	1715.247	100	1829.639	
 sample01	Rv0701	rplC	100	2889.414	100	3095.667	
-sample01	Rv0667	rpoB_1	100	4851.581	100	6403.333
-sample01	Rv0667	rpoB_2	100	1901.996	100	2281.826
+sample01	Rv0667	rpoB_1	100	4851.581	100	6403.333	Contains valid deletion(s): c.727_728delGTinsAC
+sample01	Rv0667	rpoB_2	100	1901.996	100	2281.826	Contains valid deletion(s): c.1291_1292delAGinsCC; c.1327_1329delTTGinsCCC
 sample01	EBG00000313339	rrl_1	100	1865.669	100	2085.516	
 sample01	EBG00000313339	rrl_2	100	2696.711	100	3166.373	
-sample01	EBG00000313325	rrs	100	3128.388	100	3719.095	
+sample01	EBG00000313325	rrs	91.111	5738.913	100	7776.69	
 ```
 
 ## Customizing column names
