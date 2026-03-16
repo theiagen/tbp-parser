@@ -100,7 +100,9 @@ class CoverageCalculator:
                     # convert to 1-based indexing.
                     # Ex) BedRecord (1-based closed interval) [1,10] -> pysam pileup [0,10)
                     reads_by_position[rec.reference_pos + 1] = read_list
-                    setattr(bed_record, "reads_by_position", reads_by_position)
+
+                # Set `reads_by_position` attribute outside pileup loop because if no reads are found for any position, the pileup loop will be skipped and we still want to have an entry for each position with an empty list of reads.
+                setattr(bed_record, "reads_by_position", reads_by_position)
                 logger.debug(f"Populated reads_by_position for {bed_record} across {len(bed_record.reads_by_position)} positions")
         return bed_records
 
