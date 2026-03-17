@@ -29,7 +29,7 @@ These miscellaneous columns are also included in the Looker report to provide ad
 
 ## Customizing column names
 
-To customize any of the column names, you must use the following format in a configuration file:
+To overwrite any of the output column names or text in the laboratorian report, please use the following format in a [configuration file](../inputs.md#configuration-file) or use the command-line parameter `--find_and_replace`:
 
 ```yaml
 FIND_AND_REPLACE:
@@ -37,4 +37,4 @@ FIND_AND_REPLACE:
   "rifampicin": "rifampin"
 ```
 
-This will rename the `sample_id` column to `My_Sample_ID_Column` and the `rifampicin` column to `rifampin` in the Looker report, but also rename every instance of that text in all output reports (all "rifampicin" will be renamed to "rifampin").
+Please note that this will rename every instance of that text in **all** output reports (every instance of "sample_id" will be renamed to "My_Sample_ID_Column" in all output files, etc.).

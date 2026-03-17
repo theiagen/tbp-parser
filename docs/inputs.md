@@ -36,23 +36,14 @@ A description of each file follows the table.
 
 #### Configuration File
 
-Instead of providing the input parameters on the command line, the ability to provide a configuration file in YAML format is available.
+Instead of providing the input parameters on the command line, the ability to provide a configuration file in YAML format is available. This file (and any included fields) are **case-sensitive**.
 
-The configuration file will **overwrite all command-line arguments**, except for other file arguments. The configuration file can be provided using the `--config` argument.
+The configuration file will **overwrite all command-line arguments**, except for other file arguments. The configuration file can be provided using the `--config` argument. Input parameters should be indicated in all caps and should match the long version of the command-line arguments (e.g. `MIN_FREQUENCY` instead of `-f` or `--min_frequency`).
 
-To overwrite a variable, please use the find and replace variable in the configuration file. This file is **case-sensitive**.
+To overwrite any output text, please use the find and replace variable in the configuration file.
 
 ```yaml
-# My laboratory reports "rifampicin" as "rifampin", so I want to rename that text in all of the output files.
-# We also use Rv0678 instead of mmpR5 and Rv2983 instead of fbiD, so I want to rename those as well.
-# I want an output column renamed in the LIMS report from "Sample Name" to "sample accession"
-FIND_AND_REPLACE:
-  rifampicin: "rifampin"
-  fbiD: "Rv2983"
-  mmpR5: "Rv0678"
-  "Sample Name": "sample accession"
-
-# I can also overwrite any input parameters, like so. 
+# I can overwrite any input parameters, like so. 
 # This makes it easy to rerun the same analysis on different 
 #  samples without rewriting all of the parameters each time.
 MIN_FREQUENCY: 0.1
@@ -64,6 +55,19 @@ TNGS_FREQUENCY_BOUNDARIES:
 TNGS_READ_SUPPORT_BOUNDARIES:
 - 100
 - 500
+
+# I can also use the configuration file to customize output files.
+# My laboratory reports "rifampicin" as "rifampin", so I want to
+#  rename that text in all of the output files. I also use Rv0678
+#  instead of mmpR5 and Rv2983 instead of fbiD; and I need to rename 
+#  an output column in the LIMS report from "Sample Name" to "sample"
+FIND_AND_REPLACE:
+  rifampicin: "rifampin"
+  fbiD: "Rv2983"
+  mmpR5: "Rv0678"
+  "Sample Name": "sample"
+
+
 ```
 
 #### Coverage BED File
@@ -85,6 +89,8 @@ Chromosome	4933	7267	Rv0005	gyrB	levofloxacin,moxifloxacin
 ```
 
 Please note that this file *does not* have a header line. The default file used in tbp-parser was retrieved from [the TBProfiler repository here](https://github.com/jodyphelan/TBProfiler/blob/44ce9b5d361d44b811e212f575283d0ab43da2ed/db/tbdb/genes.bed) with commit hash `44ce9b5`.
+
+This is the same format used for the optional `--err_coverage_bed` file, which is an optional input parameter primarily for tNGS analysis ([see below](#tngs-specific-arguments)).
 
 #### LIMS Report Format YAML File
 
@@ -120,9 +126,9 @@ For example:
 
 ```yaml
 - drug: rifampicin
-    drug_code: RIF
-    gene_codes:
-      rpoB: RIF_rpoB
+  drug_code: RIF
+  gene_codes:
+    rpoB: RIF_rpoB
 - drug: amikacin
   drug_code: AMK
   gene_codes:
@@ -212,7 +218,7 @@ These options are primarily used for tNGS data.
 | Name | Description | Default Value |
 | :--- | :---------- | :------------ |
 | `--tngs` | Indicates that the input data was generated using a tNGS protocol. Turns on tNGS-specific features | false |
-| `-e`, `--err_coverage_bed` | the BED file containing the regions to use for calculating the error rate for tNGS data; should be formatted like the genes.bed and file in TBProfiler and [coverage BED described above](#coverage-bed-file) | |
+| `-e`, `--err_coverage_bed` | the BED file containing the "essential for resistance regions." This file indicates to tbp-parser that these regions should also have breadth of coverage and average depth calculations performed; this file should be formatted like the genes.bed file in TBProfiler and the [coverage BED described above](#coverage-bed-file) | |
 | `--use_err_as_brr` | if an ERR BED file is provided, use the ERR regions in place of the typical coverage regions for all QC calculations<br>Note: this is an experimental option | |
 | `--tngs_frequency_boundaries` | the frequency boundaries (comma-delimited; `lower_f,upper_f`) for tNGS QC reporting, used in conjunction with `--tngs_read_support_boundaries` | 0.1,0.1 |
 | `--tngs_read_support_boundaries` | the read support boundaries (comma-delimited; `lower_r,upper_r`) for tNGS QC reporting, used in conjunction with `--tngs_frequency_boundaries` | 10,10 |

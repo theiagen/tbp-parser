@@ -34,9 +34,9 @@ Please note that drug interpretation severity is ranked as follows (from high to
 | Gene-drug combo | p.Ala689Val (e.g) | A list of the mutations for that gene-drug combination with either an "R" or "U" MDL interpretation in the Laboratorian report. The format of the mutation is "p.(amino acid change)" by default or "n.(nucleotide change)" if no protein change occurred. | R, U |
 | Drug | No mutations associated with resistance to <antimicrobial> detected | The highest severity mutation for any of the gene(s) associated with that antimicrobial drug has an "S" (susceptible) or "WT" (wild-type) MDL interpretation in the Laboratorian report | S, WT |
 | Gene-drug combo | No high confidence mutations detected | The highest severity mutation for that gene-drug combination has an "S" MDL interpretation. | S |
-| Gene-drug combo | No mutations detected | The highest severity mutation for that gene-drug combination has a "WT" MDL interpretation; no mutations were found in that gene. | WT |
+| Gene-drug combo | No mutations detected | The highest severity mutation for that gene-drug combination has a "WT" or "NA" MDL interpretation; no mutations were found in that gene, or any mutations failed positional QC. | WT |
 | Drug | Pending Retest | The highest severity mutation for any of the gene(s) associated with that antimicrobial drug has an "Insufficient Coverage" MDL interpretation in the Laboratorian report | Insufficient Coverage |
-| Gene-drug combo | No sequence | The highest severity mtuation for that gene-drug combination has an "Insufficient Coverage" MDL interpretation | Insufficient Coverage |
+| Gene-drug combo | No sequence | The highest severity mutation for that gene-drug combination has an "Insufficient Coverage" MDL interpretation | Insufficient Coverage |
 
 In tbp-parser, rifampicin uses slightly different language:
 
@@ -125,7 +125,7 @@ The language used is different between tNGS and WGS.
 
 ### **Customizing miscellaneous column names**
 
-To customize these column names in a configuration file, either indicate the desired changes with the  `--find_and_replace` input parameter, or include a block in your configuration file with the following format:
+To overwrite any of the output column names or text in the laboratorian report, please use the following format in a [configuration file](../inputs.md#configuration-file) or use the command-line parameter `--find_and_replace`:
 
 ```yaml
 FIND_AND_REPLACE:
@@ -133,9 +133,10 @@ FIND_AND_REPLACE:
   fbiD: "Rv2983"
   mmpR5: "Rv0678"
   "Sample Name": "sample accession"
+  "DNA of Mycobacterium bovis BCG detected" : "M. bovis BCG"
 ```
 
-Please note that this will rename every instance of that text in **all** output reports (all "Sample_Name" will be renamed to "My_Sample_Column" in all output files, etc.).
+Please note that this will rename every instance of that text in **all** output reports (every instance of "Sample Name" will be renamed to "sample accession" in all output files, etc.).
 
 ## Example LIMS report
 

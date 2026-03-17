@@ -77,7 +77,7 @@ sample01	EBG00000313325	rrs	91.111	5738.913	100	7776.69
 
 ## Customizing column names
 
-To overwrite any of the column names in a configuration file, use the following format:
+To overwrite any of the output column names or text in the coverage reports, please use the following format in a [configuration file](../inputs.md#configuration-file) or use the command-line parameter `--find_and_replace`:
 
 ```yaml
 FIND_AND_REPLACE:

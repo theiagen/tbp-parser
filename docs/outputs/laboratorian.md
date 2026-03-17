@@ -14,7 +14,7 @@ Any fields from TBProfiler are from the input JSON file produced by TBProfiler.
 | tbprofiler_variant_substitution_type | The type of mutation identified, whether or not it was a frameshift, missense, or synonymous mutation | TBProfiler `"type"` field |
 | tbprofiler_variant_substitution_nt | The mutation in nucleotide format | TBProfiler `"nucleotide_change"` field |
 | tbprofiler_variant_substitution_aa | The mutation in amino acid format, if possible | TBProfiler `"protein_change"` field |
-| genomic_start_pos | The genomic start position of the mutation | The TBProfiler `"pos"` field |
+| genomic_start_pos | The genomic start position of the mutation | TBProfiler `"pos"` field |
 | genomic_end_pos | The genomic end position of the mutation | Calculated from the TBProfiler `"pos"` field |
 | confidence | Contains either:<br>- the WHO annotation<br>- an indication that there is no WHO annotation<br>- NA for when there is no mutation | Edited by tbp-parser, originates from the TBProfiler `"confidence"` field |
 | antimicrobial | The antimicrobial drug that may be affected by this mutation |  TBProfiler `"annotation.drug"` field, split into multiple rows if multiple annotation items are present. May also originate from the `"gene_associated_drugs"` field if not all are included in the annotation |
@@ -29,13 +29,13 @@ Any fields from TBProfiler are from the input JSON file produced by TBProfiler.
 | source | The source of the mutation information (WHO v2 catalogue, tbdb, etc.) | TBProfiler `"annotation.source"` field |
 | tbdb_comment | Any comments from TBProfiler about the mutation | TBProfiler `"annotation.comment"` field |
 
-Because of how a particular mutation may contribute resistance to different drugs at the same time, each mutation is listed multiple times, once for each antimicrobial drug that could be affected.
+Because of how a particular mutation may contribute resistance to different drugs at the same time, each mutation may be listed multiple times, once for each antimicrobial drug that could be impacted.
 
-Any genes that do _not_ have any mutations are also included in the laboratorian report with NA or WT in the appropriate field. This results in a report with many rows and rows with very similar values.
+Any genes that do _not_ have any mutations are also included in the laboratorian report with NA or WT in the appropriate field.
 
 ## Customizing column names
 
-To overwrite any of the column names, please use the following format in a configuration file or use the command-line parameter `--find_and_replace`:
+To overwrite any of the output column names or text in the laboratorian report, please use the following format in a [configuration file](../inputs.md#configuration-file) or use the command-line parameter `--find_and_replace`:
 
 ```yaml
 FIND_AND_REPLACE:
@@ -44,4 +44,4 @@ FIND_AND_REPLACE:
   ...
 ```
 
-Please note that this will rename every instance of that text in all output reports (all "sample_id" will be renamed to "My_Sample_ID_Column" in all output files, etc.).
+Please note that this will rename every instance of that text in **all** output reports (every instance of "sample_id" will be renamed to "My_Sample_ID_Column" in all output files, etc.).
