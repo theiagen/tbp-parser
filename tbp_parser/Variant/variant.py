@@ -132,9 +132,10 @@ class Variant(BaseModel):
           "Assoc w R - interim": 4,
           "Assoc w R - Interim": 4,
           "Uncertain significance": 3,
-          "Not assoc w R - Interim": 2, # should these be flipped?
-          "Not assoc w R": 1, # should these be flipped?
-          "Not found in WHO catalogue": 0, # this might be redundant with "No WHO annotation"
+          "Not assoc w R - Interim": 2,
+          "Not assoc w R - interim": 2,
+          "Not assoc w R": 1,
+          "Not found in WHO catalogue": 0,
           "No WHO annotation": -1, # given to synthetic variants
         }
         new_variant_rank = annotation_rank[self.confidence]
