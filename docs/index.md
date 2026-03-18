@@ -25,34 +25,19 @@ Please reach out to us at <support@theiagen.com> if you would like any custom fi
 
 ### Docker
 
-We highly recommend using the following Docker image to run tbp-parser:
+You can use our Docker image to run `tbp-parser` without needing to install any dependencies. To pull the latest version of the Docker image, use the following command:
 
 ``` bash
 docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:3.0.0
 ```
 
-The entrypoint for this Docker image is the `tbp-parser` help message. To run this container _interactively_, you can use the following command:
-
-``` bash
-docker run -it --entrypoint=/bin/bash us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:3.0.0
-
-# Once inside the container interactively, you can run the tbp-parser tool
-python3 /tbp-parser/tbp_parser/tbp_parser.py -v
-# 3.0.0
-```
-
 ### Locally with Python
 
-`tbp-parser` is not yet available with `pip` or `conda`. To run `tbp-parser` in your local command-line environment, install the following dependencies:
+`tbp-parser` is availble with `pip`. To install `tbp-parser` and its dependencies, run the following command:
 
-- python >= 3.12
-- pandas >= 3.0.1, < 4.0.0
-- pydantic >= 2.12.5, < 3.0.0
-- pysam >= 0.23.3, < 0.24.0
-- pyyaml >= 6.0.3, < 7.0.0
-
-
-After installation of these dependencies, download and extract the latest release of `tbp-parser` and run the script with `python3`.
+```bash
+pip install tbp-parser
+```
 
 ## Usage
 
@@ -61,7 +46,7 @@ After installation of these dependencies, download and extract the latest releas
 This shows how the script can be run if used inside the Docker container provided above.
 
 ``` text
-python3 /tbp-parser/tbp_parser/tbp_parser.py \
+tbp_parser \
     /path/to/data/tbprofiler_output.json \
     /path/to/data/tbprofiler_output.bam \
     -o "example" \
