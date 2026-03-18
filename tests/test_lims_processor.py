@@ -262,7 +262,7 @@ class TestProcessLimsMtbcId:
         result = processor.process_lims_mtbc_id(
             lims_records, [], locus_coverage_map, "lineage4", "lineage4.1"
         )
-        assert "Mycobacterium tuberculosis species detected" == result
+        assert "DNA of Mycobacterium tuberculosis species detected" == result
 
     def test_wgs_bcg_detected(self, processor, make_lims_record, make_locus_coverage):
         lims_records = [make_lims_record()]
