@@ -95,10 +95,10 @@ class LIMSProcessor:
                         logger.debug(f"No locus coverage found for {v.gene_name}|{v.gene_id} at position {v.pos}")
                         continue
 
-                    # if variant fails positional QC but is a valid deletion, we want to keep it and assign it to the LIMSRecord for interpretation/reporting purposes; otherwise, we filter out variants that fail QC
+                    # filter out variants that fail positional QC, but keep them if they also fail locus QC
                     if (
                         not v.fails_positional_qc or
-                        locus_coverage.contains_valid_deletion(v)
+                        v.fails_positional_qc and v.fails_locus_qc
                     ):
                         qc_filtered_variants.append(v)
 
@@ -177,10 +177,10 @@ class LIMSProcessor:
         elif max_gene_code.max_mdl_interpretation in ["U"]:
             setattr(lims_record, "drug_target_value", f"The detected mutation(s) have uncertain significance. Resistance to {lims_record.drug} cannot be ruled out")
 
-        elif max_gene_code.max_mdl_interpretation in ["S", "WT"]:
+        elif max_gene_code.max_mdl_interpretation in ["S", "WT", "NA"]:
             setattr(lims_record, "drug_target_value", f"No mutations associated with resistance to {lims_record.drug} detected")
 
-        elif max_gene_code.max_mdl_interpretation in ["NA", "Insufficient Coverage"]:
+        elif max_gene_code.max_mdl_interpretation in ["Insufficient Coverage"]:
             setattr(lims_record, "drug_target_value", f"Pending Retest")
 
         logger.debug(f"{lims_record}")
@@ -266,10 +266,10 @@ class LIMSProcessor:
         elif gene_code.max_mdl_interpretation in ["S"]:
             setattr(gene_code, "gene_target_value", "No high confidence mutations detected")
 
-        elif gene_code.max_mdl_interpretation in ["WT"]:
+        elif gene_code.max_mdl_interpretation in ["WT", "NA"]:
             setattr(gene_code, "gene_target_value", "No mutations detected")
 
-        elif gene_code.max_mdl_interpretation in ["NA", "Insufficient Coverage"]:
+        elif gene_code.max_mdl_interpretation in ["Insufficient Coverage"]:
             setattr(gene_code, "gene_target_value", "No sequence")
         return
 
@@ -287,10 +287,11 @@ class LIMSProcessor:
         Returns:
             bool: True if fraction of LIMS genes passing coverage QC is above threshold, False otherwise
         """
-        lims_genes = []
+        lims_genes = set()
+        # get list of all unique genes found in the LIMS records
         for rec in lims_records:
-            for gene, lims_gene_code in rec.gene_codes.items():
-                lims_genes.append(gene)
+            for gene in rec.gene_codes:
+                lims_genes.add(gene)
 
         # Only count/check coverage for the locus tag corresponding to the genes found in the LIMS format
         passing_genes = 0
@@ -384,7 +385,7 @@ class LIMSProcessor:
             if self.config.TNGS:
                 # Section 5.5: tNGS lineage based on pncA His57Asp
                 if pnca_his57asp_variants:
-                    if any(["Failed quality in the mutation position" in v.warning for v in pnca_his57asp_variants]):
+                    if any([v.fails_positional_qc for v in pnca_his57asp_variants]):
                         lineage.add("DNA of Mycobacterium tuberculosis complex detected (M. bovis not ruled out)")
                     else:
                         lineage.add("DNA of Mycobacterium bovis detected")

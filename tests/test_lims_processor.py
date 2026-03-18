@@ -112,12 +112,12 @@ class TestResolveGeneTarget:
         processor.resolve_gene_target(gc)
         assert gc.gene_target_value == "No mutations detected"
 
-    def test_na_shows_no_sequence(self, processor, make_lims_gene_code):
+    def test_na_shows_no_mutations(self, processor, make_lims_gene_code):
         gc = make_lims_gene_code()
         gc.max_mdl_interpretation = "NA"
         gc.max_mdl_variants = []
         processor.resolve_gene_target(gc)
-        assert gc.gene_target_value == "No sequence"
+        assert gc.gene_target_value == "No mutations detected"
 
     def test_insufficient_coverage_shows_no_sequence(self, processor, make_lims_gene_code):
         gc = make_lims_gene_code()
