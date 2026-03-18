@@ -223,7 +223,7 @@ class TestResolveDrugTarget:
         record.gene_codes["katG"].max_mdl_interpretation = "NA"
         record.gene_codes["katG"].max_mdl_variants = []
         processor.resolve_drug_target(record)
-        assert "Pending Retest" in record.drug_target_value
+        assert "No mutations associated with resistance to isoniazid detected" in record.drug_target_value
 
     def test_rpob_s_with_synonymous_rrdr(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
@@ -262,7 +262,7 @@ class TestProcessLimsMtbcId:
         result = processor.process_lims_mtbc_id(
             lims_records, [], locus_coverage_map, "lineage4", "lineage4.1"
         )
-        assert "Mycobacterium tuberculosis species detected" in result
+        assert "Mycobacterium tuberculosis species detected" == result
 
     def test_wgs_bcg_detected(self, processor, make_lims_record, make_locus_coverage):
         lims_records = [make_lims_record()]
@@ -270,7 +270,7 @@ class TestProcessLimsMtbcId:
         result = processor.process_lims_mtbc_id(
             lims_records, [], locus_coverage_map, "BCG", "BCG"
         )
-        assert "bovis BCG" in result
+        assert "DNA of Mycobacterium bovis BCG detected" == result
 
     def test_wgs_bovis_la1_detected(self, processor, make_lims_record, make_locus_coverage):
         lims_records = [make_lims_record()]
@@ -278,8 +278,7 @@ class TestProcessLimsMtbcId:
         result = processor.process_lims_mtbc_id(
             lims_records, [], locus_coverage_map, "La1", "La1.1"
         )
-        assert "bovis" in result
-        assert "not BCG" in result
+        assert "DNA of Mycobacterium bovis (not BCG) detected" == result
 
     def test_wgs_empty_lineage_falls_back_to_complex(self, processor, make_lims_record, make_locus_coverage):
         lims_records = [make_lims_record()]
@@ -287,8 +286,7 @@ class TestProcessLimsMtbcId:
         result = processor.process_lims_mtbc_id(
             lims_records, [], locus_coverage_map, "", ""
         )
-        assert "tuberculosis complex detected" in result
-        assert "NOT" not in result
+        assert "DNA of Mycobacterium tuberculosis complex detected" == result
 
     def test_wgs_na_lineage_falls_back_to_complex(self, processor, make_lims_record, make_locus_coverage):
         lims_records = [make_lims_record()]
@@ -296,11 +294,9 @@ class TestProcessLimsMtbcId:
         result = processor.process_lims_mtbc_id(
             lims_records, [], locus_coverage_map, "NA", ""
         )
-        assert "tuberculosis complex detected" in result
+        assert "DNA of Mycobacterium tuberculosis complex detected" == result
 
-    def test_tngs_pnca_his57asp_passes_qc(
-        self, processor, make_variant, make_lims_record, make_lims_gene_code, make_locus_coverage, mock_config
-    ):
+    def test_tngs_pnca_his57asp_passes_qc(self, processor, make_variant, make_lims_record, make_lims_gene_code, make_locus_coverage, mock_config):
         lims_records = [
             make_lims_record(
                 drug="pyrazinamide",
@@ -315,16 +311,13 @@ class TestProcessLimsMtbcId:
             gene_name="pncA", drug="pyrazinamide",
             protein_change="p.His57Asp", gene_id="Rv2043c",
         )
-        v.warning = set()
+        v.fails_positional_qc = False
         result = processor.process_lims_mtbc_id(
             lims_records, [v], locus_coverage_map, "", ""
         )
-        assert "Mycobacterium bovis detected" in result
-        assert "not ruled out" not in result
+        assert "DNA of Mycobacterium bovis detected" == result
 
-    def test_tngs_pnca_his57asp_ignores_fails_qc(
-        self, processor, make_variant, make_lims_record, make_lims_gene_code, make_locus_coverage, mock_config
-    ):
+    def test_tngs_pnca_his57asp_ignores_fails_qc(self, processor, make_variant, make_lims_record, make_lims_gene_code, make_locus_coverage, mock_config):
         lims_records = [
             make_lims_record(
                 drug="pyrazinamide",
@@ -339,15 +332,13 @@ class TestProcessLimsMtbcId:
             gene_name="pncA", drug="pyrazinamide",
             protein_change="p.His57Asp", gene_id="Rv2043c",
         )
-        v.warning = {"Failed quality in the mutation position"}
+        v.fails_positional_qc = True
         result = processor.process_lims_mtbc_id(
             lims_records, [v], locus_coverage_map, "", ""
         )
-        assert "M. bovis not ruled out" in result
+        assert "DNA of Mycobacterium tuberculosis complex detected (M. bovis not ruled out)" == result
 
-    def test_tngs_no_pnca_his57asp(
-        self, processor, make_variant, make_lims_record, make_lims_gene_code, make_locus_coverage, mock_config
-    ):
+    def test_tngs_no_pnca_his57asp(self, processor, make_variant, make_lims_record, make_lims_gene_code, make_locus_coverage, mock_config):
         lims_records = [
             make_lims_record(
                 drug="pyrazinamide",
@@ -365,18 +356,16 @@ class TestProcessLimsMtbcId:
         result = processor.process_lims_mtbc_id(
             lims_records, [], locus_coverage_map, "", ""
         )
-        assert "not M. bovis" in result
+        assert "DNA of Mycobacterium tuberculosis complex detected (not M. bovis)" == result
 
-    def test_low_coverage_returns_not_detected(
-        self, processor, make_lims_record, make_locus_coverage, mock_config
-    ):
+    def test_low_coverage_returns_not_detected(self, processor, make_lims_record, make_locus_coverage, mock_config):
         mock_config.MIN_PERCENT_LOCI_COVERED = 1.0  # require 100%
         lims_records = [make_lims_record()]
         low_cov_map = {"Rv0667": make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=0.0)}
         result = processor.process_lims_mtbc_id(
             lims_records, [], low_cov_map, "lineage4", "lineage4.1"
         )
-        assert "NOT detected" in result
+        assert "DNA of Mycobacterium tuberculosis complex NOT detected" == result
 
 
 class TestPassesLimsCoverageFractionERR:
