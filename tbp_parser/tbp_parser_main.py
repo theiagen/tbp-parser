@@ -61,7 +61,7 @@ def main():
 
     # QC for reported_variants and unreported_variants
     variant_qc = VariantQC()
-    reported_variants = variant_qc.qc(
+    combined_variants = variant_qc.qc(
         variants=reported_variants,
         unreported_variants=unreported_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
@@ -72,7 +72,7 @@ def main():
     lims_processor = LIMSProcessor()
     lims_records, lims_lineage = lims_processor.process(
         lims_records=lims_records,
-        variants=reported_variants,
+        variants=combined_variants,
         locus_coverage_map=LOCUS_COVERAGE_MAP,
         detected_lineage=LINEAGE_ID,
         detected_sublineage=SUBLINEAGE_ID,
@@ -87,11 +87,11 @@ def main():
     )
 
     # Write lab report
-    write_laboratorian_report(reported_variants)
+    write_laboratorian_report(combined_variants)
 
     # Write Looker report
     write_looker_report(
-        variants=reported_variants,
+        variants=combined_variants,
         lims_lineage=lims_lineage,
         sample_id=SAMPLE_ID,
         detected_lineage=LINEAGE_ID,

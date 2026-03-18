@@ -20,7 +20,7 @@ def write_lims_report(
     sample_id: str,
     detected_lineage: str,
 ) -> None:
-    """Write the LIMS report from processed Variant objects.
+    """Write the LIMS report from processed LIMSRecord objects.
 
     Args:
         lims_records: List of LIMSRecord objects
