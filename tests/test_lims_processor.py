@@ -80,6 +80,25 @@ class TestSetGeneCodeMaxMdl:
         processor.set_gene_code_max_mdl(gc, [v])
         assert gc.max_mdl_interpretation == "WT"
 
+    def test_r_includes_u_variants(self, processor, make_lims_gene_code, make_variant):
+        gc = make_lims_gene_code()
+        v_r = make_variant(mdl_interpretation="R")
+        v_u = make_variant(mdl_interpretation="U", nucleotide_change="c.100A>G", protein_change="p.Thr34Ala")
+        v_s = make_variant(mdl_interpretation="S", nucleotide_change="c.200C>T", protein_change="p.Ala67Val")
+        processor.set_gene_code_max_mdl(gc, [v_r, v_u, v_s])
+        assert gc.max_mdl_interpretation == "R"
+        assert v_r in gc.max_mdl_variants
+        assert v_u in gc.max_mdl_variants
+        assert v_s not in gc.max_mdl_variants
+
+    def test_r_without_u_only_includes_r(self, processor, make_lims_gene_code, make_variant):
+        gc = make_lims_gene_code()
+        v_r = make_variant(mdl_interpretation="R")
+        v_s = make_variant(mdl_interpretation="S", nucleotide_change="c.100A>G", protein_change="p.Thr34Ala")
+        processor.set_gene_code_max_mdl(gc, [v_r, v_s])
+        assert gc.max_mdl_interpretation == "R"
+        assert gc.max_mdl_variants == [v_r]
+
 
 class TestResolveGeneTarget:
     def test_r_shows_protein_change(self, processor, make_lims_gene_code, make_variant):

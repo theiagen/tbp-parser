@@ -207,6 +207,11 @@ class LIMSProcessor:
 
         max_mdl_variants = [v for v in variants if v.mdl_interpretation == max_mdl_interpretation]
 
+        # special case: when max_mdl_interpretation is "R", also include "U" variants
+        if max_mdl_interpretation == "R":
+            u_variants = [v for v in variants if v.mdl_interpretation == "U"]
+            max_mdl_variants.extend(u_variants)
+
         # assigning max_mdl_variants/interpretation to LIMSGeneCode object
         setattr(gene_code, "max_mdl_interpretation", max_mdl_interpretation)
         setattr(gene_code, "max_mdl_variants", max_mdl_variants)
