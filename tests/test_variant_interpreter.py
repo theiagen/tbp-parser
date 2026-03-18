@@ -440,7 +440,7 @@ class TestDetermineInterpretation:
         interpreter.determine_interpretation([v])
         assert v.mdl_interpretation == "U"
         assert v.looker_interpretation == "U"
-        assert v.rationale == "Expert rule 3.2.3. gyrA QRDR"
+        assert v.rationale == "Expert rule 3.2.2. gyrA QRDR"
 
     def test_rule3_2_3_gyrb_qrdr_nonsynonymous(self, interpreter, make_variant):
         """gyrB QRDR nonsynonymous → U, rule 3.2.3"""

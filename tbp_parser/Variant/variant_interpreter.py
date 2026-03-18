@@ -34,7 +34,7 @@ class VariantInterpreter:
         "2.2.2.1": "Expert rule 2.2.2.1. rpoB RRDR",
         "2.2.2.2": "Expert rule 2.2.2.2. rpoB non-RRDR",
         "3.2.1": "Expert rule 3.2.1. rrs",
-        "3.2.2": "Expert rule 3.2.3. gyrA QRDR",
+        "3.2.2": "Expert rule 3.2.2. gyrA QRDR",
         "3.2.3": "Expert rule 3.2.3. gyrB QRDR",
         "3.2.4": "No WHO annotation or expert rule",
         "whov2": "Mutation in proximal promoter region",
