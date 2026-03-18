@@ -312,11 +312,7 @@ class LIMSProcessor:
             # Determine if locus coverage is below threshold for LIMS QC fail and check if gene contains variants with valid deletions
             has_low_boc = locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
             boc = locus_coverage.breadth_of_coverage
-            has_valid_deletion = (
-                lims_locus_tag in [
-                    variant.gene_id for variant in locus_coverage.valid_deletions
-                ]
-            )
+            has_valid_deletion = locus_coverage.contains_loci_with_valid_deletion(lims_locus_tag)
 
             if has_low_boc and not has_valid_deletion:
                 logger.debug(

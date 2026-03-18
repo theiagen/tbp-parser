@@ -148,8 +148,36 @@ class TestERRWithinCoords:
 
         with pytest.raises(ValueError):
             make_locus_coverage(coords=[(100, 200)], err_coverage=err)
-class TestContainsValidDeletion:
-    def test_contains_valid_deletion(self, make_variant):
-        del_variant = make_variant(nucleotide_change="c.1_100del", pos=150)
+class TestContainsVariantWithValidDeletion:
+    def test_contains_variant_with_valid_deletion(self, make_variant, make_target_coverage, make_locus_coverage):
+        del_variant = make_variant(gene_name="rpoB", gene_id="Rv0667", nucleotide_change="c.1_100del", pos=150)
+        other_variant = make_variant(gene_name="rpoB", gene_id="Rv0667", nucleotide_change="c.1349C>T", pos=120)
+        tc = make_target_coverage(coords=[(100, 200)], valid_deletions=[del_variant])
+        lc = make_locus_coverage(coords=[(100, 200)], valid_deletions=[del_variant])
         err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=50.0, valid_deletions=[del_variant])
-        assert err.contains_valid_deletion(del_variant) is True
+        assert tc.contains_variant_with_valid_deletion(del_variant) is True
+        assert lc.contains_variant_with_valid_deletion(del_variant) is True
+        assert err.contains_variant_with_valid_deletion(del_variant) is True
+        assert tc.contains_variant_with_valid_deletion(other_variant) is False
+        assert lc.contains_variant_with_valid_deletion(other_variant) is False
+        assert err.contains_variant_with_valid_deletion(other_variant) is False
+
+
+class TestContainsLociWithValidDeletion:
+    def test_contains_loci_with_valid_deletion(self, make_variant, make_target_coverage, make_locus_coverage):
+        """A non-deletion variant at the same locus as a valid deletion should be detected by contains_loci_with_valid_deletion."""
+        del_variant = make_variant(gene_name="rpoB", gene_id="Rv0667", nucleotide_change="c.1_100del", pos=150)
+        other_variant = make_variant(gene_name="rpoB", gene_id="Rv0667", nucleotide_change="c.1349C>T", pos=120)
+        tc = make_target_coverage(coords=[(100, 200)], valid_deletions=[del_variant])
+        lc = make_locus_coverage(coords=[(100, 200)], valid_deletions=[del_variant])
+        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=50.0, valid_deletions=[del_variant])
+        assert tc.contains_loci_with_valid_deletion(del_variant.gene_id) is True
+        assert lc.contains_loci_with_valid_deletion(del_variant.gene_id) is True
+        assert err.contains_loci_with_valid_deletion(del_variant.gene_id) is True
+        assert tc.contains_loci_with_valid_deletion(other_variant.gene_id) is True
+        assert lc.contains_loci_with_valid_deletion(other_variant.gene_id) is True
+        assert err.contains_loci_with_valid_deletion(other_variant.gene_id) is True
+        # A different locus_tag should not match
+        assert tc.contains_loci_with_valid_deletion("Rv1234") is False
+        assert lc.contains_loci_with_valid_deletion("Rv1234") is False
+        assert err.contains_loci_with_valid_deletion("Rv1234") is False

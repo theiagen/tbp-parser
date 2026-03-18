@@ -184,7 +184,7 @@ class TestApplyQc:
 
         assert v.fails_positional_qc is True
         assert v.fails_locus_qc is False
-        assert locus.contains_valid_deletion(v) is False
+        assert locus.contains_variant_with_valid_deletion(v) is False
 
     def test_deletion_failing_qc_low_breadth_r_does_not_pass_via_valid_deletion(
         self, make_variant, make_locus_coverage
@@ -199,7 +199,7 @@ class TestApplyQc:
 
         assert v.fails_positional_qc is True
         assert v.fails_locus_qc is True
-        assert locus.contains_valid_deletion(v) is False
+        assert locus.contains_variant_with_valid_deletion(v) is False
         assert v.mdl_interpretation == "Insufficient Coverage"
         assert v.looker_interpretation == "Insufficient Coverage"
 
@@ -216,7 +216,7 @@ class TestApplyQc:
 
         assert v.fails_positional_qc is True
         assert v.fails_locus_qc is True
-        assert locus.contains_valid_deletion(v) is False
+        assert locus.contains_variant_with_valid_deletion(v) is False
         assert v.mdl_interpretation == "Insufficient Coverage"
         assert v.looker_interpretation == "Insufficient Coverage"
 
@@ -228,8 +228,8 @@ class TestApplyQc:
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)])
         qc.apply_qc([good, bad], {"Rv0667": locus}, {})
 
-        assert locus.contains_valid_deletion(good) is True
-        assert locus.contains_valid_deletion(bad) is False
+        assert locus.contains_variant_with_valid_deletion(good) is True
+        assert locus.contains_variant_with_valid_deletion(bad) is False
         assert good.fails_positional_qc is False
         assert good.fails_locus_qc is False
         assert bad.fails_positional_qc is True
@@ -244,7 +244,36 @@ class TestApplyQc:
 
         assert v.fails_positional_qc is False
         assert v.fails_locus_qc is False
-        assert locus.contains_valid_deletion(v) is True
+        assert locus.contains_variant_with_valid_deletion(v) is True
+
+    def test_mutation_passes_locus_qc_when_locus_has_valid_deletion(self, make_variant, make_locus_coverage):
+        """Rule 4.2.2.2: SNP at a locus with a sibling valid deletion + low breadth -> passes locus QC."""
+        qc = VariantQC()
+        # Deletion processed first so it gets assigned to valid_deletions before the SNP's locus QC
+        deletion = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
+        snp = make_variant(nucleotide_change="c.1349C>T", depth=100, freq=0.95, pos=130)
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], breadth_of_coverage=0.50)
+        qc.apply_qc(variants=[deletion, snp], locus_coverage_map={"Rv0667": locus}, target_coverage_map={})
+
+        assert snp.fails_positional_qc is False
+        assert snp.fails_locus_qc is False
+        assert locus.contains_loci_with_valid_deletion(snp.gene_id) is True
+        assert locus.contains_variant_with_valid_deletion(snp) is False  # SNP itself is NOT a valid deletion
+
+    def test_mutation_passes_locus_qc_when_locus_has_valid_deletion_but_fails_positional_qc(
+        self, make_variant, make_locus_coverage
+    ):
+        """Rule 4.2.2.2: SNP failing positional QC at a locus with valid deletion + low breadth -> fails locus QC."""
+        qc = VariantQC()
+        deletion = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
+        snp = make_variant(nucleotide_change="c.1349C>T", depth=5, freq=0.50, pos=130)  # low depth -> fails positional
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], breadth_of_coverage=0.50)
+        qc.apply_qc(variants=[deletion, snp], locus_coverage_map={"Rv0667": locus}, target_coverage_map={})
+
+        assert snp.fails_positional_qc is True
+        assert snp.fails_locus_qc is True
+        assert "Insufficient coverage in locus" in snp.warning
+        assert locus.contains_loci_with_valid_deletion(snp.gene_id) is True
 
 
 class TestLocusQcWithErrCoverage:
@@ -400,10 +429,10 @@ class TestAssignValidDeletions:
 
         qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
 
-        assert err_locus.contains_valid_deletion(del_variant) is True
-        assert err_target.contains_valid_deletion(del_variant) is True
-        assert locus.contains_valid_deletion(del_variant) is True
-        assert target.contains_valid_deletion(del_variant) is True
+        assert err_locus.contains_variant_with_valid_deletion(del_variant) is True
+        assert err_target.contains_variant_with_valid_deletion(del_variant) is True
+        assert locus.contains_variant_with_valid_deletion(del_variant) is True
+        assert target.contains_variant_with_valid_deletion(del_variant) is True
 
     def test_deletion_outside_err_range_not_in_err(self, make_variant, make_locus_coverage, make_target_coverage):
         qc = VariantQC()
@@ -417,11 +446,11 @@ class TestAssignValidDeletions:
         qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
 
         # In locus and target (pos 350 is in range) but NOT in locus ERR (pos 350 outside ERR coords 100-200)
-        assert locus.contains_valid_deletion(del_variant) is True
-        assert target.contains_valid_deletion(del_variant) is True
-        assert err_locus.contains_valid_deletion(del_variant) is False
+        assert locus.contains_variant_with_valid_deletion(del_variant) is True
+        assert target.contains_variant_with_valid_deletion(del_variant) is True
+        assert err_locus.contains_variant_with_valid_deletion(del_variant) is False
         # Target ERR (310-390) does contain pos 350, so the variant IS assigned to target ERR
-        assert err_target.contains_valid_deletion(del_variant) is True
+        assert err_target.contains_variant_with_valid_deletion(del_variant) is True
 
     def test_deletion_assigned_without_err_coverage(self, make_variant, make_locus_coverage, make_target_coverage):
         qc = VariantQC()
@@ -432,8 +461,8 @@ class TestAssignValidDeletions:
 
         qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
 
-        assert locus.contains_valid_deletion(del_variant) is True
-        assert target.contains_valid_deletion(del_variant) is True
+        assert locus.contains_variant_with_valid_deletion(del_variant) is True
+        assert target.contains_variant_with_valid_deletion(del_variant) is True
 
     def test_non_deletion_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
         qc = VariantQC()
@@ -445,9 +474,9 @@ class TestAssignValidDeletions:
 
         qc.assign_variants_with_valid_deletions(snp_variant, {"Rv0667": locus}, {"rpoB": target})
 
-        assert locus.contains_valid_deletion(snp_variant) is False
-        assert target.contains_valid_deletion(snp_variant) is False
-        assert err.contains_valid_deletion(snp_variant) is False
+        assert locus.contains_variant_with_valid_deletion(snp_variant) is False
+        assert target.contains_variant_with_valid_deletion(snp_variant) is False
+        assert err.contains_variant_with_valid_deletion(snp_variant) is False
 
     def test_deletion_failing_positional_qc_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
         """Deletion with fails_positional_qc=True should be skipped by assign_variants_with_valid_deletions."""
@@ -461,9 +490,9 @@ class TestAssignValidDeletions:
 
         qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
 
-        assert locus.contains_valid_deletion(del_variant) is False
-        assert target.contains_valid_deletion(del_variant) is False
-        assert err.contains_valid_deletion(del_variant) is False
+        assert locus.contains_variant_with_valid_deletion(del_variant) is False
+        assert target.contains_variant_with_valid_deletion(del_variant) is False
+        assert err.contains_variant_with_valid_deletion(del_variant) is False
 
     def test_deletion_outside_coverage_coords_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
         """Good deletion at a position outside coverage coords should not be assigned."""
@@ -475,5 +504,5 @@ class TestAssignValidDeletions:
 
         qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
 
-        assert locus.contains_valid_deletion(del_variant) is False
-        assert target.contains_valid_deletion(del_variant) is False
+        assert locus.contains_variant_with_valid_deletion(del_variant) is False
+        assert target.contains_variant_with_valid_deletion(del_variant) is False

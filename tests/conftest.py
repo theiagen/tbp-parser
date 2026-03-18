@@ -95,6 +95,7 @@ def make_locus_coverage():
         breadth_of_coverage=1.0,
         average_depth=100.0,
         err_coverage=None,
+        **kwargs,
     ):
         return LocusCoverage(
             locus_tag=locus_tag,
@@ -103,6 +104,7 @@ def make_locus_coverage():
             breadth_of_coverage=breadth_of_coverage,
             average_depth=average_depth,
             err_coverage=err_coverage,
+            **kwargs,
         )
     return _make
 
@@ -117,6 +119,7 @@ def make_target_coverage():
         breadth_of_coverage=1.0,
         average_depth=100.0,
         err_coverage=None,
+        **kwargs,
     ):
         return TargetCoverage(
             locus_tag=locus_tag,
@@ -125,6 +128,7 @@ def make_target_coverage():
             breadth_of_coverage=breadth_of_coverage,
             average_depth=average_depth,
             err_coverage=err_coverage,
+            **kwargs,
         )
     return _make
 

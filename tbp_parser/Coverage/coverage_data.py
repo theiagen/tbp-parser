@@ -32,9 +32,13 @@ class BaseCoverage(BaseModel, ABC):
     def has_breadth_below(self, threshold: float) -> bool:
         return self.breadth_of_coverage < threshold
 
-    def contains_valid_deletion(self, variant: Variant) -> bool:
+    def contains_variant_with_valid_deletion(self, variant: Variant) -> bool:
         """Check if a given Variant with a deletion is in the list of valid deletions for this coverage region."""
         return any(v == variant for v in self.valid_deletions)
+
+    def contains_loci_with_valid_deletion(self, locus_tag: str) -> bool:
+        """Check if any Variant with a deletion for a given locus_tag is in the list of valid deletions for this coverage region."""
+        return any(v.gene_id == locus_tag for v in self.valid_deletions)
 
     def contains_position(self, position: int) -> bool:
         """Check if a specific position exists within this coverage region."""

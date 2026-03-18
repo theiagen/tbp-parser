@@ -309,7 +309,7 @@ class VariantQC:
         # Determine if locus coverage is below threshold for QC fail and check if variant is a valid deletion
         has_low_boc = locus_coverage.has_breadth_below(self.config.MIN_PERCENT_COVERAGE)
         boc = locus_coverage.breadth_of_coverage
-        has_valid_deletion = locus_coverage.contains_valid_deletion(variant)
+        has_valid_deletion = locus_coverage.contains_loci_with_valid_deletion(variant.gene_id)
 
         if has_low_boc:
             # Rule 4.2.2.2: Low breadth of coverage with deletion present - PASS
