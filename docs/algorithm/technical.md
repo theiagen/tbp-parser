@@ -2,35 +2,34 @@
 
 With the v3.0.0 refactor, `tbp-parser` has undergone significant changes and the previous technical description no longer applies. This document serves as a technical breakdown of the new code structure and algorithm used in `tbp-parser` v3.0.0.
 
-## Class descriptions
+??? dna "Brief Class Descriptions"
+    _In order of appearance_
 
-_In order of appearance_
-
-- `Configuration`: a singleton class that handles all configuration settings and input parameters for `tbp-parser`
-- `GeneDatabase`: a singleton class that contains information regarding each gene of interest; attributes include gene name, locus tag, tier, associated drugs, and promoter regions.
-- `LIMSGeneCode`: a class representing a gene-specific result for the LIMS report 
-- `LIMSRecord`: a class representing a drug-specific result for the LIMS report; contains a list of `LIMSGeneCode` objects (the genes associated with that drug)
-- `BedRecord`: a class representing a record/entry from a BED file; contains attributes such as chromosome, start, end, and gene name, It derives length and genomic coordinates.
-- `CoverageCalculator`: a class used to generate coverage statistics for BED records; contains methods to calculate percent coverage and average depth for a given BED record based on the read depth information from the BAM file
-- `BaseCoverage`: a base class to represent coverage data fora  genomic region that can be extended to represent coverage for specific types of regions.
-- `TargetCoverage`: a class to represent coverage data for a single target genomic region (BedRecord); based on the unique gene_name in the BedRecord. Multiple TargetCoveage objects may exist for a single locus_tag/gene if there are multiple BedRecords for the same locus_tag/gene.
-- `LocusCoverage`: a class to represent coverage data for a single locus tag, aggregating multiple target regions if necessary.
-- `ERRCoverage`: a class to represent coverage data for the essential reportable range (ERR) of a single target/locus
-- `VariantRecord`: a data class represnting a single variant record (aka JSON entry) from the TBProfiler JSON output
-- `VariantProcessor`: a class that processes VariantRecords into Variant objects
-- `Variant`: a class that represents a single genetic drug-gene-variant combination
-- `Helper`: a class containing a variety of helper functions for parsing and analyzing mutations
-- `Consequences`: a data class representing a single consequence entry (dictionary) for a list of dicts under the `consequences` field in the TBProfiler JSON output
-- `Annotation`: a data class representing a single annotation entry (dictionary) for a list of dicts under the `annotation` field in the TBProfiler JSON output
-- `VariantInterpreter`: a class to handle interpretation of variants and expert rules
-- `InterpretationResult`: a class to represent the result of variant interpretation
-- `VariantQC`: a class to generate QC warnings related to variants, such as low coverage or poor quality
-- `QCResult`: a data class representing the result of a QC check on a variant
-- `LIMSProcessor`: a class to handle the decision logic for LIMS report generation
+    - `Configuration`: a singleton class that handles all configuration settings and input parameters for `tbp-parser`
+    - `GeneDatabase`: a singleton class that contains information regarding each gene of interest; attributes include gene name, locus tag, tier, associated drugs, and promoter regions.
+    - `LIMSGeneCode`: a class representing a gene-specific result for the LIMS report 
+    - `LIMSRecord`: a class representing a drug-specific result for the LIMS report; contains a list of `LIMSGeneCode` objects (the genes associated with that drug)
+    - `BedRecord`: a class representing a record/entry from a BED file; contains attributes such as chromosome, start, end, and gene name, It derives length and genomic coordinates.
+    - `CoverageCalculator`: a class used to generate coverage statistics for BED records; contains methods to calculate percent coverage and average depth for a given BED record based on the read depth information from the BAM file
+    - `BaseCoverage`: a base class to represent coverage data fora  genomic region that can be extended to represent coverage for specific types of regions.
+    - `TargetCoverage`: a class to represent coverage data for a single target genomic region (BedRecord); based on the unique gene_name in the BedRecord. Multiple TargetCoveage objects may exist for a single locus_tag/gene if there are multiple BedRecords for the same locus_tag/gene.
+    - `LocusCoverage`: a class to represent coverage data for a single locus tag, aggregating multiple target regions if necessary.
+    - `ERRCoverage`: a class to represent coverage data for the essential reportable range (ERR) of a single target/locus
+    - `VariantRecord`: a data class represnting a single variant record (aka JSON entry) from the TBProfiler JSON output
+    - `VariantProcessor`: a class that processes VariantRecords into Variant objects
+    - `Variant`: a class that represents a single genetic drug-gene-variant combination
+    - `Helper`: a class containing a variety of helper functions for parsing and analyzing mutations
+    - `Consequences`: a data class representing a single consequence entry (dictionary) for a list of dicts under the `consequences` field in the TBProfiler JSON output
+    - `Annotation`: a data class representing a single annotation entry (dictionary) for a list of dicts under the `annotation` field in the TBProfiler JSON output
+    - `VariantInterpreter`: a class to handle interpretation of variants and expert rules
+    - `InterpretationResult`: a class to represent the result of variant interpretation
+    - `VariantQC`: a class to generate QC warnings related to variants, such as low coverage or poor quality
+    - `QCResult`: a data class representing the result of a QC check on a variant
+    - `LIMSProcessor`: a class to handle the decision logic for LIMS report generation
 
 ## Walkthrough
 
-### Setup and input parsing
+### 1. Setup and input parsing
 
 Arguments are parsed into the singleton instance of the `Configuration` class, which is used to store all input parameters. Alternatively, if a [configuration file](../inputs.md#configuration-file) is provided, it will be used to overwrite any provided command-line arguments. 
 
@@ -38,7 +37,7 @@ The provided (or default) [gene database YAML file](../inputs.md#gene-database-f
 
 The provided (or default) [LIMS report format YAML file](../inputs.md#lims-report-format-yaml-file) is then parsed into a `LIMSRecord` list and any corresponding `LIMSGeneCode` list. See the toggle below for more details.
 
-??? techdetails "The `LIMSRecord` and `LIMSGeneCode` classes"
+??? techdetails "`LIMSRecord` and `LIMSGeneCode` attributes"
     `LIMSRecord` is a drug-specific result for the LIMS report. It contains the following attributes:
         
     - `drug`: the name of the drug (as it would appear in the input TBProfiler JSON file under the `"annotation.drug"` field; e.g., "bedaquiline")
@@ -54,7 +53,7 @@ The provided (or default) [LIMS report format YAML file](../inputs.md#lims-repor
 
 The provided (or default) [coverage BED file](../inputs.md#coverage-bed-file) is then parsed into a `BedRecord` list, where each `BedRecord` represents a single record/entry from the BED file., See the toggle below for more details. This same process is applied to the [ERR coverage BED file](../inputs.md#tngs-specific-arguments) (if provided), resulting in a `BedRecord` list representing the ERR regions.
 
-??? techdetails "The `BedRecord` class"
+??? techdetails "`BedRecord` attributes"
     `BedRecord` is a class representing a single record/entry from a BED file. It contains the following attributes:
 
     - `chrom`: the chromosome of the region (e.g., "chromosome")
@@ -68,7 +67,7 @@ The provided (or default) [coverage BED file](../inputs.md#coverage-bed-file) is
 
 Once the input database files have been processed and parsed, the identified `LIMSRecord` and `BedRecord` lists are compared to ensure that each `LIMSRecord` gene has a corresponding `BedRecord`. If any genes are missing from the BED file, an error is raised. Additionally, an error is raised if any genes in the `LIMSRecord` list are not found in the `GeneDatabase`. This ensures that all genes of interest have all information necessary for downstream processing and report generation.
 
-### Coverage calculations
+### 2. Coverage calculations
 
 /// html | div[style='float: left; width: 50%; padding: 20px;']
 
@@ -106,11 +105,27 @@ Each record in the list is run through `pysam AlignmentFile.pileup()` to identif
     
     This process allows us to make an informed assumption about which reads originated from which target regions, which is important for accurate coverage calculations of individual target regions in the tNGS analysis, since it isolates the reads belonging to each primer.
 
-Once the `BedRecord` list is finalized, the `reads_by_position` dictionary is used to calculate breadth of coverage. The number of positions that has more reads than the number specified by `--min_depth` is divided by the number of positions in the dictionary. Average depth is calculated by summing the number of reads at each position and then dividing by the length of the dictionary. These coverage statistics are stored in the `BedRecord`'s `"breadth_of_coverage"` and `average_depth` attributes.
+Once the `BedRecord` list is finalized, the `reads_by_position` dictionary is used to calculate breadth of coverage. The number of positions that has more reads than the number specified by `--min_depth` is divided by the number of positions in the dictionary. Average depth is calculated by summing the number of reads at each position and then dividing by the length of the dictionary. These coverage statistics are stored in the `BedRecord`'s `"breadth_of_coverage"` and `average_depth` attributes. 
 
-If an ERR coverage BED file is provided, the same process is applied to the ERR `BedRecord` list, resulting in breadth of coverage and average depth calculations for the ERR regions. These regions are then associated with their corresponding BRR regions based on the gene name and locus tag under `err_coverage`.
+The `BedRecord` list is iterated over and each entry is used to create a `TargetCoverage` object, which contains the coverage information for that specific record. If there are multiple `BedRecord` objects associated with the same locus tag, the coverage information is aggregated (the `reads_by_position` dictionary is extended to include all information for all `BedRecord` entries for that locus) and average depth and breadth of coverage are recalculated for the locus as a whole. If there is only a single `BedRecord` associated with a locus tag, the previously calculated values are used. These results are added to a `LocusCoverage` object for each locus tag. 
 
-### TBProfiler JSON processing
+If an ERR coverage BED file is provided, the same process is applied to the ERR `BedRecord` list, resulting in breadth of coverage and average depth calculations for the ERR regions. These regions are then associated with their corresponding `TargetCoverage` and `LocusCoverage` objects under the `err_coverage` attribute. 
+
+???+ techdetails "`TargetCoverage`,`LocusCoverage`, and `ERRCoverage` attributes"
+    - `coords`: the genomic coordinates of the coverage record (e.g., (100, 200))
+    - `breadth_of_coverage`: the breadth of coverage for the region
+    - `average_depth`: the average depth of coverage for the region
+    - `valid_deletions`: a list of `Variant` objects with valid deletions that fall within the coverage region
+
+    The following attributes are not applicable for `ERRCoverage` objects:
+
+    - `locus_tag`: the locus tag of the gene associated with the coverage record (e.g., "Rv0678")
+    - `gene_name`: the gene name of the gene associated with the coverage record (e.g., "mmpR5")
+    - `err_coverage`: coverage information for ERR regions associated with the target/locus
+
+A dictionary mapping `locus_tag` to the `LocusCoverage` object is saved, as well as a dictionary mapping `gene_name` to the respective `TargetCoverage` object is also saved.
+
+### 3. TBProfiler JSON parsing
 
 The input TBProfiler JSON is then parsed. Included are examples of the input JSON format, with explanations of the relevant fields for `tbp-parser` and how they are used in the algorithm.
 
@@ -234,38 +249,36 @@ Each entry in `"dr_variants"` and `"other_variants"` represents a single variant
 
 !!! techdetails "`VariantRecord` attributes"
     - `sample_id`: the sample ID (top-level `"id"`)
-    - `pos`: the genomic position of the variant (`pos`)
-    - `depth`: the depth of coverage at the variant position (`depth`)
-    - `freq`: the frequency of the variant in the reads (`freq`)
-    - `gene_id`: the locus tag of the gene associated with the variant (`gene_id`)
-    - `gene_name`: the gene name associated with the variant (`gene_name`)
-    - `type`: the type of variant (e.g., frameshift, missense, etc.) (`type`)
-    - `nucleotide_change`: the nucleotide change associated with the variant (`nucleotide_change`)
-    - `protein_change`: the protein change associated with the variant (`protein_change`)
-    - `annotation`: a list of `Annotation` objects associated with the variant (`annotation`)
-    - `consequences`: a list of `Consequence` objects associated with the variant (`consequences`)
-    - `gene_associated_drugs`: a list of drugs associated with the gene of the variant (`gene_associated_drugs`)
+    - `pos`: the genomic position of the variant (`"pos"`)
+    - `depth`: the depth of coverage at the variant position (`"depth"`)
+    - `freq`: the frequency of the variant in the reads (`"freq"`)
+    - `gene_id`: the locus tag of the gene associated with the variant (`"gene_id"`)
+    - `gene_name`: the gene name associated with the variant (`"gene_name"`)
+    - `type`: the type of variant (e.g., frameshift, missense, etc.) (`"type"`)
+    - `nucleotide_change`: the nucleotide change associated with the variant (`"nucleotide_change"`)
+    - `protein_change`: the protein change associated with the variant (`"protein_change"`)
+    - `annotation`: a list of `Annotation` objects associated with the variant (`"annotation"`)
+    - `consequences`: a list of `Consequence` objects associated with the variant (`"consequences"`)
+    - `gene_associated_drugs`: a list of drugs associated with the gene of the variant (`"gene_associated_drugs"`)
 
 ///
 
 /// html | div[style='clear: both;']
 ///
 
-All `VariantRecord` objects are added to a list which is provided to the `VariantProcessor` class for downstream processing, including expansion, annotation extraction, interpretation, and QC. This method class begins by processing the `VariantRecord` list by first, expanding the `"consequences"` attribute of the `VariantRecord` into additional `VariantRecord` objects. This occurs only if the `VariantRecord` has a `gene_id` of Rv0676c (_mmpL5_), Rv0677c (_mmpS5_), or Rv0678 (_mmpR5_). 
-
 /// html | div[style='float: left; width: 50%; padding: 20px;']
 
-Each entry in the `"consequences"` list is a dictionary, and each of those dictionaries is saved as an attribute of a `Consequence` object. If this field is blank or missing, an empty `Consequence` object is still created to enable ease of downstream processing.
+Each entry in the `"consequences"` list is a dictionary, and each of those dictionaries is saved as an attribute of a `Consequence` object. If this field is blank or missing, an empty `Consequence` object is created to enable ease of downstream processing.
 
 !!! techdetails "`Consequence` attributes"
-    - `gene_id`: the locus tag of the gene associated with the consequence (e.g., "Rv0676c")
-    - `gene_name`: the gene name associated with the consequence (e.g., "mmpL5")
-    - `type`: the type of consequence (e.g., "upstream_gene_variant")
-    - `nucleotide_change`: the nucleotide change associated with the consequence (e.g., "c.-648dupC")
-    - `protein_change`: the protein change associated with the consequence, if applicable (e.g., "")
-    - `annotation`: a list of `Annotation` objects associated with the consequence (`annotation`)
+    - `gene_id`: the locus tag of the gene associated with the consequence (`"gene_id"`)
+    - `gene_name`: the gene name associated with the consequence (`"gene_name"`)
+    - `type`: the type of consequence (`"type"`)
+    - `nucleotide_change`: the nucleotide change associated with the consequence (`"nucleotide_change"`)
+    - `protein_change`: the protein change associated with the consequence, if applicable (`"protein_change"`)
+    - `annotation`: a list of `Annotation` objects associated with the consequence (`"annotation"`)
 
-Each consequence represents an alternate mapping of the same variant to a different gene. In the example above, the same variant is mapped to both mmpR5 and mmpL5, with different consequence types and annotations for each gene. This allows us to capture all possible drug resistance implications of a given variant, even if it maps to multiple genes.
+Each consequence represents an alternate mapping of the same variant to a different gene. In the example above, the same variant is mapped to both mmpL5 and mmpS5, with different consequence types and annotations for each gene. This allows us to capture all possible drug resistance implications of a given variant, even if it maps to multiple genes.
 
 ///
 
@@ -308,9 +321,6 @@ Each consequence represents an alternate mapping of the same variant to a differ
 /// html | div[style='clear: both;']
 ///
 
-
-The `_expand_consequences` method will create a copy of the variant record for each entry in the `consequences` list, replacing the gene information (gene_id, gene_name, etc.) with the corresponding information from the consequence entry. The consequence annotations are also added to the `annotation` field of the new `VariantRecord`. If the `annotation` field is blank, `Annotation` object(s) will be created that match the parent `VariantRecord` drug(s) with a `"confidence"` of "No WHO annotation" and blank `"source"` and `"comment"` fields.
-
 /// html | div[style='float: left; width: 50%; padding: 20px;']
 
 ```json linenums="1" title="example_input.json: annotation field"
@@ -338,13 +348,13 @@ The `_expand_consequences` method will create a copy of the variant record for e
 
 /// html | div[style='float: right; width: 50%; padding: 20px;']
 
-In the example to the right, we see the `"annotation"` field for a single variant. This field contains a list of annotations, where each annotation is represented by a dictionary with many different fields. Each field in the annotation dictionary is saved as an attribute of an `Annotation` object (if the field is present and has content).
+In the example to the left, we see the `"annotation"` field for a single variant. This field contains a list of annotations, where each annotation is represented by a dictionary with many different fields. Each field in the annotation dictionary is saved as an attribute of an `Annotation` object (if the field is present and has content).
 
 !!! techdetails "`Annotation` attributes"
-    - `drug`: the drug associated with the annotation (e.g., "bedaquiline")
-    - `confidence`: the WHO confidence level of the annotation (e.g., "Assoc w R")
-    - `source`: the source of the annotation (e.g., "WHO catalogue v2")
-    - `comment`: any comments associated with the annotation (e.g., "Can only confer resistance if genetically linked to a functional MmpL5")
+    - `drug`: the drug associated with the annotation (`"drug"`)
+    - `confidence`: the WHO confidence level of the annotation (`"confidence"`)
+    - `source`: the source of the annotation (`"source"`)
+    - `comment`: any comments associated with the annotation (`"comment"`)
 
 In this example, this variant confers resistance to both bedaquiline and clofazimine. Each annotation is saved to the `VariantRecord` to enable ease of downstream processing. 
 
@@ -355,4 +365,123 @@ An annotation can be found in either a VariantRecord or in a Consequence object,
 /// html | div[style='clear: both;']
 ///
 
+### 4. `VariantRecord` processing
 
+Once the TBProfiler JSON has been parsed into a list of `VariantRecord` objects, downstream processing is handled by the `VariantProcessor` class. `VariantProcessor` is a method class, which means that it is not initialized with any attributes and instead serves as a namespace for methods that process the `VariantRecord` list.
+
+The `.process()` method of the `VariantProcessor` class is provided the `VariantRecord` list and the `SAMPLE_ID` variable. 
+
+The `VariantRecord` list is processed by the `._expand_consequences()` method, which expands the `consequences` attribute of each `VariantRecord` into additional `VariantRecord` objects. **This occurs only if the `VariantRecord` has a `gene_id` of Rv0676c (_mmpL5_), Rv0677c (_mmpS5_), or Rv0678 (_mmpR5_)**. This method creates a copy of the `VariantRecord` for each entry in the `consequences` list, replacing the gene information (gene_id, gene_name, etc.) with the corresponding information from the consequence entry. The consequence annotations are added to the `annotation` field of the new `VariantRecord`. If the `annotation` field is blank, `Annotation` object(s) will be created that match the parent `VariantRecord` drug(s) with a `confidence` of "No WHO annotation" and blank `source` and `comment` fields.
+
+Once the `VariantRecord` list has been expanded to include relevant `consequences` if applicable, each `Annotation` list in the `VariantRecord` is expanded to include (1) all relevant drug associations using the `gene_associated_drugs` field of the `VariantRecord`, and (2) all known drugs from the `GeneDatabase`. This is because some variants in TBProfiler only report a few drug associations for the given variant, but more are known to be potentially affected. This ensures all gene-drug combinations are captured for downstream interpretation and LIMS report generation.
+
+The `gene_associated_drugs` attribute is used first, and any missing from the `Annotation` list are added as new `Annotation` objects with a "No WHO annotation" confidence value. Any drug associations missing from the `gene_associated_drugs` field but present in the `GeneDatabase` are then added with the same "no WHO annotation" confidence., but with the source attribute set to "Mutation effect for given drug is not in TBDB" to differentiate the annotations added based on the `gene_associated_drugs` field from those added based on the `GeneDatabase`. This ensures that all known drug associations for a given variant are captured, even if they are not reported in the TBProfiler JSON output.
+
+After annotation expansion, each `VariantRecord` is turned into a **`Variant`** object, which represents a single drug-gene-variant combination that is found in the Laboratorian report.
+
+???+ techdetails "`Variant` attributes"
+    - `sample_id`: the sample ID
+    - `pos`: the genomic position of the variant
+    - `depth`: the depth of coverage at the variant position
+    - `freq`: the frequency of the variant in the reads
+    - `gene_id`: the locus tag of the gene associated with the variant
+    - `gene_name`: the gene name associated with the variant
+    - `type`: the type of variant (e.g., frameshift, missense, etc.)
+    - `nucleotide_change`: the nucleotide change associated with the variant
+    - `protein_change`: the protein change associated with the variant
+    - `drug`: the drug associated with this annotation
+    - `confidence`: the WHO confidence level of the annotation
+    - `rationale`: the reason for the interpretation result for the variant
+    - `source`: the source of the annotation
+    - `comment`: any comments associated with the annotation
+    - `read_support`: `freq` * `depth`; the number of reads supporting the variant
+    - `gene_tier`: the tier of the gene associated with the variant, as found in the `GeneDatabase`
+    - `absolute_start`: the start postiion of the variant with reference to H37Rv
+    - `absolute_end`: the end position of the variant with reference to H37Rv
+    - `looker_interpretation`: the interpretation of the variant based on expert rules in the `VariantInterpreter` class; used in the Looker report generation
+    - `mdl_interpretation`: the interpretation of the variant based on expert rules in the `VariantInterpreter` class; used in the LIMS report generation
+    - `fails_locus_qc`: a Boolean flag indicating whether the variant fails locus QC based on `VariantQC` processing
+    - `fails_positional_qc`: a Boolean flag indicating whether the variant fails positional QC based on `VariantQC` processing
+    - `warning`: any QC warnings associated with the variant based on `VariantQC` processing
+
+Following the creation of the `Variant` list, deduplication occurs. Identical variants (same gene, position, and drug) are deduplicated by keeping the `Variant` with the most severe WHO annotation confidence level. The confidence levels are ranked as follows from (highest severity to lowest): 
+
+1. Assoc w R
+2. Assoc w R - [I]nterim
+3. Uncertain significance
+4. Not assoc w R - [I]nterim
+5. Not assoc w R
+6. Not found in WHO catalogue
+7. No WHO annotation
+
+If the rank is the same, the `Variant` that contains a WHO confidence is kept preferentially over a `Variant` with a non-WHO annotation. If the `Variants` are truly identical, the first one seen is kept. All of these `Variant` objects are addded to a "reported" variant list.
+
+An "unreported" variant list is created by generating `Variant` objects for any drug-gene combinations that are not represented in the `Variant` list, ensuring that every drug-gene combination has a corresponding `Variant` object, even if no variant was identified for that combination. These `Variant` objects have "NA" or "WT" values for all fields except for `sample_id`, `gene_id`, `gene_name`, `drug`, and `gene_tier`.
+
+### 5. `Variant` interpretation
+
+The "reported" variants are then interpreted using the `VariantInterpreter` method class. This class uses the `.determine_interpretation()` method to set the values for `confidence`, `looker_interpretaion`, `mdl_interpretation`, and `rationale` for each `Variant` based on the guidance listed in the [interpretation document](./interpretation.md). Please see that document for more details on the interpretation algorithm and expert rules, as they will not be described here.
+
+Results are saved in an `InterpretationResult` data class object, which contains the following attributes:
+
+!!! techdetails "`InterpretationResult` attributes"
+    - `confidence`: the WHO confidence classification or "No WHO annotation"
+    - `looker_interpretation`: the interpretation of the variant for the Looker report (R, R-Interim, U, S, S-Interim)
+    - `mdl_interpretation`: the interpretation of the variant for the LIMS report (R, U, S, WT)
+    - `rule_id`: the interpretation document rule number for traceability (e.g., "Rule 1.1.1")
+    - `rationale`: human-readable description of the rule applied
+
+### 6. `Variant` quality control
+
+After interpretation, the `VariantQC` method class is used to generate QC warnings for each `Variant`. The `qc()` method is called and applies QC to each reported `Variant` iteratively. Only a brief summary of the QC process will be provided here, so please see the [interpretation document](./interpretation.md) for more details.
+
+
+Positional quality control determines if the mutation has sufficient support. The depth, frequency, and read support of the `Variant` are compared against the thresholds specified by `--min_depth`, `--min_freq`, and `--min_read_support`. If any of these values fall below the specified threshold, the `fails_positional_qc` attribute is set to `True` and a warning is generated to indicate that the variant fails quality in the position.
+
+Locus quality control determines if the mutation is in a region of poor coverage. The breadth of coverage for the `Variant`'s gene (accessed through the `locus_coverage` result [generated in step 2](#2-coverage-calculations)) is compared against the threshold specified by `--min_percent_coverage`. If the breadth of coverage for the gene falls below the specified threshold, the `fails_locus_qc` attribute is set to `True` and a warning is generated to indicate that the variant fails quality in the locus.
+
+Additional QC scenarios are considered, and can be found in the interpretation document. All warnings generated through the QC process are saved in the `warning` attribute of the `Variant` object as a list of strings.
+
+### 7. `LIMSRecord` processing
+
+Following `Variant` quality control, the `LIMSProcessor` method class is used to determine the values for each `LIMSGeneCode` and `LIMSRecord` based on the interpreted `Variant` list and the decision logic specified in the [interpretation document](./interpretation.md). Please see that document for more details on the decision logic, as it will only be briefly covered here.
+
+Each item in the `LIMSRecord` list ([generated in step 1](#1-setup-and-input-parsing)) is processed iteratively. For each `LIMSRecord` and each `LIMSGeneCode` within that record, the `Variant` list is filtered to identify a list of "candidate" variants for determining the maximum MDL interpretation for that gene-drug combination. The list of candidate variants is filtered to determine which pass quality control in order to ignore any `Variant` that fails positional QC (but not locus QC). This is because if a variant fails positional QC, it means that the support for that variant is weak and may not be "real" so we do not want to consider it in the decision logic for determining the gene target value. 
+
+The filtered list of `Variant` objects is then used to determine maximum MDL interpretation by identifying the most severe `mdl_interpretation` value among the candidate variants, which is used to set the `max_mdl_interpretation` attribute of the `LIMSGeneCode`. The severity ranking is as follows from highest to lowest:
+
+1. R
+2. Insufficient Coverage
+3. U
+4. S
+5. WT
+6. NA
+
+A subset of `Variant` objects that have that same `mdl_interpretation` value are saved to the `max_mdl_variants` attribute. Depending on the `max_mdl_interpretation` and `max_mdl_variants` values for that `LIMSGeneCode`, the `gene_target_value` is set the the appropriate value based on the decision logic in the interpretation document.
+
+Once all `LIMSGeneCode` objects for a `LIMSRecord` are processed, the `drug_target_value` is determined based on the combined `max_mdl_interpretation` of the `LIMSGeneCode` objects and the decision logic in the interpretation document. SEe the interpretation document for more details on the decision logic for determining `gene_target_value` and `drug_target_value`.
+
+After all `LIMSRecord` objects are processed, the lineage ID information is examined, which uses the LINEAGE_ID and SUBLINEAGE_ID variables extracted from the TBProfiler JSON to determine the final lineage assignment. In order to determine if the sample is _M. tb_, the percentage of genes included in the LIMS report passing the breadth of coverage threshold must be at or above the threshold set by `--min_percent_loci_covered`. See the interpretation document for more details on the decision logic for determining lineage assignment.
+
+### 8. Creating the output reports
+
+Please see the relevant output report sections in this documentation for more information regarding the format and content of the output reports.
+
+Once each `LIMSRecord` object has been processed, [the LIMS report](../outputs/lims.md) is created. A CSV and a transposed CSV are generated with the appropriate columns and values based on the `LIMSRecord` and `LIMSGeneCode` objects. These reports are named after the `--output_prefix` input parameter and have the suffixes ".lims_report.csv" and ".lims_report.transposed.csv".
+
+[The Laboratorian report](../outputs/laboratorian.md) is created from the list of `Variant` objects. Each `Variant` is turned into row in a `pandas` DataFrame and is sorted. The DataFrame is saved to a CSV file with the appropriate values based on the `Variant` attributes. This report is named after the `--output_prefix` input parameter and has the suffix ".laboratorian_report.csv".
+
+[The Looker report](../outputs/looker.md) is created by identifying the most severe Looker interpretation for **all** drug-gene combinations across the `Variant` list. This ranking is slightly different than the ranking used to identify the maximum MDL interpretation and is as follows from highest to lowest:
+
+1. R
+2. R-Interim
+3. U
+4. S-Interim
+5. S
+6. WT
+7. Insufficient Coverage
+8. NA
+
+[A locus coverage report](../outputs/coverage.md) is created from the `LocusCoverage` objects [generated in step 2](#2-coverage-calculations). A target coverage report (from `TargetCoverage` objects) is only created if there are more targets than loci; otherwise, the two reports would be redundant.
+
+This concludes the program.
