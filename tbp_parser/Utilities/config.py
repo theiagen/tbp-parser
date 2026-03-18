@@ -38,6 +38,7 @@ class Configuration:
         TNGS_READ_SUPPORT_BOUNDARIES (list[int]): the read support boundaries for tNGS QC reporting
         TNGS_FREQUENCY_BOUNDARIES (list[float]): the frequency boundaries for tNGS QC reporting
         USE_ERR_AS_BRR (bool): whether to use ERR regions in place of coverage_bed regions for breadth of coverage calculations [tNGS only]
+        RESOLVE_OVERLAPPING_REGIONS (bool): whether to resolve overlapping BED regions to avoid double-counting reads across overlapping targets
     """
     # Shared type tracking across all Configuration instances
     _CONFIGURABLE_INPUTS = {}
@@ -108,6 +109,7 @@ class Configuration:
         # tngs-specific options
         self.TNGS = options.tngs
         self.USE_ERR_AS_BRR = options.use_err_as_brr
+        self.RESOLVE_OVERLAPPING_REGIONS = options.resolve_overlapping_regions
         self.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
         self.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]
         # logging options

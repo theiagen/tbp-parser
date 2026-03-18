@@ -95,6 +95,8 @@ def parse_arguments():
                                 help="an optional BED file formatted similarly to the --coverage_bed file but containing ranges that are essential for resistance", default=None, metavar="\b", type=is_optional_file_valid)
     tngs_arguments.add_argument("--use_err_as_brr",
                                 help="if an ERR BED file is provided, use the ERR regions in place of the --coverage_bed regions for breadth of coverage calculations\nNote: this is an experimental option", action="store_true", default=False)
+    tngs_arguments.add_argument("--resolve_overlapping_regions",
+                                help="resolve overlapping BED regions to avoid double-counting reads across overlapping targets\nRecommended for tNGS data with overlapping amplicon regions", action="store_true", default=False)
 
     # new arguments for qc reporting
     boundary_arguments = parser.add_argument_group("tNGS-specific QC boundary arguments (NOT compatible with WGS data)",

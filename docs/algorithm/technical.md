@@ -97,7 +97,7 @@ Each record in the list is run through `pysam AlignmentFile.pileup()` to identif
 ///
 
 ??? techdetails "Handling overlapping primer regions in tNGS analyses"
-    If `--tNGS` is used, the `BedRecord` list is checked to determine if any two `BedRecord` coordinates overlap. This is done by whitelisting any non-overlapping reads for each `BedRecord` under the assumption that if a read appears in a non-overlapping region it originated from that particular target. The `reads_by_position` attribute is then filtered to only include those whitelisted reads. 
+    If `--resolve_overlapping_regions` is used, the `BedRecord` list is checked to determine if any two `BedRecord` coordinates overlap. This is done by whitelisting any non-overlapping reads for each `BedRecord` under the assumption that if a read appears in a non-overlapping region it originated from that particular target. The `reads_by_position` attribute is then filtered to only include those whitelisted reads. 
     
     For example, imagine geneA is covered by two primers: primer1 covers bases 0-45, and primer2 covers bases 30-75, meaning that 15 bases overlap between the primers. readA appears in the `reads_by_position` dictionary for primerA positions 0-45, and appears in the primerB `reads_by_position` dictionary for positions 30-45. readB appears in the primerB dictionary for positions 30-75 and the primerA dictionary for positions 30-45. readA appears in the **non-overlapping** region of primer1 (0-30) while readB appears in the **non-overlapping region** of primer2 (45-75). readA is then **whitelisted** for primer1 and readB is **whitelisted** for primer2. 
     

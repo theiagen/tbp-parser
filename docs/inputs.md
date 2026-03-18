@@ -49,6 +49,7 @@ To overwrite any output text, please use the find and replace variable in the co
 MIN_FREQUENCY: 0.1
 MIN_PERCENT_LOCI_COVERED: 0.7
 TNGS: true
+RESOLVE_OVERLAPPING_REGIONS: true
 TNGS_FREQUENCY_BOUNDARIES:
 - 0.1
 - 0.95
@@ -220,6 +221,7 @@ These options are primarily used for tNGS data.
 | `--tngs` | Indicates that the input data was generated using a tNGS protocol. Turns on tNGS-specific features | false |
 | `-e`, `--err_coverage_bed` | the BED file containing the "essential for resistance regions." This file indicates to tbp-parser that these regions should also have breadth of coverage and average depth calculations performed; this file should be formatted like the genes.bed file in TBProfiler and the [coverage BED described above](#coverage-bed-file) | |
 | `--use_err_as_brr` | if an ERR BED file is provided, use the ERR regions in place of the typical coverage regions for all QC calculations<br>Note: this is an experimental option | |
+| `--resolve_overlapping_regions` | Resolve overlapping BED regions to avoid double-counting reads across overlapping targets. Recommended for tNGS data with overlapping amplicon regions. See [Handling overlapping primer regions](../algorithm/technical.md) for details | false |
 | `--tngs_frequency_boundaries` | the frequency boundaries (comma-delimited; `lower_f,upper_f`) for tNGS QC reporting, used in conjunction with `--tngs_read_support_boundaries` | 0.1,0.1 |
 | `--tngs_read_support_boundaries` | the read support boundaries (comma-delimited; `lower_r,upper_r`) for tNGS QC reporting, used in conjunction with `--tngs_frequency_boundaries` | 10,10 |
 

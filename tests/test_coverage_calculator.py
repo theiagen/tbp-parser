@@ -160,7 +160,7 @@ class TestComplexOverlappingRecords:
     def setup(self, make_cov_calc, make_bed_record):
         calc = make_cov_calc(cov_start=0, cov_end=100, read_length=10)
         calc.config.MIN_DEPTH = 8
-        calc.config.TNGS = True
+        calc.config.RESOLVE_OVERLAPPING_REGIONS = True
         record1 = make_bed_record(start=1, end=40, locus_tag="Rv0000", gene_name="geneA")
         record2 = make_bed_record(start=25, end=75, locus_tag="Rv0000", gene_name="geneB")
         record3 = make_bed_record(start=55, end=100, locus_tag="Rv0000", gene_name="geneC")
@@ -231,7 +231,7 @@ class TestComplexOverlappingRecords:
 
     def test_coverage_no_overlap_resolution(self, setup):
         calc, record1, record2, record3 = setup
-        calc.config.TNGS = False # not resolving overlaps, so breadth and average depth will be inflated in the overlapping regions
+        calc.config.RESOLVE_OVERLAPPING_REGIONS = False # not resolving overlaps, so breadth and average depth will be inflated in the overlapping regions
         locus_map, target_map = calc.calculate(bed_records=[record1, record2, record3], err_records=[])
 
         # before resolving overlaps, the breadth of coverage and average depth should be as follows:
@@ -257,7 +257,7 @@ class TestComplexOverlappingRecords:
 
     def test_coverage_with_overlap_resolution(self, setup):
         calc, record1, record2, record3 = setup
-        calc.config.TNGS = True # resolving overlaps
+        calc.config.RESOLVE_OVERLAPPING_REGIONS = True # resolving overlaps
         locus_map, target_map = calc.calculate(bed_records=[record1, record2, record3], err_records=[])
         # Reminder of non overlapping regions
         # [(1, 24)] , [(41, 54)] , [(76, 100)]

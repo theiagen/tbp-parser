@@ -34,7 +34,7 @@ class CoverageCalculator:
         bed_records = self.populate_reads_by_position(bed_records)
 
         # Resolve overlaps if in tNGS mode to avoid double-counting reads across overlapping regions
-        if self.config.TNGS:
+        if self.config.RESOLVE_OVERLAPPING_REGIONS:
             bed_records = self.resolve_overlapping_regions(bed_records)
 
         # Generate coverage maps
