@@ -74,9 +74,9 @@ def is_bed_valid(filename: str) -> str:
         with open(filename, 'r') as bed_file:
             for line in bed_file:
                 cols = line.strip().split('\t')
-                if len(cols) < 6:
-                    logger.error(f"{filename} does not have at least 6 columns as required")
-                    raise argparse.ArgumentTypeError("{0} does not have at least 6 columns as required".format(filename))
+                if len(cols) < 5:
+                    logger.error(f"{filename} does not have at least 5 columns as required")
+                    raise argparse.ArgumentTypeError("{0} does not have at least 5 columns as required".format(filename))
                 break  # only need to check the first line
     return filename
 
