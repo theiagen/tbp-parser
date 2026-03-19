@@ -1,5 +1,10 @@
 [
   {
+    "version": "tj-strangler-refactor-dev",
+    "title": "tj-strangler-refactor-dev",
+    "aliases": []
+  },
+  {
     "version": "main",
     "title": "main",
     "aliases": []
