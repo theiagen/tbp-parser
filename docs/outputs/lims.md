@@ -10,7 +10,7 @@ The report can be divided into two sections: resistance columns and miscellaneou
 
 The LIMS report will contain one column for each drug defined by the `lims_report_format_yml` file. Each drug will have one or more associated gene columns, depending on how many genes are responsible for resistance to that drug.
 
-Drug interpretation severity is ranked as follows (from high to low): **R > Insufficient Coverage > U > S > WT**. 
+Drug interpretation severity is ranked as follows (from high to low): **R > Insufficient Coverage > U > S > WT**.
 
 | Column names  | Explanation | Source |
 | --- | --- | --- |
@@ -25,9 +25,9 @@ By default, **every** gene-drug combination found in the default `tbdb.bed` file
 
 The language used for the resistance columns is the same between tNGS and WGS analysis. All mutations that failed quality in the position are not considered for the LIMS report.
 
-Please note that drug interpretation severity is ranked as follows (from high to low): **R > Insufficient Coverage > U > S > WT**. 
+Please note that drug interpretation severity is ranked as follows (from high to low): **R > Insufficient Coverage > U > S > WT**.
 
-| Column Type | Language | Explanation | Responsible MDL Interpretation(s) |
+| <div style="width:125px">Column Type</div> | Language | Explanation | Responsible MDL Interpretation(s) |
 |---|---|---|---|
 | Drug | Mutations(s) associated with resistance to <antimicrobial> detected | The highest severity mutation for any of the gene(s) associated with that antimicrobial drug has an "R" (resistant) MDL interpretation in the Laboratorian report | R |
 | Drug | The detected mutation(s) have uncertain significance. Resistance to <antimicrobial> cannot be ruled out | The highest severity mutation found any of the gene(s) associated with that antimicrobial drug has a "U" (uncertain significance) MDL interpretation in the Laboratorian report | U |
@@ -40,7 +40,7 @@ Please note that drug interpretation severity is ranked as follows (from high to
 
 In tbp-parser, rifampicin uses slightly different language:
 
-| Column Type | Language | Explanation | Responsible MDL Interpretation |
+| <div style="width:125px">Column Type</div> | Language | Explanation | Responsible MDL Interpretation |
 |---|---|---|---|
 | Drug | Predicted low-level resistance to rifampicin. May test susceptible by phenotypic methods | One or more of the following mutations in rpoB were detected: Leu430Pro, Asp435Tyr, His445Asn, His445Ser, His445Leu, His445Cys, Leu452Pro, Ile491Phe. No other R mutations were found in rpoB. | R |
 | Drug | Predicted resistance to rifampicin | An R mutation was detected in rpoB that is not part of the list above. | R |
@@ -60,7 +60,7 @@ The output column names can be customized to contain any text according to your 
 - drug: [drug_name]
   drug_code: <antimicrobial_column_name_in_lims_report>
   gene_codes:
-    [gene_name]: <column_name_for_gene_drug_combo_in_lims_report> 
+    [gene_name]: <column_name_for_gene_drug_combo_in_lims_report>
     [gene_name]: <column_name_for_gene_drug_combo_in_lims_report>
     ...
 - drug: [drug_name]
@@ -106,10 +106,10 @@ These miscellaneous columns are not set with the dictionary described above and 
 
 Lineage ID is only designated if the percentage of LIMS genes that pass locus QC is greater than the minimum percentage, indicated by `--min_percent_loci_covered` (default 0.7 -> 70%).
 
-The language used is different between tNGS and WGS. 
+The language used is different between tNGS and WGS.
 
 | WGS Language | Explanation |
-| --- | --- | 
+| --- | --- |
 | DNA of Mycobacterium tuberculosis species detected | The TBProfiler `"main_lineage"` field contains "lineage" |
 | DNA of Mycobacterium bovis BCG detected | The TBProfiler `"main_lineage"` field or `"sub_lineage"` field contains "BCG" |
 | DNA of Mycobacterium bovis (not BCG) detected | The TBProfiler `"main_lineage"` field or `"sub_lineage"` field does **not** contain "BCG" but _does_ contain "bovis" or "La1" |

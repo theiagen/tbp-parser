@@ -31,14 +31,6 @@ You can use our Docker image to run `tbp-parser` without needing to install any 
 docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:3.0.0
 ```
 
-### Locally with Python
-
-`tbp-parser` is availble with `pip`. To install `tbp-parser` and its dependencies, run the following command:
-
-```bash
-pip install tbp-parser
-```
-
 ## Usage
 
 ### Example Usage
@@ -46,14 +38,14 @@ pip install tbp-parser
 This shows how the script can be run if used inside the Docker container provided above.
 
 ``` text
-tbp_parser \
+tbp-parser \
     /path/to/data/tbprofiler_output.json \
     /path/to/data/tbprofiler_output.bam \
     -o "example" \
     --min_depth 12 \
     --min_frequency 0.9 \
     --sequencing_method "Illumina NextSeq" \
-    --operator "John Doe" 
+    --operator "John Doe"
 ```
 
 Please note that the BAM file must have the accompanying BAI file in the same directory.
