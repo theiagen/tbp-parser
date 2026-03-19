@@ -44,8 +44,8 @@ In tbp-parser, rifampicin uses slightly different language:
 |---|---|---|---|
 | Drug | Predicted low-level resistance to rifampicin. May test susceptible by phenotypic methods | One or more of the following mutations in rpoB were detected: Leu430Pro, Asp435Tyr, His445Asn, His445Ser, His445Leu, His445Cys, Leu452Pro, Ile491Phe. No other R mutations were found in rpoB. | R |
 | Drug | Predicted resistance to rifampicin | An R mutation was detected in rpoB that is not part of the list above. | R |
-| Drug | Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance | The highest severity mutation for the gene(s) associated with rifampicin has an "S" MDL interpretation and synonymous mutations were present within the rpoB RRDR region. | S |
-| Drug | Predicted susceptibility to rifampicin | The highest severity mutation for the gene(s) associated with rifampicin has an "S" MDL interpretation and **no** synonymous mutations were detected in the rpoB RRDR region. | S |
+| Drug | Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance | The highest severity mutation for the gene(s) associated with rifampicin has an "S" or "WT" MDL interpretation and synonymous mutations were present within the rpoB RRDR region. | S, WT |
+| Drug | Predicted susceptibility to rifampicin | The highest severity mutation for the gene(s) associated with rifampicin has an "S" or "WT" MDL interpretation and **no** synonymous mutations were detected in the rpoB RRDR region. | S, WT |
 | Gene-drug combo | p.Ala689Ala [synonymous] (e.g.) | If a [synonymous] tag follows a mutation, it is from the rpoB RRDR region. | S |
 
 ### **Customizing resistance column names**
@@ -92,13 +92,13 @@ For example:
 
 ## Miscellaneous columns
 
-These miscellaneous columns are not set with the dictionary described above and contain default names, but they can be renamed via the `OUTPUT_RENAMING` dictionary in a configuration file.
+These miscellaneous columns are not set with the dictionary described above and contain default names, but they can be renamed via the `FIND_AND_REPLACE` dictionary in a configuration file.
 
 | Column name | Explanation | Source |
 | --- | --- | --- |
-| Sample_Name | The name of the sample | TBProfiler `"id"` field |
-| Lineage_ID | The lineage of the sample in human-readable language | Determined by tbp-parser using the TBProfiler `"main_lineage"` and `"sub_lineage"` fields |
-| Analysis_Date | The date `tbp-parser` was run in YYYY-MM-DD HH:SS format | Determined by tbp-parser at runtime |
+| Sample Name | The name of the sample | TBProfiler `"id"` field |
+| Lineage ID | The lineage of the sample in human-readable language | Determined by tbp-parser using the TBProfiler `"main_lineage"` and `"sub_lineage"` fields |
+| Analysis date | The date `tbp-parser` was run in YYYY-MM-DD HH:MM format | Determined by tbp-parser at runtime |
 | Operator | The name of the person who ran `tbp-parser`; can be provided with the `--operator` input parameter. If left blank, “Operator not provided” is the default value. | tbp-parser input parameter |
 | Lineage | The lineage of the sample | TBProfiler `"main_lineage"` field |
 
@@ -114,14 +114,14 @@ The language used is different between tNGS and WGS.
 | DNA of Mycobacterium bovis BCG detected | The TBProfiler `"main_lineage"` field or `"sub_lineage"` field contains "BCG" |
 | DNA of Mycobacterium bovis (not BCG) detected | The TBProfiler `"main_lineage"` field or `"sub_lineage"` field does **not** contain "BCG" but _does_ contain "bovis" or "La1" |
 | DNA of Mycobacterium tuberculosis complex detected | The TBProfiler `"main_lineage"` field is blank, "NA", or does not exist |
-| DNA of Mycobacterium tuberculosis NOT detected | The `--min_percent_loci_covered` QC check fails |
+| DNA of Mycobacterium tuberculosis complex NOT detected | The `--min_percent_loci_covered` QC check fails |
 
 | tNGS Language | Explanation |
 |---|---|
-| DNA of Mycobacterium bovis BCG detected | pncA contains a "p.His57Asp" mutation that passes positional QC |
+| DNA of Mycobacterium bovis detected | pncA contains a "p.His57Asp" mutation that passes positional QC |
 | DNA of Mycobacterium tuberculosis complex detected (M. bovis not ruled out) | pncA contains a "p.His57Asp" mutation that **does not** pass positional QC |
 | DNA of Mycobacterium tuberculosis complex detected (not M. bovis) | pncA **does not** have a "p.His57Asp" mutation |
-| DNA of Mycobacterium tuberculosis NOT detected | The `--min_percent_loci_covered` QC check fails |
+| DNA of Mycobacterium tuberculosis complex NOT detected | The `--min_percent_loci_covered` QC check fails |
 
 ### **Customizing miscellaneous column names**
 

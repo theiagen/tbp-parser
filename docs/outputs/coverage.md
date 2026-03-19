@@ -19,61 +19,242 @@ ERR columns only appear if an `--err_coverage_bed` input file is provided. Pleas
 | err_average_depth | The average read depth across a region (specified by the `--err_coverage_bed` input file)<br>_Only appears if `--err_coverage_bed` is provided_ |
 | qc_warning | Indicates if any deletions were identified in the gene which may contribute to lower than expected coverage |
 
-### Locus vs Target coverage reports
+## Locus vs Target coverage reports
 
-Two coverage reports are generated: 
+Each line in your BED file defines a **target region** — a stretch of the genome where tbp-parser counts reads and calculates coverage. How you define these regions directly controls what gets measured and what appears in your coverage reports.
 
-- a **locus** coverage report, which aggregates multiple target regions if they belong to the same locus tag if neccessary (for example, if during a tNGS analysis, several genes are covered by mulitple primers, those primers will be combined into one value)
-- a **target** coverage report, which keeps each record in the provided `--coverage_bed` file separate (for example, during a tNGS analysis, each primer region is kept separate)
+- The **locus** coverage report aggregates all target regions that share the same locus tag and considers them as a single unit.
+- The **target** coverage report keeps each BED file line as its own separate unit.
 
-**If each locus is covered by only one target region, the two reports would be identical and so only the locus coverage report is generated.**
+!!! info "Which report gets generated?"
+    - If all BED file lines cover only one target region per locus, the two reports would be identical. In this case, only the locus coverage report is generated.
+    - If any BED file lines cover multiple target regions per locus, both reports will be generated.
 
-### Example Coverage Report
+!!! info "QC applies locus-level coverage"
+    All coverage-based QC decisions use the **locus-level** breadth of coverage. If katG1 has poor coverage but katG2 has sufficient coverage, the aggregated coverage may still pass or fail specific thresholds depending on the overall ratio.
 
-In the following example, katG is covered by four different target regions (katG1, katG2, katG3, and katG4) in the `--coverage_bed` file that overlap. In the locus coverage report, these four regions are aggregated into one record for the katG gene, while in the target coverage report, each of the four regions is kept separate.
+### Simple case: one target region in BED file
 
-Here is an excerpt from a locus coveage report from an example tNGS analysis:
-
-```text
-sample_name	locus_tag	gene_name	percent_coverage	average_depth	err_percent_coverage	err_average_depth	qc_warning
-sample01	Rv1305	atpE	100	1882.364	100	2409.771	
-sample01	Rv2416c	eis	100	2290.005	100	2538.581	
-sample01	Rv3795	embB	100	2376.114	100	2919.096	
-sample01	Rv0006	gyrA	100	2313.786	100	2823.435	
-sample01	Rv0005	gyrB	100	1583.527	100	1949.587	
-sample01	Rv1484	inhA	3.204	130.288	4.633	188.356	
-sample01	Rv1908c	katG	100.000	2194.408	100.000	2333.477	
-sample01	Rv0678	mmpR5	100	3158.585	100	3674.649	
-sample01	Rv2043c	pncA	100	1715.247	100	1829.639	
-sample01	Rv0701	rplC	100	2889.414	100	3095.667	
-sample01	Rv0667	rpoB	100	3285.271	100	2342.436	Contains valid deletion(s): c.727_728delGTinsAC; c.1291_1292delAGinsCC; c.1327_1329delTTGinsCCC
-sample01	EBG00000313339	rrl	100	2383.529	100	2952.955
-sample01	EBG00000313325	rrs	91.111	5738.913	100	7776.69	
+```
+BED file:
+chrom    start    end    locus_tag    gene_name
+Chrom    1        500    Rv0005       gyrB
 ```
 
-Here is a corresponding exerpt from a target coverage report; note how the valid deletion warning is only present in the target report for the specific regions that contain the deletions, while in the locus report, the warning is present for the entire gene:
+Only the locus coverage report is produced:
 
-```text
-sample_name	locus_tag	gene_name	percent_coverage	average_depth	err_percent_coverage	err_average_depth	qc_warning
-sample01	Rv1305	atpE	100	1882.364	100	2409.771	
-sample01	Rv2416c	eis	100	2290.005	100	2538.581	
-sample01	Rv3795	embB	100	2376.114	100	2919.096	
-sample01	Rv0006	gyrA	100	2313.786	100	2823.435	
-sample01	Rv0005	gyrB	100	1583.527	100	1949.587	
-sample01	Rv1484	inhA	3.204	130.288	4.633	188.356	
-sample01	Rv1908c	katG1	100	1840.63	100	2032.022	
-sample01	Rv1908c	katG2	100	1941.742	100	2579.653	
-sample01	Rv1908c	katG3	100	1913.291	100	2449.762	
-sample01	Rv1908c	katG4	100	1922.261	100	2353.081	
-sample01	Rv0678	mmpR5	100	3158.585	100	3674.649	
-sample01	Rv2043c	pncA	100	1715.247	100	1829.639	
-sample01	Rv0701	rplC	100	2889.414	100	3095.667	
-sample01	Rv0667	rpoB_1	100	4851.581	100	6403.333	Contains valid deletion(s): c.727_728delGTinsAC
-sample01	Rv0667	rpoB_2	100	1901.996	100	2281.826	Contains valid deletion(s): c.1291_1292delAGinsCC; c.1327_1329delTTGinsCCC
-sample01	EBG00000313339	rrl_1	100	1865.669	100	2085.516	
-sample01	EBG00000313339	rrl_2	100	2696.711	100	3166.373	
-sample01	EBG00000313325	rrs	91.111	5738.913	100	7776.69	
 ```
+locus_coverage_report.csv:
+
+sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
+sample01     Rv0005     gyrB       100.000           542.310
+
+  → percent_coverage = (# positions ≥ min_depth) / 500
+  → average_depth = (sum of reads at every position) / 500
+```
+
+### Split regions
+
+A gene can be covered by multiple non-overlapping target regions (common in tNGS), resulting in multiple BED lines with the **same locus tag** but **different gene names** and a gap between them:
+
+```
+BED file:
+chrom    start    end    locus_tag    gene_name
+Chrom    100      200    Rv0667       rpoB_1
+Chrom    300      400    Rv0667       rpoB_2
+
+├── rpoB_1 ──┤              ├── rpoB_2 ──┤
+100          200            300          400
+               (gap: 201–299)
+```
+
+Because there are more targets (2) than loci (1), **both** reports are generated:
+
+```
+locus_coverage_report.csv:
+
+sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
+sample01     Rv0667     rpoB       95.000            280.500
+                                   ↑ aggregated across positions 100–200 AND 300–400 (202 total positions)
+```
+```
+target_coverage_report.csv:
+
+sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
+sample01     Rv0667     rpoB_1     100.000           350.100
+sample01     Rv0667     rpoB_2     90.000            210.900
+                                   ↑ each BED line measured independently
+```
+
+The gap (positions 201–299) is **not measured at all**, so no reads are counted there. The locus report aggregates only the positions defined by the BED lines (100–200 and 300–400), not the gap between them. This means the locus-level breadth of coverage reflects only the regions defined in the BED file, not the entire gene.
+
+### Overlapping regions
+
+A gene can be covered by multiple overlapping target regions (common in tNGS), resulting in multiple BED lines with the **same locus tag** but **different gene names** that overlap:
+
+```
+BED file:
+chrom    start    end    locus_tag    gene_name
+Chrom    1        200    Rv1908c      katG1
+Chrom    150      400    Rv1908c      katG2
+
+├──── katG1 ────┤
+1               200
+            ├────── katG2 ──────┤
+            150                 400
+```
+
+Because there are now more targets (2) than loci (1), **both** reports are generated:
+
+```
+locus_coverage_report.csv:
+
+sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
+sample01     Rv1908c    katG       100.000            3471.463
+                                   ↑ aggregated across ALL positions 1–400
+```
+```
+target_coverage_report.csv:
+
+sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
+sample01     Rv1908c    katG1      100.000           2202.284
+sample01     Rv1908c    katG2      100.000           3556.657
+                                   ↑ each BED line measured independently (positions 1–200 for katG1, 150–400 for katG2)
+```
+
+The locus coverage report combines all reads from katG1 and katG2 into a single measurement across positions 1–400. The target report calculates coverage for each BED line separately.
+
+### Resolving overlapping regions
+
+In the example above, katG1 and katG2 share an overlapping region (positions 150–200). Without overlap resolution, a read spanning that region gets counted in **both** targets — inflating the locus coverage when they're aggregated together.
+
+With `--resolve_overlapping_regions` enabled, tbp-parser identifies reads that **only** appear in non-overlapping portions of each target and uses those as a whitelist:
+
+```
+katG1: ├─────────────────┤
+        1               200
+              |~overlap~|
+katG2:        ├───────────────────┤
+              150               400
+
+Non-overlapping katG1:   1 ─── 149  (unique to katG1)
+Overlap zone:          150 ─── 200  (shared)
+Non-overlapping katG2: 201 ─── 400  (unique to katG2)
+```
+
+For each target, tbp-parser will:
+
+1. Finds reads in the **non-overlapping** portion of that target
+2. Uses those read names as a whitelist
+3. Reinterprets all positions (including the overlap zone), keeping **only** the whitelisted reads
+
+This prevents double-counting when the targets are aggregated into locus coverage. The impact is visible in both reports:
+
+```
+WITHOUT --resolve_overlapping_regions:
+
+locus_coverage_report.csv:
+sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
+sample01     Rv1908c    katG       100.000           3471.463  ← inflated by double-counted reads
+
+target_coverage_report.csv:
+sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
+sample01     Rv1908c    katG1      100.000           2202.284  ← inflated by double-counted reads
+sample01     Rv1908c    katG2      100.000           3556.657  ← inflated by double-counted reads
+```
+
+```
+WITH --resolve_overlapping_regions:
+
+locus_coverage_report.csv:
+sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
+sample01     Rv1908c    katG       100.000            2683.554  ← only whitelisted reads
+
+target_coverage_report.csv:
+sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
+sample01     Rv1908c    katG1      100.000            2068.351  ← only whitelisted reads
+sample01     Rv1908c    katG2      100.000            2766.803  ← only whitelisted reads
+```
+
+Note that with overlap resolution, coverage numbers may decrease in both reports. Reads that appear entirely within the overlapping region (no part spills into the non-overlapping regions) are excluded entirely since the target region origin cannot be conclusively determined. This is a conservative and more accurate approach for handling tNGS data with overlapping regions.
+
+!!! warning "Trade-off: short reads and large overlaps"
+    Overlap resolution works by whitelisting reads that appear in non-overlapping regions. If a read is short enough to exist **solely** within the overlap zone (i.e., it never extends into either target's unique region), it will be dropped from both targets — there is no way to determine which target it came from. This means that the larger the overlap relative to your read length, the more reads may be excluded. For BED files with large overlapping regions and short reads, this can noticeably reduce coverage numbers. Consider this trade-off when deciding whether to enable `--resolve_overlapping_regions`.
+
+## Quick reference
+
+| Scenario | Reports generated | Locus report | Target report |
+|----------|-------------------|-------------|---------------|
+| 1 BED line per gene | Locus only | 1 row per gene | Not generated |
+| Multiple BED lines, same locus | Both | Aggregated into 1 row | 1 row per BED line |
+| Overlapping BED lines + flag | Both | Aggregated (deduplicated) | 1 row per BED line (deduplicated) |
+| Overlapping BED lines, no flag | Both | Aggregated (may double-count) | 1 row per BED line (may double-count) |
+
+### Deletion warnings in coverage reports
+
+When a variant contains a deletion in the ORF that passes positional QC and overlaps with a coverage region, it is flagged as a "valid deletion" and reported in the `qc_warning` column. These warnings explain why a gene's coverage may be lower than expected — the deleted region genuinely has no reads, which is biologically correct rather than a sequencing failure.
+
+A deletion is considered valid if:
+
+1. It is a deletion within the ORF (open reading frame)
+2. It passes positional QC (sufficient depth, frequency, and read support)
+3. Its genomic coordinates overlap with the coverage region
+
+#### How `--err_coverage_bed` affects deletion warnings
+
+The `qc_warning` column reports deletions differently depending on whether ERR coverage is active:
+
+- **Without `--err_coverage_bed`**: All valid deletions in the full target/locus region are reported
+- **With `--err_coverage_bed`**: Only valid deletions that fall **within the ERR region** are reported
+
+A deletion that exists in the full target region but falls outside the ERR region will **not** appear in `qc_warning` when ERR coverage is active. The warning text also indicates which region was used:
+
+```
+Without ERR:  "Contains valid deletion(s) in full locus region: ..."
+With ERR:     "Contains valid deletion(s) in ERR locus region: ..."
+```
+
+#### Example
+
+Consider rpoB split across two target regions, with three deletions:
+
+- `c.727_728delGTinsAC` — falls within the full target but **outside** the ERR region
+- `c.1291_1292delAGinsCC` — falls within both the full target and the ERR region
+- `c.1327_1329delTTGinsCCC` — falls within both the full target and the ERR region
+
+```
+Without --err_coverage_bed:
+
+locus_coverage_report.csv:
+sample_name  locus_tag  gene_name  ...  qc_warning
+sample01     Rv0667     rpoB       ...  Contains valid deletion(s) in full locus region: c.727_728delGTinsAC; c.1291_1292delAGinsCC; c.1327_1329delTTGinsCCC
+
+target_coverage_report.csv:
+sample_name  locus_tag  gene_name  ...  qc_warning
+sample01     Rv0667     rpoB_1     ...  Contains valid deletion(s) in full target region: c.727_728delGTinsAC
+sample01     Rv0667     rpoB_2     ...  Contains valid deletion(s) in full target region: c.1291_1292delAGinsCC; c.1327_1329delTTGinsCCC
+```
+
+```
+With --err_coverage_bed:
+
+locus_coverage_report.csv:
+sample_name  locus_tag  gene_name  ...  qc_warning
+sample01     Rv0667     rpoB       ...  Contains valid deletion(s) in ERR locus region: c.1291_1292delAGinsCC; c.1327_1329delTTGinsCCC
+
+target_coverage_report.csv:
+sample_name  locus_tag  gene_name  ...  qc_warning
+sample01     Rv0667     rpoB_1     ...                              ← no warning (deletion outside ERR)
+sample01     Rv0667     rpoB_2     ...  Contains valid deletion(s) in ERR target region: c.1291_1292delAGinsCC; c.1327_1329delTTGinsCCC
+```
+
+Note that `c.727_728delGTinsAC` disappears from the warnings when ERR coverage is active because it falls outside the ERR region.
+
+#### Why deletions matter for QC
+
+Valid deletions also affect locus QC decisions. When a locus has low breadth of coverage (below `--min_percent_coverage`), a valid deletion in that locus can prevent the variant from being marked as "Insufficient Coverage" — the low coverage is explained by a real biological event rather than a sequencing failure. See the [interpretation documentation](../algorithm/interpretation.md) for more details.
+
+**Note:** The `--use_err_as_brr` flag does **not** affect the coverage report. That flag controls whether ERR regions are used in place of full regions for locus QC decisions (e.g., determining "Insufficient Coverage"). The coverage report's `qc_warning` column is controlled solely by whether `--err_coverage_bed` is provided — if it is, only deletions within the ERR region are reported regardless of the `--use_err_as_brr` setting.
 
 ## Customizing column names
 

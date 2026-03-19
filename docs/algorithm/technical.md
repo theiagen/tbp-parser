@@ -48,7 +48,7 @@ The provided (or default) [LIMS report format YAML file](../inputs.md#lims-repor
         
       - `gene_code`: the desired output column name for that gene-drug combination in the LIMS report (e.g., "BDQ_Rv0678")
       - `gene_target_value`: the value that will be reported in the LIMS report for that gene-drug combination; see the `LIMSProcessor` class for more details on how this is determined
-      - `max_mdl_interpretations`: a list of the highest `mdl_interpretation` values identified for any mutation in that gene for that drug; this is used in the decision logic for determining the `gene_target_value`
+      - `max_mdl_interpretation`: a list of the highest `mdl_interpretation` values identified for any mutation in that gene for that drug; this is used in the decision logic for determining the `gene_target_value`
       - `max_mdl_variants`: a list of the specific mutations that have the highest `mdl_interpretation` values for that gene-drug combination; this is used in the decision logic for determining the `gene_target_value`
 
 The provided (or default) [coverage BED file](../inputs.md#coverage-bed-file) is then parsed into a `BedRecord` list, where each `BedRecord` represents a single record/entry from the BED file., See the toggle below for more details. This same process is applied to the [ERR coverage BED file](../inputs.md#tngs-specific-arguments) (if provided), resulting in a `BedRecord` list representing the ERR regions.

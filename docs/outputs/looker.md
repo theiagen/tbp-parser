@@ -6,9 +6,9 @@ The Looker report is intended for use in Google's Looker Data Studio for dashboa
 
 ## Resistance columns
 
-Each antimicrobial drug listed in the input `--coverage_bed` file will be represented by one column in the Looker report. The column name will be the antimicrobial drug name in lowercase. This can be customized by adding content to the `OUTPUT_RENAMING` dictionary in a configuration file, though please be aware that this will change every instance of that drug name in **all** output reports.
+Each antimicrobial drug listed in the input `--coverage_bed` file will be represented by one column in the Looker report. The column name will be the antimicrobial drug name in lowercase. This can be customized by adding content to the `FIND_AND_REPLACE` dictionary in a configuration file, though please be aware that this will change every instance of that drug name in **all** output reports.
 
-Drug interpretation severity is ranked as follows (from high to low): **R > U > S > WT > Insufficient Coverage **.
+Drug interpretation severity is ranked as follows (from high to low): **R > R-Interim > U > S-Interim > S > WT > Insufficient Coverage > NA**.
 
 | Column name | Explanation | Source |
 | --- | --- | --- |
@@ -16,15 +16,15 @@ Drug interpretation severity is ranked as follows (from high to low): **R > U > 
 
 ## Miscellaneous columns
 
-These miscellaneous columns are also included in the Looker report to provide additional context about the sample. They can be customized by adding content to the `OUTPUT_RENAMING` dictionary in a configuration file.
+These miscellaneous columns are also included in the Looker report to provide additional context about the sample. They can be customized by adding content to the `FIND_AND_REPLACE` dictionary in a configuration file.
 
 | Column name | Explanation |
 | --- | --- |
 | sample_id | The name of the sample |
 | output_seq_method_type | The sequencing method used to generate the data; can be set with the `--sequencing_method` input parameter. If left blank, "Sequencing method not provided" is the default value |
 | lineage | The lineage of the sample (the `main_lin` field as reported by TBProfiler); for example, lineage1.2.1.2.1  |
-| ID | The lineage of the sample in human-readable language (the same as the `Lineage_ID` column in the LIMS report; see [the relevant documentation](./lims.md#lineage-id-language) for more information) |
-| analysis_date | The date `tbp-parser` was run in YYYY-MM-DD HH:SS format |
+| ID | The lineage of the sample in human-readable language (the same as the `Lineage ID` column in the LIMS report; see [the relevant documentation](./lims.md#lineage-id-language) for more information) |
+| analysis_date | The date `tbp-parser` was run in YYYY-MM-DD HH:MM format |
 | operator | The name of the person who ran `tbp-parser`; can be provided with the `--operator` input parameter. If left blank, "Operator not provided" is the default value. |
 
 ## Customizing column names
