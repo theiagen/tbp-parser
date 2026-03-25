@@ -14,7 +14,7 @@ description = "A TBProfiler output parser used to classify the severity of Mycob
 authors = [
     {name = "Sage Wright", email = "sage.wright@theiagen.com"},
     {name = "Theron James", email = "theron.james@theiagen.com"},
-    {name = "Inês Mendes", email = "ines.mendes@theiagen.com"},
+    {name = "Ines Mendes", email = "ines.mendes@theiagen.com"},
 ]
 maintainers = [
     {name = "Sage Wright", email = "sage.wright@theiagen.com"},
