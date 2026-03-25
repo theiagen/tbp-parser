@@ -87,6 +87,10 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.9.0 - fixes a bug in tNGS analysis where mutations outside the expected region were not identified correctly, leading to missing warnings; deprecates the TNGS_REGIONS_ACTIVATED global variable and now creates the TNGS_REGIONS dictionary directly from the input BED file
 - v2.9.1 - fixes a bug where mutations outside the expected region can lead to an erroneous "Pending Retest" in the LIMS report
 - v2.10.0 - fixes a bug where multiple mutations outside of the expected region with "NA" amino acid changes led to some mutations appearing in the LIMS report incorrectly, and adds a new column to the tNGS coverage report for the average locus coverage; adds QC range boundaries for frequency and read support for tNGS analysis; enables modification of the percentage of LIMS genes required for lineage designation
+- v2.11.0 - fixes an issue where both mmpR5 and Rv0678 were being counted when calculating the percentage_lims_genes_above >= MIN_LOCUS_PERCENTAGE; minor changes to configuration parsing
+- v2.11.1 - handles missing positions for `alternative_consequence` variants
+- v2.11.2 - ensures that mutation QC is considered when determining tNGS lineage designation (MTBC ID)
+- v2.11.3 - adds missing proximal promoter region for Rv0678
 - v3.0.0 - a complete refactor of the codebase to improve maintainability and add new features
 
 ---
