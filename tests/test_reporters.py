@@ -211,3 +211,20 @@ class TestWriteCoverageReports:
 
         df = _run_report(mock_config, tmp_path, write_coverage_report, "locus_coverage_report", "test_sample", {"Rv0667": lc})
         assert "c.1_100del" in df["qc_warning"].iloc[0]
+
+    def test_target_report_overlapping_deletions(self, mock_config, make_target_coverage, make_variant, tmp_path):
+        del_variant = make_variant(nucleotide_change="c.1_100del", pos=150)
+
+        target1 = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB1", coords=[(100, 200)])
+        target2 = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB2", coords=[(110, 210)])
+        target1.valid_deletions.append(del_variant)
+        target2.valid_deletions.append(del_variant)
+
+        df = _run_report(mock_config, tmp_path, write_coverage_report, "target_coverage_report", "test_sample", {"rpoB1": target1, "rpoB2": target2})
+
+        t1_warning = df[df["gene_name"] == "rpoB1"]["qc_warning"].iloc[0]
+        t2_warning = df[df["gene_name"] == "rpoB2"]["qc_warning"].iloc[0]
+
+        assert "c.1_100del" in t1_warning
+        assert "c.1_100del" in t2_warning
+        assert t1_warning == t2_warning

@@ -416,7 +416,78 @@ class TestLocusQcWithErrCoverage:
 
 
 class TestAssignValidDeletions:
-    """Tests for assign_variants_with_valid_deletions with ERR coverage."""
+    """Tests for assign_variants_with_valid_deletions with and without ERR coverage."""
+
+    def test_deletion_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+        qc = VariantQC()
+        del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
+
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=None)
+        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)], err_coverage=None)
+
+        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
+
+        assert locus.contains_variant_with_valid_deletion(del_variant) is True
+        assert target.contains_variant_with_valid_deletion(del_variant) is True
+
+    def test_deletion_outside_coverage_coords_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+        """Good deletion at a position outside coverage coords should not be assigned."""
+        qc = VariantQC()
+        del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=500)
+
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)])
+        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
+
+        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
+
+        assert locus.contains_variant_with_valid_deletion(del_variant) is False
+        assert target.contains_variant_with_valid_deletion(del_variant) is False
+
+    def test_deletion_overlapping_coverage_coords_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+        """Good deletion overlapping multiple target coverage objects should be assigned to both."""
+        qc = VariantQC()
+        del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=150)
+
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)])
+        target1 = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB1", coords=[(100, 200)])
+        target2 = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB2", coords=[(110, 210)])
+
+        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB1": target1, "rpoB2": target2})
+
+        assert locus.contains_variant_with_valid_deletion(del_variant) is True
+        assert target1.contains_variant_with_valid_deletion(del_variant) is True
+        assert target2.contains_variant_with_valid_deletion(del_variant) is True
+        assert target1.valid_deletions == target2.valid_deletions == [del_variant]
+
+    def test_non_deletion_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+        qc = VariantQC()
+        snp_variant = make_variant(depth=100, freq=0.95, pos=120)  # SNP, not deletion
+
+        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err)
+        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
+
+        qc.assign_variants_with_valid_deletions(snp_variant, {"Rv0667": locus}, {"rpoB": target})
+
+        assert locus.contains_variant_with_valid_deletion(snp_variant) is False
+        assert target.contains_variant_with_valid_deletion(snp_variant) is False
+        assert err.contains_variant_with_valid_deletion(snp_variant) is False
+
+    def test_deletion_failing_positional_qc_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+        """Deletion with fails_positional_qc=True should be skipped by assign_variants_with_valid_deletions."""
+        qc = VariantQC()
+        del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
+        del_variant.fails_positional_qc = True
+
+        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
+        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err)
+        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
+
+        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
+
+        assert locus.contains_variant_with_valid_deletion(del_variant) is False
+        assert target.contains_variant_with_valid_deletion(del_variant) is False
+        assert err.contains_variant_with_valid_deletion(del_variant) is False
 
     def test_deletion_in_err_range_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
         qc = VariantQC()
@@ -451,58 +522,3 @@ class TestAssignValidDeletions:
         assert err_locus.contains_variant_with_valid_deletion(del_variant) is False
         # Target ERR (310-390) does contain pos 350, so the variant IS assigned to target ERR
         assert err_target.contains_variant_with_valid_deletion(del_variant) is True
-
-    def test_deletion_assigned_without_err_coverage(self, make_variant, make_locus_coverage, make_target_coverage):
-        qc = VariantQC()
-        del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
-
-        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=None)
-        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)], err_coverage=None)
-
-        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
-
-        assert locus.contains_variant_with_valid_deletion(del_variant) is True
-        assert target.contains_variant_with_valid_deletion(del_variant) is True
-
-    def test_non_deletion_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
-        qc = VariantQC()
-        snp_variant = make_variant(depth=100, freq=0.95, pos=120)  # SNP, not deletion
-
-        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
-        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err)
-        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
-
-        qc.assign_variants_with_valid_deletions(snp_variant, {"Rv0667": locus}, {"rpoB": target})
-
-        assert locus.contains_variant_with_valid_deletion(snp_variant) is False
-        assert target.contains_variant_with_valid_deletion(snp_variant) is False
-        assert err.contains_variant_with_valid_deletion(snp_variant) is False
-
-    def test_deletion_failing_positional_qc_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
-        """Deletion with fails_positional_qc=True should be skipped by assign_variants_with_valid_deletions."""
-        qc = VariantQC()
-        del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
-        del_variant.fails_positional_qc = True
-
-        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
-        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err)
-        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
-
-        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
-
-        assert locus.contains_variant_with_valid_deletion(del_variant) is False
-        assert target.contains_variant_with_valid_deletion(del_variant) is False
-        assert err.contains_variant_with_valid_deletion(del_variant) is False
-
-    def test_deletion_outside_coverage_coords_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
-        """Good deletion at a position outside coverage coords should not be assigned."""
-        qc = VariantQC()
-        del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=500)
-
-        locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)])
-        target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
-
-        qc.assign_variants_with_valid_deletions(del_variant, {"Rv0667": locus}, {"rpoB": target})
-
-        assert locus.contains_variant_with_valid_deletion(del_variant) is False
-        assert target.contains_variant_with_valid_deletion(del_variant) is False
