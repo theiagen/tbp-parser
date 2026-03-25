@@ -29,19 +29,23 @@ Each line/entry in your BED file defines a **`BedRecord`** — a stretch of the 
 !!! info "Which report gets generated?"
     If any `BedRecord`s share the same locus tag, both the **locus** and **target** coverage reports will be generated. Otherwise, only the **locus** coverage report will be generated.
 
-!!! info "QC applies locus-level coverage"
-    Note: All coverage-based QC determinations use the **locus-level** breadth of coverage. Ex) If katG1 has poor coverage but katG2 has sufficient coverage, the aggregated coverage may still pass or fail specific thresholds depending on the overall ratio.
+!!! tip "QC uses locus-level coverage"
+    All coverage-based QC determinations use the **locus-level** breadth of coverage. 
+    
+    For example, if primer 1 for katG has poor coverage but primer 2 for katG has sufficient coverage, QC checks use the **overall** ratio of the aggregated coverage, not the individual primer regions.
 
 ---
 
-### Simple case: one target region in BED file
+### Example 1: _one target region in BED file_
+
+When a BED file contains a single `BedRecord` (one **gene name** for one **locus tag**),
 
 ```
 BED file:
 Chrom    1        500    Rv0005       gyrB
 ```
 
-Only the locus coverage report is produced:
+only the locus coverage report is produced:
 
 ```
 locus_coverage_report.csv:
@@ -55,9 +59,9 @@ sample01     Rv0005     gyrB       100.000           542.310
 
 ---
 
-### Split regions
+### Example 2: _split regions_
 
-A gene can be covered by multiple non-overlapping target regions (common in tNGS), resulting in multiple `BedRecord`s with the **same locus tag** but **different gene names** and a gap between them:
+A gene can be covered by multiple non-overlapping target regions (common in tNGS), resulting in multiple `BedRecord`s with the **same locus tag** but **different gene names** and **a gap** between them:
 
 ```
 BED file:
@@ -66,8 +70,8 @@ Chrom    300      400    Rv0667       rpoB_2
 
 ├── rpoB_1 ──┤              ├── rpoB_2 ──┤
 100         200            300         400
-                     ↑
-               (gap: 201–299)
+                    ↑
+              (gap: 201–299)
 ```
 
 Because there are more targets (2) than loci (1), **both** reports are generated:
@@ -92,9 +96,9 @@ Note that the gap (positions 201–299) is **not measured at all** and no reads 
 
 ---
 
-### Overlapping regions
+### Example 3: _overlapping regions_
 
-A gene can be covered by multiple overlapping target regions (common in tNGS), resulting in multiple `BedRecord`s with the **same locus tag** but **different gene names** that overlap:
+A gene can be covered by multiple overlapping target regions (common in tNGS), resulting in multiple `BedRecord`s with the **same locus tag** but **different gene names** that **overlap**:
 
 ```
 BED file:
@@ -129,16 +133,16 @@ The locus coverage report combines all reads from katG1 and katG2 into a single 
 
 ---
 
-### Resolving overlapping regions
+### Example 4: _resolving overlapping regions_
 
-In the example above, katG1 and katG2 share an overlapping region (positions 150–200). Without overlap resolution, a read spanning that region gets counted in **both** `BedRecord`s — inflating the locus coverage when they're aggregated together.
+In [Example 3 above](#example-3-overlapping-regions), katG1 and katG2 share an overlapping region (positions 150–200). Without overlap resolution, a read spanning that region gets counted in **both** `BedRecord`s — inflating the locus coverage when they're aggregated together.
 
-With `--resolve_overlapping_regions` enabled, tbp-parser identifies reads that **only** appear in non-overlapping portions of each `BedRecord` and uses those as a whitelist:
+With `--resolve_overlapping_regions` enabled, tbp-parser identifies reads that **only** appear in _non_-overlapping portions of each `BedRecord` and uses those as a whitelist:
 
 ```
-katG1: ├─────────────────┤
+katG1: ├──────────────────┤
         1               200
-              |~overlap~|
+              ├ overlap ┤
 katG2:        ├───────────────────┤
               150               400
 
@@ -149,7 +153,7 @@ Non-overlapping katG2: 201 ─── 400  (unique to katG2)
 
 For each `BedRecord`, tbp-parser will:
 
-1. Find all reads in the **non-overlapping** portion of that `BedRecord`
+1. Find all reads that appear in the **non-overlapping** portion of that `BedRecord`
 2. Use those read names as a whitelist
 3. Reanalyze all positions (including the overlap zone), keeping **only** the whitelisted reads
 
@@ -207,7 +211,7 @@ Valid deletions are flagged and reported in the `qc_warning` column and may expl
 !!! info "The `--use_err_as_brr` flag does not affect the coverage report"
     The `--use_err_as_brr` flag controls whether ERR regions are used in place of full regions for locus QC decisions (e.g., determining "Insufficient Coverage"). The coverage report's `qc_warning` column is controlled solely by whether `--err_coverage_bed` is provided — if it is, only deletions within the ERR region are reported regardless of the `--use_err_as_brr` setting.
 
-Consider rpoB split across two `BedRecord`s, with two deletions:
+Deletions are shown only for the region they overlap. Consider rpoB split across two `BedRecord`s, with two deletions:
 
 - `c.727_728delGTinsAC` — falls within rpoB_1
 - `c.1291_1292delAGinsCC` — falls within rpoB_2
