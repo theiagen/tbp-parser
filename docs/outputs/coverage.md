@@ -30,8 +30,8 @@ Each line/entry in your BED file defines a **`BedRecord`** — a stretch of the 
     If any `BedRecord`s share the same locus tag, both the **locus** and **target** coverage reports will be generated. Otherwise, only the **locus** coverage report will be generated.
 
 !!! tip "QC uses locus-level coverage"
-    All coverage-based QC determinations use the **locus-level** breadth of coverage. 
-    
+    All coverage-based QC determinations use the **locus-level** breadth of coverage.
+
     For example, if primer 1 for katG has poor coverage but primer 2 for katG has sufficient coverage, QC checks use the **overall** ratio of the aggregated coverage, not the individual primer regions.
 
 ---
@@ -53,8 +53,8 @@ locus_coverage_report.csv:
 sample_name  locus_tag  gene_name  percent_coverage  average_depth  qc_warning
 sample01     Rv0005     gyrB       100.000           542.310
 
-  → percent_coverage = (# positions ≥ min_depth) / 500
-  → average_depth = (sum of reads at every position) / 500
+  → percent_coverage = (num_positions ≥ min_depth) / num_positions
+  → average_depth = (sum of reads at every position) / num_positions
 ```
 
 ---

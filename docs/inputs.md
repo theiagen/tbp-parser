@@ -225,7 +225,7 @@ These options are used verbatim in the reports, or are used to name the output f
 | `-m` | `--sequencing_method` | The sequencing method used to gerneate the data; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Sequencing method not provided" |
 | `-t` | `--operator` | The operator who ran the analysis; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Operator not provided" |
 | `-o` | `--output_prefix` | The prefix to use for the output files. Do not include any spaces | "tbp_parser" |
-| `-fr` | `--find_and_replace` | A JSON string that can be used to specify any text in the output files that should be find-and-replaced with other text. The keys will be the text to find, and the values will be the text to replace it with. This is useful for labs that want to customize the text in their reports (e.g. renaming drugs or genes or output columns).<br>For example, `'{"rifampicin": "rifampin", "Sample Name": "sample_id", "mmpR5": "Rv0678"}'` | '{}' |
+| `-fr` | `--find_and_replace` | A JSON string that can be used to specify any text in the output files that should be find-and-replaced with other text. The keys will be the text to find, and the values will be the text to replace it with. This is useful for labs that want to customize the text in their reports (e.g. renaming drugs or genes or output columns).<br>For example, `'{"rifampicin": "rifampin", "fbiD": "Rv2983", "mmpR5": "Rv0678", "p.0?": ""}'` | '{}' |
 
 ### Logging Arguments
 
