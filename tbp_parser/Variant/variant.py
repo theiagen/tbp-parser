@@ -137,6 +137,7 @@ class Variant(BaseModel):
           "Not assoc w R": 1,
           "Not found in WHO catalogue": 0,
           "No WHO annotation": -1, # given to synthetic variants
+          "": -2, # empty confidence field
         }
         new_variant_rank = annotation_rank[self.confidence]
         existing_variant_rank = annotation_rank[other.confidence]

@@ -36,6 +36,24 @@ class TestDetermineInterpretation:
         assert v.mdl_interpretation == "R"
         assert v.looker_interpretation == "R-Interim"
 
+    def test_empty_confidence_routes_to_non_who_path(self, interpreter, make_variant):
+        """Empty confidence string should be treated as no WHO confidence."""
+        v = make_variant(
+            gene_name="aftB", gene_id="Rv3805c",
+            confidence="",
+            type="missense_variant",
+            nucleotide_change="c.100A>G",
+            protein_change="p.Thr34Ala",
+        )
+        assert v.confidence == ""
+
+        interpreter.determine_interpretation([v])
+
+        # Empty confidence should be converted to "No WHO annotation"
+        assert v.mdl_interpretation
+        assert v.confidence == "No WHO annotation"
+        assert v.looker_interpretation
+
     # =========================================================================
     # Section 1: CDC Expert Rule Genes (mmpR5, atpE, pepQ, mmpL5, mmpS5, rrl, rplC)
     # =========================================================================

@@ -512,10 +512,15 @@ class TestDeduplicateVariants:
 
     @pytest.mark.parametrize("higher,lower", [
         ("Assoc w R", "Assoc w R - interim"),
+        ("Assoc w R", "Assoc w R - Interim"),
         ("Assoc w R", "Uncertain significance"),
         ("Assoc w R - interim", "Not assoc w R - Interim"),
+        ("Assoc w R - Interim", "Not assoc w R - interim"),
         ("Uncertain significance", "Not assoc w R"),
-        ("Not assoc w R", "No WHO annotation"),
+        ("Not assoc w R", "Not found in WHO catalogue"),
+        ("Not found in WHO catalogue", "No WHO annotation"),
+        ("No WHO annotation", ""),
+        ("Not found in WHO catalogue", ""),
     ])
     def test_higher_confidence_replaces_lower(self, make_variant, higher, lower):
         """Higher confidence should replace lower for same variant."""
@@ -528,10 +533,15 @@ class TestDeduplicateVariants:
 
     @pytest.mark.parametrize("higher,lower", [
         ("Assoc w R", "Assoc w R - interim"),
+        ("Assoc w R", "Assoc w R - Interim"),
         ("Assoc w R", "Uncertain significance"),
         ("Assoc w R - interim", "Not assoc w R - Interim"),
+        ("Assoc w R - Interim", "Not assoc w R - interim"),
         ("Uncertain significance", "Not assoc w R"),
-        ("Not assoc w R", "No WHO annotation"),
+        ("Not assoc w R", "Not found in WHO catalogue"),
+        ("Not found in WHO catalogue", "No WHO annotation"),
+        ("No WHO annotation", ""),
+        ("Not found in WHO catalogue", ""),
     ])
     def test_higher_confidence_kept_when_first(self, make_variant, higher, lower):
         """Higher confidence should be kept even when it appears first."""
