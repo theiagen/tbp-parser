@@ -188,6 +188,11 @@ sample01     Rv1908c    katG2      100.000            2766.803  ← only whiteli
 !!! warning "Trade-off: short reads and large overlaps"
     Note that overlap resolution may reduce coverage in both reports. Reads that fall entirely within an overlapping region, without extending into any unique region, are excluded because they cannot be confidently assigned to a specific `BedRecord`. This means that larger overlaps relative to the read length result in more reads being excluded. This is a conservative and more accurate approach for handling tNGS data with overlapping regions. Consider this trade-off when deciding whether to enable `--resolve_overlapping_regions`.
 
+???+ caption "A visual example"
+    ![A visual example of how overlapping primer regions are resolved](../assets/tbp-parser_resolve-overlapping-primers.png)
+
+    This example shows how the reads associated with each `BedRecord` are whitelisted based on their presence in the non-overlapping regions when `--resolve_overlapping_regions` is enabled. 
+
 ---
 
 ## QC warnings in coverage reports

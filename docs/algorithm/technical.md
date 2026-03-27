@@ -96,7 +96,7 @@ Each record in the list is run through `pysam AlignmentFile.pileup()` to identif
 /// html | div[style='clear: both;']
 ///
 
-??? techdetails "Handling overlapping primer regions in tNGS analyses"
+???+ techdetails "Handling overlapping primer regions in tNGS analyses"
     If `--resolve_overlapping_regions` is used, the `BedRecord` list is checked to determine if any two `BedRecord` coordinates overlap. This is done by whitelisting any non-overlapping reads for each `BedRecord` under the assumption that if a read appears in a non-overlapping region it originated from that particular target. The `reads_by_position` attribute is then filtered to only include those whitelisted reads. 
     
     For example, imagine geneA is covered by two primers: primer1 covers bases 0-45, and primer2 covers bases 30-75, meaning that 15 bases overlap between the primers. readA appears in the `reads_by_position` dictionary for primerA positions 0-45, and appears in the primerB `reads_by_position` dictionary for positions 30-45. readB appears in the primerB dictionary for positions 30-75 and the primerA dictionary for positions 30-45. readA appears in the **non-overlapping** region of primer1 (0-30) while readB appears in the **non-overlapping region** of primer2 (45-75). readA is then **whitelisted** for primer1 and readB is **whitelisted** for primer2. 
@@ -104,6 +104,11 @@ Each record in the list is run through `pysam AlignmentFile.pileup()` to identif
     If a third read, readC, covers only positions 30-45, this means that it appears only in the overlapping region of both primer1 and primer2. It is not whitelisted for either record, and so it is filtered out of the `reads_by_position` attribute for both records since its origin cannot be determined. 
     
     This process allows us to make an informed assumption about which reads originated from which target regions, which is important for accurate coverage calculations of individual target regions in the tNGS analysis, since it isolates the reads belonging to each primer.
+
+    !!! caption "A visual example"
+        ![A visual example of how overlapping primer regions are resolved](../assets/tbp-parser_resolve-overlapping-primers.png)
+
+        This example shows how the reads associated with each `BedRecord` are whitelisted based on their presence in the non-overlapping regions when `--resolve_overlapping_regions` is enabled. Reads that only appear in the overlapping region are excluded from both `BedRecord`s, preventing double-counting in the locus coverage report.
 
 Once the `BedRecord` list is finalized, the `reads_by_position` dictionary is used to calculate breadth of coverage. The number of positions that has more reads than the number specified by `--min_depth` is divided by the number of positions in the dictionary. Average depth is calculated by summing the number of reads at each position and then dividing by the length of the dictionary. These coverage statistics are stored in the `BedRecord`'s `"breadth_of_coverage"` and `average_depth` attributes. 
 
