@@ -1,0 +1,25 @@
+name: Test WIP Auth
+
+on:
+  push:
+    branches:
+      - al-gha-test
+      
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test-auth:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: your-project-id
+          workload_identity_provider: ${{ secrets.WIP_PROVIDER }}
+
+      - name: Verify auth
+        run: gcloud auth list
