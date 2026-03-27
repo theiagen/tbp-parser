@@ -25,4 +25,4 @@ jobs:
           workload_identity_provider: ${{ secrets.WIP_PROVIDER }}
 
       - name: Verify auth
-        run: gcloud auth list
+        run: gcloud auth application-default print-access-token
