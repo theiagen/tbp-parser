@@ -145,12 +145,14 @@ Rv1305:
 EBG00000313325:
     locus_tag: EBG00000313325
     gene_name: rrs
+    aliases: [Rvnr01, MTB000019]
     tier: Tier 1
     promoter_region: [-151, -1]
     drugs: [amikacin, capreomycin, kanamycin, linezolid]
 EBG00000313339:
     locus_tag: EBG00000313339
     gene_name: rrl
+    aliases: [Rvnr02, MTB000020]
     tier: Tier 1
     promoter_region: [-51, -1]
     drugs: [linezolid]

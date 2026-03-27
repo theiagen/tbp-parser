@@ -1,5 +1,6 @@
 from typing import Dict, List
 from pydantic import BaseModel, Field
+from tbp_parser.Utilities.gene_database import GeneDatabase
 
 class BedRecord(BaseModel):
     """A class representing a record or entry from a BED file."""
@@ -58,11 +59,14 @@ class BedRecord(BaseModel):
             BedRecord: An instance of BedRecord.
         """
         cols = bed_line.strip().split('\t')
+        raw_locus_tag = cols[3]
+        # resolve locus_tag using GeneDatabase to catch aliases; see rrl and rrs
+        locus_tag = GeneDatabase.get_locus_tag(raw_locus_tag) or raw_locus_tag
         return cls(
             chrom=cols[0],
             start=int(cols[1]),
             end=int(cols[2]),
-            locus_tag=cols[3],
+            locus_tag=locus_tag,
             gene_name=cols[4],
         )
 

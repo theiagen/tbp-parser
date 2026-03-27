@@ -35,6 +35,19 @@ class TestBedRecordFromBedLine:
         assert record.length == 101        # end - start + 1 (1-based)
         assert record.coords == (100, 200)
 
+    @pytest.mark.parametrize("alias,canonical,gene_name", [
+        ("Rvnr01", "EBG00000313325", "rrs"),
+        ("MTB000019", "EBG00000313325", "rrs"),
+        ("Rvnr02", "EBG00000313339", "rrl"),
+        ("MTB000020", "EBG00000313339", "rrl"),
+        ("UNKNOWN_TAG", "UNKNOWN_TAG", "some_gene"),  # unknown kept as-is
+    ], ids=["rrs-Rvnr01", "rrs-MTB000019", "rrl-Rvnr02", "rrl-MTB000020", "unknown-passthrough"])
+    def test_alias_locus_tag_normalized_to_canonical(self, alias, canonical, gene_name):
+        """BED locus_tag aliases should be normalized to canonical locus_tags via the GeneDatabase."""
+        line = f"Chromosome\t100\t200\t{alias}\t{gene_name}"
+        record = BedRecord.from_bed_line(line)
+        assert record.locus_tag == canonical
+
 
 
 class TestParseBedFile:

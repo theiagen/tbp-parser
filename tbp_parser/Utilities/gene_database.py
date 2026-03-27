@@ -6,18 +6,25 @@ logger = logging.getLogger(__name__)
 class GeneDatabase:
     GENE_DATABASE: dict[str, dict] = {}
     GENE_DATABASE_INVERTED: dict[str, dict] = {}
+    GENE_DATABASE_ALIASES: dict[str, dict] = {}
 
     def __init__(self, db_path: str):
         GeneDatabase.GENE_DATABASE = yaml.safe_load(open(db_path, "r"))
         GeneDatabase.GENE_DATABASE_INVERTED = {data["gene_name"]: data for data in GeneDatabase.GENE_DATABASE.values()}
+        GeneDatabase.GENE_DATABASE_ALIASES = {}
+        for data in GeneDatabase.GENE_DATABASE.values():
+            for alias in data.get("aliases", []):
+                GeneDatabase.GENE_DATABASE_ALIASES[alias] = data
 
     @classmethod
     def _resolve_database(cls, identifier: str) -> dict | None:
-        """Resolve an identifier (gene name or locus tag) to its full gene information."""
+        """Resolve an identifier (gene name, locus tag, or alias) to its full gene information."""
         if identifier in cls.GENE_DATABASE:
             return cls.GENE_DATABASE[identifier]
         if identifier in cls.GENE_DATABASE_INVERTED:
             return cls.GENE_DATABASE_INVERTED[identifier]
+        if identifier in cls.GENE_DATABASE_ALIASES:
+            return cls.GENE_DATABASE_ALIASES[identifier]
         return None
 
     @classmethod
