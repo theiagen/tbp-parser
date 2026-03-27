@@ -92,7 +92,8 @@ class VariantQC:
                 # Check if the variant is a valid deletion and falls within the coverage region
                 if (
                     variant.gene_id == coverage.locus_tag and
-                    coverage.overlaps_range(var_abs_start, var_abs_end)
+                    coverage.overlaps_range(var_abs_start, var_abs_end) and
+                    variant not in coverage.valid_deletions
                 ):
                     coverage.valid_deletions.append(variant)
                     logger.debug(f"Assigned {variant.gene_name}|{variant.gene_id} as a valid deletion within the coverage region of the {coverage.__class__.__name__} object")
@@ -121,6 +122,7 @@ class VariantQC:
         Returns:
             The list of Variant objects with QC warnings applied
         """
+        qcd_variants = []
         for variant in variants:
             logger.debug(f"Applying QC to {variant}")
 
@@ -132,11 +134,14 @@ class VariantQC:
             if self.config.TNGS:
                 tngs_qc_result = self.check_tngs_qc(variant, qc_result, locus_coverage_map)
                 variant = self.update_variant_qc_result(variant, tngs_qc_result)
-
+               
             # Find/assign valid deletions to coverage objects if the variant passes positional QC and is within the coverage region
             self.assign_variants_with_valid_deletions(variant, locus_coverage_map, target_coverage_map)
 
-            # Rule 4.2.2: Locus QC
+            qcd_variants.append((variant, qc_result))
+
+        for variant, qc_result in qcd_variants:
+            # Rule 4.2.2: Locus QC is dependent on positional QC and valid deletion assignment
             qc_result = self.check_locus_qc(variant, qc_result, locus_coverage_map)
             variant = self.update_variant_qc_result(variant, qc_result)
 
