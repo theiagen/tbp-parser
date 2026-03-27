@@ -588,6 +588,16 @@ class TestDeduplicateVariants:
         assert result[0].source == "WHO"
         assert result[0].comment == "high quality"
 
+    def test_higher_read_support_preferred_at_equal_rank(self, make_variant):
+        """Higher read support (depth*freq) should be preferred at equal confidence rank."""
+        v_high_support = make_variant(confidence="Assoc w R", depth=300, freq=0.90)
+        v_low_support = make_variant(confidence="Assoc w R", depth=200, freq=0.80)
+        processor = VariantProcessor()
+        result = processor.deduplicate_variants([v_low_support, v_high_support])
+        assert len(result) == 1
+        assert result[0].depth == 300
+        assert result[0].freq == 0.90
+
 
 class TestGenerateUnreportedVariants:
     """Tests for VariantProcessor.generate_unreported_variants"""

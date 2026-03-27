@@ -154,7 +154,15 @@ class Variant(BaseModel):
                 return True
 
         return False
-
+    
+    def has_better_read_support_than(self, other: 'Variant') -> bool:
+        """Compare read support between two variants."""
+        if self.read_support > other.read_support:
+            logger.debug(f"{self} has better read support ({self.read_support}) than {other} ({other.read_support})")
+            return True
+        
+        return False
+        
     def _is_synonymous(self) -> bool:
         """Check if mutation is synonymous."""
         return self.type == "synonymous_variant"

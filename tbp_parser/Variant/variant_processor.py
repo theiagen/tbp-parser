@@ -220,6 +220,8 @@ class VariantProcessor:
                 unique_variants[key] = variant
             elif variant.is_better_annotation_than(unique_variants[key]):
                 unique_variants[key] = variant
+            elif variant.has_better_read_support_than(unique_variants[key]):
+                unique_variants[key] = variant
 
         result = list(unique_variants.values())
         if len(variants) != len(result):
