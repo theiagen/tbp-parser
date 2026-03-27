@@ -183,7 +183,7 @@ class VariantQC:
                         qc_result.looker_interpretation = "S"
                         qc_result.mdl_interpretation = "WT"
 
-                    # Rule 4.2.2.3.1: if locus coverage is below threshold, set to insufficient coverage
+                    # Rule 4.2.2.1: if locus coverage is below threshold, set to insufficient coverage
                     else:
                         qc_result.type = "Insufficient Coverage"
                         qc_result.looker_interpretation = "Insufficient Coverage"

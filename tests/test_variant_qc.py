@@ -275,6 +275,29 @@ class TestApplyQc:
         assert "Insufficient coverage in locus" in snp.warning
         assert locus.contains_loci_with_valid_deletion(snp.gene_id) is True
 
+    def test_wildtype_fails_locus_qc(self, make_variant, make_locus_coverage):
+        """Rule 4.2.2.1: WT/NA variant should fail locus QC if breadth is low."""
+        qc = VariantQC()
+        v = make_variant(depth=10, freq=1, confidence="NA", nucleotide_change="NA", protein_change="NA", type="NA", pos=1)
+        locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=0.50)
+        qc.apply_wildtype_qc([v], {"Rv0667": locus})
+
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is True
+        assert "Insufficient coverage in locus" in v.warning
+        assert v.mdl_interpretation == "Insufficient Coverage"
+
+    def test_wildtype_passes_locus_qc(self, make_variant, make_locus_coverage):
+        """Rule 4.2.2.1: WT/NA variant should pass locus QC if breadth is sufficient."""
+        qc = VariantQC()
+        v = make_variant(depth=10, freq=1, confidence="NA", nucleotide_change="NA", protein_change="NA", type="NA", pos=1)
+        locus = make_locus_coverage(locus_tag="Rv0667", breadth_of_coverage=0.95)
+        qc.apply_wildtype_qc([v], {"Rv0667": locus})
+
+        assert v.fails_positional_qc is False
+        assert v.fails_locus_qc is False
+        assert "Insufficient coverage in locus" not in v.warning
+        assert v.mdl_interpretation == "WT"
 
 class TestLocusQcWithErrCoverage:
     """Tests for locus QC when USE_ERR_AS_BRR flag swaps coverage to ERR."""
