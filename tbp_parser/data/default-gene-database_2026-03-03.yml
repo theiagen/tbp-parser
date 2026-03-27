@@ -92,7 +92,7 @@ Rv0678:
     locus_tag: Rv0678
     gene_name: mmpR5
     tier: Tier 1
-    promoter_region: []
+    promoter_region: [-84, -1]
     drugs: [bedaquiline, clofazimine]
 Rv0682:
     locus_tag: Rv0682
