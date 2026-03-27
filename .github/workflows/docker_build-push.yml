@@ -2,8 +2,8 @@ name: Build & Push Docker Image
 
 on:
   push:
-      branches:
-        - tj-strangler-refactor-dev
+    tags:
+      - 'v*'
 
 env:
   PROJECT_ID: general-theiagen
