@@ -14,11 +14,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v3
         with:
-          project_id: your-project-id
+          project_id: general-theiagen
           workload_identity_provider: ${{ secrets.WIP_PROVIDER }}
 
       - name: Verify auth
