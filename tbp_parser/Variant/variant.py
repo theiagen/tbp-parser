@@ -180,9 +180,6 @@ class Variant(BaseModel):
         Returns:
             True if variant is within the target promoter region
         """
-        if self.gene_id not in GeneDatabase.get_db():
-            logger.warning(f"Gene {self.gene_id} not found in GeneDatabase; cannot check promoter region")
-            return False
         promoter_region = GeneDatabase.get_promoter_region(self.gene_id)
         return Helper.is_mutation_within_range(position_nt, promoter_region)
 
