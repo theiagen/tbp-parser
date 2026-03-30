@@ -110,8 +110,6 @@ class LIMSProcessor:
                 # get gene_target_value based on max_mdl interpretation
                 self.resolve_gene_target(gene_code)
 
-                logger.debug(f"{gene_code}")
-
             self.resolve_drug_target(lims_record)
         return lims_records
 
@@ -141,16 +139,15 @@ class LIMSProcessor:
             key=lambda gc: self.RESISTANCE_RANKING.get(gc.max_mdl_interpretation or "NA", -1),
         )
 
-        all_rpob_variants = all([
+        is_rpob_rifampicin = (
             lims_record.drug == "rifampicin" and
-            v.gene_name == "rpoB"
-            for v in max_gene_code.max_mdl_variants
-        ])
-
+            "rpoB" in lims_record.gene_codes and
+            max_gene_code == lims_record.gene_codes["rpoB"]
+        )
         logger.debug(f"Generating LIMS result - DRUG_TARGET - [{lims_record.drug}|{lims_record.drug_code}] based on results from max gene code: `{max_gene_code.gene_code}`")
 
         # rifampicin specific drug target logic
-        if all_rpob_variants:
+        if is_rpob_rifampicin:
             if max_gene_code.max_mdl_interpretation in ["R"]:
                 if all([v.protein_change in RPOB_MUTATIONS for v in max_gene_code.max_mdl_variants]):
                     setattr(lims_record, "drug_target_value", "Predicted low-level resistance to rifampicin. May test susceptible by phenotypic methods")
@@ -163,7 +160,7 @@ class LIMSProcessor:
             # elif max_gene_code.max_mdl_interpretation in ["S"]:
             # This is incorrect according to interpretation documentation. But leaving it for consistency with previous version of tbp_parser
             elif max_gene_code.max_mdl_interpretation in ["S", "WT"]:
-                if all([self._is_synonymous_rpob_rrdr(v) for v in max_gene_code.max_mdl_variants]):
+                if any([self._is_synonymous_rpob_rrdr(v) for v in max_gene_code.max_mdl_variants]):
                     setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance")
                 else:
                     setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampicin")
@@ -183,7 +180,7 @@ class LIMSProcessor:
         elif max_gene_code.max_mdl_interpretation in ["Insufficient Coverage"]:
             setattr(lims_record, "drug_target_value", f"Pending Retest")
 
-        logger.debug(f"{lims_record}")
+        logger.debug(f"Resolved drug target value: {lims_record}")
         return
 
 
@@ -207,14 +204,18 @@ class LIMSProcessor:
 
         max_mdl_variants = [v for v in variants if v.mdl_interpretation == max_mdl_interpretation]
 
-        # special case: when max_mdl_interpretation is "R", also include "U" variants
-        if max_mdl_interpretation == "R":
-            u_variants = [v for v in variants if v.mdl_interpretation == "U"]
-            max_mdl_variants.extend(u_variants)
+        # reportable variants: R, U, and synonymous RRDR (drawn from all variants)
+        max_mdl_reportable_variants = [
+            v for v in variants
+            if v.mdl_interpretation in ["R", "U"] or self._is_synonymous_rpob_rrdr(v)
+        ]
 
         # assigning max_mdl_variants/interpretation to LIMSGeneCode object
         setattr(gene_code, "max_mdl_interpretation", max_mdl_interpretation)
         setattr(gene_code, "max_mdl_variants", max_mdl_variants)
+        setattr(gene_code, "max_mdl_reportable_variants", max_mdl_reportable_variants)
+
+        logger.debug(f"Setting max MDL: {gene_code}")
         return
 
 
@@ -249,22 +250,13 @@ class LIMSProcessor:
         Returns:
             String of gene_target_value to be assigned for given LIMSGeneCode object
         """
-        # initializing default
-        gene_target_value = ""
-
-        if any([self._is_synonymous_rpob_rrdr(v) for v in gene_code.max_mdl_variants]):
-            # never report "NA" protein_changes; this is different behavior than lab report
-            gene_target_value = "; ".join(
-                f"{v.protein_change if v.protein_change != 'NA' else v.nucleotide_change} [synonymous]"
-                for v in gene_code.max_mdl_variants
-            )
-            setattr(gene_code, "gene_target_value", gene_target_value)
-
-        elif gene_code.max_mdl_interpretation in ["R", "U"]:
+        # only R, U, and synonymous RRDR variants are reportable on the gene target
+        if gene_code.max_mdl_reportable_variants:
             # never report "NA" protein_changes; this is different behavior than lab report
             gene_target_value = "; ".join(
                 f"{v.protein_change if v.protein_change != 'NA' else v.nucleotide_change}"
-                for v in gene_code.max_mdl_variants
+                f"{' [synonymous]' if self._is_synonymous_rpob_rrdr(v) else ''}"
+                for v in gene_code.max_mdl_reportable_variants
             )
             setattr(gene_code, "gene_target_value", gene_target_value)
 
@@ -276,6 +268,8 @@ class LIMSProcessor:
 
         elif gene_code.max_mdl_interpretation in ["Insufficient Coverage"]:
             setattr(gene_code, "gene_target_value", "No sequence")
+
+        logger.debug(f"Resolved gene target value: {gene_code}")
         return
 
     def _passes_lims_coverage_fraction(

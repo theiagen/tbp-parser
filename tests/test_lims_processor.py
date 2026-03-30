@@ -80,16 +80,17 @@ class TestSetGeneCodeMaxMdl:
         processor.set_gene_code_max_mdl(gc, [v])
         assert gc.max_mdl_interpretation == "WT"
 
-    def test_r_includes_u_variants(self, processor, make_lims_gene_code, make_variant):
+    def test_r_includes_u_variants_in_reportable(self, processor, make_lims_gene_code, make_variant):
         gc = make_lims_gene_code()
         v_r = make_variant(mdl_interpretation="R")
         v_u = make_variant(mdl_interpretation="U", nucleotide_change="c.100A>G", protein_change="p.Thr34Ala")
         v_s = make_variant(mdl_interpretation="S", nucleotide_change="c.200C>T", protein_change="p.Ala67Val")
         processor.set_gene_code_max_mdl(gc, [v_r, v_u, v_s])
         assert gc.max_mdl_interpretation == "R"
-        assert v_r in gc.max_mdl_variants
-        assert v_u in gc.max_mdl_variants
-        assert v_s not in gc.max_mdl_variants
+        assert gc.max_mdl_variants == [v_r]
+        assert v_r in gc.max_mdl_reportable_variants
+        assert v_u in gc.max_mdl_reportable_variants
+        assert v_s not in gc.max_mdl_reportable_variants
 
     def test_r_without_u_only_includes_r(self, processor, make_lims_gene_code, make_variant):
         gc = make_lims_gene_code()
@@ -98,6 +99,33 @@ class TestSetGeneCodeMaxMdl:
         processor.set_gene_code_max_mdl(gc, [v_r, v_s])
         assert gc.max_mdl_interpretation == "R"
         assert gc.max_mdl_variants == [v_r]
+        assert v_r in gc.max_mdl_reportable_variants
+        assert v_s not in gc.max_mdl_reportable_variants
+
+    def test_synonymous_rpob_rrdr_in_reportable_not_max(self, processor, make_lims_gene_code, make_variant):
+        """Synonymous rpoB RRDR variants appear in max_mdl_reportable_variants but not max_mdl_variants when their interpretation differs from max."""
+        gc = make_lims_gene_code()
+        v_r = make_variant(mdl_interpretation="R", protein_change="p.Ser450Leu")
+        # synonymous rpoB outside RRDR region (pos 400, outside 426-452)
+        v_syn_outside = make_variant(
+            mdl_interpretation="S",
+            gene_name="rpoB", drug="rifampicin",
+            protein_change="p.Ala400Ala", nucleotide_change="c.1200A>G",
+            type="synonymous_variant",
+        )
+        # synonymous rpoB inside RRDR region (pos 433, within 426-452)
+        v_syn_rrdr = make_variant(
+            mdl_interpretation="S",
+            gene_name="rpoB", drug="rifampicin",
+            protein_change="p.Phe433Phe", nucleotide_change="c.1299C>T",
+            type="synonymous_variant",
+        )
+        processor.set_gene_code_max_mdl(gc, [v_r, v_syn_outside, v_syn_rrdr])
+        assert gc.max_mdl_interpretation == "R"
+        assert gc.max_mdl_variants == [v_r]
+        assert v_r in gc.max_mdl_reportable_variants
+        assert v_syn_rrdr in gc.max_mdl_reportable_variants
+        assert v_syn_outside not in gc.max_mdl_reportable_variants
 
 
 class TestResolveGeneTarget:
@@ -106,6 +134,7 @@ class TestResolveGeneTarget:
         v = make_variant(mdl_interpretation="R", protein_change="p.Ser450Leu")
         gc.max_mdl_interpretation = "R"
         gc.max_mdl_variants = [v]
+        gc.max_mdl_reportable_variants = [v]
         processor.resolve_gene_target(gc)
         assert gc.gene_target_value == "p.Ser450Leu"
 
@@ -114,6 +143,7 @@ class TestResolveGeneTarget:
         v = make_variant(mdl_interpretation="U", protein_change="p.Thr34Ala")
         gc.max_mdl_interpretation = "U"
         gc.max_mdl_variants = [v]
+        gc.max_mdl_reportable_variants = [v]
         processor.resolve_gene_target(gc)
         assert gc.gene_target_value == "p.Thr34Ala"
 
@@ -154,9 +184,31 @@ class TestResolveGeneTarget:
         )
         gc.max_mdl_interpretation = "S"
         gc.max_mdl_variants = [v]
+        gc.max_mdl_reportable_variants = [v]
         processor.resolve_gene_target(gc)
-        assert "[synonymous]" in gc.gene_target_value
-        assert "p.Phe433Phe" in gc.gene_target_value
+        assert gc.gene_target_value == "p.Phe433Phe [synonymous]"
+
+    def test_s_with_mixed_synonymous_only_reports_rrdr(self, processor, make_lims_gene_code, make_variant):
+        """When max interpretation is S with both RRDR and non-RRDR synonymous variants, only the RRDR one is reported."""
+        gc = make_lims_gene_code()
+        v_syn_outside = make_variant(
+            mdl_interpretation="S",
+            gene_name="rpoB", drug="rifampicin",
+            protein_change="p.Ala400Ala", nucleotide_change="c.1200A>G",
+            type="synonymous_variant",
+        )
+        v_syn_rrdr = make_variant(
+            mdl_interpretation="S",
+            gene_name="rpoB", drug="rifampicin",
+            protein_change="p.Phe433Phe", nucleotide_change="c.1299C>T",
+            type="synonymous_variant",
+        )
+        gc.max_mdl_interpretation = "S"
+        gc.max_mdl_variants = [v_syn_outside, v_syn_rrdr]
+        gc.max_mdl_reportable_variants = [v_syn_rrdr]
+        processor.resolve_gene_target(gc)
+        assert gc.gene_target_value == "p.Phe433Phe [synonymous]"
+        assert "p.Ala400Ala" not in gc.gene_target_value
 
     def test_na_protein_change_falls_back_to_nt(self, processor, make_lims_gene_code, make_variant):
         """When protein_change is 'NA', gene_target should use nucleotide_change."""
@@ -164,6 +216,7 @@ class TestResolveGeneTarget:
         v = make_variant(mdl_interpretation="R", nucleotide_change="c.1349C>T", protein_change="NA")
         gc.max_mdl_interpretation = "R"
         gc.max_mdl_variants = [v]
+        gc.max_mdl_reportable_variants = [v]
         processor.resolve_gene_target(gc)
         assert gc.gene_target_value == "c.1349C>T"
 
@@ -181,23 +234,39 @@ class TestResolveDrugTarget:
         record.gene_codes["katG"].max_mdl_interpretation = "R"
         record.gene_codes["katG"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
-        assert "resistance to isoniazid detected" in record.drug_target_value
+        assert record.drug_target_value == "Mutation(s) associated with resistance to isoniazid detected"
 
     def test_r_rpob_standard_mutation(self, processor, make_lims_record, make_variant):
+        """Standard resistance R mutation is not affected by synonymous RRDR variant in reportable."""
         record = make_lims_record()
-        v = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
+        v_r = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
+        v_syn_rrdr = make_variant(
+            mdl_interpretation="S",
+            gene_name="rpoB", drug="rifampicin",
+            protein_change="p.Phe433Phe", nucleotide_change="c.1299C>T",
+            type="synonymous_variant",
+        )
         record.gene_codes["rpoB"].max_mdl_interpretation = "R"
-        record.gene_codes["rpoB"].max_mdl_variants = [v]
+        record.gene_codes["rpoB"].max_mdl_variants = [v_r]
+        record.gene_codes["rpoB"].max_mdl_reportable_variants = [v_r, v_syn_rrdr]
         processor.resolve_drug_target(record)
-        assert "Predicted resistance to rifampicin" in record.drug_target_value
+        assert record.drug_target_value == "Predicted resistance to rifampicin"
 
     def test_r_rpob_only_low_level_mutations(self, processor, make_lims_record, make_variant):
+        """Low-level resistance R mutation is not affected by synonymous RRDR variant in reportable."""
         record = make_lims_record()
-        v = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampicin", protein_change="p.His445Asn")
+        v_r = make_variant(mdl_interpretation="R", gene_name="rpoB", drug="rifampicin", protein_change="p.His445Asn")
+        v_syn_rrdr = make_variant(
+            mdl_interpretation="S",
+            gene_name="rpoB", drug="rifampicin",
+            protein_change="p.Phe433Phe", nucleotide_change="c.1299C>T",
+            type="synonymous_variant",
+        )
         record.gene_codes["rpoB"].max_mdl_interpretation = "R"
-        record.gene_codes["rpoB"].max_mdl_variants = [v]
+        record.gene_codes["rpoB"].max_mdl_variants = [v_r]
+        record.gene_codes["rpoB"].max_mdl_reportable_variants = [v_r, v_syn_rrdr]
         processor.resolve_drug_target(record)
-        assert "low-level resistance" in record.drug_target_value
+        assert record.drug_target_value == "Predicted low-level resistance to rifampicin. May test susceptible by phenotypic methods"
 
     def test_r_rpob_mixed_low_and_standard(self, processor, make_lims_record, make_variant):
         """When both low-level and standard rpoB mutations are present, standard wins."""
@@ -210,7 +279,7 @@ class TestResolveDrugTarget:
         record.gene_codes["rpoB"].max_mdl_interpretation = "R"
         record.gene_codes["rpoB"].max_mdl_variants = [v1, v2]
         processor.resolve_drug_target(record)
-        assert "Predicted resistance to rifampicin" in record.drug_target_value
+        assert record.drug_target_value == "Predicted resistance to rifampicin"
 
     def test_u_returns_uncertain_significance(self, processor, make_lims_record, make_variant):
         record = make_lims_record(
@@ -221,7 +290,7 @@ class TestResolveDrugTarget:
         record.gene_codes["katG"].max_mdl_interpretation = "U"
         record.gene_codes["katG"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
-        assert "uncertain significance" in record.drug_target_value
+        assert record.drug_target_value == "The detected mutation(s) have uncertain significance. Resistance to isoniazid cannot be ruled out"
 
     def test_s_returns_no_mutations(self, processor, make_lims_record, make_variant):
         record = make_lims_record(
@@ -232,9 +301,9 @@ class TestResolveDrugTarget:
         record.gene_codes["katG"].max_mdl_interpretation = "S"
         record.gene_codes["katG"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
-        assert "No mutations" in record.drug_target_value
+        assert record.drug_target_value == "No mutations associated with resistance to isoniazid detected"
 
-    def test_na_returns_pending_retest(self, processor, make_lims_record):
+    def test_na_returns_no_mutations(self, processor, make_lims_record):
         record = make_lims_record(
             drug="isoniazid", drug_code="INH",
             gene_codes={"katG": LIMSGeneCode(gene_code="INH_katG")},
@@ -242,7 +311,7 @@ class TestResolveDrugTarget:
         record.gene_codes["katG"].max_mdl_interpretation = "NA"
         record.gene_codes["katG"].max_mdl_variants = []
         processor.resolve_drug_target(record)
-        assert "No mutations associated with resistance to isoniazid detected" in record.drug_target_value
+        assert record.drug_target_value == "No mutations associated with resistance to isoniazid detected"
 
     def test_rpob_s_with_synonymous_rrdr(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
@@ -254,7 +323,7 @@ class TestResolveDrugTarget:
         record.gene_codes["rpoB"].max_mdl_interpretation = "S"
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
-        assert "synonymous mutation" in record.drug_target_value
+        assert record.drug_target_value == "Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance"
 
     def test_rpob_s_without_synonymous_rrdr(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
@@ -262,8 +331,7 @@ class TestResolveDrugTarget:
         record.gene_codes["rpoB"].max_mdl_interpretation = "S"
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
-        assert "Predicted susceptibility to rifampicin" in record.drug_target_value
-        assert "synonymous" not in record.drug_target_value
+        assert record.drug_target_value == "Predicted susceptibility to rifampicin"
 
 
 class TestProcessLimsMtbcId:
