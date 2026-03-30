@@ -414,7 +414,6 @@ class VariantInterpreter:
             LOF_EXPERT_GENES = {"katG", "pncA", "ethA", "gid"}
 
             gene = variant.gene_name
-            logger.debug(f"Applying rule 2.2 for {gene} without WHO confidence")
 
             if gene in LOF_EXPERT_GENES:
                 # note: skipping rule 2.2.1 because it only has one sub-rule (2.2.1.1)
