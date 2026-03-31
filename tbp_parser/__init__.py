@@ -1,1 +1,3 @@
-__VERSION__ = "v2.11.3"
+from importlib.metadata import version
+
+__VERSION__ = f"v{version('tbp-parser')}"

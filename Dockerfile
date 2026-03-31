@@ -1,119 +1,48 @@
-# This Dockerfile has been modified from: https://github.com/StaPH-B/docker-builds/blob/master/samtools/1.18/Dockerfile
-# We acknowledge and thank the authors for sharing their code:
-# Shelby Bennett, Erin Young, Curtis Kapsak, & Kutluhan Incekara
+FROM python:3.12-slim AS builder
 
-ARG SAMTOOLS_VER="1.18"
-ARG TBP_PARSER_VER="2.11.3"
+RUN pip install --no-cache-dir poetry==2.3.2 poetry-plugin-export
 
-FROM ubuntu:jammy AS builder
+WORKDIR /tbp-parser
 
-ARG SAMTOOLS_VER
+COPY pyproject.toml poetry.lock ./
+RUN poetry export --only main -f requirements.txt -o requirements.txt
 
-# install dependencies required for compiling samtools
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    libncurses5-dev \
-    libbz2-dev \
-    liblzma-dev \
-    libcurl4-gnutls-dev \
-    zlib1g-dev \
-    libssl-dev \
-    gcc \
-    wget \
-    make \
-    perl \
-    bzip2 \
-    gnuplot \
-    ca-certificates
+FROM python:3.12-slim AS base
 
-# download, compile, and install samtools
-RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VER}/samtools-${SAMTOOLS_VER}.tar.bz2 && \
-    tar -xjf samtools-${SAMTOOLS_VER}.tar.bz2 && \
-    cd samtools-${SAMTOOLS_VER} && \
-    ./configure && \
-    make && \
-    make install
+# install runtime dependencies from exported requirements which only rebuilds when poetry.lock changes
+COPY --from=builder /tbp-parser/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
 
-### start of app stage ###
-FROM ubuntu:jammy AS app
+WORKDIR /tbp-parser
 
-ARG SAMTOOLS_VER
-ARG TBP_PARSER_VER
+# copy everything allowed by .dockerignore
+COPY . .
 
-LABEL base.image="ubuntu:jammy"
-LABEL dockerfile.version="1"
+# install the tbp-parser package without dependencies (installed in previous step)
+# this layer is separate because it rebuilds whenever the source code changes
+RUN pip install --no-cache-dir --no-deps .
+
+LABEL base.image="python:3.12-slim"
 LABEL software="tbp-parser"
-LABEL software.version="2.11.3"
-LABEL description="tbp-parser and samtools"
+LABEL description="Parser for TBProfiler output"
 LABEL website="https://github.com/theiagen/tbp-parser"
 LABEL license="https://github.com/theiagen/tbp-parser/blob/main/LICENSE"
-LABEL maintainer="Curtis Kapsak"
-LABEL maintainer.email="curtis.kapsak@theiagen.com"
-LABEL maintainer2="Sage Wright"
-LABEL maintainer2.email="sage.wright@theiagen.com"
-
-ARG DEBIAN_FRONTEND=noninteractive
-
-# install dependencies required for running samtools
-# 'gnuplot' required for plot-ampliconstats
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    python3 \
-    python3-pip \
-    perl \
-    zlib1g \
-    libncurses5 \
-    bzip2 \
-    liblzma-dev \
-    libcurl4-gnutls-dev \
-    gnuplot \
-    wget \
-    ca-certificates \
-    && apt-get autoclean && rm -rf /var/lib/apt/lists/*
-
-# copy in samtools executables from builder stage
-COPY --from=builder /usr/local/bin/* /usr/local/bin/
+LABEL maintainer="Sage Wright"
+LABEL maintainer.email="sage.wright@theiagen.com"
+LABEL maintainer2="Theron James"
+LABEL maintainer2.email="theron.james@theiagen.com"
 
 ENV LC_ALL=C
-
-# copy in all of the tb-profiler-parsing code
-RUN wget https://github.com/theiagen/tbp-parser/archive/refs/tags/v${TBP_PARSER_VER}.tar.gz && \
-    tar -xzvf v${TBP_PARSER_VER}.tar.gz && \
-    mv -v tbp-parser-${TBP_PARSER_VER} /tbp-parser
-
-ENV DEB_PYTHON_INSTALL_LAYOUT=deb_system
-
-# install python dependencies and parsing scripts
-# updating setuptools because the version in apt for ubuntu:jammy is a bit old
-# just using a requrements.txt file for now; pyproject.toml is the current recommended approach, but I'm not too familiar with it
-RUN cd /tbp-parser && \
-python3 -m pip install "setuptools==68.2.0" && \
-python3 -m pip install pyyaml && \
-python3 -m pip install -r requirements.txt
-
-# final working directory is /data
 WORKDIR /data
 
-# default command is to pull up help options
-CMD [ "python3", "/tbp-parser/tbp_parser/tbp_parser.py", "--help"]
+FROM base AS test
 
-### start of test stage ###
-FROM app AS test
+WORKDIR /tbp-parser
 
-# # install wget for downloading test files
-RUN apt-get update && apt-get install --no-install-recommends -y wget ca-certificates
+# install dev deps for testing
+RUN pip install --no-cache-dir pytest pytest-cov
 
-RUN wget -q https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.consensus.fa && \
-  wget -q https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.primertrim.sorted.bam && \
-  wget -q https://raw.githubusercontent.com/artic-network/artic-ncov2019/master/primer_schemes/nCoV-2019/V3/nCoV-2019.primer.bed && \
-  samtools stats SRR13957123.primertrim.sorted.bam && \
-  samtools faidx SRR13957123.consensus.fa && \
-  samtools ampliconstats nCoV-2019.primer.bed SRR13957123.primertrim.sorted.bam > SRR13957123_ampliconstats.txt && \
-  plot-ampliconstats plot SRR13957123_ampliconstats.txt && \
-  ls
-
-# test version and help option outputs
-# run pytest suite
-RUN python3 /tbp-parser/tbp_parser/tbp_parser.py --version && \
-python3 /tbp-parser/tbp_parser/tbp_parser.py --help && \
-python3 -m pip install pytest && \
-cd /tbp-parser && \
-pytest
+RUN tbp-parser --version && \
+    tbp-parser --help && \
+    pytest -v

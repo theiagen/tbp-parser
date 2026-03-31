@@ -1,12 +1,13 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+*__pycache__*
 
 # IDE
 .vscode/
 
 # output from pytest
 *.csv
-.pytest_cache/
 *.pyc
+.pytest_cache/
+.coverage
 
 secret/

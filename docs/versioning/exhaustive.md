@@ -2,6 +2,9 @@
 title: Exhaustive version descriptions
 ---
 
+!!! warning "Validate Before Use"
+    **CAUTION**: The information produced by this program should **not** be used for clinical reporting unless and until extensive validation has occured in ==_**your**_== laboratory on a stable version. Otherwise, the outputs of tbp-parser are for research use only.
+
 The following is a list of every version of `tbp-parser` and a short summary of the changes made in each version.
 
 <span style="color:blue">Blue</span> indicates that CDPH performed a clinical validation on that version
@@ -88,7 +91,13 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.11.1 - handles missing positions for `alternative_consequence` variants
 - v2.11.2 - ensures that mutation QC is considered when determining tNGS lineage designation (MTBC ID)
 - v2.11.3 - adds missing proximal promoter region for Rv0678
+- v3.0.0 - a complete refactor of the codebase to improve maintainability and add new features
+
 ---
 
-The following diagram shows how each version is related to the others without technical details:
-![This diagram shows how each version is related to the others without technical details.](../assets/tbp-parser_versioning.png){ align = left }
+??? info "Diagram of Version Relationships before v2.1.0"
+    The following diagram shows how each version prior to v2.1.0 is related to the others without technical details.
+
+    After v2.1.0, all changes are made in a linear fashion on the `main` branch.
+
+    ![This diagram shows how each version is related to the others without technical details.](../assets/tbp-parser_versioning.png){ align = left }

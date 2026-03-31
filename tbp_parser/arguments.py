@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+import argparse
+import json
+from pathlib import Path
+from tbp_parser import __VERSION__
+from tbp_parser.Utilities import (
+  is_boundary_valid,
+  is_file_valid,
+  is_bam_valid,
+  is_bed_valid,
+  is_optional_file_valid,
+)
+
+
+def resolve_output_prefix(output_prefix: str) -> Path:
+    """
+    Resolve the output prefix to handle directories and file names.
+    Give default file name if only a directory is provided.
+    """
+    output_path = Path(output_prefix)
+    if output_prefix.endswith('/'):
+        output_path.mkdir(parents=True, exist_ok=True)
+        output_path = output_path / "tbp_parser"
+    else:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+    return output_path
+
+
+def parse_arguments():
+    data_dir = Path(__file__).parent / "data"
+    default_coverage_bed = data_dir / "tbdb.bed"
+    default_lims_report_format = data_dir / "default-lims-report-format.yml"
+    default_gene_database = data_dir / "default-gene-database_2026-03-03.yml"
+
+    parser = argparse.ArgumentParser(
+        prog = "tbp-parser",
+        description = "Parses Jody Phelon's TBProfiler JSON output into four files:\n- a Laboratorian report,\n- a LIMS report\n- a Looker report, and\n- a coverage report",
+        usage = "tbp-parser [-h|-v] <input_json> <input_bam> [<args>]",
+        epilog = "Please contact support@theiagen.com with any questions",
+        formatter_class = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=10))
+    parser.add_argument("input_json",
+                        help="the JSON file produced by TBProfiler", type=is_file_valid)
+    parser.add_argument("input_bam",
+                        help="the BAM file produced by TBProfiler", type=is_bam_valid)
+    parser.add_argument("-v", "--version",
+                        action='version', version=str(__VERSION__))
+    parser.add_argument("--config",
+                        help="the configuration file to use, in YAML format\n(overrides all other arguments EXCEPT for any file-type inputs)", default="", metavar="\b", type=is_optional_file_valid)
+    file_arguments = parser.add_argument_group("file arguments",
+                                                "arguments that specify input files used to create standard dictionaries")
+
+    ### TO-DO: brainstorm better name for this argument -- regions_bed, targets_bed, genes_bed, etc.
+    file_arguments.add_argument("-b", "--coverage_bed",
+                        help="the BED file containing the genes of interest, their locus tags, and their regions for QC calculations; should be formatted like the tbdb.bed file in TBProfiler\ndefault=data/tbdb.bed", default=default_coverage_bed, metavar="\b", type=is_bed_valid)
+    ### TO-DO: make yaml format validation function
+    file_arguments.add_argument("--lims_report_format_yml",
+                        help="an optional YAML file that specifies the format of the LIMS report; if not provided, a default format will be used", default=default_lims_report_format, metavar="\b", type=is_file_valid)
+    file_arguments.add_argument("--gene_database_yml",
+                        help="an optional YAML file that specifies a custom gene database; if not provided, the default gene database will be used", default=default_gene_database, metavar="\b", type=is_file_valid)
+
+    qc_arguments = parser.add_argument_group("quality control arguments",
+                                              "options that determine what passes QC")
+    qc_arguments.add_argument("-d", "--min_depth",
+                        help="the minimum depth of coverage for a site to pass QC\ndefault=10", default=10, metavar="\b", type=int)
+    qc_arguments.add_argument("-c", "--min_percent_coverage",
+                        help="the minimum percentage of a region that has depth above the threshold set by min_depth\n  (used for a gene/locus to pass QC; 1.0 -> 100%%)\ndefault=1.0", default=1.0, metavar="\b", type=float)
+    qc_arguments.add_argument("-s", "--min_read_support",
+                        help="the minimum read support for a mutation to pass QC\ndefault=10", default=10, metavar="\b", type=int)
+    qc_arguments.add_argument("-f", "--min_frequency",
+                        help="the minimum frequency for a mutation to pass QC (0.1 -> 10%%)\ndefault=0.1", default=0.1, metavar="\b", type=float)
+    qc_arguments.add_argument("-l", "--min_percent_loci_covered", default=0.7, metavar="\b", type=float,
+                        help="the minimum percentage of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%%)\ndefault=0.7")
+
+    # I don't think this is ever actually used by our partners and it adds unnecessary complexity to the QC logic, so I'm disabling it for now; can re-enable in the future if needed
+    # qc_arguments.add_argument("-q", "--qc_resistant_mutations", default=False, action="store_true",
+    #                     help="treat R mutations the same as S or U mutations in that if locus coverage is poor, they will not be reported\ndefault=False")
+
+    general_arguments = parser.add_argument_group("text arguments",
+                                                  "arguments that are used verbatim in the reports or to name the output files")
+    general_arguments.add_argument("-m", "--sequencing_method",
+                        help="the sequencing method used to generate the data; used in the LIMS & Looker reports\n** Enclose in quotes if includes a space\ndefault=\"Sequencing method not provided\"", default="Sequencing method not provided", metavar="\b")
+    general_arguments.add_argument("-t", "--operator",
+                        help="the operator who ran the sequencing; used in the LIMS & Looker reports\n** Enclose in quotes if includes a space\ndefault=\"Operator not provided\"", default="Operator not provided", metavar="\b")
+    general_arguments.add_argument("-o", "--output_prefix",
+                        help="the output file name prefix\n** Do not include any spaces", default="tbp_parser", metavar="\b", type=resolve_output_prefix)
+    ### TO-DO: create dict format validation function
+    general_arguments.add_argument("-fr", "--find_and_replace",
+                        help="A JSON string of find-and-replace pairs applied across all fields.\nExample: --find_and_replace '{\"rifampicin\": \"rifampin\", \"fbiD\": \"Rv2983\"}'", default={}, type=json.loads)
+
+    tngs_arguments = parser.add_argument_group("tNGS-specific arguments",
+                                                "options that are primarily used for tNGS data")
+    tngs_arguments.add_argument("--tngs",
+                        help="\nindicates that the input data was generated using a tNGS protocol\nTurns on tNGS-specific features", action="store_true", default=False)
+    tngs_arguments.add_argument("-e", "--err_coverage_bed",
+                                help="an optional BED file formatted similarly to the --coverage_bed file but containing ranges that are essential for resistance", default=None, metavar="\b", type=is_optional_file_valid)
+    tngs_arguments.add_argument("--use_err_for_qc",
+                                help="if an ERR BED file is provided, use the ERR regions in place of the --coverage_bed regions for breadth of coverage calculations\nNote: this is an experimental option", action="store_true", default=False)
+    tngs_arguments.add_argument("--resolve_overlapping_regions",
+                                help="resolve overlapping BED regions to avoid double-counting reads across overlapping targets\nRecommended for tNGS data with overlapping amplicon regions", action="store_true", default=False)
+
+    # new arguments for qc reporting
+    boundary_arguments = parser.add_argument_group("tNGS-specific QC boundary arguments (NOT compatible with WGS data)",
+                                                  "options that set read support and frequency boundaries for tNGS QC reporting:\n if `lower_rs <= read support < upper_rs` AND frequency >= `upper_f` OR\n if `read support >= upper_rs` AND frequency >= `lower_f`\n  QC pass")
+    boundary_arguments.add_argument("--tngs_read_support_boundaries",
+                        help="the read support boundaries (comma-delimited; \"lower_rs,upper_rs\") for tNGS QC reporting, used in conjunction with `--tngs_frequency_boundaries`\ndefault=10,10 (this is equivalent to no change from the default min read support)",
+                        default="10,10", metavar="\b", type=is_boundary_valid)
+    boundary_arguments.add_argument("--tngs_frequency_boundaries",
+                        help="the frequency boundaries (comma-delimited; \"lower_f,upper_f\") for tNGS QC reporting, used in conjunction with `--tngs_read_support_boundaries`\ndefault=0.1,0.1 (this is equivalent to no change from the default min frequency)",
+                        default="0.1,0.1", metavar="\b", type=is_boundary_valid)
+
+    logging_arguments = parser.add_argument_group("logging arguments",
+                                                  "options that change the verbosity of the stdout log")
+    logging_arguments.add_argument("--debug",
+                        help="increase output verbosity to debug; overwrites --verbose", action="store_true", default=False)
+
+    options = parser.parse_args()
+
+    return options

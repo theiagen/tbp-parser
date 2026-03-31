@@ -1,0 +1,84 @@
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry]
+packages = [{include = "tbp_parser"}]
+
+
+[project]
+name = "tbp-parser"
+version = "3.0.0"
+description = "A TBProfiler output parser used to classify the severity of Mycobacterium tuberculosis mutations."
+authors = [
+    {name = "Sage Wright", email = "sage.wright@theiagen.com"},
+    {name = "Theron James", email = "theron.james@theiagen.com"},
+    {name = "Ines Mendes", email = "ines.mendes@theiagen.com"},
+]
+maintainers = [
+    {name = "Sage Wright", email = "sage.wright@theiagen.com"},
+    {name = "Theron James", email = "theron.james@theiagen.com"},
+]
+license = "GPL-3.0"
+readme = "README.md"
+keywords = [
+    "mtb",
+    "tb",
+    "mycobacterium",
+    "tuberculosis",
+    "mycobacterium tuberculosis",
+    "parser",
+    "profiler",
+    "tbprofiler",
+    "bioinformatics",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pandas (>=3.0.1,<4.0.0)",
+    "pydantic (>=2.12.5,<3.0.0)",
+    "pysam (>=0.23.3,<0.24.0)",
+    "pyyaml (>=6.0.3,<7.0.0)",
+]
+
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-cov (>=7.0.0,<8.0.0)",
+]
+
+
+[project.scripts]
+tbp-parser = "tbp_parser.tbp_parser_main:main"
+
+
+[project.urls]
+Documentation = "https://theiagen.github.io/tbp-parser/"
+Changelog = "https://theiagen.github.io/tbp-parser/latest/versioning/exhaustive/"
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--color=yes"
+
+
+[tool.coverage.run]
+branch = true
+source = ["tbp_parser"]
+omit = [
+    "__pycache__/*",
+    "__init__.py",
+]
+
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == '__main__':",
+    "def main",
+    "def __str__",
+    "def __repr__",
+    "def _coverage_str",
+]

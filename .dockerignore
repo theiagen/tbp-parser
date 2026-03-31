@@ -1,0 +1,9 @@
+# ignore everything
+*
+
+# allow only what's needed for the build
+!tbp_parser/
+!tests/
+!pyproject.toml
+!poetry.lock
+!README.md
