@@ -266,7 +266,8 @@ class LIMSProcessor:
         elif gene_code.max_mdl_interpretation in ["WT", "NA"]:
             setattr(gene_code, "gene_target_value", "No mutations detected")
 
-        elif gene_code.max_mdl_interpretation in ["Insufficient Coverage"]:
+        # overwrite mutation list if max_mdl_interpretation if Insufficient Coverage
+        if gene_code.max_mdl_interpretation in ["Insufficient Coverage"]:
             setattr(gene_code, "gene_target_value", "No sequence")
 
         logger.debug(f"Resolved gene target value: {gene_code}")
