@@ -305,8 +305,8 @@ class LIMSProcessor:
             if not locus_coverage:
                 raise ValueError(f"Could not find locus tag for LIMS gene {lims_gene} in locus coverage map. Check that the input bed file contains the correct locus tags for LIMS genes")
 
-            # if ERR coverage exists AND the `--use_err_as_brr` flag is set, use ERR coverage for determining lims QC
-            if self.config.USE_ERR_AS_BRR and locus_coverage.err_coverage:
+            # if ERR coverage exists AND the `--use_err_for_qc` flag is set, use ERR coverage for determining lims QC
+            if self.config.USE_ERR_FOR_QC and locus_coverage.err_coverage:
                 logger.debug(f"Using ERR coverage for LIMS QC of gene {lims_gene}|{lims_locus_tag}")
                 locus_coverage = locus_coverage.err_coverage
 

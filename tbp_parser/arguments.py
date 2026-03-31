@@ -93,7 +93,7 @@ def parse_arguments():
                         help="\nindicates that the input data was generated using a tNGS protocol\nTurns on tNGS-specific features", action="store_true", default=False)
     tngs_arguments.add_argument("-e", "--err_coverage_bed",
                                 help="an optional BED file formatted similarly to the --coverage_bed file but containing ranges that are essential for resistance", default=None, metavar="\b", type=is_optional_file_valid)
-    tngs_arguments.add_argument("--use_err_as_brr",
+    tngs_arguments.add_argument("--use_err_for_qc",
                                 help="if an ERR BED file is provided, use the ERR regions in place of the --coverage_bed regions for breadth of coverage calculations\nNote: this is an experimental option", action="store_true", default=False)
     tngs_arguments.add_argument("--resolve_overlapping_regions",
                                 help="resolve overlapping BED regions to avoid double-counting reads across overlapping targets\nRecommended for tNGS data with overlapping amplicon regions", action="store_true", default=False)

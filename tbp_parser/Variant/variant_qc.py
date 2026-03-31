@@ -134,7 +134,7 @@ class VariantQC:
             if self.config.TNGS:
                 tngs_qc_result = self.check_tngs_qc(variant, qc_result, locus_coverage_map)
                 variant = self.update_variant_qc_result(variant, tngs_qc_result)
-               
+
             # Find/assign valid deletions to coverage objects if the variant passes positional QC and is within the coverage region
             self.assign_variants_with_valid_deletions(variant, locus_coverage_map, target_coverage_map)
 
@@ -307,8 +307,8 @@ class VariantQC:
             logger.debug(f"No locus coverage found for {variant.gene_name}|{variant.gene_id} at position {variant.pos}. Locus QC rules cannot be applied.")
             return qc_result
 
-        # if ERR coverage exists AND the `--use_err_as_brr` flag is set, use ERR coverage for locus QC instead of overall locus coverage
-        if self.config.USE_ERR_AS_BRR and locus_coverage.err_coverage:
+        # if ERR coverage exists AND the `--use_err_for_qc` flag is set, use ERR coverage for locus QC instead of overall locus coverage
+        if self.config.USE_ERR_FOR_QC and locus_coverage.err_coverage:
             logger.debug(f"Using ERR coverage for locus QC of {variant.gene_name}|{variant.gene_id}")
             locus_coverage = locus_coverage.err_coverage
 

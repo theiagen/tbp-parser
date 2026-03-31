@@ -37,7 +37,7 @@ class Configuration:
         # QC_RESISTANT_MUTATIONS (bool): whether R mutations should be treated the same as S/U mutations for locus QC
         TNGS_READ_SUPPORT_BOUNDARIES (list[int]): the read support boundaries for tNGS QC reporting
         TNGS_FREQUENCY_BOUNDARIES (list[float]): the frequency boundaries for tNGS QC reporting
-        USE_ERR_AS_BRR (bool): whether to use ERR regions in place of coverage_bed regions for breadth of coverage calculations [tNGS only]
+        USE_ERR_FOR_QC (bool): whether to use ERR regions in place of coverage_bed regions for breadth of coverage calculations [tNGS only]
         RESOLVE_OVERLAPPING_REGIONS (bool): whether to resolve overlapping BED regions to avoid double-counting reads across overlapping targets
     """
     # Shared type tracking across all Configuration instances
@@ -108,7 +108,7 @@ class Configuration:
         self.FIND_AND_REPLACE = options.find_and_replace
         # tngs-specific options
         self.TNGS = options.tngs
-        self.USE_ERR_AS_BRR = options.use_err_as_brr
+        self.USE_ERR_FOR_QC = options.use_err_for_qc
         self.RESOLVE_OVERLAPPING_REGIONS = options.resolve_overlapping_regions
         self.TNGS_READ_SUPPORT_BOUNDARIES = [int(x) for x in options.tngs_read_support_boundaries.split(",")]
         self.TNGS_FREQUENCY_BOUNDARIES = [float(x) for x in options.tngs_frequency_boundaries.split(",")]

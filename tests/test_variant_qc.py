@@ -300,7 +300,7 @@ class TestApplyQc:
         assert v.mdl_interpretation == "WT"
 
 class TestLocusQcWithErrCoverage:
-    """Tests for locus QC when USE_ERR_AS_BRR flag swaps coverage to ERR."""
+    """Tests for locus QC when USE_ERR_FOR_QC flag swaps coverage to ERR."""
 
     def _make_err(self, breadth=0.95, coords=None):
         if coords is None:
@@ -308,7 +308,7 @@ class TestLocusQcWithErrCoverage:
         return ERRCoverage(coords=coords, breadth_of_coverage=breadth, average_depth=100.0)
 
     def test_err_high_boc_passes_when_locus_low(self, mock_config, make_variant, make_locus_coverage):
-        mock_config.USE_ERR_AS_BRR = True
+        mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Uncertain significance")
         v.mdl_interpretation = "S"
@@ -325,7 +325,7 @@ class TestLocusQcWithErrCoverage:
         assert v.mdl_interpretation == "S"  # preserved — ERR breadth is good
 
     def test_err_also_low_fails_insufficient(self, mock_config, make_variant, make_locus_coverage):
-        mock_config.USE_ERR_AS_BRR = True
+        mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Uncertain significance")
         v.mdl_interpretation = "S"
@@ -342,7 +342,7 @@ class TestLocusQcWithErrCoverage:
         assert v.mdl_interpretation == "Insufficient Coverage"
 
     def test_err_flag_off_uses_locus(self, mock_config, make_variant, make_locus_coverage):
-        mock_config.USE_ERR_AS_BRR = False
+        mock_config.USE_ERR_FOR_QC = False
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Uncertain significance")
         v.mdl_interpretation = "S"
@@ -360,7 +360,7 @@ class TestLocusQcWithErrCoverage:
         assert v.mdl_interpretation == "Insufficient Coverage"
 
     def test_err_no_err_coverage_uses_locus(self, mock_config, make_variant, make_locus_coverage):
-        mock_config.USE_ERR_AS_BRR = True
+        mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Uncertain significance")
         v.mdl_interpretation = "S"
@@ -378,7 +378,7 @@ class TestLocusQcWithErrCoverage:
         assert v.mdl_interpretation == "S"
 
     def test_r_locus_fail_only_warning_preserved(self, mock_config, make_variant, make_locus_coverage):
-        mock_config.USE_ERR_AS_BRR = True
+        mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Assoc w R")
         v.mdl_interpretation = "R"
@@ -396,7 +396,7 @@ class TestLocusQcWithErrCoverage:
         assert v.mdl_interpretation == "R"
 
     def test_r_both_fail_overwrites(self, mock_config, make_variant, make_locus_coverage):
-        mock_config.USE_ERR_AS_BRR = True
+        mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         v = make_variant(depth=5, freq=0.50, confidence="Assoc w R")  # low depth -> positional fail
         v.mdl_interpretation = "R"
@@ -415,7 +415,7 @@ class TestLocusQcWithErrCoverage:
 
     def test_err_valid_deletion_passes_locus_qc(self, mock_config, make_variant, make_locus_coverage, make_target_coverage):
         """Rule 4.2.2.2: Deletion in ERR valid_deletions + low ERR breadth -> passes locus QC."""
-        mock_config.USE_ERR_AS_BRR = True
+        mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
 

@@ -191,7 +191,7 @@ sample01     Rv1908c    katG2      100.000            2766.803  ← only whiteli
 ???+ caption "A visual example"
     ![A visual example of how overlapping primer regions are resolved](../assets/tbp-parser_resolve-overlapping-primers.png)
 
-    This example shows how the reads associated with each `BedRecord` are whitelisted based on their presence in the non-overlapping regions when `--resolve_overlapping_regions` is enabled. 
+    This example shows how the reads associated with each `BedRecord` are whitelisted based on their presence in the non-overlapping regions when `--resolve_overlapping_regions` is enabled.
 
 ---
 
@@ -213,8 +213,8 @@ Valid deletions are flagged and reported in the `qc_warning` column and may expl
 
     A deletion that exists in the full locus/target region but falls outside the ERR region will **not** appear in `qc_warning` when an `--err_coverage_bed` file is provided.
 
-!!! info "The `--use_err_as_brr` flag does not affect the coverage report"
-    The `--use_err_as_brr` flag controls whether ERR regions are used in place of full regions for locus QC decisions (e.g., determining "Insufficient Coverage"). The coverage report's `qc_warning` column is controlled solely by whether `--err_coverage_bed` is provided — if it is, only deletions within the ERR region are reported regardless of the `--use_err_as_brr` setting.
+!!! info "The `--use_err_for_qc` flag does not affect the coverage report"
+    The `--use_err_for_qc` flag controls whether ERR regions are used in place of full regions for locus QC decisions (e.g., determining "Insufficient Coverage"). The coverage report's `qc_warning` column is controlled solely by whether `--err_coverage_bed` is provided — if it is, only deletions within the ERR region are reported regardless of the `--use_err_for_qc` setting.
 
 Deletions are shown only for the region they overlap. Consider rpoB split across two `BedRecord`s, with two deletions:
 

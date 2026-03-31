@@ -456,7 +456,7 @@ class TestProcessLimsMtbcId:
 
 
 class TestPassesLimsCoverageFractionERR:
-    """Tests for _passes_lims_coverage_fraction with USE_ERR_AS_BRR flag."""
+    """Tests for _passes_lims_coverage_fraction with USE_ERR_FOR_QC flag."""
 
     def _make_err(self, breadth=0.95, coords=None):
         if coords is None:
@@ -464,7 +464,7 @@ class TestPassesLimsCoverageFractionERR:
         return ERRCoverage(coords=coords, breadth_of_coverage=breadth, average_depth=100.0)
 
     def test_err_high_boc_passes_lims_qc(self, processor, make_lims_record, make_locus_coverage, mock_config):
-        mock_config.USE_ERR_AS_BRR = True
+        mock_config.USE_ERR_FOR_QC = True
         lims_records = [make_lims_record()]
         locus_coverage_map = {
             "Rv0667": make_locus_coverage(
@@ -475,7 +475,7 @@ class TestPassesLimsCoverageFractionERR:
         assert processor._passes_lims_coverage_fraction(lims_records, locus_coverage_map) is True
 
     def test_err_low_boc_fails_lims_qc(self, processor, make_lims_record, make_locus_coverage, mock_config):
-        mock_config.USE_ERR_AS_BRR = True
+        mock_config.USE_ERR_FOR_QC = True
         mock_config.MIN_PERCENT_LOCI_COVERED = 1.0  # require 100%
         lims_records = [make_lims_record()]
         err_coverage = self._make_err(breadth=0.50)
@@ -488,7 +488,7 @@ class TestPassesLimsCoverageFractionERR:
         assert processor._passes_lims_coverage_fraction(lims_records, locus_coverage_map) is False
 
     def test_err_valid_deletion_overrides_low_boc(self, processor, make_lims_record, make_locus_coverage, make_variant, mock_config):
-        mock_config.USE_ERR_AS_BRR = True
+        mock_config.USE_ERR_FOR_QC = True
         mock_config.MIN_PERCENT_LOCI_COVERED = 1.0
         del_variant = make_variant(nucleotide_change="c.1_100del", gene_id="Rv0667", pos=120)
 
@@ -505,7 +505,7 @@ class TestPassesLimsCoverageFractionERR:
         assert processor._passes_lims_coverage_fraction(lims_records, locus_coverage_map) is True
 
     def test_flag_off_falls_back_to_locus(self, processor, make_lims_record, make_locus_coverage, mock_config):
-        mock_config.USE_ERR_AS_BRR = False
+        mock_config.USE_ERR_FOR_QC = False
         mock_config.MIN_PERCENT_LOCI_COVERED = 1.0
         lims_records = [make_lims_record()]
         locus_coverage_map = {

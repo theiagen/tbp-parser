@@ -23,7 +23,7 @@ def mock_config():
     config.OPERATOR = "test_operator"
     config.TNGS_READ_SUPPORT_BOUNDARIES = [10, 100]
     config.TNGS_FREQUENCY_BOUNDARIES = [0.10, 0.25]
-    config.USE_ERR_AS_BRR = False
+    config.USE_ERR_FOR_QC = False
     config.lims_report_format_yml = str(Path(__file__).parent.parent / "tbp_parser" / "data" / "default-lims-report-format.yml")
     return config
 
