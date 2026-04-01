@@ -1,17 +1,5 @@
 [
   {
-    "version": "tj-strangler-refactor-dev",
-    "title": "tj-strangler-refactor-dev",
-    "aliases": []
-  },
-  {
-    "version": "null",
-    "title": "null",
-    "aliases": [
-      "latest"
-    ]
-  },
-  {
     "version": "main",
     "title": "main",
     "aliases": []
