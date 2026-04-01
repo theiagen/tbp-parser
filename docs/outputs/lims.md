@@ -34,7 +34,7 @@ Please note that drug interpretation severity is ranked as follows (from high to
 | Gene-drug combo | p.Ala689Val (e.g) | A list of the mutations for that gene-drug combination with either an "R" or "U" MDL interpretation in the Laboratorian report. The format of the mutation is "p.(amino acid change)" by default or "n.(nucleotide change)" if no protein change occurred. | R, U |
 | Drug | No mutations associated with resistance to <antimicrobial> detected | The highest severity mutation for any of the gene(s) associated with that antimicrobial drug has an "S" (susceptible) or "WT" (wild-type) MDL interpretation in the Laboratorian report | S, WT |
 | Gene-drug combo | No high confidence mutations detected | The highest severity mutation for that gene-drug combination has an "S" MDL interpretation. | S |
-| Gene-drug combo | No mutations detected | The highest severity mutation for that gene-drug combination has a "WT" or "NA" MDL interpretation; no mutations were found in that gene, or any mutations failed positional QC. | WT |
+| Gene-drug combo | No mutations detected | The highest severity mutation for that gene-drug combination has a "WT" or "NA" MDL interpretation; no mutations were found in that gene, or any mutations failed positional QC. | WT, NA |
 | Drug | Pending Retest | The highest severity mutation for any of the gene(s) associated with that antimicrobial drug has an "Insufficient Coverage" MDL interpretation in the Laboratorian report | Insufficient Coverage |
 | Gene-drug combo | No sequence | The highest severity mutation for that gene-drug combination has an "Insufficient Coverage" MDL interpretation | Insufficient Coverage |
 
@@ -45,7 +45,7 @@ In tbp-parser, rifampicin uses slightly different language:
 | Drug | Predicted low-level resistance to rifampicin. May test susceptible by phenotypic methods | One or more of the following mutations in rpoB were detected: Leu430Pro, Asp435Tyr, His445Asn, His445Ser, His445Leu, His445Cys, Leu452Pro, Ile491Phe. No other R mutations were found in rpoB. | R |
 | Drug | Predicted resistance to rifampicin | An R mutation was detected in rpoB that is not part of the list above. | R |
 | Drug | Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance | The highest severity mutation for the gene(s) associated with rifampicin has an "S" or "WT" MDL interpretation and synonymous mutations were present within the rpoB RRDR region. | S, WT |
-| Drug | Predicted susceptibility to rifampicin | The highest severity mutation for the gene(s) associated with rifampicin has an "S" or "WT" MDL interpretation and **no** synonymous mutations were detected in the rpoB RRDR region. | S, WT |
+| Drug | Predicted susceptibility to rifampicin | The highest severity mutation for the gene(s) associated with rifampicin has an "S" MDL interpretation and **no** synonymous mutations were detected in the rpoB RRDR region. | S |
 | Gene-drug combo | p.Ala689Ala [synonymous] (e.g.) | If a [synonymous] tag follows a mutation, it is from the rpoB RRDR region. | S |
 
 ### **Customizing resistance column names**
