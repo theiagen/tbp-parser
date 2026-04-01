@@ -144,7 +144,7 @@ The following is an example of the default LIMS report (transposed for readabili
 
 ```text
 Sample Name,sample01
-Sample ID,DNA of Mycobacterium tuberculosis species detected
+Lineage ID,DNA of Mycobacterium tuberculosis species detected
 AMK,Mutation(s) associated with resistance to amikacin detected
 AMK_bacA,No sequence
 AMK_ccsA,No high confidence mutations detected
