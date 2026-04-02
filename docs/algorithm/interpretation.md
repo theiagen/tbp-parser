@@ -8,4 +8,4 @@ In the case where the WHO annotation is missing, either due to novel mutations o
 
 When an expert rule is applied, the `rationale` field of the laboratorian report will indicate which expert rule was used (the number prefacing the rule directly correlates to the appropriate section in the interpretation logic PDF) and also indicate that there was no WHO annotation.
 
-Interpretation documents are available in the [root directory](https://www.github.com/theiagen/tbp-parser) of the `tbp-parser` repository. Versions that correspond to different releases are available in the [interpretation_docs](https://github.com/theiagen/tbp-parser/tree/main/interpretation_docs) directory on GitHub.
+Interpretation documents are available in the [interpretation_docs](https://github.com/theiagen/tbp-parser/tree/main/interpretation_docs) directory on GitHub, prepended by their corresponding version.
