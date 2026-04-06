@@ -92,6 +92,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.11.2 - ensures that mutation QC is considered when determining tNGS lineage designation (MTBC ID)
 - v2.11.3 - adds missing proximal promoter region for Rv0678
 - v3.0.0 - a complete refactor of the codebase to improve maintainability and add new features
+- v3.0.1 - minor update to the gene database to ensure parity with TBProfiler v6.7.0
 
 ---
 
