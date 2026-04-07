@@ -28,7 +28,7 @@ Please reach out to us at <support@theiagen.com> if you would like any custom fi
 You can use our Docker image to run `tbp-parser` without needing to install any dependencies. To pull the latest version of the Docker image, use the following command:
 
 ``` bash
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:3.0.0
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:3.0.1
 ```
 
 ## Usage
