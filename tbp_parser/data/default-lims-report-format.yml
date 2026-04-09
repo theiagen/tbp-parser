@@ -44,6 +44,7 @@
     fgd1: CFZ_fgd1
     mmpL5: CFZ_mmpL5
     mmpR5: CFZ_mmpR5
+    mmpS5: CFZ_mmpS5
     pepQ: CFZ_pepQ
     Rv1979c: CFZ_Rv1979c
 
@@ -162,6 +163,17 @@
     fbiD: PMD_fbiD
     fgd1: PMD_fgd1
 
+- drug: prothionamide
+  drug_code: PTO
+  gene_codes:
+    ethA: PTO_ethA
+    ethR: PTO_ethR
+    inhA: PTO_inhA
+    mshA: PTO_mshA
+    ndh: PTO_ndh
+    Rv0565c: PTO_Rv0565c
+    Rv3083: PTO_Rv3083
+
 - drug: pyrazinamide
   drug_code: PZA
   gene_codes:
@@ -188,6 +200,21 @@
     Rv1129c: RIF_Rv1129c
     Rv2477c: RIF_Rv2477c
     Rv2752c: RIF_Rv2752c
+
+- drug: rifapentine
+  drug_code: RPT
+  gene_codes:
+    glpK: RPT_glpK
+    lpqB: RPT_lpqB
+    mtrA: RPT_mtrA
+    mtrB: RPT_mtrB
+    nusG: RPT_nusG
+    rpoA: RPT_rpoA
+    rpoB: RPT_rpoB
+    rpoC: RPT_rpoC
+    Rv1129c: RPT_Rv1129c
+    Rv2477c: RPT_Rv2477c
+    Rv2752c: RPT_Rv2752c
 
 - drug: streptomycin
   drug_code: STM

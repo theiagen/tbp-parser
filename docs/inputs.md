@@ -214,7 +214,7 @@ These options are primarily used for tNGS data.
 | `--use_err_for_qc` | if an ERR BED file is provided, use the ERR coverage regions in place of the typical coverage regions for all QC determinations.<br>Note: This will influence how variants are interpretated and how deletions are reported because the QC thresholds for breadth of coverage and average depth will be based on the coverage found within the ERR regions. | false |
 | `--resolve_overlapping_regions` | Resolve overlapping BED regions to avoid double-counting reads across overlapping targets. Recommended for tNGS data with overlapping amplicon regions. See [Handling overlapping primer regions](./algorithm/technical.md#2-coverage-calculations) and the section on [the coverage report](./outputs/coverage.md) for more details | false |
 | `--tngs_frequency_boundaries` | the frequency boundaries (comma-delimited; `lower_f,upper_f`) for tNGS QC reporting, used in conjunction with `--tngs_read_support_boundaries` | 0.1,0.1 |
-| `--tngs_read_support_boundaries` | the read support boundaries (comma-delimited; `lower_r,upper_r`) for tNGS QC reporting, used in conjunction with `--tngs_frequency_boundaries` | 10,10 |
+| `--tngs_read_support_boundaries` | the read support boundaries (comma-delimited; `lower_rs,upper_rs`) for tNGS QC reporting, used in conjunction with `--tngs_frequency_boundaries` | 10,10 |
 
 ### Text Arguments
 
@@ -222,7 +222,7 @@ These options are used verbatim in the reports, or are used to name the output f
 
 | Short Version | <div style="width:200px">Long Version</div> | Description | Default Value |
 | :--- | :--- | :---------- | :------------ |
-| `-m` | `--sequencing_method` | The sequencing method used to gerneate the data; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Sequencing method not provided" |
+| `-m` | `--sequencing_method` | The sequencing method used to generate the data; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Sequencing method not provided" |
 | `-t` | `--operator` | The operator who ran the analysis; used in the LIMS & Looker reports. Enclose in quotes if including a space | "Operator not provided" |
 | `-o` | `--output_prefix` | The prefix to use for the output files. Do not include any spaces | "tbp_parser" |
 | `-fr` | `--find_and_replace` | A JSON string that can be used to specify any text in the output files that should be find-and-replaced with other text. The keys will be the text to find, and the values will be the text to replace it with. This is useful for labs that want to customize the text in their reports (e.g. renaming drugs or genes or output columns).<br>For example, `'{"rifampicin": "rifampin", "fbiD": "Rv2983", "mmpR5": "Rv0678", "p.0?": ""}'` | '{}' |

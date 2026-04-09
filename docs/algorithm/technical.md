@@ -1,6 +1,6 @@
 # Technical Code Breakdown
 
-With the v3.0.0 refactor, `tbp-parser` has undergone significant changes and the previous technical description no longer applies. This document serves as a technical breakdown of the new code structure and algorithm used in `tbp-parser` v3.0.0.
+With the v3.0.0 refactor, `tbp-parser` has undergone significant changes and the previous technical description no longer applies. This document serves as a technical breakdown of the new code structure and algorithm used in `tbp-parser` v3.0.0+.
 
 ??? dna "Brief Class Descriptions"
     _In order of appearance_

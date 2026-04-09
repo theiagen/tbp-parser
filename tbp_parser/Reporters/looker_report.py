@@ -61,7 +61,6 @@ def write_looker_report(
         **{
             k: drug_map[k]
             for k in sorted(drug_map)
-            if k not in ["cycloserine", "delamanid", "para-aminosalicylic_acid"] # remove these drugs from the report for now, to be consistent with old report
         }
     }
 

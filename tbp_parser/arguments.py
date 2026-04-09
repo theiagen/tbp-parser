@@ -30,7 +30,7 @@ def parse_arguments():
     data_dir = Path(__file__).parent / "data"
     default_coverage_bed = data_dir / "tbdb.bed"
     default_lims_report_format = data_dir / "default-lims-report-format.yml"
-    default_gene_database = data_dir / "default-gene-database_2026-03-03.yml"
+    default_gene_database = data_dir / "default-gene-database_2026-04-01.yml"
 
     parser = argparse.ArgumentParser(
         prog = "tbp-parser",
