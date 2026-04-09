@@ -24,7 +24,7 @@ class TestParseLimsYmlFile:
     def test_parse_lims_yml_num_records(self, mock_config):
         """Test that the default LIMS YAML file is parsed correctly"""
         result = parse_lims_yml_file(mock_config.lims_report_format_yml)
-        assert len(result) == 18
+        assert len(result) == 20
         assert all(isinstance(r, LIMSRecord) for r in result)
 
 class TestResistanceRanking:
