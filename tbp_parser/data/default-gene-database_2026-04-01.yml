@@ -383,7 +383,7 @@ Rv3696c:
     gene_name: glpK
     tier: NA
     promoter_region: [-52, -1]
-    drugs: [ethambutol, isoniazid, levofloxacin, moxifloxacin, rifampicin, streptomycin]
+    drugs: [ethambutol, isoniazid, levofloxacin, moxifloxacin, rifampicin, rifapentine, streptomycin]
 Rv3793:
     locus_tag: Rv3793
     gene_name: embC
@@ -431,7 +431,7 @@ Rv3862c:
     gene_name: whiB6
     tier: Tier 2
     promoter_region: [-126, -1]
-    drugs: [amikacin, capreomycin, streptomycin]
+    drugs: [amikacin, capreomycin, kanamycin]
 Rv3919c:
     locus_tag: Rv3919c
     gene_name: gid
