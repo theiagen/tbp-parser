@@ -50,9 +50,13 @@ def is_bam_valid(filename: str) -> str:
     try:
         with pysam.AlignmentFile(filename, "rb") as bam:
             bam.check_index()
-    except (OSError, AttributeError, ValueError) as e:
-        logger.error(f"Invalid BAM or missing index for '{filename}': {e}")
-        raise argparse.ArgumentTypeError(f"Invalid BAM or missing index for '{filename}': {e}")
+    except (OSError, AttributeError) as e:
+        logger.error(f"Invalid BAM  for '{filename}': {e}")
+        raise argparse.ArgumentTypeError(f"Invalid BAM for '{filename}': {e}")
+    except ValueError:
+        logger.error("Generating a BAM index for the input BAM since the BAI appears to be missing / invalid")
+        pysam.index(filename)
+
     return filename
 
 def is_bed_valid(filename: str) -> str:
