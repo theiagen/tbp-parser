@@ -157,9 +157,7 @@ class LIMSProcessor:
                 logger.debug(f"{lims_record}")
                 return
 
-            # elif max_gene_code.max_mdl_interpretation in ["S"]:
-            # This is incorrect according to interpretation documentation. But leaving it for consistency with previous version of tbp_parser
-            elif max_gene_code.max_mdl_interpretation in ["S", "WT"]:
+            elif max_gene_code.max_mdl_interpretation in ["S"]:
                 if any([self._is_synonymous_rpob_rrdr(v) for v in max_gene_code.max_mdl_variants]):
                     setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance")
                 else:
