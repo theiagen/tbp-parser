@@ -38,8 +38,8 @@ def is_optional_file_valid(filename: str) -> str:
             raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
     return filename
 
-def is_bam_valid(filename: str) -> str:
-    """Checks if the input BAM is valid and accessible and if there is an associated BAI
+def is_bam_index_valid(filename: str) -> str:
+    """Checks if there's an associated BAI for the BAM
 
     Args:
         filename (String): The name of file to check
@@ -54,7 +54,7 @@ def is_bam_valid(filename: str) -> str:
         logger.error(f"Invalid BAM  for '{filename}': {e}")
         raise argparse.ArgumentTypeError(f"Invalid BAM for '{filename}': {e}")
     except ValueError:
-        logger.error("Generating a BAM index for the input BAM since the BAI appears to be missing / invalid")
+        logger.error("tbp-parser: Generating a BAM index for the input BAM since the BAI appears to be missing / invalid. This could take a while.")
         pysam.index(filename)
 
     return filename
@@ -70,7 +70,7 @@ def is_bed_valid(filename: str) -> str:
     """
 
     # check if the necessary columns are present in the BED file -- just count them because we can't really parse it here
-    # does this file have at least 6 columns
+    # does this file have at least 5 columns
     if filename != "" and not os.path.exists(filename) and filename != "-":
         logger.error(f"{filename} cannot be accessed")
         raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))

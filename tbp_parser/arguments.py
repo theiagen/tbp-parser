@@ -6,7 +6,7 @@ from tbp_parser import __VERSION__
 from tbp_parser.Utilities import (
   is_boundary_valid,
   is_file_valid,
-  is_bam_valid,
+  is_bam_index_valid,
   is_bed_valid,
   is_optional_file_valid,
 )
@@ -41,7 +41,7 @@ def parse_arguments():
     parser.add_argument("input_json",
                         help="the JSON file produced by TBProfiler", type=is_file_valid)
     parser.add_argument("input_bam",
-                        help="the BAM file produced by TBProfiler", type=is_bam_valid)
+                        help="the BAM file produced by TBProfiler", type=is_bam_index_valid)
     parser.add_argument("-v", "--version",
                         action='version', version=str(__VERSION__))
     parser.add_argument("--config",
