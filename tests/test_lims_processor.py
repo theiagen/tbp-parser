@@ -85,12 +85,14 @@ class TestSetGeneCodeMaxMdl:
         v_r = make_variant(mdl_interpretation="R")
         v_u = make_variant(mdl_interpretation="U", nucleotide_change="c.100A>G", protein_change="p.Thr34Ala")
         v_s = make_variant(mdl_interpretation="S", nucleotide_change="c.200C>T", protein_change="p.Ala67Val")
-        processor.set_gene_code_max_mdl(gc, [v_r, v_u, v_s])
+        v_i = make_variant(mdl_interpretation="Insufficient Coverage", nucleotide_change="c.300G>T", protein_change="p.Gly100Val")
+        processor.set_gene_code_max_mdl(gc, [v_r, v_u, v_s, v_i])
         assert gc.max_mdl_interpretation == "R"
         assert gc.max_mdl_variants == [v_r]
         assert v_r in gc.max_mdl_reportable_variants
         assert v_u in gc.max_mdl_reportable_variants
         assert v_s not in gc.max_mdl_reportable_variants
+        assert v_i not in gc.max_mdl_reportable_variants
 
     def test_r_without_u_only_includes_r(self, processor, make_lims_gene_code, make_variant):
         gc = make_lims_gene_code()
@@ -100,6 +102,18 @@ class TestSetGeneCodeMaxMdl:
         assert gc.max_mdl_interpretation == "R"
         assert gc.max_mdl_variants == [v_r]
         assert v_r in gc.max_mdl_reportable_variants
+        assert v_s not in gc.max_mdl_reportable_variants
+
+    def test_insufficient_coverage_includes_u_and_s(self, processor, make_lims_gene_code, make_variant):
+        gc = make_lims_gene_code()
+        v_i = make_variant(mdl_interpretation="Insufficient Coverage", nucleotide_change="c.300G>T", protein_change="p.Gly100Val")
+        v_u = make_variant(mdl_interpretation="U", nucleotide_change="c.100A>G", protein_change="p.Thr34Ala")
+        v_s = make_variant(mdl_interpretation="S", nucleotide_change="c.200C>T", protein_change="p.Ala67Val")
+        processor.set_gene_code_max_mdl(gc, [v_i, v_u, v_s])
+        assert gc.max_mdl_interpretation == "Insufficient Coverage"
+        assert gc.max_mdl_variants == [v_i]
+        assert v_i not in gc.max_mdl_reportable_variants
+        assert v_u in gc.max_mdl_reportable_variants
         assert v_s not in gc.max_mdl_reportable_variants
 
     def test_synonymous_rpob_rrdr_in_reportable_not_max(self, processor, make_lims_gene_code, make_variant):
@@ -333,7 +347,54 @@ class TestResolveDrugTarget:
         processor.resolve_drug_target(record)
         assert record.drug_target_value == "Predicted susceptibility to rifampicin"
 
+    def test_rpob_wt_returns_no_mutations(self, processor, make_lims_record, make_variant):
+        record = make_lims_record()
+        v = make_variant(mdl_interpretation="WT", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
+        record.gene_codes["rpoB"].max_mdl_interpretation = "WT"
+        record.gene_codes["rpoB"].max_mdl_variants = [v]
+        processor.resolve_drug_target(record)
+        assert record.drug_target_value == "No mutations associated with resistance to rifampicin detected"
+        
+    def test_rpob_na_returns_no_mutations(self, processor, make_lims_record, make_variant):
+        record = make_lims_record()
+        v = make_variant(mdl_interpretation="NA", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
+        record.gene_codes["rpoB"].max_mdl_interpretation = "NA"
+        record.gene_codes["rpoB"].max_mdl_variants = [v]
+        processor.resolve_drug_target(record)
+        assert record.drug_target_value == "No mutations associated with resistance to rifampicin detected"
+    
+    
+    def test_insufficient_coverage_shows_no_sequence(self, processor, make_lims_record, make_variant):
+        record = make_lims_record()
+        v = make_variant(mdl_interpretation="Insufficient Coverage", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
+        record.gene_codes["rpoB"].max_mdl_interpretation = "Insufficient Coverage"
+        record.gene_codes["rpoB"].max_mdl_variants = [v]
+        
+        processor.resolve_drug_target(record)
+        assert record.drug_target_value == "Pending Retest"
 
+    def test_insufficient_coverage_with_s_and_u_genes(self, processor, make_lims_record, make_variant):
+        record = make_lims_record(
+            drug="isoniazid", drug_code="INH",
+            gene_codes={"katG": LIMSGeneCode(gene_code="INH_katG"),
+                        "inhA": LIMSGeneCode(gene_code="INH_inhA"),
+                        "ahpC": LIMSGeneCode(gene_code="INH_ahpC")},
+        )
+        v_i = make_variant(mdl_interpretation="Insufficient Coverage", gene_name="katG", drug="isoniazid", protein_change="p.Ser450Leu")
+        v_s = make_variant(mdl_interpretation="S", gene_name="inhA", drug="isoniazid", protein_change="p.Phe433Phe")
+        v_u = make_variant(mdl_interpretation="U", gene_name="ahpC", drug="isoniazid", protein_change="p.Gly78Ser")
+        
+        record.gene_codes["katG"].max_mdl_interpretation = "Insufficient Coverage"
+        record.gene_codes["katG"].max_mdl_variants = [v_i]
+        record.gene_codes["inhA"].max_mdl_interpretation = "S"
+        record.gene_codes["inhA"].max_mdl_variants = [v_s]
+        record.gene_codes["ahpC"].max_mdl_interpretation = "U"
+        record.gene_codes["ahpC"].max_mdl_variants = [v_u]
+                
+        processor.resolve_drug_target(record)
+        assert record.drug_target_value == "Pending Retest"
+    
+    
 class TestProcessLimsMtbcId:
     def test_get_pnca_his57asp_variants(self, processor, make_variant):
         v1 = make_variant(gene_name="pncA", drug="pyrazinamide", protein_change="p.His57Asp")
