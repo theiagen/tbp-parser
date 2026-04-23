@@ -257,7 +257,6 @@ class TestResolveGeneTarget:
         processor.resolve_gene_target(gc)
         assert len(gc.gene_target_value.split("; ")) == 2
         assert set(gc.gene_target_value.split("; ")) == {"p.Lys450Leu", "p.Arg123Ser"}
-
         
     def test_duplicate_aas_removed_complex(self, processor, make_lims_gene_code, make_variant):
         """When there are duplicate AA, gene_target should include only one."""
@@ -272,13 +271,15 @@ class TestResolveGeneTarget:
         v8 = make_variant(mdl_interpretation="U", nucleotide_change="c.-36A>T", protein_change="NA")
         v9 = make_variant(mdl_interpretation="R", nucleotide_change="c.-37T>A", protein_change="NA")
         v10 = make_variant(mdl_interpretation="U", nucleotide_change="c.123A>G", protein_change="p.Ser200Ala")
-        
         gc.max_mdl_interpretation = "U"
         gc.max_mdl_variants = [v1, v2, v3, v4, v5, v6, v7, v8, v9, v10]
         gc.max_mdl_reportable_variants = [v1, v2, v3, v4, v5, v6, v7, v8, v9, v10]
         processor.resolve_gene_target(gc)
         assert len(gc.gene_target_value.split("; ")) == 6
         assert set(gc.gene_target_value.split("; ")) == {"p.Arg123Ser", "p.Lys450Leu", "p.444", "c.-37T>A", "c.-36A>T", "p.Ser200Ala"}
+        assert "NA" not in gc.gene_target_value
+                
+        
 class TestResolveDrugTarget:
     def test_r_non_rpob_resistance(self, processor, make_lims_record, make_variant):
         record = make_lims_record(
