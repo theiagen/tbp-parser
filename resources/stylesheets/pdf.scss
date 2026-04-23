@@ -1,0 +1,115 @@
+:root {
+  --width: 8.5in;
+  --margin: 1.20cm;
+  --height: 11in;
+  --offset: calc(var(--margin) * 2);
+}
+
+@page {
+  size: Letter;
+  margin: 1.20cm;
+
+  @top-right {
+    content: "tbp-parser v3.0.2 - " string(chapter);
+    font-size: 9pt;
+    color: #7f7f7f;
+  }
+
+  @bottom-center {
+    content: counter(page);
+    font-size: 9pt;
+    color: #7f7f7f;
+  }
+}
+
+@page :first {
+  @top-right {content: none;}
+  @bottom-center {content: none;}
+}
+
+hr:has(+ div.md-source-file), .md-source-file {
+  display: none !important;
+}
+
+summary::after {
+  display: none;
+}
+
+.front-cover {
+  margin: var(--margin);
+  height: calc(var(--height) - var(--offset));
+  page-break-after: always;
+  border: 1px solid #fff;
+  position: relative;
+  page-break-after: always;
+
+  img {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    image-rendering: optimizeQuality;
+  }
+
+  > section {
+    color: #fff;
+    padding: 0.635cm;
+    max-width: 10.25cm;
+    word-wrap: break-word;
+    margin-top: calc(var(--height) / 2 - var(--offset) - 2cm);
+    font-size: 13pt;
+
+    > .title {
+      font-size: 26pt;
+      font-weight: 500;
+      line-height: 1.1;
+      color: #fff;
+    }
+  }
+}
+
+h1 {
+  string-set: chapter content(text);
+}
+
+.md-typeset h1 .headerlink,
+.md-typeset h1 a.headerlink::after {
+  display: none !important;
+  content: none !important;
+}
+
+
+body {
+  print-color-adjust: exact;
+  text-rendering: geometricPrecision;
+}
+
+.md-main .md-main__inner {
+  margin: 0;
+}
+
+.md-content .md-content__inner {
+  margin: 0;
+  padding: 0;
+
+  &::before {
+    height: 0;
+  }
+}
+
+img {
+  max-width: 100%;
+  max-height: 100vh;
+  height: auto;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.md-typeset img {
+  max-width: 100%;
+  max-height: 90vh;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}

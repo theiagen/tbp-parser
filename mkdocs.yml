@@ -93,6 +93,18 @@ plugins:
   - search
   - glightbox
   - mike
+  - exporter:
+      formats:
+        pdf:
+          stylesheets:
+            - resources/stylesheets/pdf.scss
+          covers:
+            front: resources/templates/covers/front.html.j2
+            back: resources/templates/covers/back.html.j2
+          aggregator:
+             enabled: true
+             output: documentation.pdf
+             covers: limits
 
 extra_javascript:
   - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
