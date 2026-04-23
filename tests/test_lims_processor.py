@@ -244,7 +244,7 @@ class TestResolveGeneTarget:
         gc.max_mdl_variants = [v1, v2, v3]
         gc.max_mdl_reportable_variants = [v1, v2, v3]
         processor.resolve_gene_target(gc)
-        assert set(gc.gene_target_value.split("; ")) == {"p.Arg123Ser", "p.Lys450Leu"}
+        assert gc.gene_target_value == "p.Lys450Leu; p.Arg123Ser"
 
 class TestResolveDrugTarget:
     def test_r_non_rpob_resistance(self, processor, make_lims_record, make_variant):
