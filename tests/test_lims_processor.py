@@ -234,6 +234,17 @@ class TestResolveGeneTarget:
         processor.resolve_gene_target(gc)
         assert gc.gene_target_value == "c.1349C>T"
 
+    def test_duplicate_aas_removed(self, processor, make_lims_gene_code, make_variant):
+        """When there are duplicate AA, gene_target should include only one."""
+        gc = make_lims_gene_code()
+        v1 = make_variant(mdl_interpretation="U", nucleotide_change="c.1349C>T", protein_change="p.Lys450Leu")
+        v2 = make_variant(mdl_interpretation="U", nucleotide_change="c.1348G>C", protein_change="p.Lys450Leu")
+        v3 = make_variant(mdl_interpretation="U", nucleotide_change="c.32A>T", protein_change="p.Arg123Ser")
+        gc.max_mdl_interpretation = "U"
+        gc.max_mdl_variants = [v1, v2, v3]
+        gc.max_mdl_reportable_variants = [v1, v2, v3]
+        processor.resolve_gene_target(gc)
+        assert set(gc.gene_target_value.split("; ")) == {"p.Arg123Ser", "p.Lys450Leu"}
 
 class TestResolveDrugTarget:
     def test_r_non_rpob_resistance(self, processor, make_lims_record, make_variant):
@@ -353,7 +364,7 @@ class TestResolveDrugTarget:
         record.gene_codes["rpoB"].max_mdl_interpretation = "WT"
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
-        assert record.drug_target_value == "No mutations associated with resistance to rifampicin detected"
+        assert record.drug_target_value == "Predicted susceptibility to rifampicin"
         
     def test_rpob_na_returns_no_mutations(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
@@ -361,8 +372,7 @@ class TestResolveDrugTarget:
         record.gene_codes["rpoB"].max_mdl_interpretation = "NA"
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
-        assert record.drug_target_value == "No mutations associated with resistance to rifampicin detected"
-    
+        assert record.drug_target_value == "Predicted susceptibility to rifampicin"
     
     def test_insufficient_coverage_shows_no_sequence(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
