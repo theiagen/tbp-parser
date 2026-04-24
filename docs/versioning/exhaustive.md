@@ -93,6 +93,8 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v2.11.3 - adds missing proximal promoter region for Rv0678
 - v3.0.0 - a complete refactor of the codebase to improve maintainability and add new features
 - v3.0.1 - minor update to the gene database to ensure parity with TBProfiler v6.7.0
+- v3.0.2 - now generates a BAI file when it is not in the same directory as the BAM for convenience; also changes WT rpoB to use a different LIMS report message
+- v3.0.3 - reverts the WT rpoB LIMS report change from v3.0.2 and collapse duplicate amino acid mutations in the LIMS report despite different underlying nucleotide mutations
 
 ---
 
