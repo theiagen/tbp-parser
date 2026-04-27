@@ -392,7 +392,8 @@ class TestResolveDrugTarget:
         processor.resolve_drug_target(record)
         assert record.drug_target_value == "Predicted susceptibility to rifampicin"
 
-    def test_rpob_wt_returns_no_mutations(self, processor, make_lims_record, make_variant):
+    # def test_rpob_wt_returns_no_mutations(self, processor, make_lims_record, make_variant):
+    def test_rpob_wt_returns_susceptible(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
         v = make_variant(mdl_interpretation="WT", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
         record.gene_codes["rpoB"].max_mdl_interpretation = "WT"
@@ -402,7 +403,8 @@ class TestResolveDrugTarget:
         # updated in v3.0.3 - WT rpoB LIMS has same message as S
         assert record.drug_target_value == "Predicted susceptibility to rifampicin"
         
-    def test_rpob_na_returns_no_mutations(self, processor, make_lims_record, make_variant):
+    # def test_rpob_na_returns_no_mutations(self, processor, make_lims_record, make_variant):
+    def test_rpob_na_returns_susceptible(self, processor, make_lims_record, make_variant):
         record = make_lims_record()
         v = make_variant(mdl_interpretation="NA", gene_name="rpoB", drug="rifampicin", protein_change="p.Ser450Leu")
         record.gene_codes["rpoB"].max_mdl_interpretation = "NA"
