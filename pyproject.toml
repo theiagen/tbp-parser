@@ -9,7 +9,7 @@ packages = [{include = "tbp_parser"}]
 
 [project]
 name = "tbp-parser"
-version = "3.0.1"
+version = "3.0.3"
 description = "A TBProfiler output parser used to classify the severity of Mycobacterium tuberculosis mutations."
 authors = [
     {name = "Sage Wright", email = "sage.wright@theiagen.com"},

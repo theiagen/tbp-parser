@@ -157,7 +157,7 @@ class LIMSProcessor:
                 logger.debug(f"{lims_record}")
                 return
 
-            elif max_gene_code.max_mdl_interpretation in ["S"]:
+            elif max_gene_code.max_mdl_interpretation in ["S", "WT", "NA"]:
                 if any([self._is_synonymous_rpob_rrdr(v) for v in max_gene_code.max_mdl_variants]):
                     setattr(lims_record, "drug_target_value", "Predicted susceptibility to rifampicin. The detected synonymous mutation(s) do not confer resistance")
                 else:
@@ -252,9 +252,11 @@ class LIMSProcessor:
         if gene_code.max_mdl_reportable_variants:
             # never report "NA" protein_changes; this is different behavior than lab report
             gene_target_value = "; ".join(
-                f"{v.protein_change if v.protein_change != 'NA' else v.nucleotide_change}"
-                f"{' [synonymous]' if self._is_synonymous_rpob_rrdr(v) else ''}"
-                for v in gene_code.max_mdl_reportable_variants
+                list(set(
+                    f"{v.protein_change if v.protein_change != 'NA' else v.nucleotide_change}"
+                    f"{' [synonymous]' if self._is_synonymous_rpob_rrdr(v) else ''}"
+                    for v in gene_code.max_mdl_reportable_variants
+                ))
             )
             setattr(gene_code, "gene_target_value", gene_target_value)
 
