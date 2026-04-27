@@ -271,7 +271,7 @@ class TestResolveGeneTarget:
         v8 = make_variant(mdl_interpretation="U", nucleotide_change="c.-36A>T", protein_change="NA")
         v9 = make_variant(mdl_interpretation="R", nucleotide_change="c.-37T>A", protein_change="NA")
         v10 = make_variant(mdl_interpretation="U", nucleotide_change="c.123A>G", protein_change="p.Ser200Ala")
-        gc.max_mdl_interpretation = "U"
+        gc.max_mdl_interpretation = "R"
         gc.max_mdl_variants = [v1, v2, v3, v4, v5, v6, v7, v8, v9, v10]
         gc.max_mdl_reportable_variants = [v1, v2, v3, v4, v5, v6, v7, v8, v9, v10]
         processor.resolve_gene_target(gc)
@@ -398,6 +398,8 @@ class TestResolveDrugTarget:
         record.gene_codes["rpoB"].max_mdl_interpretation = "WT"
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
+        # assert record.drug_target_value == "No mutations associated with resistance to rifampicin detected"
+        # updated in v3.0.3 - WT rpoB LIMS has same message as S
         assert record.drug_target_value == "Predicted susceptibility to rifampicin"
         
     def test_rpob_na_returns_no_mutations(self, processor, make_lims_record, make_variant):
@@ -406,6 +408,8 @@ class TestResolveDrugTarget:
         record.gene_codes["rpoB"].max_mdl_interpretation = "NA"
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
+        # assert record.drug_target_value == "No mutations associated with resistance to rifampicin detected" 
+        # updated in v3.0.3 - NA (operationally WT) rpoB LIMS has same message as S
         assert record.drug_target_value == "Predicted susceptibility to rifampicin"
     
     def test_insufficient_coverage_shows_no_sequence(self, processor, make_lims_record, make_variant):
