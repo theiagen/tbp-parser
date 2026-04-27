@@ -401,7 +401,7 @@ class TestResolveDrugTarget:
         record.gene_codes["rpoB"].max_mdl_variants = [v]
         processor.resolve_drug_target(record)
         # assert record.drug_target_value == "No mutations associated with resistance to rifampicin detected"
-        # updated in v3.0.3 - NA (operationally WT) rpoB LIMS has same message as S
+        # updated in v3.0.3 - WT rpoB LIMS has same message as S
         assert record.drug_target_value == "Predicted susceptibility to rifampicin"
         
     # def test_rpob_na_returns_no_mutations(self, processor, make_lims_record, make_variant):        
