@@ -133,7 +133,7 @@ FIND_AND_REPLACE:
   fbiD: "Rv2983"
   mmpR5: "Rv0678"
   "Sample Name": "sample accession"
-  "DNA of Mycobacterium bovis BCG detected" : "M. bovis BCG"
+  "DNA of Mycobacterium bovis BCG detected": "M. bovis BCG"
 ```
 
 Please note that this will rename every instance of that text in **all** output reports (every instance of "Sample Name" will be renamed to "sample accession" in all output files, etc.).
