@@ -5,8 +5,8 @@ site_url: https://theiagen.github.io/tbp-parser/
 
 repo_url: https://github.com/theiagen/tbp-parser
 
-theme: 
-  name: material
+theme:
+  variant: classic
   logo: assets/Theiagen-Logo-White.png
   favicon: assets/Theiagen-Symbol-Standard-01.png
   custom_dir: docs/overrides
@@ -28,7 +28,7 @@ theme:
   language: en
   palette:
     - media: "(prefers-color-scheme: light)"
-      scheme: light 
+      scheme: light
       toggle:
         icon: material/weather-night
         name: Switch to Dark Mode
@@ -42,56 +42,53 @@ theme:
 
 nav:
   - tbp-parser:
-    - Home: index.md
-    - Inputs: inputs.md
-    - Outputs:
-        - Laboratorian report: outputs/laboratorian.md
-        - LIMS report: outputs/lims.md
-        - Looker report: outputs/looker.md
-        - Coverage report: outputs/coverage.md
-    - Versioning:
-      - Brief Description of Versions: versioning/brief.md
-      - Exhaustive List of Versions: versioning/exhaustive.md
-    - Algorithm:
-        - Technical Code Breakdown: algorithm/technical.md
-        - Interpretation Document: algorithm/interpretation.md
+      - Home: index.md
+      - Inputs: inputs.md
+      - Outputs:
+          - Laboratorian report: outputs/laboratorian.md
+          - LIMS report: outputs/lims.md
+          - Looker report: outputs/looker.md
+          - Coverage report: outputs/coverage.md
+      - Versioning:
+          - Brief Description of Versions: versioning/brief.md
+          - Exhaustive List of Versions: versioning/exhaustive.md
+      - Algorithm:
+          - Technical Code Breakdown: algorithm/technical.md
+          - Interpretation Document: algorithm/interpretation.md
 
-markdown_extensions: 
+markdown_extensions:
   - admonition
   - attr_list
   - def_list
   - footnotes
   - md_in_html
+  - pymdownx.blocks.html
+  - pymdownx.caret
   - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.keys
   - pymdownx.mark
-  - pymdownx.caret
   - pymdownx.snippets
   - pymdownx.superfences
-  - pymdownx.blocks.html
-  - pymdownx.tasklist:
-      custom_checkbox: true
-  - toc:
-      permalink: true
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.tabbed:
       alternate_style: true
       slugify: !!python/object/apply:pymdownx.slugs.slugify
         kwds:
           case: lower
+  - toc:
+      permalink: true
+  - zensical.extensions.glightbox
 
 plugins:
   - git-revision-date-localized:
       enable_creation_date: true
       type: iso_date
-  - search
-  - glightbox
   - mike
 
 extra_javascript:
@@ -99,7 +96,7 @@ extra_javascript:
   - javascripts/tablesort.js
 
 extra_css:
-  - stylesheets/extra.css        
+  - stylesheets/extra.css
 
 extra:
   social:
