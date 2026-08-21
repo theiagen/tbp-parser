@@ -1,6 +1,6 @@
 import pytest
 from tbp_parser.Variant import Variant, VariantRecord, VariantProcessor
-from tbp_parser.Utilities import GeneDatabase
+from tbp_parser.GeneDB import GeneDatabase
 
 class TestExpandConsequences:
     """Tests for VariantProcessor._expand_consequences"""

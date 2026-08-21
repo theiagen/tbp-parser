@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 from tbp_parser.Coverage.coverage_data import LocusCoverage
 from tbp_parser.LIMS.lims_record import LIMSRecord, LIMSGeneCode
 from tbp_parser.Utilities.config import Configuration
-from tbp_parser.Utilities.gene_database import GeneDatabase
+from tbp_parser.GeneDB.gene_db import GeneDatabase
 from tbp_parser.Utilities.helper import Helper
 from tbp_parser.Variant.variant import Variant
 

@@ -1,6 +1,6 @@
 from typing import Dict, List
 from pydantic import BaseModel, Field
-from tbp_parser.Utilities.gene_database import GeneDatabase
+from tbp_parser.GeneDB.gene_db import GeneDatabase
 
 class BedRecord(BaseModel):
     """A class representing a record or entry from a BED file."""

@@ -1,5 +1,4 @@
 from tbp_parser.Utilities.config import Configuration, apply_find_and_replace
-from tbp_parser.Utilities.gene_database import GeneDatabase
 from tbp_parser.Utilities.helper import Helper
 from tbp_parser.Utilities.logger_setup import setup_logger
 from tbp_parser.Utilities.check_inputs import (
@@ -13,7 +12,6 @@ from tbp_parser.Utilities.check_inputs import (
 
 __all__ = [
     'Configuration',
-    'GeneDatabase',
     'Helper',
     'setup_logger',
     'is_boundary_valid',

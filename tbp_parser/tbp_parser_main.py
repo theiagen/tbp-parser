@@ -1,8 +1,8 @@
 import logging
 from tbp_parser.arguments import parse_arguments
+from tbp_parser.GeneDB import GeneDatabase
 from tbp_parser.Utilities import (
     Configuration,
-    GeneDatabase,
     setup_logger,
     check_bed_for_lims_genes,
 )

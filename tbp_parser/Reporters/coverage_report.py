@@ -4,7 +4,7 @@ from pathlib import Path
 
 from tbp_parser.Coverage.coverage_data import TargetCoverage, LocusCoverage
 from tbp_parser.Utilities.config import Configuration, apply_find_and_replace
-from tbp_parser.Utilities.gene_database import GeneDatabase
+from tbp_parser.GeneDB.gene_db import GeneDatabase
 
 logger = logging.getLogger(__name__)
 

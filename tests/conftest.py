@@ -3,7 +3,8 @@ import pysam
 from pathlib import Path
 from copy import deepcopy
 from unittest.mock import MagicMock
-from tbp_parser.Utilities import Configuration, GeneDatabase
+from tbp_parser.GeneDB import GeneDatabase
+from tbp_parser.Utilities import Configuration
 from tbp_parser.Variant import Variant, VariantRecord, Annotation, Consequences
 from tbp_parser.Coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
 
