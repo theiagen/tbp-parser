@@ -21,7 +21,7 @@ class Configuration:
         lims_report_format_yml (str): an optional YAML file that specifies the format of the LIMS report
         gene_database_yml (str): an optional YAML file that specifies a custom gene database
 
-
+        SKIP_INPUT_VALIDATION (bool): whether to validate the coverage_bed and lims_report_format_yml files against the gene database
         MIN_DEPTH (int): the minimum depth of coverage for a site to pass QC
         MIN_PERCENT_COVERAGE (float): the minimum percentage of a region that has depth above the threshold set by MIN_DEPTH to pass QC
         MIN_READ_SUPPORT (int): the minimum read support for a mutation to pass QC
@@ -94,6 +94,8 @@ class Configuration:
         self.lims_report_format_yml = options.lims_report_format_yml
         self.gene_database_yml = options.gene_database_yml
         # INITIALIZE CONFIGURABLE INPUTS (always uppercase)
+        # input validation options
+        self.SKIP_INPUT_VALIDATION = options.skip_input_validation
         # qc options
         self.MIN_DEPTH = options.min_depth
         self.MIN_PERCENT_COVERAGE = options.min_percent_coverage
@@ -116,7 +118,7 @@ class Configuration:
         self.DEBUG = options.debug
 
         # configuration file overwrite
-        if self.config != "":
+        if self.config:
             logger.info("Overwriting variables with the provided config file")
             self.overwrite_variables()
 

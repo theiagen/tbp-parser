@@ -1,5 +1,11 @@
 import logging
-from tbp_parser.arguments import parse_arguments
+
+from tbp_parser.arguments import (
+    BUILD_GENE_DB_COMMAND,
+    BUILD_LIMS_FMT_COMMAND,
+    PARSE_COMMAND,
+    parse_arguments,
+)
 from tbp_parser.GeneDB import GeneDatabase, build_gene_db
 from tbp_parser.Utilities import (
     Configuration,
@@ -38,6 +44,19 @@ def main():
         level=logging.DEBUG if options.debug else logging.INFO,
     )
 
+    if options.command == BUILD_GENE_DB_COMMAND:
+        build_gene_db(options)
+        return
+
+    if options.command == BUILD_LIMS_FMT_COMMAND:
+        build_lims_fmt(options)
+        return
+
+    if options.command == PARSE_COMMAND:
+        parse(options)
+        return
+
+def parse(options):
     # Set up Configuration and GeneDatabase instances to be used throughout
     config = Configuration(options)
     gdb = GeneDatabase(config.gene_database_yml)
