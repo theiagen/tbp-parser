@@ -28,10 +28,13 @@ from tbp_parser.Reporters import (
     write_coverage_report,
 )
 
+logger = logging.getLogger(__name__)
+
 def main():
     options = parse_arguments()
+
     setup_logger(
-        output_prefix=options.output_prefix,
+        log_file=getattr(options, "output_prefix", None),
         level=logging.DEBUG if options.debug else logging.INFO,
     )
 
