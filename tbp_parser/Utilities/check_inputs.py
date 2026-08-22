@@ -84,6 +84,30 @@ def is_bed_valid(filename: str) -> str:
                 break  # only need to check the first line
     return filename
 
+def is_fraction_valid(value: str) -> float:
+    """Checks that a percentage-style threshold is a fraction between 0.0 and 1.0
+
+    These thresholds are expressed as fractions (1.0 -> 100%), so a value above 1.0
+    can never be met and would silently fail every locus.
+
+    Args:
+        value (String): The value to check
+
+    Returns:
+        Float: The value as a float if it falls within 0.0 - 1.0
+    """
+    try:
+        fraction = float(value)
+    except ValueError:
+        logger.error(f"{value} is not a number")
+        raise argparse.ArgumentTypeError("{0} is not a number".format(value))
+
+    if not 0.0 <= fraction <= 1.0:
+        logger.error(f"{value} must be a fraction between 0.0 and 1.0 (1.0 -> 100%)")
+        raise argparse.ArgumentTypeError("{0} must be a fraction between 0.0 and 1.0 (1.0 -> 100%)".format(value))
+
+    return fraction
+
 def is_boundary_valid(boundary_string: str) -> str:
     """Checks if the boundary string for tNGS is valid (two comma-separated numerical values)
 

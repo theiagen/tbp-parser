@@ -5,6 +5,7 @@ from pathlib import Path
 from tbp_parser import __VERSION__
 from tbp_parser.Utilities import (
   is_boundary_valid,
+  is_fraction_valid,
   is_file_valid,
   is_bam_index_valid,
   is_bed_valid,

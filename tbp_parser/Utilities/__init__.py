@@ -3,6 +3,7 @@ from tbp_parser.Utilities.helper import Helper
 from tbp_parser.Utilities.logger_setup import setup_logger
 from tbp_parser.Utilities.check_inputs import (
     is_boundary_valid,
+    is_fraction_valid,
     is_file_valid,
     is_bam_index_valid,
     is_bed_valid,
@@ -15,6 +16,7 @@ __all__ = [
     'Helper',
     'setup_logger',
     'is_boundary_valid',
+    'is_fraction_valid',
     'is_file_valid',
     'is_bam_index_valid',
     'is_bed_valid',
