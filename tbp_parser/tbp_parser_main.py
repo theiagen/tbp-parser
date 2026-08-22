@@ -1,6 +1,6 @@
 import logging
 from tbp_parser.arguments import parse_arguments
-from tbp_parser.GeneDB import GeneDatabase
+from tbp_parser.GeneDB import GeneDatabase, build_gene_db
 from tbp_parser.Utilities import (
     Configuration,
     setup_logger,
@@ -18,6 +18,7 @@ from tbp_parser.Variant import (
 )
 from tbp_parser.LIMS import (
     LIMSProcessor,
+    build_lims_fmt,
     parse_lims_yml_file,
 )
 from tbp_parser.Reporters import (
