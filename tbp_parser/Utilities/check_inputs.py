@@ -1,7 +1,5 @@
 import argparse
 import os
-import subprocess
-import sys
 import logging
 import pysam
 
@@ -131,36 +129,178 @@ def is_boundary_valid(boundary_string: str) -> str:
 
     return boundary_string
 
-def check_bed_for_lims_genes(bed_records, lims_records) -> None:
-    """Checks that the provided LIMS format yml file has an associated BedRecord for LIMS report coverage calculations.
+def _check_bed_against_gene_db(bed_records) -> list:
+    """
+    Checks that every locus tag in the BED file exists in the gene database.
+    NOTE: The BED file's drug column is deliberately ignored; BedRecord never parses it
 
     Args:
         bed_records: List of BedRecord objects to check
-        lims_records: List of LIMSRecord objects to check
+
+    Returns:
+        list: Error messages, empty when every locus tag resolves
     """
+    unknown = sorted(
+        set(rec.locus_tag for rec in bed_records if GeneDatabase.get_locus_tag(rec.locus_tag) is None)
+    )
+    if not unknown:
+        return []
+    return [f"The following genes from the BED file are missing in the Gene Database: {', '.join(unknown)}"]
 
-    # It's typical for the lims yaml input file to contain gene names, but the BED file might have irregular
-    # gene names representing partial regions. Look for locus tags in the BED file and convert those to gene names to compare with LIMS genes.
-    unique_bed_genes = set(record.locus_tag for record in bed_records)
-    unique_lims_genes = set()
+def _check_lims_against_gene_db(lims_records) -> list:
+    """
+    Checks the LIMS report format yml file against the gene database for the following error conditions:
+      - a drug no gene in the gene database is associated with.
+      - a gene code the gene database cannot resolve, whether written as a gene name, locus tag, or alias.
+      - a gene/drug pairing the gene database does not contain.
 
-    missing_from_database = set()
+    Args:
+        lims_records: List of LIMSRecord objects to check
+
+    Returns:
+        list: Error messages, empty when the LIMS entries are a subset of the gene database
+    """
+    known_drugs = {drug for entry in GeneDatabase.get_db().values() for drug in (entry.get("drugs") or [])}
+
+    unknown_drugs = set()
+    unknown_genes = set()
+    missing_pairs = set()
+
+    for rec in lims_records:
+        drug_is_known = rec.drug in known_drugs
+        if not drug_is_known:
+            unknown_drugs.add(rec.drug)
+
+        for gene in rec.gene_codes.keys():
+            locus_tag = GeneDatabase.get_locus_tag(gene)
+            if locus_tag is None:
+                unknown_genes.add(gene)
+                continue
+
+            # an unknown drug is already reported on its own
+            if drug_is_known and rec.drug not in GeneDatabase.get_drugs(locus_tag):
+                missing_pairs.add(f"{rec.drug}|{gene}|{locus_tag}")
+
+    errors = []
+    if unknown_drugs:
+        errors.append(f"The following drugs from the LIMS report format yaml file are missing in the Gene Database: {', '.join(sorted(unknown_drugs))}")
+    if unknown_genes:
+        errors.append(f"The following genes from the LIMS report format yaml file are missing in the Gene Database: {', '.join(sorted(unknown_genes))}")
+    if missing_pairs:
+        errors.append(f"The following drug|gene|locus_tag associations from the LIMS report format yaml file are missing in the Gene Database: {', '.join(sorted(missing_pairs))}")
+
+    return errors
+
+def _check_lims_against_bed(lims_records, bed_records) -> list:
+    """
+    Checks that every gene in the LIMS report format yml file has a region in the BED file.
+    Without a BED region there is no coverage figure for the gene and the LIMS coverage lookup raises.
+
+    Args:
+        lims_records: List of LIMSRecord objects to check
+        bed_records: List of BedRecord objects the LIMS genes must have a region in
+
+    Returns:
+        list: Error messages, empty when every LIMS gene has a BED region
+    """
+    bed_locus_tags = {rec.locus_tag for rec in bed_records}
+
+    missing = set()
+    unresolved = set()
+
     for rec in lims_records:
         for gene in rec.gene_codes.keys():
             locus_tag = GeneDatabase.get_locus_tag(gene)
             if locus_tag is None:
-                missing_from_database.add(gene)
-            else:
-                unique_lims_genes.add(locus_tag)
+                unresolved.add(gene)
+            elif locus_tag not in bed_locus_tags:
+                missing.add(f"{gene}|{locus_tag}")
 
-    if missing_from_database:
-        logger.error(f"The following genes from the LIMS report format yaml file are missing in the Gene Database: {', '.join(missing_from_database)}")
-        raise ValueError(f"The following genes from the LIMS report format yaml file are missing in the Gene Database: {', '.join(missing_from_database)}")
+    errors = []
+    if missing:
+        errors.append(f"The following gene|locus_tag entries from the LIMS report format yaml file are missing in the BED file: {', '.join(sorted(missing))}")
+    if unresolved:
+        errors.append(f"The following genes from the LIMS report format yaml file could not be checked against the BED file because they do not resolve in the Gene Database: {', '.join(sorted(unresolved))}")
 
-    if not unique_lims_genes.issubset(unique_bed_genes):
-        missing_locus_tags = unique_lims_genes - unique_bed_genes
-        missing_genes_list = [f"{GeneDatabase.get_gene_name(locus_tag)}|{GeneDatabase.get_locus_tag(locus_tag)}" for locus_tag in missing_locus_tags]
-        logger.error(f"The following genes from the LIMS report format yaml file are missing in the BED file: {', '.join(missing_genes_list)}")
-        raise ValueError(f"The following genes from the LIMS report format yaml file are missing in the BED file: {', '.join(missing_genes_list)}")
-    else:
-        logger.info("All genes from the LIMS report format yaml file are present in the BED file and Gene Database.")
+    return errors
+
+def _check_variants_against_gene_db(variant_records) -> list:
+    """
+    Checks that every gene/drug pairing in the input results JSON exists in the gene database.
+
+    The gene database must be a faithful representation of the TBProfiler database the variants were
+    called against, so the results JSON can only ever be a subset of it. A gene or drug the JSON
+    reports on but the gene database does not know is potentially reporting misleading information downstream
+    because of `_expand_annotations_for_all_drugs` and `generate_unreported_variants`.
+
+    Args:
+        variant_records: List of VariantRecord objects to check
+
+    Returns:
+        list: Error messages, empty when every gene and pairing is known
+    """
+    unknown_genes = set()
+    missing_pairs = set()
+
+    for rec in variant_records:
+        locus_tag = GeneDatabase.get_locus_tag(rec.gene_id)
+        if locus_tag is None:
+            unknown_genes.add(rec.gene_id)
+            continue
+
+        # truth set of drugs from the gene_db
+        known_drugs = GeneDatabase.get_drugs(locus_tag)
+
+        # drugs reported via the input results JSON (annotation + gene_associated_drugs)
+        annotated_drugs = {annotation.drug for annotation in rec.annotation if annotation.drug}
+        all_drugs = annotated_drugs | set(rec.gene_associated_drugs)
+
+        for drug in all_drugs:
+            if drug not in known_drugs:
+                missing_pairs.add(f"{drug}|{rec.gene_id}|{locus_tag}")
+
+    errors = []
+    if unknown_genes:
+        errors.append(f"The following genes from the results JSON file are missing in the Gene Database: {', '.join(sorted(unknown_genes))}")
+    if missing_pairs:
+        errors.append(f"The following drug|gene|locus_tag associations from the results JSON file are missing in the Gene Database: {', '.join(sorted(missing_pairs))}")
+
+    return errors
+
+def validate_inputs(
+    bed_records,
+    lims_records,
+    variant_records,
+) -> None:
+    """
+    Checks that the BED, LIMS report format, and results JSON inputs are all subsets of the gene database.
+
+    The gene database represents the upstream TBProfiler database that variants were called against,
+    so anything in the other input files that is missing from it can never be reported on. Input
+    files that cover fewer genes or drugs than the gene database are fine; extras are not.
+
+    Every check runs before anything is raised, so a broken set of input files can be corrected in a
+    single pass rather than one error at a time.
+
+    Args:
+        bed_records: List of BedRecord objects to check
+        lims_records: List of LIMSRecord objects to check
+        variant_records: Optional list of VariantRecord objects from the results JSON file
+
+    Raises:
+        ValueError: If any input file references a gene, drug, or gene/drug pairing that the gene
+                    database does not contain, or a LIMS gene with no region in the BED file
+    """
+    errors = [
+        *_check_variants_against_gene_db(variant_records),
+        *_check_bed_against_gene_db(bed_records),
+        *_check_lims_against_gene_db(lims_records),
+        *_check_lims_against_bed(lims_records, bed_records),
+    ]
+
+    if errors:
+        message = "\n".join(errors) + "\nEither correct the input files, or provide a --gene_database_yml file that contains these entries (see `tbp-parser build_gene_db`)."
+        logger.error(message)
+        raise ValueError(message)
+
+    logger.info("All genes and gene/drug associations from the input files are present in the Gene Database.")

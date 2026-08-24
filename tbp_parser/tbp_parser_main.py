@@ -10,7 +10,7 @@ from tbp_parser.GeneDB import GeneDatabase, build_gene_db
 from tbp_parser.Utilities import (
     Configuration,
     setup_logger,
-    check_bed_for_lims_genes,
+    validate_inputs,
 )
 from tbp_parser.Coverage import (
     CoverageCalculator,
@@ -61,18 +61,23 @@ def parse(options):
     config = Configuration(options)
     gdb = GeneDatabase(config.gene_database_yml)
 
-    # Check entries match between LIMS and BED input files before processing
+    # Parse input files
     lims_records = parse_lims_yml_file(config.lims_report_format_yml)
     bed_records = parse_bed_file(config.coverage_bed)
     err_records = parse_bed_file(config.err_coverage_bed)
-    check_bed_for_lims_genes(bed_records, lims_records)
+    variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
+
+    # Validate all gene/drug associations from the input files are present in the Gene Database
+    if not config.SKIP_INPUT_VALIDATION:
+        validate_inputs(
+            bed_records=bed_records,
+            lims_records=lims_records,
+            variant_records=variant_records,
+        )
 
     # Coverage calculation
     coverage_calculator = CoverageCalculator()
     LOCUS_COVERAGE_MAP, TARGET_COVERAGE_MAP = coverage_calculator.calculate(bed_records, err_records)
-
-    # VariantRecord parsing
-    variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
 
     # Variant processing: expansion, extraction, deduplication, unreported variant generation
     variant_processor = VariantProcessor()

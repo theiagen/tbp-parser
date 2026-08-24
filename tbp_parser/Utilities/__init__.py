@@ -8,7 +8,7 @@ from tbp_parser.Utilities.check_inputs import (
     is_bam_index_valid,
     is_bed_valid,
     is_optional_file_valid,
-    check_bed_for_lims_genes,
+    validate_inputs,
 )
 
 __all__ = [
@@ -21,6 +21,6 @@ __all__ = [
     'is_bam_index_valid',
     'is_bed_valid',
     'is_optional_file_valid',
-    'check_bed_for_lims_genes',
+    'validate_inputs',
     'apply_find_and_replace',
 ]
