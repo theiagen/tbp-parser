@@ -10,16 +10,16 @@ class BedRecord(BaseModel):
     locus_tag: str
     gene_name: str
 
-    # Derived fields (computed during init, excluded from serialization)
-    length: int = Field(default=0, exclude=True)
-    coords: tuple[int, int] = Field(default=(0, 0), exclude=True)
-
     # To be populated in Coverage class after parsing the BAM file, excluded from serialization
     reads_by_position: Dict[int, List[str]] = Field(default_factory=dict, exclude=True) # (1-based)
 
-    def model_post_init(self, __context=None):
-        self.length = self.end - self.start + 1  # assuming 1-based indexing
-        self.coords = (self.start, self.end)
+    @property
+    def length(self) -> int:
+        return self.end - self.start + 1  # assuming 1-based indexing
+
+    @property
+    def coords(self) -> tuple[int, int]:
+        return (self.start, self.end)
 
     def __str__(self):
         return f"BedRecord([{self.gene_name}][{self.locus_tag}]{self.coords})"
@@ -98,7 +98,13 @@ class BedRecord(BaseModel):
         return (overlap_start, overlap_end)
 
     def get_non_overlapping_coords(self, others: list['BedRecord']) -> list[tuple[int, int]]:
-        """Get the non-overlapping coordinates between this BedRecord and another BedRecord.
+        """
+        Get the non-overlapping coordinates between this BedRecord and another *overlapping* BedRecord.
+
+        This assumes every entry in `others` overlaps this BedRecord, which is how
+        `resolve_overlapping_regions` calls it. That is why there is a check at the end which
+        enforces that there should only ever be at most 2 non-overlapping regions.
+
         Args:
             others (list['BedRecord']): A list of BedRecord instances that overlap with this BedRecord.
         Returns:
