@@ -129,8 +129,12 @@ class TestERRWithinCoords:
     ])
     def test_err_within_coords_valid(self, make_target_coverage, make_locus_coverage, err_coords):
         err = ERRCoverage(coords=err_coords, breadth_of_coverage=0.95, average_depth=50.0)
-        tc = make_target_coverage(coords=[(100, 200)], err_coverage=err)
-        lc = make_locus_coverage(coords=[(100, 200)], err_coverage=err)
+        tc = make_target_coverage(coords=[(100, 200)])
+        lc = make_locus_coverage(coords=[(100, 200)])
+
+        tc.err_coverage = err
+        lc.err_coverage = err
+
         assert tc.err_coverage == err
         assert lc.err_coverage == err
 
@@ -143,11 +147,21 @@ class TestERRWithinCoords:
     ])
     def test_err_within_coords_invalid(self, make_target_coverage, make_locus_coverage, err_coords):
         err = ERRCoverage(coords=err_coords, breadth_of_coverage=0.95, average_depth=50.0)
-        with pytest.raises(ValueError):
+        tc = make_target_coverage(coords=[(100, 200)])
+        lc = make_locus_coverage(coords=[(100, 200)])
+
+        with pytest.raises(ValueError, match="fall outside target coords"):
+            tc.err_coverage = err
+
+        with pytest.raises(ValueError, match="fall outside locus coords"):
+            lc.err_coverage = err
+
+    def test_err_coords_are_still_validated_when_passed_to_the_constructor(self, make_target_coverage):
+        err = ERRCoverage(coords=[(50, 250)], breadth_of_coverage=0.95, average_depth=50.0)
+        with pytest.raises(ValueError, match="fall outside target coords"):
             make_target_coverage(coords=[(100, 200)], err_coverage=err)
 
-        with pytest.raises(ValueError):
-            make_locus_coverage(coords=[(100, 200)], err_coverage=err)
+
 class TestContainsVariantWithValidDeletion:
     def test_contains_variant_with_valid_deletion(self, make_variant, make_target_coverage, make_locus_coverage):
         del_variant = make_variant(gene_name="rpoB", gene_id="Rv0667", nucleotide_change="c.1_100del", pos=150)

@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from tbp_parser.Utilities.config import Configuration
 from tbp_parser.Coverage.bed_record import BedRecord
-from tbp_parser.Coverage.coverage_data import TargetCoverage, LocusCoverage
+from tbp_parser.Coverage.coverage_data import TargetCoverage, LocusCoverage, ERRCoverage
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +48,23 @@ class CoverageCalculator:
 
             for gene_name, target_coverage in target_coverage_map.items():
                 if gene_name in err_target_coverage_map:
-                    setattr(target_coverage, "err_coverage", err_target_coverage_map[gene_name])
+                    err = err_target_coverage_map[gene_name]
+                    target_coverage.err_coverage = ERRCoverage(
+                        coords=err.coords,
+                        breadth_of_coverage=err.breadth_of_coverage,
+                        average_depth=err.average_depth,
+                        valid_deletions=err.valid_deletions,
+                    )
 
             for locus_tag, locus_coverage in locus_coverage_map.items():
                 if locus_tag in err_locus_coverage_map:
-                    setattr(locus_coverage, "err_coverage", err_locus_coverage_map[locus_tag])
+                    err = err_locus_coverage_map[locus_tag]
+                    locus_coverage.err_coverage = ERRCoverage(
+                        coords=err.coords,
+                        breadth_of_coverage=err.breadth_of_coverage,
+                        average_depth=err.average_depth,
+                        valid_deletions=err.valid_deletions,
+                    )
         return locus_coverage_map, target_coverage_map
 
 

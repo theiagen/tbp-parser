@@ -1,6 +1,8 @@
 from collections import defaultdict
 import pytest
 
+from tbp_parser.Coverage.coverage_data import ERRCoverage
+
 class TestPopulateReadsByPosition:
     def test_populate_reads_by_position(self, make_cov_calc, make_bed_record):
         calc = make_cov_calc(cov_start=0, cov_end=100, read_length=10)
@@ -292,3 +294,39 @@ class TestComplexOverlappingRecords:
         # [76-100] (500 reads)
         assert locus_map["Rv0000"].breadth_of_coverage == 0.84 # 84/100 below min_depth [4-30], [35-60], [70-100]
         assert locus_map["Rv0000"].average_depth == 15.30 # 1530/100 [480 + 460 + 590]
+
+class TestErrCoverageAssignment:
+    """Tests that ERR coverage is attached to the coverage records calculated from --coverage_bed."""
+
+    def test_attaches_err_coverage_as_an_ERRCoverage(self, make_cov_calc, make_bed_record):
+        calc = make_cov_calc(cov_start=0, cov_end=100, read_length=10)
+        record = make_bed_record(start=1, end=50, locus_tag="Rv0000", gene_name="geneA")
+        err_record = make_bed_record(start=10, end=40, locus_tag="Rv0000", gene_name="geneA")
+
+        locus_map, target_map = calc.calculate(bed_records=[record], err_records=[err_record])
+
+        # the ERR regions are measured by the same calculation, so they come back as Target/Locus
+        # coverage records and have to be rebuilt as the type err_coverage is declared as
+        assert isinstance(target_map["geneA"].err_coverage, ERRCoverage)
+        assert isinstance(locus_map["Rv0000"].err_coverage, ERRCoverage)
+        assert target_map["geneA"].err_coverage.coords == [(10, 40)]
+
+    def test_leaves_err_coverage_unset_for_records_the_err_bed_does_not_cover(self, make_cov_calc, make_bed_record):
+        calc = make_cov_calc(cov_start=0, cov_end=100, read_length=10)
+        covered = make_bed_record(start=1, end=50, locus_tag="Rv0000", gene_name="geneA")
+        uncovered = make_bed_record(start=60, end=90, locus_tag="Rv0001", gene_name="geneB")
+        err_record = make_bed_record(start=10, end=40, locus_tag="Rv0000", gene_name="geneA")
+
+        locus_map, target_map = calc.calculate(bed_records=[covered, uncovered], err_records=[err_record])
+
+        # an omitted region is not an error; it reports N/A in the coverage report
+        assert target_map["geneB"].err_coverage is None
+        assert locus_map["Rv0001"].err_coverage is None
+
+    def test_rejects_an_err_region_that_falls_outside_its_coverage_region(self, make_cov_calc, make_bed_record):
+        calc = make_cov_calc(cov_start=0, cov_end=100, read_length=10)
+        record = make_bed_record(start=10, end=40, locus_tag="Rv0000", gene_name="geneA")
+        err_record = make_bed_record(start=1, end=50, locus_tag="Rv0000", gene_name="geneA")
+
+        with pytest.raises(ValueError, match="fall outside"):
+            calc.calculate(bed_records=[record], err_records=[err_record])
