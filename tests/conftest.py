@@ -25,16 +25,20 @@ def mock_config():
     config.TNGS_READ_SUPPORT_BOUNDARIES = [10, 100]
     config.TNGS_FREQUENCY_BOUNDARIES = [0.10, 0.25]
     config.USE_ERR_FOR_QC = False
-    config.lims_report_format_yml = str(Path(__file__).parent.parent / "tbp_parser" / "data" / "default-lims-report-format.yml")
+    config.err_coverage_bed = None
+    config.lims_report_format_yml = str(Path(__file__).parent / "test_files" / "test_lims_report_format.yml")
     return config
+
 
 @pytest.fixture(autouse=True)
 def setup_config(mock_config):
     Configuration._instance = mock_config
 
+
 @pytest.fixture(autouse=True, scope="session")
 def setup_gene_database():
-    GeneDatabase(db_path=str(Path(__file__).parent.parent / "tbp_parser" / "data" / "default-gene-database_2026-03-03.yml"))
+    GeneDatabase(db_path=str(Path(__file__).parent / "test_files" / "test_gene_db.yml"))
+
 
 @pytest.fixture
 def make_bed_record():
@@ -132,8 +136,6 @@ def make_target_coverage():
             **kwargs,
         )
     return _make
-
-
 
 
 @pytest.fixture

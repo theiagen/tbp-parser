@@ -366,12 +366,12 @@ class TestExpandAnnotationsForAllDrugs:
 
     def test_no_duplicate_drugs_when_all_sources_overlap(self, make_annotation):
         """When original, gene_associated, and GeneDatabase all share the same drug, only one annotation."""
-        anno = make_annotation(drug="rifampicin", confidence="Assoc w R", source="WHO")
+        anno = make_annotation(drug="bedaquiline", confidence="Assoc w R", source="WHO")
         processor = VariantProcessor()
         result = processor._expand_annotations_for_all_drugs(
             original_annotations=[anno],
-            gene_associated_drugs=["rifampicin"],
-            gene_id="Rv0667",  # GeneDatabase has ["rifampicin"]
+            gene_associated_drugs=["bedaquiline"],
+            gene_id="Rv1305",  # GeneDatabase just has ["bedaquiline"]
         )
         result = list(result)
         assert len(result) == 1
