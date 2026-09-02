@@ -50,7 +50,7 @@ def main():
         return
 
     if options.command == BUILD_LIMS_FMT_COMMAND:
-        build_lims_fmt(options)
+        build_lims_fmt(options.gene_database_yml, options.output)
         return
 
     if options.command == PARSE_COMMAND:

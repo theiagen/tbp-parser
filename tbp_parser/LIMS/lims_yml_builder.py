@@ -1,4 +1,3 @@
-import argparse
 import logging
 import yaml
 
@@ -31,17 +30,21 @@ DRUG_CODES: dict[str, str] = {
   "streptomycin": "STM",
 }
 
-def build_lims_fmt(options: argparse.Namespace) -> None:
+def build_lims_fmt(
+    gene_database_yml: str,
+    output_path: str
+) -> None:
     """
     Entry point for the `build_lims_fmt` subcommand.
 
     Args:
-        options (argparse.Namespace): an object with the input arguments provided at runtime
+        gene_database_yml (String): The path to the gene database YAML file to derive the format from
+        output_path (String): The path of the LIMS report format YAML file to write
     """
 
-    logger.info(f"Building a LIMS report format from --gene_database_yml '{options.gene_database_yml}'")
-    lims_report_format = build_lims_report_format(options.gene_database_yml)
-    write_lims_report_format_yml(lims_report_format, f"{options.output}")
+    logger.info(f"Building a LIMS report format from --gene_database_yml '{gene_database_yml}'")
+    lims_report_format = build_lims_report_format(gene_database_yml)
+    write_lims_report_format_yml(lims_report_format, output_path)
 
 
 def _collect_genes_by_drug(gene_database: dict) -> dict[str, set]:
