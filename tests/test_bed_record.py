@@ -14,6 +14,13 @@ class TestBedRecordEquality:
         rec2 = make_bed_record(**{field: different_value})
         assert rec1 != rec2
 
+    def test_records_differing_only_in_drugs_are_equal(self, make_bed_record):
+        """Currently, a region is identified by its coordinates and gene, not by its drug annotations."""
+        rec1 = make_bed_record(drugs=["levofloxacin"])
+        rec2 = make_bed_record(drugs=["rifampicin", "isoniazid"])
+        assert rec1 == rec2
+        assert hash(rec1) == hash(rec2)
+
     def test_non_bed_record_equality(self, make_bed_record):
         rec1 = make_bed_record()
         rec2 = {"chrom": rec1.chrom, "start": rec1.start, "end": rec1.end, "locus_tag": rec1.locus_tag, "gene_name": rec1.gene_name}
@@ -48,6 +55,22 @@ class TestBedRecordFromBedLine:
         record = BedRecord.from_bed_line(line)
         assert record.locus_tag == canonical
 
+    @pytest.mark.parametrize("drug_column, expected", [
+        ("levofloxacin,moxifloxacin", ["levofloxacin", "moxifloxacin"]),
+        ("rifampicin", ["rifampicin"]),
+        (" levofloxacin , moxifloxacin ", ["levofloxacin", "moxifloxacin"]),  # whitespace stripped
+        ("levofloxacin,,moxifloxacin", ["levofloxacin", "moxifloxacin"]),  # empty entries dropped
+        ("fluoroquinolones,ciprofloxacin", ["fluoroquinolones", "ciprofloxacin"]),
+        ("", []),
+    ], ids=["two-drugs", "one-drug", "whitespace", "empty-entries", "drug-classes", "empty-column"])
+    def test_drugs_parsed_from_the_sixth_column(self, drug_column, expected):
+        line = f"Chromosome\t100\t200\tRv0006\tgyrA\t{drug_column}"
+        record = BedRecord.from_bed_line(line)
+        assert record.drugs == expected
+
+    def test_drugs_empty_without_a_sixth_column(self):
+        record = BedRecord.from_bed_line("Chromosome\t100\t200\tRv0006\tgyrA")
+        assert record.drugs == []
 
 
 class TestParseBedFile:

@@ -44,7 +44,7 @@ def setup_gene_database():
 def make_bed_record():
     """Module-level helper to construct BedRecord objects with sensible defaults."""
     def _make(**kwargs):
-        params = {"chrom": "Chromosome", "start": 100, "end": 200, "locus_tag": "Rv0000", "gene_name": "geneA"}
+        params = {"chrom": "Chromosome", "start": 100, "end": 200, "locus_tag": "Rv0000", "gene_name": "geneA", "drugs": []}
         params.update(kwargs)
         bed_record = BedRecord(**params)  # type: ignore
         return bed_record
