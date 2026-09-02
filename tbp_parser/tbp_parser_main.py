@@ -44,6 +44,8 @@ def main():
         level=logging.DEBUG if options.debug else logging.INFO,
     )
 
+    logger.info(f"\n\nExecuting subcommand: {options.command}\n")
+
     if options.command == BUILD_GENE_DB_COMMAND:
         db_bed_records = parse_bed_file(options.db_bed)
         build_gene_db(db_bed_records, options.output)

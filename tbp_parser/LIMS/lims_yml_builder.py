@@ -42,7 +42,7 @@ def build_lims_fmt(
         output_path (String): The path of the LIMS report format YAML file to write
     """
 
-    logger.info(f"Building a LIMS report format from --gene_database_yml '{gene_database_yml}'")
+    logger.info(f"Building a LIMS report format from `--gene_database_yml` '{gene_database_yml}'")
     lims_report_format = build_lims_report_format(gene_database_yml)
     write_lims_report_format_yml(lims_report_format, output_path)
 

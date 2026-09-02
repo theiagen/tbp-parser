@@ -22,7 +22,7 @@ def build_gene_db(
         output_path (String): The path of the gene database YAML file to write
     """
 
-    logger.info(f"Building a gene database from {len(bed_records)} --db_bed records")
+    logger.info(f"Building a gene database from {len(bed_records)} `--db_bed` BedRecords")
     gene_database = build_gene_database(bed_records)
     write_gene_database_yml(gene_database, f"{output_path}")
 
