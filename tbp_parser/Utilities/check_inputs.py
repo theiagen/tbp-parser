@@ -132,7 +132,9 @@ def is_boundary_valid(boundary_string: str) -> str:
 def _check_bed_against_gene_db(bed_records) -> list:
     """
     Checks that every locus tag in the BED file exists in the gene database.
-    NOTE: The BED file's drug column is deliberately ignored; BedRecord never parses it
+    NOTE: The BED file's drug column is parsed into BedRecord.drugs but deliberately not checked
+    here. Drug column only parsed from the `--db_bed` file in `build_gene_db`. The truth set of gene/drug interactions
+    should already be established at this point in the GeneDatabase.
 
     Args:
         bed_records: List of BedRecord objects to check

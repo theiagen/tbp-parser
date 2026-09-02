@@ -45,7 +45,8 @@ def main():
     )
 
     if options.command == BUILD_GENE_DB_COMMAND:
-        build_gene_db(options)
+        db_bed_records = parse_bed_file(options.db_bed)
+        build_gene_db(db_bed_records, options.output)
         return
 
     if options.command == BUILD_LIMS_FMT_COMMAND:

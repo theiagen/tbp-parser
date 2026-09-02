@@ -118,11 +118,10 @@ def parse_arguments(argv: list | None = None):
     # =========================================================================
     build_gene_db = subcommands.add_parser(
         BUILD_GENE_DB_COMMAND,
-        help="Build a `--gene_database_yml` file from a TBProfiler results JSON and the `mutations.json` database file its variants were called against.",
+        help="Build a `--gene_database_yml` file from the 'genes.bed' file describing the TBProfiler database its variants were called against.",
         formatter_class = CustomFormatter,
     )
-    build_gene_db.add_argument("--db", help="A `mutations.json` database file representing all drug resistant mutations used by TBProfiler to call variants.", required=True, type=is_file_valid)
-    build_gene_db.add_argument("--input_json", help="The results JSON file produced by TBProfiler. Must contain a `gene_name2locus_tag` map (TBProfiler v6.7.0 or later).", required=True, type=is_file_valid)
+    build_gene_db.add_argument("--db_bed", help="A BED file containing every gene TBProfiler calls variants against, its locus tag, and the drugs it is associated with.", required=True, type=is_bed_valid)
     build_gene_db.add_argument("--output", help="The path to write the gene database YAML file to.", required=True)
     build_gene_db.add_argument("--debug", help="Increase output verbosity to debug.", action="store_true", default=False)
 

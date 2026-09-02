@@ -1,11 +1,11 @@
 """
 Hardcoded gene metadata carried forward from the default gene database found in tbp-parser v3.0.3
 
-The TBProfiler mutation database JSON carries neither `tier` nor `promoter_region`, and it has no
-concept of locus tag aliases, so `build_gene_db` cannot derive any of them from its inputs currently.
-This map is a stopgap transcribed from data/default-gene-database_2026-04-01.yml (a snapshot of the TBProfiler
-v6.7.0 database) so that a generated gene database stays usable as a --gene_database_yml file. Genes
-absent from this map default to a tier of "NA", an empty promoter region, and no aliases.
+The `--db_bed` file carries neither `tier` nor `promoter_region`, and it has no concept of locus tag
+aliases, so `build_gene_db` cannot derive any of them from its input currently. This map is a stopgap
+transcribed from an earlier default gene database (a snapshot of the TBProfiler v6.7.0 database) so
+that a generated gene database stays usable as a --gene_database_yml file. Genes absent from this map
+default to a tier of "NA", an empty promoter region, and no aliases.
 
 TO-DO: Determine how to source tier and promoter_region dynamically rather than hardcoding them here.
 Alternatively, reassess whether this metadata is actually necessary.

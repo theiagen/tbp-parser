@@ -9,6 +9,7 @@ class BedRecord(BaseModel):
     end: int
     locus_tag: str
     gene_name: str
+    drugs: List[str] = Field(default_factory=list) # only authoritative for the `build_gene_db --db_bed` file
 
     # To be populated in Coverage class after parsing the BAM file, excluded from serialization
     reads_by_position: Dict[int, List[str]] = Field(default_factory=dict, exclude=True) # (1-based)
@@ -68,6 +69,7 @@ class BedRecord(BaseModel):
             end=int(cols[2]),
             locus_tag=locus_tag,
             gene_name=cols[4],
+            drugs=[drug.strip() for drug in cols[5].split(',') if drug.strip()] if len(cols) > 5 else [],
         )
 
     def overlaps_with(self, other: 'BedRecord') -> bool:
