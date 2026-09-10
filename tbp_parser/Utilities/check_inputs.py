@@ -2,6 +2,7 @@ import argparse
 import os
 import logging
 import pysam
+from pathlib import Path
 
 from tbp_parser.GeneDB.gene_db import GeneDatabase
 
@@ -36,6 +37,20 @@ def is_optional_file_valid(filename: str) -> str:
             raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
     return filename
 
+def _touch_stale_index(filename: str) -> None:
+    """
+    Bumps a BAM index's mtime if it's older than the BAM itself.
+
+    Removes an unnecessary htslib warning that the index file is older than the data file.
+    Touching the index file is computationally simpler than regenerating it.
+    """
+    bam_path = Path(filename)
+    for file in (Path(str(bam_path) + ".bai"), bam_path.with_suffix(".bai")):
+        if file.exists():
+            if file.stat().st_mtime < bam_path.stat().st_mtime:
+                file.touch()
+            return
+
 def is_bam_index_valid(filename: str) -> str:
     """Checks if there's an associated BAI for the BAM
 
@@ -45,6 +60,8 @@ def is_bam_index_valid(filename: str) -> str:
     Returns:
         String: The name of the file if valid and accessible
     """
+    _touch_stale_index(filename)
+
     try:
         with pysam.AlignmentFile(filename, "rb") as bam:
             bam.check_index()
