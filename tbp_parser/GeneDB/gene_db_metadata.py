@@ -1,14 +1,50 @@
 """
-Hardcoded gene metadata carried forward from the default gene database found in tbp-parser v3.0.3
-
 The `--db_bed` file carries neither `tier` nor `promoter_region`, and it has no concept of locus tag
-aliases, so `build_gene_db` cannot derive any of them from its input currently. This map is a stopgap
-transcribed from an earlier default gene database (a snapshot of the TBProfiler v6.7.0 database) so
-that a generated gene database stays usable as a --gene_database_yml file. Genes absent from this map
+aliases, so `build_gene_db` cannot derive any of them from its input currently. Genes absent from this map
 default to a tier of "NA", an empty promoter region, and no aliases.
 
-TO-DO: Determine how to source tier and promoter_region dynamically rather than hardcoding them here.
-Alternatively, reassess whether this metadata is actually necessary.
+Sources
+----------------
+Both fields originate from the WHO catalogue of mutations in M. tuberculosis, 2nd edition (2023):
+
+- `tier`            WHO v2 catalogue, Table 21 "Candidate resistance genes" (p. 89)
+- `promoter_region` WHO v2 catalogue, Table 22 "Upstream/promoter regions of candidate resistance genes" (p. 89, 90)
+
+The same data is published as CSVs in WHO's companion repository (https://github.com/GTB-tbsequencing/mutation-catalogue-2023).
+See `Input data files for Solo algorithms/additional-data/gene_promoters.csv` (matches Table 22).
+Tiers are not published as a flat file there, so Table 21 and the `tier` column of
+`Final Result Files/WHO-UCN-TB-2023.6-eng_catalogue_master_file.txt` are the only public sources.
+
+Promoter Region Coordinates
+----------------
+Table 22 lists each region as `1-N` (e.g. aftB `1-129`), counted back from the gene start (CDS 5' end)
+found in `gene_locations.csv`. Those are stored here as negative ranges (`[-129, -1]`), matching HGVS
+`c.-N` numbering back from the start codon.
+
+Table 22's "primary transcriptional start site" column is what set each region's length. It says,
+"for each resistance gene, relevant promoter and/or upstream regions were defined according to the primary
+transcriptional start site" (p. 88), with the region truncated if it extended into an adjacent coding sequence.
+
+The offset of bp derived from Table 22 is exactly 51 bp: `region_end - (gene_start - TSS)` Genes with no listed
+TSS fall back to a bare 51 bp (`[-51, -1]` entries).
+
+Tier Definition
+----------------
+A tier is WHO's predefined ranking of where resistance mutations are expected to occur for each drug.
+Tier 1 covers the gene sequences and promoters "considered most likely to contain resistance mutations".
+Tier 2 covers the remaining candidate genes, with "a lower, but still reasonable pre-test probability".
+Only these two tiers exist.
+
+Caveats
+----------------
+1. Tiers are technically assigned per (drug, gene), not per gene: 9 genes hold both tiers depending on the drug
+   (Rv1258c, Rv1979c, Rv2983, fbiA, fbiB, fbiC, fgd1, mshA, rrl), and a gene may be a candidate for
+   one drug and untiered for another.
+2. `Rv0678` is absent from Table 22: WHO folds its upstream region into mmpS5's `1-85` window
+   (Table 22 footnote d). The `[-84, -1]` entry here is tbp-parser splitting that shared intergenic
+   region back out. Likewise aftA, fabG1 and furA have no entries of their own because Table 22
+   subsumes them into the embC, inhA and katG promoter regions respectively (footnotes a, b, c).
+
 """
 
 GENE_DB_METADATA: dict[str, dict] = {
