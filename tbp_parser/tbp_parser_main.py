@@ -62,7 +62,7 @@ def main():
 def parse(options):
     # Set up Configuration and GeneDatabase instances to be used throughout
     config = Configuration(options)
-    gdb = GeneDatabase(config.gene_database_yml)
+    GeneDatabase(config.gene_database_yml)
 
     # Parse input files
     lims_records = parse_lims_yml_file(config.lims_report_format_yml)

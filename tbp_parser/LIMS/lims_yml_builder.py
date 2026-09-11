@@ -2,7 +2,6 @@ import logging
 import yaml
 
 from collections import defaultdict
-from tbp_parser.GeneDB.gene_db import GeneDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -88,8 +87,8 @@ def build_lims_report_format(gene_database_yml: str) -> list[dict]:
     Returns:
         list: A LIMS report format, in the same format as a --lims_report_format_yml file
     """
-    GeneDatabase(gene_database_yml)
-    gene_database = GeneDatabase.get_db()
+    with open(gene_database_yml, "r") as gene_database_file:
+        gene_database = yaml.safe_load(gene_database_file)
 
     logger.debug(f"Loaded {len(gene_database)} genes from {gene_database_yml}")
 
