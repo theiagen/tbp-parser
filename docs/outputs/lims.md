@@ -19,7 +19,7 @@ Drug interpretation severity is ranked as follows (from high to low): **R > Insu
 
 These columns will be repeated for each drug and associated genes defined in the `lims_report_format.yml` file. All genes associated with an antimicrobial drug will be grouped together with that antimicrobial's column in the report.
 
-By default, **every** gene-drug combination found in the default `tbdb.bed` file is included in the LIMS report by virtue of its default inclusion in the `lims_report_format_yml` file.
+When the `lims_report_format_yml` file is generated with [`tbp-parser build_lims_fmt`](../subcommands.md#build_lims_fmt), it includes **every** gene-drug combination present in your `gene_database_yml` file. Remove entries from that file to drop them from the report.
 
 ### **Syntax and logic used**
 

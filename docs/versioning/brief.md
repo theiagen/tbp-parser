@@ -16,5 +16,6 @@ You may notice there are many releases; `tbp-parser` is in active development an
 - **v1.5.x+ and v2.0.0** - major changes to code in due to using results from TBProfiler v6.2.0+; compatible with WHO v2
 - **v2.1.0** - ==_v1.6.0 and earlier versions are no longer supported_==; v2.1+ changes are included on `main` branch moving foward.
 - **v3.0.0+** - a complete refactor of the codebase to improve maintainability and add new features
+- **v3.1.0** - ==_breaking change to the command line_==: created subcommand-based interface, removed bundled default input files, and added validation of all input files against the mutation database
 
 For a more exhaustive list, please visit [the Exhaustive List of Versions](exhaustive.md).

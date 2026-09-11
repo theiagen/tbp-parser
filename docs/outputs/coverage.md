@@ -15,9 +15,14 @@ ERR columns only appear if an `--err_coverage_bed` input file is provided. Pleas
 | gene_name | The name of the gene |
 | percent_coverage | The percentage of a region (specified by the `--coverage_bed` input file) that has a read depth over the minimum value (default: 10; user-customizable by altering `--min_depth`) |
 | average_depth | The average read depth across that region (specified by the `--coverage_bed` input file) |
-| err_percent_coverage | The percentage of the region (specified by the `--err_coverage_bed` input file) that has a read depth over the minimum value (default: 10; user-customizable by altering `--min_depth`)<br>_Only appears if `--err_coverage_bed` is provided_ |
-| err_average_depth | The average read depth across a region (specified by the `--err_coverage_bed` input file)<br>_Only appears if `--err_coverage_bed` is provided_ |
+| err_percent_coverage | The percentage of the region (specified by the `--err_coverage_bed` input file) that has a read depth over the minimum value (default: 10; user-customizable by altering `--min_depth`)<br>_Only appears if `--err_coverage_bed` is provided; reports "N/A" for a region the ERR BED file does not cover_ |
+| err_average_depth | The average read depth across a region (specified by the `--err_coverage_bed` input file)<br>_Only appears if `--err_coverage_bed` is provided; reports "N/A" for a region the ERR BED file does not cover_ |
 | qc_warning | Indicates if any deletions were identified in the gene which may contribute to lower than expected coverage |
+
+!!! info "Which regions need an ERR entry?"
+    When `--err_coverage_bed` is provided, the two ERR columns appear for **every** row of the report. A gene in `--coverage_bed` that the ERR BED file does not cover simply reports `N/A`.
+
+    An ERR region that *is* present must fall entirely within its corresponding `--coverage_bed` region, or `tbp-parser` will stop with an error naming the offending locus and gene. [See the tNGS-specific arguments for details.](../inputs.md#tngs-specific-arguments)
 
 ## Locus vs Target coverage reports
 

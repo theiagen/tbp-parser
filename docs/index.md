@@ -28,24 +28,14 @@ Please reach out to us at <support@theiagen.com> if you would like any custom fi
 You can use our Docker image to run `tbp-parser` without needing to install any dependencies. To pull the latest version of the Docker image, use the following command:
 
 ``` bash
-docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:3.0.3
+docker pull us-docker.pkg.dev/general-theiagen/theiagen/tbp-parser:latest
 ```
 
 ## Usage
 
-### Example Usage
+`tbp-parser` takes a subcommand as its first argument:
 
-This shows how the script can be run if used inside the Docker container provided above.
+- `parse` produces the four reports above
+- `build_gene_db` and `build_lims_fmt` generate two of the input files `parse` requires.
 
-``` text
-tbp-parser \
-    /path/to/data/tbprofiler_output.json \
-    /path/to/data/tbprofiler_output.bam \
-    -o "example" \
-    --min_depth 12 \
-    --min_frequency 0.9 \
-    --sequencing_method "Illumina NextSeq" \
-    --operator "John Doe"
-```
-
-Please note that the BAM file must have the accompanying BAI file in the same directory.
+See the [Subcommands](./subcommands.md) page for full details and [example usage](./subcommands.md#example-usage).
