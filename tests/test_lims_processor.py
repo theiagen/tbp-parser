@@ -1,24 +1,9 @@
 import pytest
 from tbp_parser.LIMS import LIMSProcessor, LIMSRecord, LIMSGeneCode, parse_lims_yml_file
-from tbp_parser.Coverage.coverage_data import ERRCoverage
 
 @pytest.fixture
 def processor():
     return LIMSProcessor()
-
-@pytest.fixture
-def make_lims_gene_code():
-    def _make(gene_code="M_DST_D02_rpoB"):
-        return LIMSGeneCode(gene_code=gene_code)
-    return _make
-
-@pytest.fixture
-def make_lims_record():
-    def _make(drug="rifampicin", drug_code="M_DST_D02", gene_codes=None):
-        if gene_codes is None:
-            gene_codes = {"rpoB": LIMSGeneCode(gene_code="M_DST_D02_rpoB")}
-        return LIMSRecord(drug=drug, drug_code=drug_code, gene_codes=gene_codes)
-    return _make
 
 class TestParseLimsYmlFile:
     def test_parse_lims_yml_num_records(self, mock_config):
@@ -571,27 +556,22 @@ class TestProcessLimsMtbcId:
 class TestPassesLimsCoverageFractionERR:
     """Tests for _passes_lims_coverage_fraction with USE_ERR_FOR_QC flag."""
 
-    def _make_err(self, breadth=0.95, coords=None):
-        if coords is None:
-            coords = [(100, 150), (250, 350)]
-        return ERRCoverage(coords=coords, breadth_of_coverage=breadth, average_depth=100.0)
-
-    def test_err_high_boc_passes_lims_qc(self, processor, make_lims_record, make_locus_coverage, mock_config):
+    def test_err_high_boc_passes_lims_qc(self, processor, make_lims_record, make_locus_coverage, make_err_coverage, mock_config):
         mock_config.USE_ERR_FOR_QC = True
         lims_records = [make_lims_record()]
         locus_coverage_map = {
             "Rv0667": make_locus_coverage(
                 locus_tag="Rv0667", breadth_of_coverage=0.50,
-                err_coverage=self._make_err(breadth=0.95),
+                err_coverage=make_err_coverage(breadth_of_coverage=0.95),
             )
         }
         assert processor._passes_lims_coverage_fraction(lims_records, locus_coverage_map) is True
 
-    def test_err_low_boc_fails_lims_qc(self, processor, make_lims_record, make_locus_coverage, mock_config):
+    def test_err_low_boc_fails_lims_qc(self, processor, make_lims_record, make_locus_coverage, make_err_coverage, mock_config):
         mock_config.USE_ERR_FOR_QC = True
         mock_config.MIN_PERCENT_LOCI_COVERED = 1.0  # require 100%
         lims_records = [make_lims_record()]
-        err_coverage = self._make_err(breadth=0.50)
+        err_coverage = make_err_coverage(breadth_of_coverage=0.50)
         locus_coverage_map = {
             "Rv0667": make_locus_coverage(
                 locus_tag="Rv0667", breadth_of_coverage=0.50,
@@ -600,13 +580,12 @@ class TestPassesLimsCoverageFractionERR:
         }
         assert processor._passes_lims_coverage_fraction(lims_records, locus_coverage_map) is False
 
-    def test_err_valid_deletion_overrides_low_boc(self, processor, make_lims_record, make_locus_coverage, make_variant, mock_config):
+    def test_err_valid_deletion_overrides_low_boc(self, processor, make_lims_record, make_locus_coverage, make_err_coverage, make_variant, mock_config):
         mock_config.USE_ERR_FOR_QC = True
         mock_config.MIN_PERCENT_LOCI_COVERED = 1.0
         del_variant = make_variant(nucleotide_change="c.1_100del", gene_id="Rv0667", pos=120)
 
-        err = self._make_err(breadth=0.50, coords=[(100, 150), (250, 350)])
-        err.valid_deletions.append(del_variant)
+        err = make_err_coverage(breadth_of_coverage=0.50, valid_deletions=[del_variant])
 
         lims_records = [make_lims_record()]
         locus_coverage_map = {
@@ -617,14 +596,14 @@ class TestPassesLimsCoverageFractionERR:
         }
         assert processor._passes_lims_coverage_fraction(lims_records, locus_coverage_map) is True
 
-    def test_flag_off_falls_back_to_locus(self, processor, make_lims_record, make_locus_coverage, mock_config):
+    def test_flag_off_falls_back_to_locus(self, processor, make_lims_record, make_locus_coverage, make_err_coverage, mock_config):
         mock_config.USE_ERR_FOR_QC = False
         mock_config.MIN_PERCENT_LOCI_COVERED = 1.0
         lims_records = [make_lims_record()]
         locus_coverage_map = {
             "Rv0667": make_locus_coverage(
                 locus_tag="Rv0667", breadth_of_coverage=0.50,
-                err_coverage=self._make_err(breadth=0.95),
+                err_coverage=make_err_coverage(breadth_of_coverage=0.95),
             )
         }
         # Flag off -> uses locus breadth (0.50) -> fails

@@ -11,4 +11,4 @@
 .coverage
 
 secret/
-tests/test.bam*
+tests/test_files/test.bam*

@@ -1,5 +1,4 @@
 from tbp_parser.Variant import VariantQC
-from tbp_parser.Coverage.coverage_data import ERRCoverage
 
 
 class TestIsDeletion:
@@ -302,12 +301,7 @@ class TestApplyQc:
 class TestLocusQcWithErrCoverage:
     """Tests for locus QC when USE_ERR_FOR_QC flag swaps coverage to ERR."""
 
-    def _make_err(self, breadth=0.95, coords=None):
-        if coords is None:
-            coords = [(100, 150), (250, 350)]
-        return ERRCoverage(coords=coords, breadth_of_coverage=breadth, average_depth=100.0)
-
-    def test_err_high_boc_passes_when_locus_low(self, mock_config, make_variant, make_locus_coverage):
+    def test_err_high_boc_passes_when_locus_low(self, mock_config, make_variant, make_locus_coverage, make_err_coverage):
         mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Uncertain significance")
@@ -315,7 +309,7 @@ class TestLocusQcWithErrCoverage:
         v.looker_interpretation = "S"
         locus = make_locus_coverage(
             locus_tag="Rv0667", breadth_of_coverage=0.50,
-            err_coverage=self._make_err(breadth=0.95),
+            err_coverage=make_err_coverage(breadth_of_coverage=0.95),
         )
         qc.apply_qc([v], {"Rv0667": locus}, {})
 
@@ -324,7 +318,7 @@ class TestLocusQcWithErrCoverage:
         assert "Insufficient coverage in locus" not in v.warning
         assert v.mdl_interpretation == "S"  # preserved — ERR breadth is good
 
-    def test_err_also_low_fails_insufficient(self, mock_config, make_variant, make_locus_coverage):
+    def test_err_also_low_fails_insufficient(self, mock_config, make_variant, make_locus_coverage, make_err_coverage):
         mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Uncertain significance")
@@ -332,7 +326,7 @@ class TestLocusQcWithErrCoverage:
         v.looker_interpretation = "S"
         locus = make_locus_coverage(
             locus_tag="Rv0667", breadth_of_coverage=0.50,
-            err_coverage=self._make_err(breadth=0.50),
+            err_coverage=make_err_coverage(breadth_of_coverage=0.50),
         )
         qc.apply_qc([v], {"Rv0667": locus}, {})
 
@@ -341,7 +335,7 @@ class TestLocusQcWithErrCoverage:
         assert "Insufficient coverage in locus" in v.warning
         assert v.mdl_interpretation == "Insufficient Coverage"
 
-    def test_err_flag_off_uses_locus(self, mock_config, make_variant, make_locus_coverage):
+    def test_err_flag_off_uses_locus(self, mock_config, make_variant, make_locus_coverage, make_err_coverage):
         mock_config.USE_ERR_FOR_QC = False
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Uncertain significance")
@@ -349,7 +343,7 @@ class TestLocusQcWithErrCoverage:
         v.looker_interpretation = "S"
         locus = make_locus_coverage(
             locus_tag="Rv0667", breadth_of_coverage=0.50,
-            err_coverage=self._make_err(breadth=0.95),
+            err_coverage=make_err_coverage(breadth_of_coverage=0.95),
         )
         qc.apply_qc([v], {"Rv0667": locus}, {})
 
@@ -377,7 +371,7 @@ class TestLocusQcWithErrCoverage:
         assert "Insufficient coverage in locus" not in v.warning
         assert v.mdl_interpretation == "S"
 
-    def test_r_locus_fail_only_warning_preserved(self, mock_config, make_variant, make_locus_coverage):
+    def test_r_locus_fail_only_warning_preserved(self, mock_config, make_variant, make_locus_coverage, make_err_coverage):
         mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         v = make_variant(depth=100, freq=0.95, confidence="Assoc w R")
@@ -385,7 +379,7 @@ class TestLocusQcWithErrCoverage:
         v.looker_interpretation = "R"
         locus = make_locus_coverage(
             locus_tag="Rv0667", breadth_of_coverage=0.50,
-            err_coverage=self._make_err(breadth=0.50),
+            err_coverage=make_err_coverage(breadth_of_coverage=0.50),
         )
         qc.apply_qc([v], {"Rv0667": locus}, {})
 
@@ -395,7 +389,7 @@ class TestLocusQcWithErrCoverage:
         assert "Insufficient coverage in locus" in v.warning
         assert v.mdl_interpretation == "R"
 
-    def test_r_both_fail_overwrites(self, mock_config, make_variant, make_locus_coverage):
+    def test_r_both_fail_overwrites(self, mock_config, make_variant, make_locus_coverage, make_err_coverage):
         mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         v = make_variant(depth=5, freq=0.50, confidence="Assoc w R")  # low depth -> positional fail
@@ -403,7 +397,7 @@ class TestLocusQcWithErrCoverage:
         v.looker_interpretation = "R"
         locus = make_locus_coverage(
             locus_tag="Rv0667", breadth_of_coverage=0.50,
-            err_coverage=self._make_err(breadth=0.50),
+            err_coverage=make_err_coverage(breadth_of_coverage=0.50),
         )
         qc.apply_qc([v], {"Rv0667": locus}, {})
 
@@ -413,13 +407,13 @@ class TestLocusQcWithErrCoverage:
         assert v.mdl_interpretation == "Insufficient Coverage"
         assert v.looker_interpretation == "Insufficient Coverage"
 
-    def test_err_valid_deletion_passes_locus_qc(self, mock_config, make_variant, make_locus_coverage, make_target_coverage):
+    def test_err_valid_deletion_passes_locus_qc(self, mock_config, make_variant, make_locus_coverage, make_err_coverage, make_target_coverage):
         """Rule 4.2.2.2: Deletion in ERR valid_deletions + low ERR breadth -> passes locus QC."""
         mock_config.USE_ERR_FOR_QC = True
         qc = VariantQC()
         del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
 
-        err = self._make_err(breadth=0.50, coords=[(100, 200)])
+        err = make_err_coverage(breadth_of_coverage=0.50, coords=[(100, 200)])
         locus = make_locus_coverage(
             locus_tag="Rv0667", breadth_of_coverage=0.50,
             coords=[(100, 200)],
@@ -428,7 +422,7 @@ class TestLocusQcWithErrCoverage:
         target = make_target_coverage(
             locus_tag="Rv0667", gene_name="rpoB",
             coords=[(100, 200)],
-            err_coverage=ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.50, average_depth=100.0),
+            err_coverage=make_err_coverage(coords=[(100, 200)], breadth_of_coverage=0.50),
         )
 
         # First assign valid deletions, then apply QC
@@ -482,11 +476,11 @@ class TestAssignValidDeletions:
         assert target2.contains_variant_with_valid_deletion(del_variant) is True
         assert target1.valid_deletions == target2.valid_deletions == [del_variant]
 
-    def test_non_deletion_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+    def test_non_deletion_not_assigned(self, make_variant, make_locus_coverage, make_err_coverage, make_target_coverage):
         qc = VariantQC()
         snp_variant = make_variant(depth=100, freq=0.95, pos=120)  # SNP, not deletion
 
-        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
+        err = make_err_coverage(coords=[(100, 200)])
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err)
         target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
 
@@ -496,13 +490,13 @@ class TestAssignValidDeletions:
         assert target.contains_variant_with_valid_deletion(snp_variant) is False
         assert err.contains_variant_with_valid_deletion(snp_variant) is False
 
-    def test_deletion_failing_positional_qc_not_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+    def test_deletion_failing_positional_qc_not_assigned(self, make_variant, make_locus_coverage, make_err_coverage, make_target_coverage):
         """Deletion with fails_positional_qc=True should be skipped by assign_variants_with_valid_deletions."""
         qc = VariantQC()
         del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
         del_variant.fails_positional_qc = True
 
-        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
+        err = make_err_coverage(coords=[(100, 200)])
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err)
         target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)])
 
@@ -512,12 +506,12 @@ class TestAssignValidDeletions:
         assert target.contains_variant_with_valid_deletion(del_variant) is False
         assert err.contains_variant_with_valid_deletion(del_variant) is False
 
-    def test_deletion_in_err_range_assigned(self, make_variant, make_locus_coverage, make_target_coverage):
+    def test_deletion_in_err_range_assigned(self, make_variant, make_locus_coverage, make_err_coverage, make_target_coverage):
         qc = VariantQC()
         del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=120)
 
-        err_locus = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
-        err_target = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
+        err_locus = make_err_coverage(coords=[(100, 200)])
+        err_target = make_err_coverage(coords=[(100, 200)])
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200)], err_coverage=err_locus)
         target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(100, 200)], err_coverage=err_target)
 
@@ -528,12 +522,12 @@ class TestAssignValidDeletions:
         assert locus.contains_variant_with_valid_deletion(del_variant) is True
         assert target.contains_variant_with_valid_deletion(del_variant) is True
 
-    def test_deletion_outside_err_range_not_in_err(self, make_variant, make_locus_coverage, make_target_coverage):
+    def test_deletion_outside_err_range_not_in_err(self, make_variant, make_locus_coverage, make_err_coverage, make_target_coverage):
         qc = VariantQC()
         del_variant = make_variant(nucleotide_change="c.1_100del", depth=100, freq=0.95, pos=350)
 
-        err_locus = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=100.0)
-        err_target = ERRCoverage(coords=[(310, 390)], breadth_of_coverage=0.95, average_depth=100.0)
+        err_locus = make_err_coverage(coords=[(100, 200)])
+        err_target = make_err_coverage(coords=[(310, 390)])
         locus = make_locus_coverage(locus_tag="Rv0667", coords=[(100, 200), (300, 400)], err_coverage=err_locus)
         target = make_target_coverage(locus_tag="Rv0667", gene_name="rpoB", coords=[(300, 400)], err_coverage=err_target)
 
