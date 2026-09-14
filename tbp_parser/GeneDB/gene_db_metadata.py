@@ -73,7 +73,11 @@ GENE_DB_METADATA: dict[str, dict] = {
     "Rv1267c": {"tier": "Tier 2", "promoter_region": [-103, -1]},  # embR
     "Rv1305": {"tier": "Tier 1", "promoter_region": [-51, -1]},  # atpE
     "EBG00000313325": {"tier": "Tier 1", "promoter_region": [-151, -1], "aliases": ["Rvnr01", "MTB000019"]},  # rrs
+    "Rvnr01": {"tier": "Tier 1", "promoter_region": [-151, -1], "aliases": ["EBG00000313325", "MTB000019"]},  # rrs
+    "MTB000019": {"tier": "Tier 1", "promoter_region": [-151, -1], "aliases": ["EBG00000313325", "Rvnr01"]},  # rrs
     "EBG00000313339": {"tier": "Tier 1", "promoter_region": [-51, -1], "aliases": ["Rvnr02", "MTB000020"]},  # rrl
+    "Rvnr02": {"tier": "Tier 1", "promoter_region": [-51, -1], "aliases": ["EBG00000313339", "MTB000020"]},  # rrl
+    "MTB000020": {"tier": "Tier 1", "promoter_region": [-51, -1], "aliases": ["EBG00000313339", "Rvnr02"]},  # rrl
     "Rv1484": {"tier": "Tier 1", "promoter_region": [-813, -1]},  # inhA
     "Rv1630": {"tier": "NA", "promoter_region": [-100, -1]},  # rpsA
     "Rv1644": {"tier": "NA", "promoter_region": [-51, -1]},  # tsnR
