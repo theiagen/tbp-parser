@@ -2,7 +2,7 @@
 title: Subcommands
 ---
 
-As of v3.1.0, `tbp-parser` takes a **subcommand** as its first argument:
+As of v4.0.0, `tbp-parser` takes a **subcommand** as its first argument:
 
 | Subcommand | Purpose |
 | :--------- | :------ |
@@ -48,15 +48,15 @@ tbp-parser build_gene_db \
 | `--output` | The path to write the gene database YAML file to | **Yes** |
 | `--debug` | Increase output verbosity to debug | No |
 
-The `--db_bed` file uses the same **tab-delimited**, headerless BED format as the coverage BED file. However, the `build_gene_db` command uses the `drugs` (6th) column to build the gene database, while `--coverage_bed` ignores this column. See the [BED file structure](inputs.md#coverage-bed-file) and column [warning](inputs.md#the-sixth-drugs-column).
+The `--db_bed` file uses the same **tab-delimited**, headerless BED format as the coverage BED file. However, the `build_gene_db` command uses the `drugs` (6th) column to build the gene database, while `--coverage_bed` ignores this column. See the [BED file structure](inputs.md#coverage-bed-file) for the column layout and a warning about the `drugs` column.
 
 ??? warning "Two behaviors worth knowing about"
-    - **A line with no sixth column produces no database entry.** It is skipped silently, so a five-column BED file will build an empty gene database.
+    - **Every line must list at least one drug in the sixth column.** `tbp-parser` rejects the file and names the offending lines, rather than skipping them and building a database that is silently missing those genes.
     - **The same locus tag and gene name cannot appear on more than one line.** `tbp-parser` rejects the file with an error rather than merging the lines, so a gene that is split into multiple target regions must be combined into a single line spanning the whole region before building the database.
 
 The generated gene database contains one entry per gene, with the locus tag as the key. Each entry contains the `locus_tag`, `gene_name`, `tier`, `promoter_region`, `drugs`, and `aliases` (if present) associated with that gene. Drugs are de-duplicated and sorted alphabetically. See [Gene Database File](inputs.md#gene-database-file) for the full schema.
 
-??? technicaldetails " Where `tier` and `promoter_region` come from"
+??? techdetails "Where `tier` and `promoter_region` come from"
 
     Both fields originate from the [WHO catalogue of mutations in _Mycobacterium tuberculosis_, 2nd edition (2023)](https://www.who.int/publications/i/item/9789240082410):
 

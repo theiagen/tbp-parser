@@ -95,7 +95,7 @@ The following is a list of every version of `tbp-parser` and a short summary of 
 - v3.0.1 - minor update to the gene database to ensure parity with TBProfiler v6.7.0
 - v3.0.2 - now generates a BAI file when it is not in the same directory as the BAM for convenience; also changes WT rpoB to use a different LIMS report message
 - v3.0.3 - reverts the WT rpoB LIMS report change from v3.0.2 and collapse duplicate amino acid mutations in the LIMS report despite different underlying nucleotide mutations
-- v3.1.0 - restructures the command-line interface into `parse`, `build_gene_db`, and `build_lims_fmt` subcommands; removes all bundled default input files; validates that every gene/drug pair in the required inputs exist in the gene database (skippable with `--skip_input_validation`); validates that ERR regions fall within their coverage regions
+- v4.0.0 - restructures the command-line interface into `parse`, `build_gene_db`, and `build_lims_fmt` subcommands; removes all bundled default input files; validates that every gene/drug pair in the required inputs exist in the gene database (skippable with `--skip_input_validation`); `input_json` and `input_bam` are no longer positional and now require named flags; all other short form flags have been removed; the coverage reports now report `percent_coverage` and `average_depth` to two decimal places instead of three; validates that ERR regions fall within their coverage regions; the `err_percent_coverage` and `err_average_depth` columns are now always present when `--err_coverage_bed` is provided, reporting `N/A` for a regions not specified in the ERR BED file
 
 ---
 

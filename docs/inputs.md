@@ -17,7 +17,7 @@ This page documents the arguments of the main `parse` subcommand, which produces
 | `--lims_report_format_yml` | The path to a LIMS report format YAML file ([see below](#lims-report-format-yaml-file)) | Defines the columns of the LIMS report. |
 
 !!! dna "No default input files are provided"
-    As of v3.1.0, `tbp-parser` no longer ships with default versions of these files, because the correct contents depend on which TBProfiler database your sample was called against. Generate the gene database and LIMS report format from that database's `genes.bed` file with [`tbp-parser build_gene_db` and `tbp-parser build_lims_fmt`](subcommands.md), then reuse them for every sample called against that database.
+    As of v4.0.0, `tbp-parser` no longer ships with default versions of these files, because the correct contents depend on which TBProfiler database your sample was called against. Generate the gene database and LIMS report format from that database's `genes.bed` file with [`tbp-parser build_gene_db` and `tbp-parser build_lims_fmt`](subcommands.md), then reuse them for every sample called against that database.
 
 ### Coverage BED File
 
@@ -106,7 +106,7 @@ EBG00000313325:
     aliases: [Rvnr01, MTB000019]
 ```
 
-See [where `tier` and `promoter_region` come from](subcommands.md#where-tier-and-promoter_region-come-from) for more information on how to determine the correct values for those fields.
+See [`build_gene_db`](subcommands.md#build_gene_db) for more information on how to determine the correct values for those fields.
 
 ---
 
@@ -183,7 +183,7 @@ These options determine the thresholds for quality control.
 | Long Version           | Description | Default Value |
 | :--------------------- | :---------- | :------------ |
 | `--min_depth` | The minimum depth of coverage required for a site to pass QC | 10 |
-| `--min_percent_coverage` | The minimum fraction of a region that has depth above the threshold set by `min_depth` (used for a gene/locus to pass QC; 1.0 -> 100%) | 1.0 |
+| `--min_percent_coverage` | The minimum fraction of a region that has depth meeting or exceeding the threshold set by `min_depth` (used for a gene/locus to pass QC; 1.0 -> 100%) | 1.0 |
 | `--min_read_support` | The minimum read support for a mutation to pass QC | 10 |
 | `--min_frequency` | The minimum frequency for a mutation to pass QC (0.1 -> 10%) | 0.1 |
 | `--min_percent_loci_covered` | The minimum fraction of loci/genes in the LIMS report that must pass coverage QC for the sample to be identified as MTBC (0.7 -> 70%) | 0.7 |
@@ -241,7 +241,7 @@ These options change the verbosity of the `stderr` log. The `parse` subcommand a
 
 Instead of providing the input parameters on the command line, the ability to provide a configuration file in YAML format is available. This file (and any included fields) are **case-sensitive** and should be written in all caps.
 
-The configuration file will accept input parameters from the [Validation Arguments](#validation-arguments), [Quality Control Arguments](#quality-control-arguments), [tNGS-specific Arguments](#tngs-specific-arguments), and [Text Arguments](#text-arguments). [File Arguments](#file-arguments) and [Logging Arguments](#logging-arguments) should be provided **separately** on the command line. The configuration file can be provided using the `--config` argument. Input parameters should be indicated in all caps and should match the long version of the command-line arguments (e.g. `MIN_FREQUENCY` instead of `--min_frequency`).
+The configuration file will accept input parameters from the [Validation Arguments](#validation-arguments), [Quality Control Arguments](#quality-control-arguments), [Text Arguments](#text-arguments), and the [tNGS-specific Arguments](#tngs-specific-arguments). Any flag that requires a file path as an input should be provided **separately** on the command line. This includes: [Required Arguments](#required-arguments), `--err_coverage_bed`, and [Logging Arguments](#logging-arguments). The configuration file can be provided using the `--config` argument. Input parameters should be indicated in all caps and should match the long version of the command-line arguments (e.g. `MIN_FREQUENCY` instead of `--min_frequency`; see example below).
 
 ```yaml
 # I can overwrite any input parameters, like so.
