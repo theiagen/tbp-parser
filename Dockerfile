@@ -45,4 +45,7 @@ RUN pip install --no-cache-dir pytest pytest-cov
 
 RUN tbp-parser --version && \
     tbp-parser --help && \
+    tbp-parser parse --help && \
+    tbp-parser build_gene_db --help && \
+    tbp-parser build_lims_fmt --help && \
     pytest -v
