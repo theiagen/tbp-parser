@@ -31,8 +31,8 @@ The Coverage BED file is the **tab-delimited** [BED](https://grch37.ensembl.org/
 6. `drugs`: the drugs associated with that gene, separated by commas (e.g. "isoniazid,rifampicin")
 
 ??? warning "The sixth `drugs` column"
-    - The `parse` (`--coverage_bed`) subcommand reads only the first five columns; `drugs` and anything after it are ignored, because the gene database is the truth set for gene-drug associations, not the coverage BED file.
-    - The `build_gene_db` (`--db_bed`) subcommand is the opposite: it builds the database *from* this column, and **a gene with no drugs listed is left out of the database entirely**.
+    - The `parse` (`--coverage_bed`) subcommand ignores `drugs` and anything after it, because the gene database is the truth set for gene-drug associations, not the coverage BED file. This column can be omitted entirely.
+    - The `build_gene_db` (`--db_bed`) subcommand is the opposite: it builds the database *from* this column, so **every line must list at least one drug**. A file with a blank or missing sixth column on any line is rejected with an error naming those lines.
     - Populating this column in every BED file means the same file can serve both commands.
 
 For example, the following is a valid BED file:
