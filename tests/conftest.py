@@ -12,13 +12,19 @@ from tbp_parser.LIMS import LIMSRecord, LIMSGeneCode
 
 @pytest.fixture
 def mock_config():
-    """Create a mock Configuration object with sensible defaults."""
+    """
+    Create a mock Configuration object with sensible defaults.
+
+    Every boolean option is set explicitly. A bare MagicMock returns a truthy mock for anything left
+    unset, which can lead to unexpected behavior in tests.
+    """
     config = MagicMock()
     config.MIN_DEPTH = 10
     config.MIN_FREQUENCY = 0.10
     config.MIN_READ_SUPPORT = 10
     config.MIN_PERCENT_COVERAGE = 0.90
     config.MIN_PERCENT_LOCI_COVERED = 0.50
+    config.SKIP_INPUT_VALIDATION = False
     config.TNGS = False
     config.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = False
     config.SEQUENCING_METHOD = "WGS"
@@ -27,6 +33,8 @@ def mock_config():
     config.TNGS_READ_SUPPORT_BOUNDARIES = [10, 100]
     config.TNGS_FREQUENCY_BOUNDARIES = [0.10, 0.25]
     config.USE_ERR_FOR_QC = False
+    config.RESOLVE_OVERLAPPING_REGIONS = False
+    config.DEBUG = False
     config.err_coverage_bed = None
     config.lims_report_format_yml = str(Path(__file__).parent / "test_files" / "test_lims_report_format.yml")
     return config
