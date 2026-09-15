@@ -6,8 +6,8 @@ With the v3.0.0 refactor, `tbp-parser` has undergone significant changes and the
     _In order of appearance_
 
     - `Configuration`: a singleton class that handles all configuration settings and input parameters for `tbp-parser`
-    - `GeneDatabase`: a singleton class that contains information regarding each gene of interest; attributes include gene name, locus tag, tier, associated drugs, and promoter regions.
-    - `LIMSGeneCode`: a class representing a gene-specific result for the LIMS report 
+    - `GeneDatabase`: a singleton class that contains information regarding each gene of interest; attributes include gene name, locus tag, tier, associated drugs, promoter regions, and any alternate locus tag aliases. It lives in the `GeneDB` module alongside the [`build_gene_db`](../subcommands.md#build_gene_db) builder and the WHO catalogue metadata that builder draws from.
+    - `LIMSGeneCode`: a class representing a gene-specific result for the LIMS report
     - `LIMSRecord`: a class representing a drug-specific result for the LIMS report; contains a list of `LIMSGeneCode` objects (the genes associated with that drug)
     - `BedRecord`: a class representing a record/entry from a BED file; contains attributes such as chromosome, start, end, and gene name, It derives length and genomic coordinates.
     - `CoverageCalculator`: a class used to generate coverage statistics for BED records; contains methods to calculate percent coverage and average depth for a given BED record based on the read depth information from the BAM file
@@ -27,31 +27,31 @@ With the v3.0.0 refactor, `tbp-parser` has undergone significant changes and the
     - `QCResult`: a data class representing the result of a QC check on a variant
     - `LIMSProcessor`: a class to handle the decision logic for LIMS report generation
 
-## Walkthrough
+## Walkthrough of the `parse` subcommand
 
 ### 1. Setup and input parsing
 
-Arguments are parsed into the singleton instance of the `Configuration` class, which is used to store all input parameters. Alternatively, if a [configuration file](../inputs.md#configuration-file) is provided, it will be used to overwrite any provided command-line arguments. 
+Arguments are parsed into the singleton instance of the `Configuration` class, which is used to store all input parameters. Alternatively, if a [configuration file](../inputs.md#configuration-file) is provided, it will be used to overwrite any provided command-line arguments.
 
-The provided (or default) [gene database YAML file](../inputs.md#gene-database-file) is then parsed into the singleton instance of the `GeneDatabase` class, which contains all relevant information for each gene of interest. This class takes the form of a dictionary, where the keys are the locus tags of the genes and the values are dictionaries containing all relevant information for that gene: gene name, locus tag, tier, associated drugs, and promoter regions. This database also exists in an "inverted" form where the key is the gene name instead of the locus tag.
+The provided [gene database YAML file](../inputs.md#gene-database-file) is then parsed into the singleton instance of the `GeneDatabase` class, which contains all relevant information for each gene of interest. This class takes the form of a dictionary, where the keys are the locus tags of the genes and the values are dictionaries containing all relevant information for that gene: gene name, locus tag, tier, associated drugs, and promoter regions. This database also exists in an "inverted" form where the key is the gene name instead of the locus tag.
 
-The provided (or default) [LIMS report format YAML file](../inputs.md#lims-report-format-yaml-file) is then parsed into a `LIMSRecord` list and any corresponding `LIMSGeneCode` list. See the toggle below for more details.
+The provided [LIMS report format YAML file](../inputs.md#lims-report-format-yaml-file) is then parsed into a `LIMSRecord` list and any corresponding `LIMSGeneCode` list. See the toggle below for more details.
 
 ??? techdetails "`LIMSRecord` and `LIMSGeneCode` attributes"
     `LIMSRecord` is a drug-specific result for the LIMS report. It contains the following attributes:
-        
+
     - `drug`: the name of the drug (as it would appear in the input TBProfiler JSON file under the `"annotation.drug"` field; e.g., "bedaquiline")
     - `drug_code`: the desired output column name for that drug in the LIMS report (e.g., "BDQ")
     - `gene_codes`: a dictionary of gene names (as they appear in TBProfiler under the `gene_name` field; e.g., "mmpR5") to a corresponding `LIMSGeneCode` object
-    
+
     `LIMSGeneCode` is a result for a gene-drug combination for the LIMS report with the following attributes:
-        
+
       - `gene_code`: the desired output column name for that gene-drug combination in the LIMS report (e.g., "BDQ_Rv0678")
       - `gene_target_value`: the value that will be reported in the LIMS report for that gene-drug combination; see the `LIMSProcessor` class for more details on how this is determined
       - `max_mdl_interpretation`: a list of the highest `mdl_interpretation` values identified for any mutation in that gene for that drug; this is used in the decision logic for determining the `gene_target_value`
       - `max_mdl_variants`: a list of the specific mutations that have the highest `mdl_interpretation` values for that gene-drug combination; this is used in the decision logic for determining the `gene_target_value`
 
-The provided (or default) [coverage BED file](../inputs.md#coverage-bed-file) is then parsed into a `BedRecord` list, where each `BedRecord` represents a single record/entry from the BED file., See the toggle below for more details. This same process is applied to the [ERR coverage BED file](../inputs.md#tngs-specific-arguments) (if provided), resulting in a `BedRecord` list representing the ERR regions.
+The provided [coverage BED file](../inputs.md#coverage-bed-file) is then parsed into a `BedRecord` list, where each `BedRecord` represents a single record/entry from the BED file., See the toggle below for more details. This same process is applied to the [ERR coverage BED file](../inputs.md#tngs-specific-arguments) (if provided), resulting in a `BedRecord` list representing the ERR regions.
 
 ??? techdetails "`BedRecord` attributes"
     `BedRecord` is a class representing a single record/entry from a BED file. It contains the following attributes:
@@ -65,13 +65,15 @@ The provided (or default) [coverage BED file](../inputs.md#coverage-bed-file) is
     - `coords`:  a tuple of the coordinates of the region, derived from the start and end positions (e.g., (100, 200))
     - `reads_by_position`: a dictionary where the keys are genomic positions and the values are lists of read names that appear at that position; this is populated during the coverage calculation step (see below)
 
-Once the input database files have been processed and parsed, the identified `LIMSRecord` and `BedRecord` lists are compared to ensure that each `LIMSRecord` gene has a corresponding `BedRecord`. If any genes are missing from the BED file, an error is raised. Additionally, an error is raised if any genes in the `LIMSRecord` list are not found in the `GeneDatabase`. This ensures that all genes of interest have all information necessary for downstream processing and report generation.
+The TBProfiler results JSON is then parsed into a `VariantRecord` list (see [step 3](#3-tbprofiler-json-parsing)) so that it can be validated alongside the other input files.
+
+Once every input file has been parsed, they are all validated against the `GeneDatabase`. Because the gene database represents the TBProfiler database the variants were called against, every other input can only ever be a subset of it. Several functions confirm that each gene/drug pair in the `VariantRecord`, `BedRecord`, and `LIMSRecord` lists exists in the `GeneDatabase`, and that each `LIMSRecord` gene has a corresponding `BedRecord` to draw coverage from. Every check runs before anything is raised, so all findings are reported together and a broken set of input files can be corrected in a single pass. If any check fails, a `ValueError` stops the run. This validation can be turned off with [`--skip_input_validation`](../inputs.md#validation-arguments), which disables these checks and nothing else.
 
 ### 2. Coverage calculations
 
 /// html | div[style='float: left; width: 50%; padding: 20px;']
 
-After initial setup and input parameter processing, the `CoverageCalculator` class is initialized using the `Configuration` instance, which provides access to the BAM file and other necessary parameters for the breadth of coverage calculation. The `.calculate()` method is called on the `CoverageCalculator` object, which iterates through the `BedRecord` list (and the ERR `BedRecord` list if applicable). 
+After initial setup and input parameter processing, the `CoverageCalculator` class is initialized using the `Configuration` instance, which provides access to the BAM file and other necessary parameters for the breadth of coverage calculation. The `.calculate()` method is called on the `CoverageCalculator` object, which iterates through the `BedRecord` list (and the ERR `BedRecord` list if applicable).
 
 Each record in the list is run through `pysam AlignmentFile.pileup()` to identify which reads in the BAM file are associated with that record's region. Those reads are stored in the `BedRecord`'s `"reads_by_position"` attribute. Each `BedRecord` has a unique `reads_by_position` dictionary, so if regions overlap, the same positions and reads may be associated with multiple `BedRecord` entries.
 
@@ -97,12 +99,12 @@ Each record in the list is run through `pysam AlignmentFile.pileup()` to identif
 ///
 
 ???+ techdetails "Handling overlapping primer regions in tNGS analyses"
-    If `--resolve_overlapping_regions` is used, the `BedRecord` list is checked to determine if any two `BedRecord` coordinates overlap. This is done by whitelisting any non-overlapping reads for each `BedRecord` under the assumption that if a read appears in a non-overlapping region it originated from that particular target. The `reads_by_position` attribute is then filtered to only include those whitelisted reads. 
-    
-    For example, imagine geneA is covered by two primers: primer1 covers bases 0-45, and primer2 covers bases 30-75, meaning that 15 bases overlap between the primers. readA appears in the `reads_by_position` dictionary for primerA positions 0-45, and appears in the primerB `reads_by_position` dictionary for positions 30-45. readB appears in the primerB dictionary for positions 30-75 and the primerA dictionary for positions 30-45. readA appears in the **non-overlapping** region of primer1 (0-30) while readB appears in the **non-overlapping region** of primer2 (45-75). readA is then **whitelisted** for primer1 and readB is **whitelisted** for primer2. 
-    
-    If a third read, readC, covers only positions 30-45, this means that it appears only in the overlapping region of both primer1 and primer2. It is not whitelisted for either record, and so it is filtered out of the `reads_by_position` attribute for both records since its origin cannot be determined. 
-    
+    If `--resolve_overlapping_regions` is used, the `BedRecord` list is checked to determine if any two `BedRecord` coordinates overlap. This is done by whitelisting any non-overlapping reads for each `BedRecord` under the assumption that if a read appears in a non-overlapping region it originated from that particular target. The `reads_by_position` attribute is then filtered to only include those whitelisted reads.
+
+    For example, imagine geneA is covered by two primers: primer1 covers bases 0-45, and primer2 covers bases 30-75, meaning that 15 bases overlap between the primers. readA appears in the `reads_by_position` dictionary for primerA positions 0-45, and appears in the primerB `reads_by_position` dictionary for positions 30-45. readB appears in the primerB dictionary for positions 30-75 and the primerA dictionary for positions 30-45. readA appears in the **non-overlapping** region of primer1 (0-30) while readB appears in the **non-overlapping region** of primer2 (45-75). readA is then **whitelisted** for primer1 and readB is **whitelisted** for primer2.
+
+    If a third read, readC, covers only positions 30-45, this means that it appears only in the overlapping region of both primer1 and primer2. It is not whitelisted for either record, and so it is filtered out of the `reads_by_position` attribute for both records since its origin cannot be determined.
+
     This process allows us to make an informed assumption about which reads originated from which target regions, which is important for accurate coverage calculations of individual target regions in the tNGS analysis, since it isolates the reads belonging to each primer.
 
     !!! caption "A visual example"
@@ -110,11 +112,11 @@ Each record in the list is run through `pysam AlignmentFile.pileup()` to identif
 
         This example shows how the reads associated with each `BedRecord` are whitelisted based on their presence in the non-overlapping regions when `--resolve_overlapping_regions` is enabled. Reads that only appear in the overlapping region are excluded from both `BedRecord`s, preventing double-counting in the locus coverage report.
 
-Once the `BedRecord` list is finalized, the `reads_by_position` dictionary is used to calculate breadth of coverage. The number of positions that has more reads than the number specified by `--min_depth` is divided by the number of positions in the dictionary. Average depth is calculated by summing the number of reads at each position and then dividing by the length of the dictionary. These coverage statistics are stored in the `BedRecord`'s `"breadth_of_coverage"` and `average_depth` attributes. 
+Once the `BedRecord` list is finalized, the `reads_by_position` dictionary is used to calculate breadth of coverage. The number of positions whose read count meets or exceeds the number specified by `--min_depth` is divided by the number of positions in the dictionary. Average depth is calculated by summing the number of reads at each position and then dividing by the length of the dictionary. These coverage statistics are stored in the `BedRecord`'s `"breadth_of_coverage"` and `average_depth` attributes.
 
-The `BedRecord` list is iterated over and each entry is used to create a `TargetCoverage` object, which contains the coverage information for that specific record. If there are multiple `BedRecord` objects associated with the same locus tag, the coverage information is aggregated (the `reads_by_position` dictionary is extended to include all information for all `BedRecord` entries for that locus) and average depth and breadth of coverage are recalculated for the locus as a whole. If there is only a single `BedRecord` associated with a locus tag, the previously calculated values are used. These results are added to a `LocusCoverage` object for each locus tag. 
+The `BedRecord` list is iterated over and each entry is used to create a `TargetCoverage` object, which contains the coverage information for that specific record. If there are multiple `BedRecord` objects associated with the same locus tag, the coverage information is aggregated (the `reads_by_position` dictionary is extended to include all information for all `BedRecord` entries for that locus) and average depth and breadth of coverage are recalculated for the locus as a whole. If there is only a single `BedRecord` associated with a locus tag, the previously calculated values are used. These results are added to a `LocusCoverage` object for each locus tag.
 
-If an ERR coverage BED file is provided, the same process is applied to the ERR `BedRecord` list, resulting in breadth of coverage and average depth calculations for the ERR regions. These regions are then associated with their corresponding `TargetCoverage` and `LocusCoverage` objects under the `err_coverage` attribute. 
+If an ERR coverage BED file is provided, the same process is applied to the ERR `BedRecord` list, resulting in breadth of coverage and average depth calculations for the ERR regions. These regions are then associated with their corresponding `TargetCoverage` and `LocusCoverage` objects under the `err_coverage` attribute.
 
 ???+ techdetails "`TargetCoverage`,`LocusCoverage`, and `ERRCoverage` attributes"
     - `coords`: the genomic coordinates of the coverage record (e.g., (100, 200))
@@ -210,7 +212,7 @@ There are many other fields available that have useful information but are not u
       ...
   ],
   "other_variants": [
-      { 
+      {
           "chrom": "Chromosome",
           "pos": 3065027,
           "ref": "G",
@@ -298,7 +300,7 @@ Each consequence represents an alternate mapping of the same variant to a differ
         "type": "frameshift_variant",
         "nucleotide_change": "c.139dupG",
         "protein_change": "p.Asp47fs",
-        "annotation": [ ... ], 
+        "annotation": [ ... ],
     },
     {
         "gene_id": "Rv0676c",
@@ -361,7 +363,7 @@ In the example to the left, we see the `"annotation"` field for a single variant
     - `source`: the source of the annotation (`"source"`)
     - `comment`: any comments associated with the annotation (`"comment"`)
 
-In this example, this variant confers resistance to both bedaquiline and clofazimine. Each annotation is saved to the `VariantRecord` to enable ease of downstream processing. 
+In this example, this variant confers resistance to both bedaquiline and clofazimine. Each annotation is saved to the `VariantRecord` to enable ease of downstream processing.
 
 An annotation can be found in either a VariantRecord or in a Consequence object, since both variants and consequences can have unique annotations.
 
@@ -374,7 +376,7 @@ An annotation can be found in either a VariantRecord or in a Consequence object,
 
 Once the TBProfiler JSON has been parsed into a list of `VariantRecord` objects, downstream processing is handled by the `VariantProcessor` class. `VariantProcessor` is a method class, which means that it is not initialized with any attributes and instead serves as a namespace for methods that process the `VariantRecord` list.
 
-The `.process()` method of the `VariantProcessor` class is provided the `VariantRecord` list and the `SAMPLE_ID` variable. 
+The `.process()` method of the `VariantProcessor` class is provided the `VariantRecord` list and the `SAMPLE_ID` variable.
 
 The `VariantRecord` list is processed by the `._expand_consequences()` method, which expands the `consequences` attribute of each `VariantRecord` into additional `VariantRecord` objects. **This occurs only if the `VariantRecord` has a `gene_id` of Rv0676c (_mmpL5_), Rv0677c (_mmpS5_), or Rv0678 (_mmpR5_)**. This method creates a copy of the `VariantRecord` for each entry in the `consequences` list, replacing the gene information (gene_id, gene_name, etc.) with the corresponding information from the consequence entry. The consequence annotations are added to the `annotation` field of the new `VariantRecord`. If the `annotation` field is blank, `Annotation` object(s) will be created that match the parent `VariantRecord` drug(s) with a `confidence` of "No WHO annotation" and blank `source` and `comment` fields.
 
@@ -409,7 +411,7 @@ After annotation expansion, each `VariantRecord` is turned into a **`Variant`** 
     - `fails_positional_qc`: a Boolean flag indicating whether the variant fails positional QC based on `VariantQC` processing
     - `warning`: any QC warnings associated with the variant based on `VariantQC` processing
 
-Following the creation of the `Variant` list, deduplication occurs. Identical variants (same gene, position, and drug) are deduplicated by keeping the `Variant` with the most severe WHO annotation confidence level. The confidence levels are ranked as follows from (highest severity to lowest): 
+Following the creation of the `Variant` list, deduplication occurs. Identical variants (same gene, position, and drug) are deduplicated by keeping the `Variant` with the most severe WHO annotation confidence level. The confidence levels are ranked as follows from (highest severity to lowest):
 
 1. Assoc w R
 2. Assoc w R - [I]nterim
@@ -441,7 +443,7 @@ Results are saved in an `InterpretationResult` data class object, which contains
 After interpretation, the `VariantQC` method class is used to generate QC warnings for each `Variant`. The `qc()` method is called and applies QC to each reported `Variant` iteratively. Only a brief summary of the QC process will be provided here, so please see the [interpretation document](./interpretation.md) for more details.
 
 
-Positional quality control determines if the mutation has sufficient support. The depth, frequency, and read support of the `Variant` are compared against the thresholds specified by `--min_depth`, `--min_freq`, and `--min_read_support`. If any of these values fall below the specified threshold, the `fails_positional_qc` attribute is set to `True` and a warning is generated to indicate that the variant fails quality in the position.
+Positional quality control determines if the mutation has sufficient support. The depth, frequency, and read support of the `Variant` are compared against the thresholds specified by `--min_depth`, `--min_frequency`, and `--min_read_support`. If any of these values fall below the specified threshold, the `fails_positional_qc` attribute is set to `True` and a warning is generated to indicate that the variant fails quality in the position.
 
 Locus quality control determines if the mutation is in a region of poor coverage. The breadth of coverage for the `Variant`'s gene (accessed through the `locus_coverage` result [generated in step 2](#2-coverage-calculations)) is compared against the threshold specified by `--min_percent_coverage`. If the breadth of coverage for the gene falls below the specified threshold, the `fails_locus_qc` attribute is set to `True` and a warning is generated to indicate that the variant fails quality in the locus.
 
@@ -451,7 +453,7 @@ Additional QC scenarios are considered, and can be found in the interpretation d
 
 Following `Variant` quality control, the `LIMSProcessor` method class is used to determine the values for each `LIMSGeneCode` and `LIMSRecord` based on the interpreted `Variant` list and the decision logic specified in the [interpretation document](./interpretation.md). Please see that document for more details on the decision logic, as it will only be briefly covered here.
 
-Each item in the `LIMSRecord` list ([generated in step 1](#1-setup-and-input-parsing)) is processed iteratively. For each `LIMSRecord` and each `LIMSGeneCode` within that record, the `Variant` list is filtered to identify a list of "candidate" variants for determining the maximum MDL interpretation for that gene-drug combination. The list of candidate variants is filtered to determine which pass quality control in order to ignore any `Variant` that fails positional QC (but not locus QC). This is because if a variant fails positional QC, it means that the support for that variant is weak and may not be "real" so we do not want to consider it in the decision logic for determining the gene target value. 
+Each item in the `LIMSRecord` list ([generated in step 1](#1-setup-and-input-parsing)) is processed iteratively. For each `LIMSRecord` and each `LIMSGeneCode` within that record, the `Variant` list is filtered to identify a list of "candidate" variants for determining the maximum MDL interpretation for that gene-drug combination. The list of candidate variants is filtered to determine which pass quality control in order to ignore any `Variant` that fails positional QC (but not locus QC). This is because if a variant fails positional QC, it means that the support for that variant is weak and may not be "real" so we do not want to consider it in the decision logic for determining the gene target value.
 
 The filtered list of `Variant` objects is then used to determine maximum MDL interpretation by identifying the most severe `mdl_interpretation` value among the candidate variants, which is used to set the `max_mdl_interpretation` attribute of the `LIMSGeneCode`. The severity ranking is as follows from highest to lowest:
 

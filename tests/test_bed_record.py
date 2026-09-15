@@ -14,6 +14,13 @@ class TestBedRecordEquality:
         rec2 = make_bed_record(**{field: different_value})
         assert rec1 != rec2
 
+    def test_records_differing_only_in_drugs_are_equal(self, make_bed_record):
+        """Currently, a region is identified by its coordinates and gene, not by its drug annotations."""
+        rec1 = make_bed_record(drugs=["levofloxacin"])
+        rec2 = make_bed_record(drugs=["rifampicin", "isoniazid"])
+        assert rec1 == rec2
+        assert hash(rec1) == hash(rec2)
+
     def test_non_bed_record_equality(self, make_bed_record):
         rec1 = make_bed_record()
         rec2 = {"chrom": rec1.chrom, "start": rec1.start, "end": rec1.end, "locus_tag": rec1.locus_tag, "gene_name": rec1.gene_name}
@@ -48,6 +55,22 @@ class TestBedRecordFromBedLine:
         record = BedRecord.from_bed_line(line)
         assert record.locus_tag == canonical
 
+    @pytest.mark.parametrize("drug_column, expected", [
+        ("levofloxacin,moxifloxacin", ["levofloxacin", "moxifloxacin"]),
+        ("rifampicin", ["rifampicin"]),
+        (" levofloxacin , moxifloxacin ", ["levofloxacin", "moxifloxacin"]),  # whitespace stripped
+        ("levofloxacin,,moxifloxacin", ["levofloxacin", "moxifloxacin"]),  # empty entries dropped
+        ("fluoroquinolones,ciprofloxacin", ["fluoroquinolones", "ciprofloxacin"]),
+        ("", []),
+    ], ids=["two-drugs", "one-drug", "whitespace", "empty-entries", "drug-classes", "empty-column"])
+    def test_drugs_parsed_from_the_sixth_column(self, drug_column, expected):
+        line = f"Chromosome\t100\t200\tRv0006\tgyrA\t{drug_column}"
+        record = BedRecord.from_bed_line(line)
+        assert record.drugs == expected
+
+    def test_drugs_empty_without_a_sixth_column(self):
+        record = BedRecord.from_bed_line("Chromosome\t100\t200\tRv0006\tgyrA")
+        assert record.drugs == []
 
 
 class TestParseBedFile:
@@ -60,12 +83,60 @@ class TestParseBedFile:
         bed_file = tmp_path / "test.bed"
         bed_file.write_text(bed_content)
 
-        records = parse_bed_file(str(bed_file))
+        records = parse_bed_file(str(bed_file), expected_columns=5)
 
         assert len(records) == 3
         assert records[0].gene_name == "gene1"
         assert records[1].locus_tag == "Rv0001"
         assert records[2].start == 500
+
+    def test_skips_blank_lines(self, tmp_path):
+        # `from_bed_line` would IndexError on [''], so blank lines have to be skipped by the parser
+        bed_content = (
+            "Chromosome\t100\t200\tRv0000\tgene1\n"
+            "\n"
+            "Chromosome\t300\t400\tRv0001\tgene2\n"
+            "\n"
+        )
+        bed_file = tmp_path / "blank_lines.bed"
+        bed_file.write_text(bed_content)
+
+        records = parse_bed_file(str(bed_file), expected_columns=5)
+
+        assert [record.gene_name for record in records] == ["gene1", "gene2"]
+
+    def test_reports_every_short_line_in_a_single_error(self, tmp_path):
+        # reporting them all at once means a ragged file can be fixed in one pass, and the line
+        # numbers count blank lines so they line up with what an editor shows
+        bed_content = (
+            "Chromosome\t100\t200\tRv0000\tgene1\n"
+            "Chromosome\t300\t400\n"
+            "\n"
+            "Chromosome\t500\t600\tRv0002\tgene3\n"
+            "Chromosome\t700\n"
+        )
+        bed_file = tmp_path / "ragged.bed"
+        bed_file.write_text(bed_content)
+
+        with pytest.raises(ValueError, match=r"requires 5 tab-separated columns; line\(s\) 2, 5"):
+            parse_bed_file(str(bed_file), expected_columns=5)
+
+    @pytest.mark.parametrize("sixth_column", [
+        "",      # no 6th column at all
+        "\t",    # present but empty
+        "\t ",   # present but whitespace only
+    ], ids=["absent", "empty", "whitespace"])
+    def test_expected_columns_of_six_requires_a_drug_column(self, tmp_path, sixth_column):
+        # the `--db_bed` drug column is the truth set of gene/drug associations, so a row without one
+        # cannot become a gene database entry
+        bed_file = tmp_path / "db.bed"
+        bed_file.write_text(f"Chromosome\t100\t200\tRv0000\tgene1{sixth_column}\n")
+
+        with pytest.raises(ValueError, match=r"requires 6 tab-separated columns; line\(s\) 1"):
+            parse_bed_file(str(bed_file), expected_columns=6)
+
+        # the same row is a perfectly good --coverage_bed row, where the drug column is optional
+        assert len(parse_bed_file(str(bed_file), expected_columns=5)) == 1
 
 
 class TestUniqueBedRecordsValidation:
@@ -78,7 +149,7 @@ class TestUniqueBedRecordsValidation:
         bed_file.write_text(bed_content)
 
         with pytest.raises(ValueError, match="Duplicate BedRecords found with identical locus_tag and gene_name"):
-            parse_bed_file(str(bed_file))
+            parse_bed_file(str(bed_file), expected_columns=5)
 
 
 class TestBedRecordOverlaps:

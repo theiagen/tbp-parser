@@ -4,7 +4,7 @@ from pathlib import Path
 
 from tbp_parser.Coverage.coverage_data import TargetCoverage, LocusCoverage
 from tbp_parser.Utilities.config import Configuration, apply_find_and_replace
-from tbp_parser.Utilities.gene_database import GeneDatabase
+from tbp_parser.GeneDB.gene_db import GeneDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +53,10 @@ def write_coverage_report(
             "sample_name": sample_name,
             "locus_tag": locus_tag,
             "gene_name": gene_name,
-            "percent_coverage": f"{coverage.breadth_of_coverage*100:.3f}",
-            "average_depth": f"{coverage.average_depth:.3f}",
-            **({"err_percent_coverage": f"{coverage.err_coverage.breadth_of_coverage*100:.3f}"} if coverage.err_coverage else {}),
-            **({"err_average_depth": f"{coverage.err_coverage.average_depth:.3f}"} if coverage.err_coverage else {}),
+            "percent_coverage": f"{coverage.breadth_of_coverage*100:.2f}",
+            "average_depth": f"{coverage.average_depth:.2f}",
+            **({"err_percent_coverage": f"{coverage.err_coverage.breadth_of_coverage*100:.2f}" if coverage.err_coverage else "N/A"} if bool(config.err_coverage_bed) else {}),
+            **({"err_average_depth": f"{coverage.err_coverage.average_depth:.2f}" if coverage.err_coverage else "N/A"} if bool(config.err_coverage_bed) else {}),
             "qc_warning": qc_warning,
         })
 

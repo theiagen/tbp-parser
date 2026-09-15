@@ -5,7 +5,7 @@ site_url: https://theiagen.github.io/tbp-parser/
 
 repo_url: https://github.com/theiagen/tbp-parser
 
-theme: 
+theme:
   name: material
   logo: assets/Theiagen-Logo-White.png
   favicon: assets/Theiagen-Symbol-Standard-01.png
@@ -28,7 +28,7 @@ theme:
   language: en
   palette:
     - media: "(prefers-color-scheme: light)"
-      scheme: light 
+      scheme: light
       toggle:
         icon: material/weather-night
         name: Switch to Dark Mode
@@ -43,6 +43,7 @@ theme:
 nav:
   - tbp-parser:
     - Home: index.md
+    - Subcommands: subcommands.md
     - Inputs: inputs.md
     - Outputs:
         - Laboratorian report: outputs/laboratorian.md
@@ -56,7 +57,7 @@ nav:
         - Technical Code Breakdown: algorithm/technical.md
         - Interpretation Document: algorithm/interpretation.md
 
-markdown_extensions: 
+markdown_extensions:
   - admonition
   - attr_list
   - def_list
@@ -99,7 +100,7 @@ extra_javascript:
   - javascripts/tablesort.js
 
 extra_css:
-  - stylesheets/extra.css        
+  - stylesheets/extra.css
 
 extra:
   social:

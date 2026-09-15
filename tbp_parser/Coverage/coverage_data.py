@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from abc import ABC
 from tbp_parser.Variant.variant import Variant
 
@@ -66,10 +66,17 @@ class TargetCoverage(BaseCoverage):
     coords: list[tuple[int, int]]
     err_coverage: Optional[ERRCoverage] = None
 
-    def model_post_init(self, __context) -> None:
+    # `validate_assignment` is required for the validator below to run when err_coverage is attached
+    # after construction, which is how CoverageCalculator assigns it.
+    model_config = {"validate_assignment": True}
+
+    @model_validator(mode="after")
+    def check_err_within_coords(self) -> 'TargetCoverage':
+        """Ensure that if ERR coverage is provided, its coordinates fall within the target coordinates."""
         if self.err_coverage is not None:
             if not all(self.contains_position(s) and self.contains_position(e) for s, e in self.err_coverage.coords):
-                raise ValueError(f"ERR coords {self.err_coverage.coords} fall outside target coords {self.coords}")
+                raise ValueError(f"ERR coords for target `{self.locus_tag}` ({self.gene_name}) {self.err_coverage.coords} fall outside target coords {self.coords}")
+        return self
 
 class LocusCoverage(BaseCoverage):
     """
@@ -80,8 +87,14 @@ class LocusCoverage(BaseCoverage):
     coords: list[tuple[int, int]] # can be a list of coordinates if aggregating multiple target regions
     err_coverage: Optional[ERRCoverage] = None
 
-    # Post-init validation to ensure that if ERR coverage is provided, its coordinates fall within the locus coverage coordinates
-    def model_post_init(self, __context) -> None:
+    # `validate_assignment` is required for the validator below to run when err_coverage is attached
+    # after construction, which is how CoverageCalculator assigns it.
+    model_config = {"validate_assignment": True}
+
+    @model_validator(mode="after")
+    def check_err_within_coords(self) -> 'LocusCoverage':
+        """Ensure that if ERR coverage is provided, its coordinates fall within the locus coordinates."""
         if self.err_coverage is not None:
             if not all(self.contains_position(s) and self.contains_position(e) for s, e in self.err_coverage.coords):
-                raise ValueError(f"ERR coords {self.err_coverage.coords} fall outside locus coords {self.coords}")
+                raise ValueError(f"ERR coords for locus `{self.locus_tag}` ({self.gene_names}) {self.err_coverage.coords} fall outside locus coords {self.coords}")
+        return self

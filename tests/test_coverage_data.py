@@ -1,5 +1,4 @@
 import pytest
-from tbp_parser.Coverage.coverage_data import ERRCoverage
 
 
 class TestBaseCoverage:
@@ -127,10 +126,14 @@ class TestERRWithinCoords:
         [(140, 160)], # fully within target/locus
         [(100, 200)], # exactly matches target/locus (not strictly within)
     ])
-    def test_err_within_coords_valid(self, make_target_coverage, make_locus_coverage, err_coords):
-        err = ERRCoverage(coords=err_coords, breadth_of_coverage=0.95, average_depth=50.0)
-        tc = make_target_coverage(coords=[(100, 200)], err_coverage=err)
-        lc = make_locus_coverage(coords=[(100, 200)], err_coverage=err)
+    def test_err_within_coords_valid(self, make_target_coverage, make_err_coverage, make_locus_coverage, err_coords):
+        err = make_err_coverage(coords=err_coords, average_depth=50.0)
+        tc = make_target_coverage(coords=[(100, 200)])
+        lc = make_locus_coverage(coords=[(100, 200)])
+
+        tc.err_coverage = err
+        lc.err_coverage = err
+
         assert tc.err_coverage == err
         assert lc.err_coverage == err
 
@@ -141,20 +144,30 @@ class TestERRWithinCoords:
         [(90, 100)],  # ends exactly at start boundary but starts before
         [(50, 250)] # completely encompasses target/locus
     ])
-    def test_err_within_coords_invalid(self, make_target_coverage, make_locus_coverage, err_coords):
-        err = ERRCoverage(coords=err_coords, breadth_of_coverage=0.95, average_depth=50.0)
-        with pytest.raises(ValueError):
+    def test_err_within_coords_invalid(self, make_target_coverage, make_err_coverage, make_locus_coverage, err_coords):
+        err = make_err_coverage(coords=err_coords, average_depth=50.0)
+        tc = make_target_coverage(coords=[(100, 200)])
+        lc = make_locus_coverage(coords=[(100, 200)])
+
+        with pytest.raises(ValueError, match="fall outside target coords"):
+            tc.err_coverage = err
+
+        with pytest.raises(ValueError, match="fall outside locus coords"):
+            lc.err_coverage = err
+
+    def test_err_coords_are_still_validated_when_passed_to_the_constructor(self, make_target_coverage, make_err_coverage):
+        err = make_err_coverage(coords=[(50, 250)], average_depth=50.0)
+        with pytest.raises(ValueError, match="fall outside target coords"):
             make_target_coverage(coords=[(100, 200)], err_coverage=err)
 
-        with pytest.raises(ValueError):
-            make_locus_coverage(coords=[(100, 200)], err_coverage=err)
+
 class TestContainsVariantWithValidDeletion:
-    def test_contains_variant_with_valid_deletion(self, make_variant, make_target_coverage, make_locus_coverage):
+    def test_contains_variant_with_valid_deletion(self, make_variant, make_target_coverage, make_err_coverage, make_locus_coverage):
         del_variant = make_variant(gene_name="rpoB", gene_id="Rv0667", nucleotide_change="c.1_100del", pos=150)
         other_variant = make_variant(gene_name="rpoB", gene_id="Rv0667", nucleotide_change="c.1349C>T", pos=120)
         tc = make_target_coverage(coords=[(100, 200)], valid_deletions=[del_variant])
         lc = make_locus_coverage(coords=[(100, 200)], valid_deletions=[del_variant])
-        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=50.0, valid_deletions=[del_variant])
+        err = make_err_coverage(coords=[(100, 200)], average_depth=50.0, valid_deletions=[del_variant])
         assert tc.contains_variant_with_valid_deletion(del_variant) is True
         assert lc.contains_variant_with_valid_deletion(del_variant) is True
         assert err.contains_variant_with_valid_deletion(del_variant) is True
@@ -164,13 +177,13 @@ class TestContainsVariantWithValidDeletion:
 
 
 class TestContainsLociWithValidDeletion:
-    def test_contains_loci_with_valid_deletion(self, make_variant, make_target_coverage, make_locus_coverage):
+    def test_contains_loci_with_valid_deletion(self, make_variant, make_target_coverage, make_err_coverage, make_locus_coverage):
         """A non-deletion variant at the same locus as a valid deletion should be detected by contains_loci_with_valid_deletion."""
         del_variant = make_variant(gene_name="rpoB", gene_id="Rv0667", nucleotide_change="c.1_100del", pos=150)
         other_variant = make_variant(gene_name="rpoB", gene_id="Rv0667", nucleotide_change="c.1349C>T", pos=120)
         tc = make_target_coverage(coords=[(100, 200)], valid_deletions=[del_variant])
         lc = make_locus_coverage(coords=[(100, 200)], valid_deletions=[del_variant])
-        err = ERRCoverage(coords=[(100, 200)], breadth_of_coverage=0.95, average_depth=50.0, valid_deletions=[del_variant])
+        err = make_err_coverage(coords=[(100, 200)], average_depth=50.0, valid_deletions=[del_variant])
         assert tc.contains_loci_with_valid_deletion(del_variant.gene_id) is True
         assert lc.contains_loci_with_valid_deletion(del_variant.gene_id) is True
         assert err.contains_loci_with_valid_deletion(del_variant.gene_id) is True

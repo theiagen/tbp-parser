@@ -1,10 +1,17 @@
 import logging
-from tbp_parser.arguments import parse_arguments
+
+from tbp_parser.arguments import (
+    BUILD_GENE_DB_COMMAND,
+    BUILD_LIMS_FMT_COMMAND,
+    PARSE_COMMAND,
+    parse_arguments,
+)
+from tbp_parser.GeneDB import GeneDatabase, build_gene_db
 from tbp_parser.Utilities import (
     Configuration,
-    GeneDatabase,
     setup_logger,
-    check_bed_for_lims_genes,
+    validate_inputs,
+    validate_err_coords,
 )
 from tbp_parser.Coverage import (
     CoverageCalculator,
@@ -18,6 +25,7 @@ from tbp_parser.Variant import (
 )
 from tbp_parser.LIMS import (
     LIMSProcessor,
+    build_lims_fmt,
     parse_lims_yml_file,
 )
 from tbp_parser.Reporters import (
@@ -27,29 +35,56 @@ from tbp_parser.Reporters import (
     write_coverage_report,
 )
 
+logger = logging.getLogger(__name__)
+
 def main():
     options = parse_arguments()
+
     setup_logger(
-        output_prefix=options.output_prefix,
+        log_file=getattr(options, "output_prefix", None),
         level=logging.DEBUG if options.debug else logging.INFO,
     )
 
+    logger.info(f"\n\nExecuting subcommand: {options.command}\n")
+
+    if options.command == BUILD_GENE_DB_COMMAND:
+        db_bed_records = parse_bed_file(options.db_bed, expected_columns=6)
+        build_gene_db(db_bed_records, options.output)
+        return
+
+    if options.command == BUILD_LIMS_FMT_COMMAND:
+        build_lims_fmt(options.gene_database_yml, options.output)
+        return
+
+    if options.command == PARSE_COMMAND:
+        parse(options)
+        return
+
+def parse(options):
     # Set up Configuration and GeneDatabase instances to be used throughout
     config = Configuration(options)
-    gdb = GeneDatabase(config.gene_database_yml)
+    GeneDatabase(config.gene_database_yml)
 
-    # Check entries match between LIMS and BED input files before processing
+    # Parse input files
     lims_records = parse_lims_yml_file(config.lims_report_format_yml)
-    bed_records = parse_bed_file(config.coverage_bed)
-    err_records = parse_bed_file(config.err_coverage_bed)
-    check_bed_for_lims_genes(bed_records, lims_records)
+    bed_records = parse_bed_file(config.coverage_bed, expected_columns=5)
+    err_records = parse_bed_file(config.err_coverage_bed, expected_columns=5)
+    variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
+
+    # Validate that every ERR region falls within the target region it belongs to.
+    validate_err_coords(bed_records, err_records)
+
+    # Validate all gene/drug associations from the input files are present in the Gene Database
+    if not config.SKIP_INPUT_VALIDATION:
+        validate_inputs(
+            bed_records=bed_records,
+            lims_records=lims_records,
+            variant_records=variant_records,
+        )
 
     # Coverage calculation
     coverage_calculator = CoverageCalculator()
     LOCUS_COVERAGE_MAP, TARGET_COVERAGE_MAP = coverage_calculator.calculate(bed_records, err_records)
-
-    # VariantRecord parsing
-    variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
 
     # Variant processing: expansion, extraction, deduplication, unreported variant generation
     variant_processor = VariantProcessor()

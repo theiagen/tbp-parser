@@ -6,7 +6,7 @@ The Looker report is intended for use in Google's Looker Data Studio for dashboa
 
 ## Resistance columns
 
-Each antimicrobial drug listed in the input `--coverage_bed` file will be represented by one column in the Looker report. The column name will be the antimicrobial drug name in lowercase. This can be customized by adding content to the `FIND_AND_REPLACE` dictionary in a configuration file, though please be aware that this will change every instance of that drug name in **all** output reports.
+Each antimicrobial drug associated with a gene in the input `--gene_database_yml` file will be represented by one column in the Looker report. The column name will be the antimicrobial drug name in lowercase. This can be customized by adding content to the `FIND_AND_REPLACE` dictionary in a configuration file, though please be aware that this will change every instance of that drug name in **all** output reports.
 
 Drug interpretation severity is ranked as follows (from high to low): **R > R-Interim > U > S-Interim > S > WT > Insufficient Coverage > NA**.
 
@@ -29,7 +29,7 @@ These miscellaneous columns are also included in the Looker report to provide ad
 
 ## Customizing column names
 
-To overwrite any of the output column names or text in the laboratorian report, please use the following format in a [configuration file](../inputs.md#configuration-file) or use the command-line parameter `--find_and_replace`:
+To overwrite any of the output column names or text in the Looker report, please use the following format in a [configuration file](../inputs.md#configuration-file) or use the command-line parameter `--find_and_replace`:
 
 ```yaml
 FIND_AND_REPLACE:

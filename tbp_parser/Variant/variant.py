@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Any
-from tbp_parser.Utilities.gene_database import GeneDatabase
+from tbp_parser.GeneDB.gene_db import GeneDatabase
 from tbp_parser.Utilities.helper import Helper
 import logging
 

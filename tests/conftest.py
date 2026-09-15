@@ -3,19 +3,28 @@ import pysam
 from pathlib import Path
 from copy import deepcopy
 from unittest.mock import MagicMock
-from tbp_parser.Utilities import Configuration, GeneDatabase
+from tbp_parser.GeneDB import GeneDatabase
+from tbp_parser.Utilities import Configuration
 from tbp_parser.Variant import Variant, VariantRecord, Annotation, Consequences
 from tbp_parser.Coverage import LocusCoverage, TargetCoverage, BedRecord, CoverageCalculator
+from tbp_parser.Coverage.coverage_data import ERRCoverage
+from tbp_parser.LIMS import LIMSRecord, LIMSGeneCode
 
 @pytest.fixture
 def mock_config():
-    """Create a mock Configuration object with sensible defaults."""
+    """
+    Create a mock Configuration object with sensible defaults.
+
+    Every boolean option is set explicitly. A bare MagicMock returns a truthy mock for anything left
+    unset, which can lead to unexpected behavior in tests.
+    """
     config = MagicMock()
     config.MIN_DEPTH = 10
     config.MIN_FREQUENCY = 0.10
     config.MIN_READ_SUPPORT = 10
     config.MIN_PERCENT_COVERAGE = 0.90
     config.MIN_PERCENT_LOCI_COVERED = 0.50
+    config.SKIP_INPUT_VALIDATION = False
     config.TNGS = False
     config.DO_NOT_TREAT_R_MUTATIONS_DIFFERENTLY = False
     config.SEQUENCING_METHOD = "WGS"
@@ -24,22 +33,28 @@ def mock_config():
     config.TNGS_READ_SUPPORT_BOUNDARIES = [10, 100]
     config.TNGS_FREQUENCY_BOUNDARIES = [0.10, 0.25]
     config.USE_ERR_FOR_QC = False
-    config.lims_report_format_yml = str(Path(__file__).parent.parent / "tbp_parser" / "data" / "default-lims-report-format.yml")
+    config.RESOLVE_OVERLAPPING_REGIONS = False
+    config.DEBUG = False
+    config.err_coverage_bed = None
+    config.lims_report_format_yml = str(Path(__file__).parent / "test_files" / "test_lims_report_format.yml")
     return config
+
 
 @pytest.fixture(autouse=True)
 def setup_config(mock_config):
     Configuration._instance = mock_config
 
+
 @pytest.fixture(autouse=True, scope="session")
 def setup_gene_database():
-    GeneDatabase(db_path=str(Path(__file__).parent.parent / "tbp_parser" / "data" / "default-gene-database_2026-03-03.yml"))
+    GeneDatabase(db_path=str(Path(__file__).parent / "test_files" / "test_gene_db.yml"))
+
 
 @pytest.fixture
 def make_bed_record():
     """Module-level helper to construct BedRecord objects with sensible defaults."""
     def _make(**kwargs):
-        params = {"chrom": "Chromosome", "start": 100, "end": 200, "locus_tag": "Rv0000", "gene_name": "geneA"}
+        params = {"chrom": "Chromosome", "start": 100, "end": 200, "locus_tag": "Rv0000", "gene_name": "geneA", "drugs": []}
         params.update(kwargs)
         bed_record = BedRecord(**params)  # type: ignore
         return bed_record
@@ -110,6 +125,30 @@ def make_locus_coverage():
 
 
 @pytest.fixture
+def make_err_coverage():
+    """Factory fixture to create ERRCoverage objects with sensible defaults."""
+    def _make(
+        coords=None,
+        breadth_of_coverage=0.95,
+        average_depth=100.0,
+        valid_deletions=None,
+        **kwargs,
+    ):
+        if coords is None:
+            coords = [(100, 150), (250, 350)]
+        if valid_deletions is None:
+            valid_deletions = []
+        return ERRCoverage(
+            coords=coords,
+            breadth_of_coverage=breadth_of_coverage,
+            average_depth=average_depth,
+            valid_deletions=valid_deletions,
+            **kwargs,
+        )
+    return _make
+
+
+@pytest.fixture
 def make_target_coverage():
     """Factory fixture to create TargetCoverage objects."""
     def _make(
@@ -133,8 +172,6 @@ def make_target_coverage():
     return _make
 
 
-
-
 @pytest.fixture
 def make_annotation():
     """Factory fixture to create Annotation objects with sensible defaults."""
@@ -149,7 +186,7 @@ def make_annotation():
 
 
 @pytest.fixture
-def make_consequences(make_annotation):
+def make_consequences():
     """Factory fixture to create Consequences objects with sensible defaults."""
     def _make(
         gene_id="Rv0678",
@@ -211,6 +248,28 @@ def make_variant_record(make_annotation):
 
 
 @pytest.fixture
+def make_lims_gene_code():
+    """Factory fixture to create LIMSGeneCode objects with sensible defaults."""
+    def _make(gene_code="M_DST_D02_rpoB"):
+        return LIMSGeneCode(gene_code=gene_code)
+    return _make
+
+
+@pytest.fixture
+def make_lims_record():
+    """Factory fixture to create LIMSRecord objects with sensible defaults.
+
+    Each gene named positionally gets a `<drug_code>_<gene>` gene code; pass `gene_codes`
+    instead to build the mapping explicitly.
+    """
+    def _make(drug="rifampicin", drug_code="M_DST_D02", *genes, gene_codes=None):
+        if gene_codes is None:
+            gene_codes = {gene: LIMSGeneCode(gene_code=f"{drug_code}_{gene}") for gene in genes or ("rpoB",)}
+        return LIMSRecord(drug=drug, drug_code=drug_code, gene_codes=gene_codes)
+    return _make
+
+
+@pytest.fixture
 def make_bam_file():
     """Factory fixture to create a BAM file for testing."""
     def _make(
@@ -218,7 +277,7 @@ def make_bam_file():
         cov_end=100,
         read_length=10,
     ):
-        bam_file = str(Path(__file__).parent / "test.bam")
+        bam_file = str(Path(__file__).parent / "test_files" / "test.bam")
         # random 100 bases that I will repeat in this order to use as a reference.
         # reference base [0:10] 'GACAAGGACA' will be the same as [100:110] 'GACAAGGACA', etc
         ref_seq = "GACAAGGACATGACGTACGCGGCCCCGCTGTTCGTCACGGCCGAGTTCATCAACAACAACACCGGTGAGATCAAGAGCCAGACGGTGTTCATGGGATCGG"

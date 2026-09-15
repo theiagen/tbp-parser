@@ -7,7 +7,6 @@ from tbp_parser.Reporters.lab_report import write_laboratorian_report
 from tbp_parser.Reporters.lims_report import write_lims_report
 from tbp_parser.Reporters.looker_report import write_looker_report, LOOKER_RESISTANCE_RANKING
 from tbp_parser.Reporters.coverage_report import write_coverage_report
-from tbp_parser.Coverage.coverage_data import ERRCoverage
 from tbp_parser.LIMS import LIMSRecord, LIMSGeneCode
 
 
@@ -188,9 +187,51 @@ class TestWriteCoverageReports:
         assert len(df) == 1
         assert "locus_tag" in df.columns
 
-    def test_target_report_uses_err_deletions(self, mock_config, make_target_coverage, make_variant, tmp_path):
+    def test_omits_err_columns_when_no_err_bed_was_given(self, mock_config, make_target_coverage, tmp_path):
+        mock_config.err_coverage_bed = None
+        gene_map = {"rpoB": make_target_coverage(gene_name="rpoB")}
+
+        df = _run_report(mock_config, tmp_path, write_coverage_report, "target_coverage_report", "test_sample", gene_map)
+        assert "err_percent_coverage" not in df.columns
+        assert "err_average_depth" not in df.columns
+
+    def test_reports_na_for_a_region_without_err_coverage(self, mock_config, make_err_coverage, make_target_coverage, tmp_path):
+        # a gene omitted from the ERR BED file falls back to its coverage BED region and reports N/A
+        mock_config.err_coverage_bed = "err.bed"
+        err = make_err_coverage(coords=[(100, 150)])
+        gene_map = {
+            "rpoB": make_target_coverage(gene_name="rpoB", err_coverage=err),
+            "katG": make_target_coverage(gene_name="katG", locus_tag="Rv1908c", err_coverage=None),
+        }
+
+        _run_report(mock_config, tmp_path, write_coverage_report, "target_coverage_report", "test_sample", gene_map)
+
+        # read the file as written: pandas treats "N/A" as a null value by defaul
+        df = pd.read_csv(Path(f"{mock_config.OUTPUT_PREFIX}.target_coverage_report.csv"), keep_default_na=False, dtype=str)
+        by_gene = df.set_index("gene_name")
+        assert by_gene.loc["rpoB", "err_percent_coverage"] == "95.00"
+        assert by_gene.loc["rpoB", "err_average_depth"] == "100.00"
+        assert by_gene.loc["katG", "err_percent_coverage"] == "N/A"
+        assert by_gene.loc["katG", "err_average_depth"] == "N/A"
+
+    def test_keeps_err_columns_in_a_fixed_position_when_the_first_row_lacks_err_coverage(self, mock_config, make_err_coverage, make_target_coverage, tmp_path):
+        # the columns are spliced in per row, so a first row without ERR coverage used to push them after qc_warning
+        mock_config.err_coverage_bed = "err.bed"
+        err = make_err_coverage(coords=[(100, 150)])
+        gene_map = {
+            "katG": make_target_coverage(gene_name="katG", locus_tag="Rv1908c", err_coverage=None),
+            "rpoB": make_target_coverage(gene_name="rpoB", err_coverage=err),
+        }
+
+        df = _run_report(mock_config, tmp_path, write_coverage_report, "target_coverage_report", "test_sample", gene_map)
+        assert list(df.columns) == [
+            "sample_name", "locus_tag", "gene_name", "percent_coverage", "average_depth",
+            "err_percent_coverage", "err_average_depth", "qc_warning",
+        ]
+
+    def test_target_report_uses_err_deletions(self, mock_config, make_err_coverage, make_target_coverage, make_variant, tmp_path):
         del_variant = make_variant(nucleotide_change="c.1_100del", pos=120)
-        err = ERRCoverage(coords=[(100, 150)], breadth_of_coverage=0.95, average_depth=100.0, valid_deletions=[del_variant])
+        err = make_err_coverage(coords=[(100, 150)], valid_deletions=[del_variant])
         tc = make_target_coverage(gene_name="rpoB", err_coverage=err)
 
         df = _run_report(mock_config, tmp_path, write_coverage_report, "target_coverage_report", "test_sample", {"rpoB": tc})
@@ -204,9 +245,9 @@ class TestWriteCoverageReports:
         df = _run_report(mock_config, tmp_path, write_coverage_report, "target_coverage_report", "test_sample", {"rpoB": tc})
         assert "c.200_300del" in df["qc_warning"].iloc[0]
 
-    def test_locus_report_uses_err_deletions(self, mock_config, make_locus_coverage, make_variant, tmp_path):
+    def test_locus_report_uses_err_deletions(self, mock_config, make_err_coverage, make_locus_coverage, make_variant, tmp_path):
         del_variant = make_variant(nucleotide_change="c.1_100del", pos=120)
-        err = ERRCoverage(coords=[(100, 150), (250, 350)], breadth_of_coverage=0.95, average_depth=100.0, valid_deletions=[del_variant])
+        err = make_err_coverage(coords=[(100, 150), (250, 350)], valid_deletions=[del_variant])
         lc = make_locus_coverage(locus_tag="Rv0667", err_coverage=err)
 
         df = _run_report(mock_config, tmp_path, write_coverage_report, "locus_coverage_report", "test_sample", {"Rv0667": lc})
