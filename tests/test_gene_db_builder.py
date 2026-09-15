@@ -1,6 +1,7 @@
 import yaml
 
 from tbp_parser.GeneDB.gene_db_builder import (
+    build_gene_db,
     build_gene_database,
     write_gene_database_yml,
 )
@@ -103,3 +104,29 @@ class TestWriteGeneDatabaseYml:
 
         written = yaml.safe_load(output_path.read_text())
         assert list(written["Rv0006"]) == ["locus_tag", "gene_name", "tier", "promoter_region", "drugs"]
+
+
+class TestBuildGeneDb:
+    """Tests for the `build_gene_db` subcommand entry point."""
+
+    def test_builds_and_writes_a_gene_database(self, tmp_path, make_bed_record):
+        bed_records = [
+            make_bed_record(locus_tag="Rv0006", gene_name="gyrA", drugs=["levofloxacin"]),
+            make_bed_record(locus_tag="EBG00000313325", gene_name="rrs", drugs=["amikacin"]),
+        ]
+        output_path = tmp_path / "gene-database.yml"
+
+        build_gene_db(bed_records, str(output_path))
+
+        written = yaml.safe_load(output_path.read_text())
+        assert list(written) == ["EBG00000313325", "Rv0006"]
+        assert written["Rv0006"]["drugs"] == ["levofloxacin"]
+        assert written["EBG00000313325"]["aliases"] == ["Rvnr01", "MTB000019"]
+
+    def test_accepts_a_path_object(self, tmp_path, make_bed_record):
+        # the entry point interpolates output_path into an f-string, so a Path must work as well as a str
+        output_path = tmp_path / "gene-database.yml"
+
+        build_gene_db([make_bed_record(locus_tag="Rv0006", gene_name="gyrA", drugs=["levofloxacin"])], output_path)  # type: ignore[arg-type]
+
+        assert yaml.safe_load(output_path.read_text())["Rv0006"]["gene_name"] == "gyrA"
