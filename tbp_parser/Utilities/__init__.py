@@ -8,6 +8,7 @@ from tbp_parser.Utilities.check_inputs import (
     is_bam_index_valid,
     is_optional_file_valid,
     validate_inputs,
+    validate_err_coords,
 )
 
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     'is_bam_index_valid',
     'is_optional_file_valid',
     'validate_inputs',
+    'validate_err_coords',
     'apply_find_and_replace',
 ]

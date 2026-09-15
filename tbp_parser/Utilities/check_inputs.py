@@ -121,6 +121,42 @@ def is_boundary_valid(boundary_string: str) -> str:
 
     return boundary_string
 
+def validate_err_coords(bed_records, err_records) -> None:
+    """
+    Checks that every ERR region falls within the target region it belongs to.
+
+    `TargetCoverage.check_err_within_coords` enforces the same invariant, but raises on the first bad
+    region and only after the BAM pileup has run. Checking here reports every offending region at
+    once, before any BAM work is done.
+
+    Targets are keyed by gene name to mirror `generate_coverage_maps`, which builds one
+    TargetCoverage per gene name from that record's coords.
+
+    Args:
+        bed_records: List of BedRecord objects from the `--coverage_bed` file
+        err_records: List of BedRecord objects from the `--err_coverage_bed` file
+
+    Raises:
+        ValueError: If any ERR region is not contained by the target region of the same gene
+    """
+    target_coords = {record.gene_name: record.coords for record in bed_records}
+
+    outside = []
+    for err in err_records:
+        coords = target_coords.get(err.gene_name)
+        # an ERR region with no matching target is ignored by the coverage calculator, not an error
+        if coords is None:
+            continue
+
+        start, end = coords
+        if not (start <= err.start and err.end <= end):
+            outside.append(f"{err.gene_name} ({err.locus_tag}) {err.coords} falls outside {coords}")
+
+    if outside:
+        message = "The following ERR regions fall outside their target regions:\n  " + "\n  ".join(outside)
+        logger.error(message)
+        raise ValueError(message)
+
 def _check_bed_against_gene_db(bed_records) -> list:
     """
     Checks that every locus tag in the BED file exists in the gene database.

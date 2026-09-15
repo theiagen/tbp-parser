@@ -11,6 +11,7 @@ from tbp_parser.Utilities import (
     Configuration,
     setup_logger,
     validate_inputs,
+    validate_err_coords,
 )
 from tbp_parser.Coverage import (
     CoverageCalculator,
@@ -69,6 +70,9 @@ def parse(options):
     bed_records = parse_bed_file(config.coverage_bed, expected_columns=5)
     err_records = parse_bed_file(config.err_coverage_bed, expected_columns=5)
     variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
+
+    # Validate that every ERR region falls within the target region it belongs to.
+    validate_err_coords(bed_records, err_records)
 
     # Validate all gene/drug associations from the input files are present in the Gene Database
     if not config.SKIP_INPUT_VALIDATION:
