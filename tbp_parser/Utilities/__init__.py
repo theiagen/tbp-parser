@@ -6,7 +6,6 @@ from tbp_parser.Utilities.check_inputs import (
     is_fraction_valid,
     is_file_valid,
     is_bam_index_valid,
-    is_bed_valid,
     is_optional_file_valid,
     validate_inputs,
 )
@@ -19,7 +18,6 @@ __all__ = [
     'is_fraction_valid',
     'is_file_valid',
     'is_bam_index_valid',
-    'is_bed_valid',
     'is_optional_file_valid',
     'validate_inputs',
     'apply_find_and_replace',

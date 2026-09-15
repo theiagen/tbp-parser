@@ -10,7 +10,6 @@ from tbp_parser.Utilities import (
   is_fraction_valid,
   is_file_valid,
   is_bam_index_valid,
-  is_bed_valid,
   is_optional_file_valid,
 )
 
@@ -77,7 +76,7 @@ def parse_arguments(argv: list | None = None):
     required_files = parser.add_argument_group("REQUIRED")
     required_files.add_argument("--input_json", help="The results JSON file produced by TBProfiler.", required=True, type=is_file_valid)
     required_files.add_argument("--input_bam", help="The BAM file produced by TBProfiler.", required=True, type=is_bam_index_valid)
-    required_files.add_argument("--coverage_bed", help="A BED file containing genes of interest and their coordinates.", required=True, type=is_bed_valid)
+    required_files.add_argument("--coverage_bed", help="A BED file containing genes of interest and their coordinates.", required=True, type=is_file_valid)
     required_files.add_argument("--lims_report_format_yml", help=f"A YAML file that defines the formatting and structure of the final LIMS report output. See subcommand: `{BUILD_LIMS_FMT_COMMAND}`.", required=True, type=is_file_valid)
     required_files.add_argument("--gene_database_yml", help=f"A YAML file that defines a gene database and represents the TBDB database used to generate the results JSON. See subcommand: `{BUILD_GENE_DB_COMMAND}`.", required=True, type=is_file_valid)
 
@@ -121,7 +120,7 @@ def parse_arguments(argv: list | None = None):
         help="Build a `--gene_database_yml` file from the 'genes.bed' file describing the TBProfiler database its variants were called against.",
         formatter_class = CustomFormatter,
     )
-    build_gene_db.add_argument("--db_bed", help="A BED file containing every gene TBProfiler calls variants against, its locus tag, and the drugs it is associated with.", required=True, type=is_bed_valid)
+    build_gene_db.add_argument("--db_bed", help="A BED file containing every gene TBProfiler calls variants against, its locus tag, and the drugs it is associated with.", required=True, type=is_file_valid)
     build_gene_db.add_argument("--output", help="The path to write the gene database YAML file to.", required=True)
     build_gene_db.add_argument("--debug", help="Increase output verbosity to debug.", action="store_true", default=False)
 

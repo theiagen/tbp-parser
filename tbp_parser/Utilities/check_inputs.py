@@ -74,31 +74,6 @@ def is_bam_index_valid(filename: str) -> str:
 
     return filename
 
-def is_bed_valid(filename: str) -> str:
-    """Checks if the coverage_bed files are accessible
-
-    Args:
-        filename (String): The name of file to check
-
-    Returns:
-        String: The name of the file if valid and accessible
-    """
-
-    # check if the necessary columns are present in the BED file -- just count them because we can't really parse it here
-    # does this file have at least 5 columns
-    if filename != "" and not os.path.exists(filename) and filename != "-":
-        logger.error(f"{filename} cannot be accessed")
-        raise argparse.ArgumentTypeError("{0} cannot be accessed".format(filename))
-    else:
-        with open(filename, 'r') as bed_file:
-            for line in bed_file:
-                cols = line.strip().split('\t')
-                if len(cols) < 5:
-                    logger.error(f"{filename} does not have at least 5 columns as required")
-                    raise argparse.ArgumentTypeError("{0} does not have at least 5 columns as required".format(filename))
-                break  # only need to check the first line
-    return filename
-
 def is_fraction_valid(value: str) -> float:
     """Checks that a percentage-style threshold is a fraction between 0.0 and 1.0
 

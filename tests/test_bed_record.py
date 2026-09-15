@@ -101,7 +101,7 @@ class TestUniqueBedRecordsValidation:
         bed_file.write_text(bed_content)
 
         with pytest.raises(ValueError, match="Duplicate BedRecords found with identical locus_tag and gene_name"):
-            parse_bed_file(str(bed_file))
+            parse_bed_file(str(bed_file), expected_columns=5)
 
 
 class TestBedRecordOverlaps:

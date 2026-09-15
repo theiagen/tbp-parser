@@ -47,7 +47,7 @@ def main():
     logger.info(f"\n\nExecuting subcommand: {options.command}\n")
 
     if options.command == BUILD_GENE_DB_COMMAND:
-        db_bed_records = parse_bed_file(options.db_bed)
+        db_bed_records = parse_bed_file(options.db_bed, expected_columns=6)
         build_gene_db(db_bed_records, options.output)
         return
 
@@ -66,8 +66,8 @@ def parse(options):
 
     # Parse input files
     lims_records = parse_lims_yml_file(config.lims_report_format_yml)
-    bed_records = parse_bed_file(config.coverage_bed)
-    err_records = parse_bed_file(config.err_coverage_bed)
+    bed_records = parse_bed_file(config.coverage_bed, expected_columns=5)
+    err_records = parse_bed_file(config.err_coverage_bed, expected_columns=5)
     variant_records, SAMPLE_ID, LINEAGE_ID, SUBLINEAGE_ID = parse_tbprofiler_json(config.input_json)
 
     # Validate all gene/drug associations from the input files are present in the Gene Database
